@@ -1,4 +1,4 @@
--- NCPD Patrol v0.5a | scanner dispatch, terminal duty, bonuses and boarding
+-- NCPD Patrol v0.5b | longer dispatch notices, alert sound and radio audition
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -188,7 +188,7 @@ local function startShift()
         return
     end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 6 then error("Lua/redscript version mismatch; install all v0.5a files and restart the game") end
+        if patrol:Version() ~= 7 then error("Lua/redscript version mismatch; install all v0.5b files and restart the game") end
         patrol:BeginShift()
     end)
     if not ok then status("Cannot start shift: " .. tostring(err)); return end
@@ -231,7 +231,7 @@ end
 
 registerForEvent("onInit", function()
     Dispatch.init()
-    status("v0.5a loaded. Start Shift for scanner dispatch. Use Request dispatch now in CET to test immediately.")
+    status("v0.5b loaded. Longer dispatch/resolved notices and dispatch alert. Audio tests are available under DISPATCH.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -288,7 +288,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.5a")
+    local visible = ImGui.Begin("NCPD Patrol - v0.5b")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -310,6 +310,16 @@ registerForEvent("onDraw", function()
         if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
             Dispatch.setAutomatic(not Dispatch.isAutomatic(), status)
         end
+        if ImGui.Button(Dispatch.isSoundEnabled() and "Mute dispatch alert" or "Enable dispatch alert") then
+            Dispatch.setSoundEnabled(not Dispatch.isSoundEnabled(), status)
+        end
+        if ImGui.Button("Test dispatch alert") then
+            Dispatch.testAudio(getPatrolSystem(), false, status)
+        end
+        if ImGui.Button("Preview police radio (in vehicle)") then
+            Dispatch.testAudio(getPatrolSystem(), true, status)
+        end
+        ImGui.TextWrapped("Radio preview uses an existing police pursuit line. Automatic spoken on-scene briefing is pending a suitable line.")
         ImGui.TextWrapped(Dispatch.state())
         ImGui.Text("Dispatches completed: " .. tostring(Dispatch.completed()))
         if onDuty and Dispatch.isAutomatic() and not Dispatch.isActive() then
@@ -361,7 +371,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 6 then return "Version mismatch: install all v0.5a files and restart the game." end
+                if patrol:Version() ~= 7 then return "Version mismatch: install all v0.5b files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

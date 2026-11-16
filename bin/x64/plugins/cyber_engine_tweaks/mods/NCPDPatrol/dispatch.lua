@@ -7,6 +7,7 @@ local countdown, poll = 0, 0
 local state = "OFF DUTY"
 local completed, candidateCount = 0, 0
 local failed = false
+local soundEnabled = true
 
 local function distance(a, b)
     local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
@@ -46,6 +47,29 @@ function M.isActive() return active ~= nil end
 function M.completed() return completed end
 function M.seconds() return math.max(0, math.ceil(countdown)) end
 function M.candidates() return candidateCount end
+function M.isSoundEnabled() return soundEnabled end
+function M.setSoundEnabled(value, status)
+    soundEnabled = value
+    if status then status("Dispatch | Alert sound " .. (value and "enabled" or "muted")) end
+end
+
+function M.testAudio(patrol, radio, status)
+    local ok, result = pcall(function()
+        if not patrol or not Game.GetPlayer() then error("Load a save first") end
+        if patrol:Version() ~= 7 then error("Install all v0.5b files and restart the game") end
+        if radio then return patrol:PreviewPoliceRadio() end
+        return patrol:PlayDispatchAlert()
+    end)
+    if status then
+        if ok and result then
+            status(radio and "Police radio preview requested: nc_heat_1_start. Listen in a vehicle; this is a pursuit line, not an automatic brief."
+                or "Dispatch alert requested. Check that the short signal is audible.")
+        else
+            status("Audio preview unavailable: " .. tostring(result))
+        end
+    end
+    return ok and result == true
+end
 
 function M.start(patrol, status)
     active, used = nil, {}
@@ -91,7 +115,7 @@ function M.request(patrol, status)
         return false
     end
     local ok, result = pcall(function()
-        if patrol:Version() ~= 6 then error("Install all v0.5a Lua/redscript files and restart the game") end
+        if patrol:Version() ~= 7 then error("Install all v0.5b Lua/redscript files and restart the game") end
         if not patrol:IsOnDuty() then report("Start a shift before requesting a dispatch", status); return false end
         if failed then report("Dispatch stopped after an API error; end and restart the shift to retry", status); return false end
         if active then report("A dispatch is already assigned; complete or cancel it first", status); return false end
@@ -132,7 +156,7 @@ function M.request(patrol, status)
         used[chosen.key] = true
         active.arrived = false
         countdown = 0
-        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.")
+        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.", 8.0, soundEnabled)
         drawObjective(patrol:IsDispatchMenuOpen())
         report("Assigned: " .. chosen.label .. " | POI=" .. chosen.key .. " | waypoint placed", status)
         return true
@@ -151,7 +175,7 @@ function M.cancel(patrol, status)
     local ok, err = pcall(function()
         clear(patrol)
         countdown = math.random(60, 120)
-        patrol:NotifyDispatch("NCPD DISPATCH: Assignment cancelled.")
+        patrol:NotifyDispatch("NCPD DISPATCH: Assignment cancelled.", 4.0)
     end)
     if ok then
         report("Assignment cancelled; ready for another call", status)
@@ -169,7 +193,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then hide(); return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 6 then return end
+        if patrol:Version() ~= 7 then return end
         if not onDuty or not patrol:IsOnDuty() then
             if dutySeen then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
@@ -183,14 +207,14 @@ function M.update(delta, onDuty, status, getPatrol)
                 clear(patrol)
                 completed = completed + 1
                 countdown = math.random(60, 120)
-                patrol:NotifyDispatch("NCPD DISPATCH: Incident resolved. Stand by for your next call.")
+                patrol:NotifyDispatch("NCPD DISPATCH: Incident resolved. Stand by for your next call.", 8.0)
                 report("Incident resolved | Dispatches completed: " .. tostring(completed), status)
                 return
             end
             if not inMenu and not active.arrived
                 and distance(Game.GetPlayer():GetWorldPosition(), active.position) <= 60 then
                 active.arrived = true
-                patrol:NotifyDispatch("NCPD DISPATCH: On scene. Resolve the incident and collect evidence.")
+                patrol:NotifyDispatch("NCPD DISPATCH: On scene. Resolve the incident and collect evidence.", 4.0)
                 report("On scene: " .. active.label, status)
             end
             drawObjective(inMenu)

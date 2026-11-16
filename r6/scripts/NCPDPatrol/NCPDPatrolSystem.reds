@@ -1,4 +1,4 @@
-// NCPD Patrol v0.5a. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.5b. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -18,6 +18,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     private let m_shiftBonus: Int32;
     private let m_noticeSession: Int32;
     private let m_lastBonusAmount: Int32;
+    private let m_noticeBusy: Bool;
+    private let m_pendingNotices: array<ref<NCPDPatrolNotice>>;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolSystem") as NCPDPatrolSystem;
@@ -31,7 +33,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 6; }
+    public func Version() -> Int32 { return 7; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
     public func GetTerminalDutyState() -> Bool {
         if this.m_requestedDuty == 1 { return true; }
@@ -57,6 +59,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_shiftJobs = 0;
         this.m_shiftBonus = 0;
         this.m_noticeSession += 1;
+        this.m_noticeBusy = false;
+        ArrayClear(this.m_pendingNotices);
         this.m_lastBonusAmount = 0;
         this.m_allMappins = 0;
         this.m_scannerMarkers = 0;
@@ -198,8 +202,25 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         };
     }
 
-    public func NotifyDispatch(text: String) -> Void {
-        this.ShowMessage(text);
+    public func NotifyDispatch(text: String, duration: Float, opt alert: Bool) -> Void {
+        this.ShowMessage(text, false, duration, alert);
+    }
+
+    public func PlayDispatchAlert() -> Bool {
+        let player: ref<GameObject> = GetPlayer(this.GetGameInstance());
+        if !IsDefined(player) { return false; };
+        // Existing short notification event. No looping vehicle siren is started.
+        GameObject.PlaySoundEvent(player, n"ui_phone_sms");
+        return true;
+    }
+
+    public func PreviewPoliceRadio() -> Bool {
+        let radio: ref<PoliceRadioSystem> = GameInstance.GetPoliceRadioSystem(this.GetGameInstance());
+        if !IsDefined(radio) { return false; };
+        // Audition only: this documented entry is a pursuit line, not a bespoke brief.
+        // Do not alter heat, district, vehicle or police AI state to make it play.
+        radio.PoliceRadioRequest(n"nc_heat_1_start");
+        return true;
     }
 
     public func IsDispatchMenuOpen() -> Bool {
@@ -327,14 +348,51 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         };
     }
 
-    private func ShowMessage(text: String, opt money: Bool) -> Void {
+    private func ShowMessage(text: String, opt money: Bool, opt duration: Float, opt alert: Bool) -> Void {
+        let notice: ref<NCPDPatrolNotice> = new NCPDPatrolNotice();
+        notice.text = text;
+        notice.money = money;
+        notice.alert = alert;
+        notice.duration = duration;
+        if notice.duration <= 0.0 { notice.duration = money ? 8.0 : 4.0; };
+        this.QueueNotice(notice);
+    }
+
+    private func QueueNotice(notice: ref<NCPDPatrolNotice>) -> Void {
+        let delay: ref<DelaySystem> = GameInstance.GetDelaySystem(this.GetGameInstance());
+        if !IsDefined(delay) {
+            this.PresentNotice(notice);
+            return;
+        };
+        if this.m_noticeBusy {
+            ArrayPush(this.m_pendingNotices, notice);
+            return;
+        };
+        this.m_noticeBusy = true;
+        this.PresentNotice(notice);
+        delay.DelayCallback(NCPDPatrolNoticeFinished.Create(this, this.m_noticeSession), notice.duration, false);
+    }
+
+    public func FinishNotice(session: Int32) -> Void {
+        let notice: ref<NCPDPatrolNotice>;
+        if session != this.m_noticeSession { return; };
+        this.m_noticeBusy = false;
+        if ArraySize(this.m_pendingNotices) > 0 {
+            notice = this.m_pendingNotices[0];
+            ArrayErase(this.m_pendingNotices, 0);
+            this.QueueNotice(notice);
+        };
+    }
+
+    private func PresentNotice(notice: ref<NCPDPatrolNotice>) -> Void {
         let message: SimpleScreenMessage;
         message.isShown = true;
-        message.duration = money ? 8.0 : 4.0;
-        message.message = text;
+        message.duration = notice.duration;
+        message.message = notice.text;
         message.isInstant = true;
-        message.type = money ? SimpleMessageType.Money : SimpleMessageType.Neutral;
+        message.type = notice.money ? SimpleMessageType.Money : SimpleMessageType.Neutral;
         GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications)
             .SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(message), true);
+        if notice.alert { this.PlayDispatchAlert(); };
     }
 }
