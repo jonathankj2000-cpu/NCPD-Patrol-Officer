@@ -1,4 +1,4 @@
--- NCPD Patrol v0.3b | automatic NCPD partner at shift start
+-- NCPD Patrol v0.4a | terminal duty, scanner bonuses, explicit passenger boarding
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -8,6 +8,8 @@ local Partner = require("partner")
 local onDuty = false
 local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
+local dutyPoll, bonusPoll = 0, 0
+local bridgeErrorReported = false
 -- The optional vcd_* record belongs to external vehicle mods,
 -- so we must test for its existence before trying to unlock it.
 local MODDED_POLICE_HELLA = "Vehicle.vcd_archer_hella_ncpd"
@@ -21,6 +23,14 @@ end
 
 local function isInGame()
     return Game ~= nil and Game.GetPlayer ~= nil and Game.GetPlayer() ~= nil
+end
+
+local function getPatrolSystem()
+    local ok, system = pcall(function()
+        return Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem")
+    end)
+    if ok and system then return system end
+    return nil
 end
 
 -- Read-only record availability check; avoids reporting success for unknown vehicle IDs.
@@ -145,7 +155,18 @@ local function startShift()
         status("Already on duty.")
         return
     end
+    local patrol = getPatrolSystem()
+    if not patrol then
+        status("NCPD Patrol redscript module unavailable. Install r6/scripts/NCPDPatrol and restart the game.")
+        return
+    end
+    local ok, err = pcall(function()
+        if patrol:Version() ~= 4 then error("Lua/redscript version mismatch") end
+        patrol:BeginShift()
+    end)
+    if not ok then status("Cannot start shift: " .. tostring(err)); return end
     onDuty = true
+    bonusPoll = 0
     assignPatrolCar()
     ensurePoliceOutfit()
     print("[NCPD Patrol] On duty. Existing NCPD Scanner missions are unchanged.")
@@ -161,6 +182,8 @@ local function endShift()
         status("Already off duty.")
         return
     end
+    local patrol = getPatrolSystem()
+    if patrol then patrol:FinishShift() end
     onDuty = false
     Partner.dismiss(status)
     status("Off duty. Vehicle and Police Uniform stay unlocked; worn outfit unchanged.")
@@ -171,7 +194,7 @@ local function toggleDuty()
 end
 
 registerForEvent("onInit", function()
-    status("v0.3b loaded. Start Shift automatically calls your NCPD partner.")
+    status("v0.4a loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -181,20 +204,53 @@ registerForEvent("onOverlayOpen", function() overlayOpen = true end)
 registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
+    if not isInGame() then
+        if onDuty then Partner.reset(); onDuty = false end
+        return
+    end
+    dutyPoll = dutyPoll + delta
+    bonusPoll = bonusPoll + delta
+    if dutyPoll >= 0.25 then
+        dutyPoll = 0
+        local ok, err = pcall(function()
+            local patrol = getPatrolSystem()
+            if not patrol then return end
+            if onDuty and not patrol:IsOnDuty() then
+                -- Loading a save reset the native session; old actor IDs are stale.
+                onDuty = false
+                Partner.reset()
+            end
+            local request = patrol:TakeDutyRequest()
+            if request == 1 then startShift() elseif request == 2 then endShift() end
+            if onDuty and bonusPoll >= 1 then
+                bonusPoll = 0
+                patrol:TickBonuses()
+            end
+        end)
+        if not ok and not bridgeErrorReported then
+            bridgeErrorReported = true
+            status("Duty/bonus control failed: " .. tostring(err))
+        end
+    end
     Partner.update(delta, onDuty, status)
 end)
 
 registerForEvent("onShutdown", function()
+    pcall(function()
+        local patrol = getPatrolSystem()
+        if patrol then patrol:ResetSession() end
+    end)
     Partner.dismiss(function() end)
 end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.3b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.4a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
         ImGui.Text(onDuty and "ON DUTY" or "OFF DUTY")
+        ImGui.TextWrapped("Use a Fast Travel terminal for Start Shift / End Shift. These controls remain available for diagnostics.")
         if ImGui.Button(onDuty and "End Shift" or "Start Shift") then
             toggleDuty()
         end
@@ -234,8 +290,21 @@ registerForEvent("onDraw", function()
             status(Partner.state())
         end
         ImGui.TextWrapped("Current state: " .. Partner.state())
+        ImGui.TextWrapped("Vehicle: " .. Partner.vehicleState())
         ImGui.TextWrapped("Dismiss removes your partner for the current shift. Use Spawn partner if you want to call another one.")
 
+        ImGui.Separator()
+        ImGui.Text("SCANNER BONUS")
+        ImGui.TextWrapped("EUR$1000 for each eligible NCPD combat activity completed on duty. Reported Crime follow-ups are not included in this build.")
+        local patrol = getPatrolSystem()
+        if patrol then
+            local ok, info = pcall(function()
+                return (patrol:IsMonitorReady() and "Monitor ready" or "Monitor idle / waiting")
+                    .. " | Activities: " .. tostring(patrol:GetShiftJobs())
+                    .. " | Shift bonus: EUR$" .. tostring(patrol:GetShiftBonus())
+            end)
+            ImGui.TextWrapped(ok and info or "Scanner diagnostics unavailable")
+        end
         ImGui.Separator()
         ImGui.Text("STATUS / DIAGNOSTICS")
         ImGui.TextWrapped(lastMessage)

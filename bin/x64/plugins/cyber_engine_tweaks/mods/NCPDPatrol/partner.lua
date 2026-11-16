@@ -1,10 +1,11 @@
--- NCPD Patrol v0.3b: One NCPD partner, automatically called at shift start.
+-- NCPD Patrol v0.4a: One NCPD partner with explicit vehicle boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
 -- Every state change initiated by player input; no nearby NPC is ever modified.
 
 local M = {}
+local Boarding = require("boarding")
 local PARTNER_RECORD = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
 local spawnId = nil
 local officer = nil
@@ -13,6 +14,8 @@ local timeout = 0
 local pollTime = 0
 local followTime = 0
 local stateLabel = "Not spawned"
+local followCommand = nil
+local vehicleFailed = false
 
 local function loaded()
     return Game and Game.GetPlayer and Game.GetPlayer() ~= nil
@@ -24,6 +27,15 @@ local function getSystem()
 end
 
 function M.state() return stateLabel end
+function M.vehicleState() return vehicleFailed and "Vehicle control failed; see diagnostics" or Boarding.state() end
+
+local function stopFollow()
+    if followCommand and officer then
+        local ai = officer:GetAIControllerComponent()
+        if ai then ai:StopExecutingCommand(followCommand, false) end
+    end
+    followCommand = nil
+end
 
 local function nativeFollower(target)
     local ai = target:GetAIControllerComponent()
@@ -46,7 +58,7 @@ local function nativeFollower(target)
 end
 
 local function sendFollow()
-    if not officer or not loaded() or not officer:IsAttached() then return end
+    if not officer or not loaded() or not officer:IsAttached() or Boarding.busy() then return end
     local ai = officer:GetAIControllerComponent()
     if not ai then return end
     local cmd = AIFollowTargetCommand.new()
@@ -62,6 +74,7 @@ local function sendFollow()
     cmd.removeAfterCombat = false
     cmd.alwaysUseStealth = false
     ai:SendCommand(cmd)
+    followCommand = cmd
 end
 
 function M.spawn(onDuty, status)
@@ -94,6 +107,9 @@ function M.spawn(onDuty, status)
     end
     spawnId = result
     spawnWaiting = true
+    Boarding.reset()
+    followCommand = nil
+    vehicleFailed = false
     timeout = 0
     pollTime = 0
     followTime = 0
@@ -105,15 +121,21 @@ function M.dismiss(status)
     if not spawnId then
         officer = nil
         spawnWaiting = false
+        Boarding.reset()
+        followCommand = nil
         stateLabel = "Not spawned"
         if status then status("No spawned partner to dismiss.") end
         return
     end
     local id = spawnId
+    pcall(function() Boarding.cancel(officer); stopFollow() end)
     -- Clear local references first; on failure do not retry indefinitely.
     spawnId = nil
     officer = nil
     spawnWaiting = false
+    Boarding.reset()
+    followCommand = nil
+    vehicleFailed = false
     local ok, err = pcall(function()
         local system = getSystem()
         if not system then error("DynamicEntitySystem unavailable") end
@@ -124,6 +146,16 @@ function M.dismiss(status)
     if status then
         status(ok and "Dismissed our spawned partner." or ("Partner cleanup failed: " .. tostring(err) .. ". Reload the test save."))
     end
+end
+
+-- A loaded save has already removed non-persistent actors from the old world.
+-- Forget stale IDs without issuing a deletion into the newly loaded world.
+function M.reset()
+    spawnId, officer, spawnWaiting, followCommand = nil, nil, false, nil
+    timeout, pollTime, followTime = 0, 0, 0
+    stateLabel = "Not spawned"
+    Boarding.reset()
+    vehicleFailed = false
 end
 
 function M.update(delta, onDuty, status)
@@ -155,6 +187,18 @@ function M.update(delta, onDuty, status)
         return
     end
     if officer then
+        local wasBusy = Boarding.busy()
+        if not vehicleFailed then
+            local boarded, err = pcall(Boarding.update, delta, officer, status, stopFollow)
+            if not boarded then
+                vehicleFailed = true
+                status("Partner vehicle control failed: " .. tostring(err))
+                -- Keep following and dismissal available if vehicle API access fails.
+                pcall(function() Boarding.cancel(officer) end)
+                Boarding.reset()
+            end
+        end
+        if wasBusy and not Boarding.busy() then followTime = 5 end
         followTime = followTime + delta
         if followTime >= 5 then
             followTime = 0

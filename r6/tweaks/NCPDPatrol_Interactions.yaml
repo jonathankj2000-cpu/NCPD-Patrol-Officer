@@ -1,0 +1,7 @@
+# Unique choice IDs using the terminal's existing interaction metadata.
+# Visible captions are supplied by the action's caption parts in redscript.
+Interactions.NCPDPatrolStartShift:
+  $base: Interactions.SellectDestination
+
+Interactions.NCPDPatrolEndShift:
+  $base: Interactions.SellectDestination
