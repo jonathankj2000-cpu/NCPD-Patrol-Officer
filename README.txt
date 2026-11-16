@@ -1,8 +1,18 @@
-NCPD PATROL v0.4a - TERMINAL DUTY / SCANNER BONUS / VEHICLE BOARDING
+NCPD PATROL v0.4b - TERMINAL DUTY / SCANNER BONUS / VEHICLE BOARDING
 =================================================================
 TEST BUILD: offline checks passed; this update still needs an in-game test.
 
-INSTALL / UPDATE FROM v0.3b
+NEW IN v0.4b
+ - Fast Travel choices use registered captions: Start NCPD Shift / End NCPD Shift.
+   The native input key is retained. The shift choice no longer inherits the
+   Select Destination caption from the cloned interaction record.
+ - A paid scanner bonus queues a dedicated money-style receipt after 2 seconds:
+   NCPD BONUS PAID: +EUR$1000. The receipt lasts 8 seconds and never grants money.
+ - Last bonus paid is available in the CET scanner diagnostics.
+ - Existing save-bound paid activity IDs, eligibility rules and boarding code
+   are retained. This update does not repay already completed scanner activities.
+
+INSTALL / UPDATE FROM v0.3b OR v0.4a
 1. Exit Cyberpunk 2077 completely.
 2. Extract the installation ZIP into the game directory containing bin and r6.
 3. Replace the NCPDPatrol Lua files and install the new redscript and YAML files.
@@ -16,7 +26,7 @@ REQUIREMENTS FOR CYBERPUNK 2077 2.5
 
 START / END SHIFT IN THE WORLD
 Look at an available, ordinary Fast Travel terminal. Its interaction choices
-should include the existing Fast Travel option and Start Shift or End Shift.
+should include the existing Fast Travel option and Start NCPD Shift or End NCPD Shift.
 Selecting Start Shift calls the same NCPD officer model as v0.3b.
 Selecting End Shift dismisses the active or pending partner and shows a summary.
 Metro gates and unavailable/disabled Fast Travel interactions are excluded.
@@ -54,7 +64,8 @@ QUICK IN-GAME CHECK
 2. Start Shift; allow the officer to appear and check that the choice changes.
 3. With the partner 5-10 metres away, enter a parked Hella and wait for him to
    approach the passenger door. Test getting out and entering another vehicle.
-4. Complete an eligible scanner activity and check for the extra EUR$1000 message.
+4. Complete an eligible scanner activity and wait for the separate NCPD BONUS
+   PAID receipt. This shows the bonus alone, separate from the vanilla reward.
 5. End Shift at a terminal; check the summary and partner cleanup.
 6. Load a save and start another shift; old completed activities must not pay again.
 
@@ -62,7 +73,8 @@ VALIDATION / LIMITS
 Lua modules passed LuaJIT syntax and mocked lifecycle/vehicle tests. The authored
 reward class passed completion, payment retry and save/session scenarios through
 a test-only syntax adapter with mocked game native calls. redscript 1.0.1 passed
-syntax/type checks against source-derived API contracts. These checks do not use
+syntax/type checks against source-derived API contracts, including Codeware
+localization and delayed receipt callbacks. These checks do not use
 your actual Cyberpunk 2.5 script cache and cannot verify live interaction prompts,
 pathfinding, animations or full scanner coverage. This build is not in-game
 verified. The earlier v0.3b installation ZIP remains in the GitHub releases folder.

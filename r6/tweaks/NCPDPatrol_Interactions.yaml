@@ -1,7 +1,11 @@
-# Unique choice IDs using the terminal's existing interaction metadata.
-# Visible captions are supplied by the action's caption parts in redscript.
+# Keep each native input action inherited from the terminal interaction, with
+# independent captions registered by NCPDPatrolLocalizationProvider.
 Interactions.NCPDPatrolStartShift:
   $base: Interactions.SellectDestination
+  name: NCPDPatrolStartShift
+  caption: NCPDPatrol-StartShift
 
 Interactions.NCPDPatrolEndShift:
   $base: Interactions.SellectDestination
+  name: NCPDPatrolEndShift
+  caption: NCPDPatrol-EndShift

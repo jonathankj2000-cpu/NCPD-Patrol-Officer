@@ -1,4 +1,4 @@
--- NCPD Patrol v0.4a | terminal duty, scanner bonuses, explicit passenger boarding
+-- NCPD Patrol v0.4b | terminal duty, scanner bonuses, explicit passenger boarding
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -194,7 +194,7 @@ local function toggleDuty()
 end
 
 registerForEvent("onInit", function()
-    status("v0.4a loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
+    status("v0.4b loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -245,7 +245,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.4a")
+    local visible = ImGui.Begin("NCPD Patrol - v0.4b")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -302,6 +302,7 @@ registerForEvent("onDraw", function()
                 return (patrol:IsMonitorReady() and "Monitor ready" or "Monitor idle / waiting")
                     .. " | Activities: " .. tostring(patrol:GetShiftJobs())
                     .. " | Shift bonus: EUR$" .. tostring(patrol:GetShiftBonus())
+                    .. " | Last bonus paid: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
             ImGui.TextWrapped(ok and info or "Scanner diagnostics unavailable")
         end

@@ -5,10 +5,10 @@ public class NCPDPatrolShiftAction extends ActionBool {
     public func SetProperties(active: Bool) -> Void {
         this.endShift = active;
         this.actionName = n"NCPDPatrolShiftAction";
-        this.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(this.actionName, active, n"Start Shift", n"End Shift");
+        this.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(this.actionName, active, n"NCPDPatrol-StartShift", n"NCPDPatrol-EndShift");
         this.CreateActionWidgetPackage();
         this.CreateInteraction();
-        this.interactionChoice.caption = active ? "End Shift" : "Start Shift";
+        this.interactionChoice.caption = GetLocalizedTextByKey(active ? n"NCPDPatrol-EndShift" : n"NCPDPatrol-StartShift");
         InteractionChoiceCaption.Clear(this.interactionChoice.captionParts);
         InteractionChoiceCaption.AddTextPart(this.interactionChoice.captionParts, this.interactionChoice.caption);
     }

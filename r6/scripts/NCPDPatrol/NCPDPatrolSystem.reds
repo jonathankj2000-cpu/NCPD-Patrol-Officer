@@ -1,4 +1,4 @@
-// NCPD Patrol v0.4a. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.4b. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -8,6 +8,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     private let m_eligibleActivities: array<CName>;
     private let m_shiftJobs: Int32;
     private let m_shiftBonus: Int32;
+    private let m_noticeSession: Int32;
+    private let m_lastBonusAmount: Int32;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolSystem") as NCPDPatrolSystem;
@@ -31,6 +33,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     public func IsMonitorReady() -> Bool { return this.m_baselineReady; }
     public func GetShiftJobs() -> Int32 { return this.m_shiftJobs; }
     public func GetShiftBonus() -> Int32 { return this.m_shiftBonus; }
+    public func GetLastBonusAmount() -> Int32 { return this.m_lastBonusAmount; }
 
     public func ResetSession() -> Void {
         this.m_onDuty = false;
@@ -38,6 +41,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_baselineReady = false;
         this.m_shiftJobs = 0;
         this.m_shiftBonus = 0;
+        this.m_noticeSession += 1;
+        this.m_lastBonusAmount = 0;
         ArrayClear(this.m_eligibleActivities);
     }
 
@@ -57,6 +62,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_onDuty = true;
         this.m_shiftJobs = 0;
         this.m_shiftBonus = 0;
+        this.m_lastBonusAmount = 0;
         this.m_baselineReady = false;
         ArrayClear(this.m_eligibleActivities);
         this.TickBonuses();
@@ -125,15 +131,33 @@ public class NCPDPatrolSystem extends ScriptableSystem {
             i += 1;
         };
         if awarded > 0 {
-            this.ShowMessage(s"NCPD patrol bonus: +EUR$\(awarded)");
+            this.m_lastBonusAmount = awarded;
+            this.QueueBonusReceipt(awarded);
         };
     }
 
-    private func ShowMessage(text: String) -> Void {
+    private func QueueBonusReceipt(amount: Int32) -> Void {
+        let delay: ref<DelaySystem> = GameInstance.GetDelaySystem(this.GetGameInstance());
+        if IsDefined(delay) {
+            delay.DelayCallback(NCPDPatrolBonusReceipt.Create(this, amount, this.m_noticeSession), 2.0, false);
+        } else {
+            this.ShowBonusReceipt(amount, this.m_noticeSession);
+        };
+    }
+
+    public func ShowBonusReceipt(amount: Int32, session: Int32) -> Void {
+        if session == this.m_noticeSession {
+            this.ShowMessage(s"NCPD BONUS PAID: +€$\(amount)", true);
+        };
+    }
+
+    private func ShowMessage(text: String, opt money: Bool) -> Void {
         let message: SimpleScreenMessage;
         message.isShown = true;
-        message.duration = 4.0;
+        message.duration = money ? 8.0 : 4.0;
         message.message = text;
+        message.isInstant = true;
+        message.type = money ? SimpleMessageType.Money : SimpleMessageType.Neutral;
         GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications)
             .SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(message), true);
     }
