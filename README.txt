@@ -1,107 +1,85 @@
-NCPD PATROL v0.4c - SCANNER MONITOR FIX / PAYMENT DIAGNOSTICS
-=================================================================
-TEST BUILD: offline checks passed; this update still needs an in-game test.
+NCPD PATROL v0.5a - SCANNER DISPATCH TEST
+======================================
+Built on v0.4c, whose scanner bonus and receipt the user confirmed in game.
+The new dispatch, waypoint and HUD display still require in-game verification.
 
-NEW IN v0.4c
- - Replaces the OpenWorld activity-registry dependency with Codeware's live
-   PointOfInterest mappins and the game's saved POI phases. The previous code
-   could remain at "waiting" indefinitely without explaining the cause.
- - Tracks an unfinished Assault in Progress or Suspected Organized Crime marker
-   by journal-path hash. Pays when its actual phase becomes Completed, including
-   when completion has removed it from the live list. Streaming out alone is not
-   completion. A failed native saved-state lookup must never mean Completed.
- - CET logs scanner diagnostics at shift start, state changes, every 15 seconds,
-   and shift end. A successful transfer also logs BONUS PAID and the shift total.
- - The panel reports live marker counts, watched IDs, unknown phases, payment
-   failures and actual paid totals. No more silent "waiting" status.
- - Bonus receipt, terminal captions and vehicle boarding from v0.4b are retained.
- - This update focuses on the bonus-monitoring bug. Partner revive is not yet
-   implemented; the basic revive feature remains the next planned change.
-
-RETAINED FROM v0.4b
- - Fast Travel choices use registered captions: Start NCPD Shift / End NCPD Shift.
-   The native input key is retained. The shift choice no longer inherits the
-   Select Destination caption from the cloned interaction record.
- - A paid scanner bonus queues a dedicated money-style receipt after 2 seconds:
-   NCPD BONUS PAID: +EUR$1000. The receipt lasts 8 seconds and never grants money.
- - Last bonus paid is available in the CET scanner diagnostics.
- - Save-bound paid activity IDs remain. New observations use journal-path hashes.
-   This update does not repay already completed scanner activities.
-
-INSTALL / UPDATE FROM v0.3b, v0.4a OR v0.4b
+INSTALL / UPDATE
 1. Exit Cyberpunk 2077 completely.
-2. Extract the installation ZIP into the game directory containing bin and r6.
-3. Replace the NCPDPatrol Lua files and install the new redscript and YAML files.
-4. Start the game and load a save.
+2. Extract the complete ZIP into the game folder containing bin and r6.
+3. Replace the NCPDPatrol files. Include both new Lua files and the new
+   NCPDPatrolDispatchMappinData.reds script; do not update only init.lua.
+4. Start the game, load a save and start a shift.
 
-REQUIREMENTS FOR CYBERPUNK 2077 2.5
- - Cyber Engine Tweaks 1.38.0+ with support for game patch 2.5.
- - Codeware 1.21.4 and RED4ext 1.31.0+.
- - redscript compatible with patch 2.5 (Codeware specifies 0.5.32+).
- - TweakXL, now also used for the terminal interaction choice records.
+REQUIREMENTS
+Cyberpunk 2077 2.5, a matching CET version (1.38.0+), Codeware 1.21.4,
+RED4ext 1.31.0+, TweakXL and a matching redscript (Codeware specifies 0.5.32+).
+No additional dependency is introduced by this dispatch prototype.
 
-START / END SHIFT IN THE WORLD
-Look at an available, ordinary Fast Travel terminal. Its interaction choices
-should include the existing Fast Travel option and Start NCPD Shift or End NCPD Shift.
-Selecting Start Shift calls the same NCPD officer model as v0.3b.
-Selecting End Shift dismisses the active or pending partner and shows a summary.
-Metro gates and unavailable/disabled Fast Travel interactions are excluded.
-The existing CET panel and duty hotkey remain available for troubleshooting.
+DISPATCH
+ - One active assignment at a time, selected from existing active, unfinished
+   Assault in Progress / Suspected Organized Crime Activity POI markers.
+ - Incidents within 2.5 km are preferred; otherwise the available wider pool is
+   used. Duplicate journal IDs and assignments cancelled this shift are excluded.
+ - Selection creates an NCPD dispatch notification and a Custom Position waypoint
+   at the target. An in-game text display shows the assignment and distance.
+ - Within 60 m, the objective becomes Resolve the incident and collect evidence.
+ - Arrival and kills do not complete the assignment. Completion uses the same
+   saved/live POI phase as the working v0.4c bonus monitor.
+ - Streaming out alone does not complete a dispatch. Completion can still be
+   detected from the saved phase after the original scanner marker disappears.
+ - The existing EUR$1000 bonus/receipt handles payment. Dispatch adds no second
+   reward. Other eligible scanners still receive their normal patrol bonus.
+ - First automatic call: 30-60 seconds. After completion/cancellation: 60-120
+   seconds. Automatic countdowns pause in menus and combat. Only one call is active.
+ - If no eligible marker is available, automatic mode retries after 30 seconds.
+ - End Shift cancels the assignment and removes tagged dispatch waypoints.
+ - Loading a save resets duty and dispatch. Tagged markers are cleaned using
+   current native IDs; IDs from the previous loaded world are not reused.
 
-VEHICLE BOARDING
-When you get into a stopped vehicle, your partner is explicitly instructed to
-walk to a free passenger seat and enter with an animation. Periodic on-foot
-follow commands are suppressed during approach and while seated.
-Front-right is preferred, then rear-right, then rear-left. The driver seat is
-never assigned and occupied seats are skipped. A moving car must stop before
-a new boarding command is issued. Vehicle entry is paused during combat.
-Getting out cancels a pending approach or asks a seated partner to get out.
-There is no instant mounting or failsafe teleport. A blocked door or missing
-navmesh can still prevent entry. Three attempts are made, 20 seconds apart;
-exit and re-enter the vehicle to start a new attempt if boarding stalls.
+CET TEST CONTROLS
+Open the NCPD Patrol window and find DISPATCH.
+ - Request dispatch now: bypasses the automatic wait. Requires an active shift.
+ - Cancel active dispatch: clears the assignment and its waypoint. It does not
+   complete, fail or reset the original scanner activity. That ID will not be
+   selected again during the same shift.
+ - Pause / Resume automatic dispatch: manual requests remain available.
+ - State, completed count, automatic countdown and HUD attachment state are shown.
+ - CET logs dispatch assignment (including POI hash), arrival, completion and errors.
 
-SCANNER BONUS
- - EUR$1000 extra for each eligible NCPD combat activity completed on duty.
- - Coverage: Assault in Progress and Suspected Organized Crime Activity POI
-   markers. Reported Crime follow-ups are not covered.
- - An unfinished scanner marker must be observed during the active shift before
-   its completion can pay. Already completed activities receive no backpay.
- - Completion uses the POI's actual Completed phase, including any evidence
-   collection needed by the game. No enemy kill counting is used.
- - Money is added only after a successful inventory transaction. Paid activity
-   IDs are saved in the same save as the money and prevent duplicate payouts.
- - Each activity ID pays once per playthrough/save timeline, even if another
-   mod restarts the activity.
- - The end-of-shift message reports paid activity count and total patrol bonus.
- - Duty resets to OFF on loading a save. The paid activity ledger is retained.
+QUICK TEST
+1. Start a shift. Click Request dispatch now in CET; close the overlay.
+2. Check the dispatch notification, waypoint on the map/world, and HUD objective.
+3. Travel to the marker. Within 60 m the objective should change to resolving it.
+4. Finish the scanner, including evidence collection. Confirm the dispatch clears,
+   its waypoint disappears, and the existing NCPD BONUS PAID receipt appears.
+5. Request another assignment. Test cancellation, End Shift and loading a save.
+6. To test automatic mode, leave it enabled while outside menus and combat.
 
-QUICK IN-GAME CHECK
-1. Confirm Fast Travel and Start Shift are both visible at an ordinary terminal.
-2. Start Shift; allow the officer to appear and check that the choice changes.
-3. With the partner 5-10 metres away, enter a parked Hella and wait for him to
-   approach the passenger door. Test getting out and entering another vehicle.
-4. Open the CET panel: Scanner diagnostics should show ON DUTY and watched IDs.
-   NO LIVE MAPPINS / NO NCPD MARKERS OBSERVED YET are explicit source states.
-   Complete an eligible scanner activity, including its evidence collection,
-   and wait for NCPD BONUS PAID. Verify both the wallet and paid/bonus counters.
-   CET must also log BONUS PAID: +EUR$1000 on a successful transfer.
-   If it fails, report the [NCPD Patrol] Scanner line before and after the activity.
-5. End Shift at a terminal; check the summary and partner cleanup.
-6. Load a save and start another shift; old completed activities must not pay again.
+NAVIGATION / HUD LIMITS
+The prototype registers a visible Custom Position waypoint automatically. The
+normal road GPS line is not claimed as verified: direct manual-map tracking is
+not exposed by the API used here. Check actual navigation behaviour in game.
+The new text display attaches to the quest tracker's HUD parent and is placed at
+the top right. It is separate from journal quests. Its position/readability with
+your HUD settings needs verification. Any HUD setup error appears in CET, while
+the dispatch notification and waypoint can continue to work.
+This version chooses existing scanner encounters; it does not reset completed
+encounters or generate new enemies/evidence. Reported Crime follow-ups are excluded.
 
-VALIDATION / LIMITS
-Lua modules passed LuaJIT syntax and mocked lifecycle/vehicle tests. The authored
-reward class passed live and saved POI completion, stream-out without completion,
-missing-source diagnostics, duplicate IDs, non-NCPD exclusions, payment retries,
-receipt timing and save/session scenarios through
-a test-only syntax adapter with mocked game native calls. redscript 1.0.1 passed
-syntax/type checks against source-derived API contracts, including Codeware
-localization and delayed receipt callbacks. These checks do not use
-your actual Cyberpunk 2.5 script cache and cannot verify live scanner registration,
-interaction prompts, pathfinding, animations or full coverage. This build is not in-game
-verified. The earlier v0.3b installation ZIP remains in the GitHub releases folder.
+VALIDATION
+All Lua modules pass LuaJIT loading. The redscript files pass syntax/type checks
+with redscript 1.0.1 against source-derived game/Codeware API contracts, not the
+actual Cyberpunk 2.5 script cache. The authored reward/helper class is exercised
+through a test-only syntax adapter with mocked native calls. Actual Lua modules
+are tested against that class with a CET array-conversion bridge and native mocks.
+Scenarios cover scanner filtering, nearby preference, duplicate/cancelled IDs,
+manual and automatic requests, menus/combat, arrival, stream-out, correct target
+completion, payment retries/no duplicate payment, HUD lifecycle, failed waypoint
+registration, End Shift and tagged cleanup after a load. The previous partner,
+vehicle boarding, terminal requests, bonus and receipt regression checks pass.
+These checks cannot verify real HUD placement, waypoint rendering or GPS routes.
 
-RETURN TO v0.3b
-Exit the game. Remove r6/scripts/NCPDPatrol and
-r6/tweaks/NCPDPatrol_Interactions.yaml, then reinstall the v0.3b ZIP.
-The original Police Hella tweak remains in place.
+ROLLBACK TO v0.4c
+Exit the game, remove dispatch.lua, dispatch_hud.lua and
+r6/scripts/NCPDPatrol/NCPDPatrolDispatchMappinData.reds, then reinstall the complete
+v0.4c ZIP. Ending the shift before rollback removes an active dispatch waypoint.

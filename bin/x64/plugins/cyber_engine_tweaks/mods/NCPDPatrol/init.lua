@@ -1,10 +1,11 @@
--- NCPD Patrol v0.4c | terminal duty, scanner bonuses, explicit passenger boarding
+-- NCPD Patrol v0.5a | scanner dispatch, terminal duty, bonuses and boarding
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
 -- Native partner AI is updated while on duty. No quest edits or new key bindings.
 
 local Partner = require("partner")
+local Dispatch = require("dispatch")
 local onDuty = false
 local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
@@ -187,7 +188,7 @@ local function startShift()
         return
     end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 5 then error("Lua/redscript version mismatch; install all v0.4c files and restart the game") end
+        if patrol:Version() ~= 6 then error("Lua/redscript version mismatch; install all v0.5a files and restart the game") end
         patrol:BeginShift()
     end)
     if not ok then status("Cannot start shift: " .. tostring(err)); return end
@@ -197,6 +198,7 @@ local function startShift()
     scannerLogState = nil
     bridgeErrorReported = false
     logScanner(patrol, true)
+    Dispatch.start(patrol, status)
     assignPatrolCar()
     ensurePoliceOutfit()
     print("[NCPD Patrol] On duty. Existing NCPD Scanner missions are unchanged.")
@@ -214,6 +216,7 @@ local function endShift()
     end
     local patrol = getPatrolSystem()
     if patrol then
+        Dispatch.finish(patrol, status)
         patrol:FinishShift()
         logScanner(patrol, true)
     end
@@ -227,7 +230,8 @@ local function toggleDuty()
 end
 
 registerForEvent("onInit", function()
-    status("v0.4c loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
+    Dispatch.init()
+    status("v0.5a loaded. Start Shift for scanner dispatch. Use Request dispatch now in CET to test immediately.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -238,7 +242,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     if not isInGame() then
-        if onDuty then Partner.reset(); onDuty = false end
+        if onDuty then Partner.reset(); Dispatch.reset(); onDuty = false end
         return
     end
     dutyPoll = dutyPoll + delta
@@ -253,6 +257,7 @@ registerForEvent("onUpdate", function(delta)
                 -- Loading a save reset the native session; old actor IDs are stale.
                 onDuty = false
                 Partner.reset()
+                Dispatch.reset()
                 scannerLogState = nil
             end
             local request = patrol:TakeDutyRequest()
@@ -269,9 +274,11 @@ registerForEvent("onUpdate", function(delta)
         end
     end
     Partner.update(delta, onDuty, status)
+    Dispatch.update(delta, onDuty, status, getPatrolSystem)
 end)
 
 registerForEvent("onShutdown", function()
+    Dispatch.shutdown(getPatrolSystem())
     pcall(function()
         local patrol = getPatrolSystem()
         if patrol then patrol:ResetSession() end
@@ -281,7 +288,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.4c")
+    local visible = ImGui.Begin("NCPD Patrol - v0.5a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -290,6 +297,25 @@ registerForEvent("onDraw", function()
         if ImGui.Button(onDuty and "End Shift" or "Start Shift") then
             toggleDuty()
         end
+
+        ImGui.Separator()
+        ImGui.Text("DISPATCH")
+        ImGui.TextWrapped("One scanner assignment at a time. Nearby incidents are preferred. Request a call now to skip the automatic wait.")
+        if ImGui.Button("Request dispatch now") then
+            Dispatch.request(getPatrolSystem(), status)
+        end
+        if ImGui.Button("Cancel active dispatch") then
+            Dispatch.cancel(getPatrolSystem(), status)
+        end
+        if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
+            Dispatch.setAutomatic(not Dispatch.isAutomatic(), status)
+        end
+        ImGui.TextWrapped(Dispatch.state())
+        ImGui.Text("Dispatches completed: " .. tostring(Dispatch.completed()))
+        if onDuty and Dispatch.isAutomatic() and not Dispatch.isActive() then
+            ImGui.Text("Next automatic call in about " .. tostring(Dispatch.seconds()) .. " s (pauses in menus/combat).")
+        end
+        ImGui.TextWrapped("Objective display: " .. Dispatch.hudState())
 
         ImGui.Separator()
         ImGui.Text("NCPD PATROL VEHICLE")
@@ -335,7 +361,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 5 then return "Version mismatch: install all v0.4c files and restart the game." end
+                if patrol:Version() ~= 6 then return "Version mismatch: install all v0.5a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

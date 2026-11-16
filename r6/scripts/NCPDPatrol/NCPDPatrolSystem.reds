@@ -1,4 +1,4 @@
-// NCPD Patrol v0.4c. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.5a. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -31,7 +31,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 5; }
+    public func Version() -> Int32 { return 6; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
     public func GetTerminalDutyState() -> Bool {
         if this.m_requestedDuty == 1 { return true; }
@@ -128,6 +128,85 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         return gamedataMappinPhase.Invalid;
     }
 
+    // Shared by rewards and dispatch. A live completion can precede the saved phase.
+    public func GetScannerPhase(hash: Uint32, marker: ref<PointOfInterestMappin>) -> gamedataMappinPhase {
+        let phase: gamedataMappinPhase = gamedataMappinPhase.Invalid;
+        let livePhase: gamedataMappinPhase;
+        let system: ref<MappinSystem> = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if IsDefined(system) { phase = this.ReadSavedPhase(system, hash); };
+        if IsDefined(marker) {
+            livePhase = marker.GetPhase();
+            if Equals(livePhase, gamedataMappinPhase.CompletedPhase) || Equals(phase, gamedataMappinPhase.Invalid) {
+                phase = livePhase;
+            };
+        };
+        return phase;
+    }
+
+    public func GetDispatchCandidates() -> array<ref<PointOfInterestMappin>> {
+        let result: array<ref<PointOfInterestMappin>>;
+        let pins: array<ref<IMappin>>;
+        let marker: ref<PointOfInterestMappin>;
+        let hash: Uint32;
+        let phase: gamedataMappinPhase;
+        let i: Int32 = 0;
+        let system: ref<MappinSystem> = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if !this.m_onDuty || !IsDefined(system) { return result; };
+        pins = system.GetAllMappins();
+        while i < ArraySize(pins) {
+            marker = pins[i] as PointOfInterestMappin;
+            if IsDefined(marker) && this.IsScannerVariant(marker.GetVariant()) && marker.IsActive() {
+                hash = marker.GetJournalPathHash();
+                if hash != 0u && !ArrayContains(this.m_paidActivities, this.MarkerKey(hash)) {
+                    phase = this.GetScannerPhase(hash, marker);
+                    if NotEquals(phase, gamedataMappinPhase.CompletedPhase) && NotEquals(phase, gamedataMappinPhase.Invalid) {
+                        ArrayPush(result, marker);
+                    };
+                };
+            };
+            i += 1;
+        };
+        return result;
+    }
+
+    public func PlaceDispatchWaypoint(position: Vector4) -> NewMappinID {
+        let data: MappinData;
+        let emptyID: NewMappinID;
+        let system: ref<MappinSystem> = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if !this.m_onDuty || !IsDefined(system) { return emptyID; };
+        data.mappinType = t"Mappins.DefaultStaticMappin";
+        data.variant = gamedataMappinVariant.CustomPositionVariant;
+        data.active = true;
+        data.visibleThroughWalls = true;
+        data.debugCaption = "NCPD DISPATCH";
+        data.scriptData = new NCPDPatrolDispatchMappinData();
+        return system.RegisterMappin(data, position);
+    }
+
+    // Tag-based cleanup avoids reusing an entity/mappin ID from a previous load.
+    public func ClearDispatchWaypoints() -> Void {
+        let pins: array<ref<IMappin>>;
+        let tag: ref<NCPDPatrolDispatchMappinData>;
+        let i: Int32 = 0;
+        let system: ref<MappinSystem> = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if !IsDefined(system) { return; };
+        pins = system.GetAllMappins();
+        while i < ArraySize(pins) {
+            tag = pins[i].GetScriptData() as NCPDPatrolDispatchMappinData;
+            if IsDefined(tag) { system.UnregisterMappin(pins[i].GetNewMappinID()); };
+            i += 1;
+        };
+    }
+
+    public func NotifyDispatch(text: String) -> Void {
+        this.ShowMessage(text);
+    }
+
+    public func IsDispatchMenuOpen() -> Bool {
+        return GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_System)
+            .GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);
+    }
+
     public func TickBonuses() -> Void {
         let system: ref<MappinSystem>;
         let pins: array<ref<IMappin>>;
@@ -135,7 +214,6 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         let hash: Uint32;
         let key: CName;
         let phase: gamedataMappinPhase;
-        let livePhase: gamedataMappinPhase;
         let index: Int32;
         let player: ref<GameObject>;
         let transaction: ref<TransactionSystem>;
@@ -188,15 +266,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         while i < ArraySize(this.m_watchedKeys) {
             key = this.m_watchedKeys[i];
             if !ArrayContains(this.m_paidActivities, key) {
-                phase = this.ReadSavedPhase(system, this.m_watchedHashes[i]);
                 marker = this.m_watchedMarkers[i];
-                if IsDefined(marker) {
-                    livePhase = marker.GetPhase();
-                    // The live marker may update before the saved phase does.
-                    if Equals(livePhase, gamedataMappinPhase.CompletedPhase) || Equals(phase, gamedataMappinPhase.Invalid) {
-                        phase = livePhase;
-                    };
-                };
+                phase = this.GetScannerPhase(this.m_watchedHashes[i], marker);
                 if Equals(phase, gamedataMappinPhase.Invalid) { this.m_unknownPhases += 1; };
                 if Equals(phase, gamedataMappinPhase.CompletedPhase) {
                     if IsDefined(player) && IsDefined(transaction) {
