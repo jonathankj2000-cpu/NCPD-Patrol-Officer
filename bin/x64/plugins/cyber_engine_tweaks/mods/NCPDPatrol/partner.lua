@@ -1,4 +1,4 @@
--- NCPD Patrol v0.4b: One NCPD partner with explicit vehicle boarding.
+-- NCPD Patrol v0.4c: One NCPD partner with explicit vehicle boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.

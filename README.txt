@@ -1,18 +1,34 @@
-NCPD PATROL v0.4b - TERMINAL DUTY / SCANNER BONUS / VEHICLE BOARDING
+NCPD PATROL v0.4c - SCANNER MONITOR FIX / PAYMENT DIAGNOSTICS
 =================================================================
 TEST BUILD: offline checks passed; this update still needs an in-game test.
 
-NEW IN v0.4b
+NEW IN v0.4c
+ - Replaces the OpenWorld activity-registry dependency with Codeware's live
+   PointOfInterest mappins and the game's saved POI phases. The previous code
+   could remain at "waiting" indefinitely without explaining the cause.
+ - Tracks an unfinished Assault in Progress or Suspected Organized Crime marker
+   by journal-path hash. Pays when its actual phase becomes Completed, including
+   when completion has removed it from the live list. Streaming out alone is not
+   completion. A failed native saved-state lookup must never mean Completed.
+ - CET logs scanner diagnostics at shift start, state changes, every 15 seconds,
+   and shift end. A successful transfer also logs BONUS PAID and the shift total.
+ - The panel reports live marker counts, watched IDs, unknown phases, payment
+   failures and actual paid totals. No more silent "waiting" status.
+ - Bonus receipt, terminal captions and vehicle boarding from v0.4b are retained.
+ - This update focuses on the bonus-monitoring bug. Partner revive is not yet
+   implemented; the basic revive feature remains the next planned change.
+
+RETAINED FROM v0.4b
  - Fast Travel choices use registered captions: Start NCPD Shift / End NCPD Shift.
    The native input key is retained. The shift choice no longer inherits the
    Select Destination caption from the cloned interaction record.
  - A paid scanner bonus queues a dedicated money-style receipt after 2 seconds:
    NCPD BONUS PAID: +EUR$1000. The receipt lasts 8 seconds and never grants money.
  - Last bonus paid is available in the CET scanner diagnostics.
- - Existing save-bound paid activity IDs, eligibility rules and boarding code
-   are retained. This update does not repay already completed scanner activities.
+ - Save-bound paid activity IDs remain. New observations use journal-path hashes.
+   This update does not repay already completed scanner activities.
 
-INSTALL / UPDATE FROM v0.3b OR v0.4a
+INSTALL / UPDATE FROM v0.3b, v0.4a OR v0.4b
 1. Exit Cyberpunk 2077 completely.
 2. Extract the installation ZIP into the game directory containing bin and r6.
 3. Replace the NCPDPatrol Lua files and install the new redscript and YAML files.
@@ -46,11 +62,11 @@ exit and re-enter the vehicle to start a new attempt if boarding stalls.
 
 SCANNER BONUS
  - EUR$1000 extra for each eligible NCPD combat activity completed on duty.
- - Coverage: Codeware's NCPD combat registry (Assault in Progress and Suspected
-   Organized Crime Activity). Reported Crime follow-ups are not covered.
- - A baseline is taken when the scanner system is ready. Already completed
-   activities do not receive retrospective bonuses.
- - Completion uses the activity's actual completed state, including any evidence
+ - Coverage: Assault in Progress and Suspected Organized Crime Activity POI
+   markers. Reported Crime follow-ups are not covered.
+ - An unfinished scanner marker must be observed during the active shift before
+   its completion can pay. Already completed activities receive no backpay.
+ - Completion uses the POI's actual Completed phase, including any evidence
    collection needed by the game. No enemy kill counting is used.
  - Money is added only after a successful inventory transaction. Paid activity
    IDs are saved in the same save as the money and prevent duplicate payouts.
@@ -64,19 +80,25 @@ QUICK IN-GAME CHECK
 2. Start Shift; allow the officer to appear and check that the choice changes.
 3. With the partner 5-10 metres away, enter a parked Hella and wait for him to
    approach the passenger door. Test getting out and entering another vehicle.
-4. Complete an eligible scanner activity and wait for the separate NCPD BONUS
-   PAID receipt. This shows the bonus alone, separate from the vanilla reward.
+4. Open the CET panel: Scanner diagnostics should show ON DUTY and watched IDs.
+   NO LIVE MAPPINS / NO NCPD MARKERS OBSERVED YET are explicit source states.
+   Complete an eligible scanner activity, including its evidence collection,
+   and wait for NCPD BONUS PAID. Verify both the wallet and paid/bonus counters.
+   CET must also log BONUS PAID: +EUR$1000 on a successful transfer.
+   If it fails, report the [NCPD Patrol] Scanner line before and after the activity.
 5. End Shift at a terminal; check the summary and partner cleanup.
 6. Load a save and start another shift; old completed activities must not pay again.
 
 VALIDATION / LIMITS
 Lua modules passed LuaJIT syntax and mocked lifecycle/vehicle tests. The authored
-reward class passed completion, payment retry and save/session scenarios through
+reward class passed live and saved POI completion, stream-out without completion,
+missing-source diagnostics, duplicate IDs, non-NCPD exclusions, payment retries,
+receipt timing and save/session scenarios through
 a test-only syntax adapter with mocked game native calls. redscript 1.0.1 passed
 syntax/type checks against source-derived API contracts, including Codeware
 localization and delayed receipt callbacks. These checks do not use
-your actual Cyberpunk 2.5 script cache and cannot verify live interaction prompts,
-pathfinding, animations or full scanner coverage. This build is not in-game
+your actual Cyberpunk 2.5 script cache and cannot verify live scanner registration,
+interaction prompts, pathfinding, animations or full coverage. This build is not in-game
 verified. The earlier v0.3b installation ZIP remains in the GitHub releases folder.
 
 RETURN TO v0.3b

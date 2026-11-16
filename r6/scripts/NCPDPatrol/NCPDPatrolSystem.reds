@@ -1,11 +1,19 @@
-// NCPD Patrol v0.4b. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.4c. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
     private let m_onDuty: Bool;
     private let m_requestedDuty: Int32;
     private let m_baselineReady: Bool;
-    private let m_eligibleActivities: array<CName>;
+    private let m_watchedKeys: array<CName>;
+    private let m_watchedHashes: array<Uint32>;
+    private let m_watchedMarkers: array<ref<PointOfInterestMappin>>;
+    private let m_allMappins: Int32;
+    private let m_scannerMarkers: Int32;
+    private let m_unknownPhases: Int32;
+    private let m_paymentFailures: Int32;
+    private let m_monitorState: Int32;
+    private let m_monitorReason: String;
     private let m_shiftJobs: Int32;
     private let m_shiftBonus: Int32;
     private let m_noticeSession: Int32;
@@ -23,7 +31,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 4; }
+    public func Version() -> Int32 { return 5; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
     public func GetTerminalDutyState() -> Bool {
         if this.m_requestedDuty == 1 { return true; }
@@ -34,6 +42,13 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     public func GetShiftJobs() -> Int32 { return this.m_shiftJobs; }
     public func GetShiftBonus() -> Int32 { return this.m_shiftBonus; }
     public func GetLastBonusAmount() -> Int32 { return this.m_lastBonusAmount; }
+    public func GetMonitorState() -> Int32 { return this.m_monitorState; }
+    public func GetMonitorDiagnostics() -> String {
+        let watched: Int32 = ArraySize(this.m_watchedKeys);
+        let reason: String = this.m_onDuty ? this.m_monitorReason : "OFF DUTY";
+        let duty: String = this.m_onDuty ? "ON DUTY" : "OFF DUTY";
+        return s"\(duty) | \(reason) | source=POI mappins | all=\(this.m_allMappins) | NCPD=\(this.m_scannerMarkers) | watched=\(watched) | unknown phases=\(this.m_unknownPhases) | payment failures=\(this.m_paymentFailures) | paid=\(this.m_shiftJobs) | bonus=EUR$\(this.m_shiftBonus)";
+    }
 
     public func ResetSession() -> Void {
         this.m_onDuty = false;
@@ -43,7 +58,15 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_shiftBonus = 0;
         this.m_noticeSession += 1;
         this.m_lastBonusAmount = 0;
-        ArrayClear(this.m_eligibleActivities);
+        this.m_allMappins = 0;
+        this.m_scannerMarkers = 0;
+        this.m_unknownPhases = 0;
+        this.m_paymentFailures = 0;
+        this.m_monitorState = 0;
+        this.m_monitorReason = "OFF DUTY";
+        ArrayClear(this.m_watchedKeys);
+        ArrayClear(this.m_watchedHashes);
+        ArrayClear(this.m_watchedMarkers);
     }
 
     // Desired state, not a blind toggle: a stale terminal choice is harmless.
@@ -64,7 +87,9 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_shiftBonus = 0;
         this.m_lastBonusAmount = 0;
         this.m_baselineReady = false;
-        ArrayClear(this.m_eligibleActivities);
+        ArrayClear(this.m_watchedKeys);
+        ArrayClear(this.m_watchedHashes);
+        ArrayClear(this.m_watchedMarkers);
         this.TickBonuses();
         this.ShowMessage("NCPD: Shift started. Partner called.");
     }
@@ -74,61 +99,141 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         // Check completion before turning duty off, including the last second.
         this.TickBonuses();
         this.m_onDuty = false;
+        this.m_monitorState = 0;
+        this.m_monitorReason = "OFF DUTY";
         this.m_baselineReady = false;
-        ArrayClear(this.m_eligibleActivities);
+        ArrayClear(this.m_watchedKeys);
+        ArrayClear(this.m_watchedHashes);
+        ArrayClear(this.m_watchedMarkers);
         this.ShowMessage(s"NCPD: Shift ended. \(this.m_shiftJobs) activities, +EUR$\(this.m_shiftBonus) bonus.");
     }
 
+    private func IsScannerVariant(variant: gamedataMappinVariant) -> Bool {
+        return Equals(variant, gamedataMappinVariant.GangWatchVariant) || Equals(variant, gamedataMappinVariant.OutpostVariant);
+    }
+
+    private func MarkerKey(hash: Uint32) -> CName {
+        return StringToName(s"ncpd-poi-\(hash)");
+    }
+
+    private func ReadSavedPhase(system: ref<MappinSystem>, hash: Uint32) -> gamedataMappinPhase {
+        let phase: Uint16;
+        let variant: Uint16;
+        let active: Bool;
+        let found: Bool = system.GetPointOfInterestMappinSavedState(hash, phase, variant, active);
+        if found {
+            return IntEnum<gamedataMappinPhase>(Cast<Int32>(phase));
+        };
+        // Never interpret default-initialized zero as CompletedPhase.
+        return gamedataMappinPhase.Invalid;
+    }
+
     public func TickBonuses() -> Void {
-        let world: ref<OpenWorldSystem>;
-        let activities: array<OpenWorldActivityState>;
+        let system: ref<MappinSystem>;
+        let pins: array<ref<IMappin>>;
+        let marker: ref<PointOfInterestMappin>;
+        let hash: Uint32;
+        let key: CName;
+        let phase: gamedataMappinPhase;
+        let livePhase: gamedataMappinPhase;
+        let index: Int32;
         let player: ref<GameObject>;
         let transaction: ref<TransactionSystem>;
-        let activity: OpenWorldActivityState;
         let awarded: Int32 = 0;
         let i: Int32 = 0;
         if !this.m_onDuty { return; }
-        world = GameInstance.GetOpenWorldSystem();
-        if !IsDefined(world) || !world.IsReady() { return; }
-        activities = world.GetActivities();
-        // An empty/streaming registry is not a valid baseline.
-        if ArraySize(activities) == 0 { return; }
-        if !this.m_baselineReady {
-            while i < ArraySize(activities) {
-                activity = activities[i];
-                if Equals(activity.kind, n"ncpd") && !activity.completed && !ArrayContains(this.m_paidActivities, activity.name) {
-                    ArrayPush(this.m_eligibleActivities, activity.name);
-                };
-                i += 1;
-            };
-            this.m_baselineReady = true;
+        this.m_baselineReady = false;
+        this.m_unknownPhases = 0;
+        this.m_paymentFailures = 0;
+        this.m_allMappins = 0;
+        this.m_scannerMarkers = 0;
+        system = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if !IsDefined(system) {
+            this.m_monitorState = 1;
+            this.m_monitorReason = "ERROR: MappinSystem unavailable";
             return;
         };
-        player = GetPlayer(this.GetGameInstance());
-        if !IsDefined(player) { return; }
-        transaction = GameInstance.GetTransactionSystem(this.GetGameInstance());
-        if !IsDefined(transaction) { return; }
-        while i < ArraySize(activities) {
-            activity = activities[i];
-            if Equals(activity.kind, n"ncpd") && !ArrayContains(this.m_paidActivities, activity.name) {
-                if !activity.completed {
-                    // Newly registered, unfinished activities can become eligible.
-                    if !ArrayContains(this.m_eligibleActivities, activity.name) {
-                        ArrayPush(this.m_eligibleActivities, activity.name);
-                    };
-                } else {
-                    if ArrayContains(this.m_eligibleActivities, activity.name) {
-                        if transaction.GiveItem(player, ItemID.FromTDBID(t"Items.money"), 1000) {
-                            ArrayPush(this.m_paidActivities, activity.name);
-                            ArrayRemove(this.m_eligibleActivities, activity.name);
-                            this.m_shiftJobs += 1;
-                            this.m_shiftBonus += 1000;
-                            awarded += 1000;
+        pins = system.GetAllMappins();
+        this.m_allMappins = ArraySize(pins);
+        this.m_scannerMarkers = 0;
+        this.m_baselineReady = true;
+        while i < ArraySize(pins) {
+            marker = pins[i] as PointOfInterestMappin;
+            if IsDefined(marker) && this.IsScannerVariant(marker.GetVariant()) {
+                hash = marker.GetJournalPathHash();
+                if hash != 0u {
+                    this.m_scannerMarkers += 1;
+                    key = this.MarkerKey(hash);
+                    phase = marker.GetPhase();
+                    index = ArrayFindFirst(this.m_watchedKeys, key);
+                    if index >= 0 {
+                        // A streamed-in replacement may have the same journal ID.
+                        this.m_watchedMarkers[index] = marker;
+                    } else {
+                        if NotEquals(phase, gamedataMappinPhase.CompletedPhase) && NotEquals(phase, gamedataMappinPhase.Invalid) && !ArrayContains(this.m_paidActivities, key) {
+                            ArrayPush(this.m_watchedKeys, key);
+                            ArrayPush(this.m_watchedHashes, hash);
+                            ArrayPush(this.m_watchedMarkers, marker);
                         };
                     };
                 };
             };
             i += 1;
+        };
+        // Completion can remove a marker from the live list. Check the game's
+        // saved POI phase for each previously seen scanner ID as well.
+        player = GetPlayer(this.GetGameInstance());
+        transaction = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        i = 0;
+        while i < ArraySize(this.m_watchedKeys) {
+            key = this.m_watchedKeys[i];
+            if !ArrayContains(this.m_paidActivities, key) {
+                phase = this.ReadSavedPhase(system, this.m_watchedHashes[i]);
+                marker = this.m_watchedMarkers[i];
+                if IsDefined(marker) {
+                    livePhase = marker.GetPhase();
+                    // The live marker may update before the saved phase does.
+                    if Equals(livePhase, gamedataMappinPhase.CompletedPhase) || Equals(phase, gamedataMappinPhase.Invalid) {
+                        phase = livePhase;
+                    };
+                };
+                if Equals(phase, gamedataMappinPhase.Invalid) { this.m_unknownPhases += 1; };
+                if Equals(phase, gamedataMappinPhase.CompletedPhase) {
+                    if IsDefined(player) && IsDefined(transaction) {
+                        if transaction.GiveItem(player, ItemID.FromTDBID(t"Items.money"), 1000) {
+                            ArrayPush(this.m_paidActivities, key);
+                            this.m_shiftJobs += 1;
+                            this.m_shiftBonus += 1000;
+                            awarded += 1000;
+                        } else {
+                            this.m_paymentFailures += 1;
+                        };
+                    } else {
+                        this.m_paymentFailures += 1;
+                    };
+                };
+            };
+            i += 1;
+        };
+        if this.m_allMappins == 0 && ArraySize(this.m_watchedKeys) == 0 {
+            this.m_monitorState = 2;
+            this.m_monitorReason = "NO LIVE MAPPINS";
+        } else {
+            if this.m_scannerMarkers == 0 && ArraySize(this.m_watchedKeys) == 0 {
+                this.m_monitorState = 3;
+                this.m_monitorReason = "NO NCPD MARKERS OBSERVED YET";
+            } else {
+                this.m_monitorState = 4;
+                this.m_monitorReason = this.m_scannerMarkers > 0 ? "MONITORING" : "MONITORING SAVED POI STATES";
+            };
+        };
+        if this.m_unknownPhases > 0 {
+            this.m_monitorState = 5;
+            this.m_monitorReason = "SOME TRACKED POI PHASES UNAVAILABLE";
+        };
+        if this.m_paymentFailures > 0 {
+            this.m_monitorState = 6;
+            this.m_monitorReason = "PAYMENT FAILED (WILL RETRY)";
         };
         if awarded > 0 {
             this.m_lastBonusAmount = awarded;

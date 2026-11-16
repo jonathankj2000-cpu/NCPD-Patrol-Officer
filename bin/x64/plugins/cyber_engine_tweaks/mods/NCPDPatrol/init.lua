@@ -1,4 +1,4 @@
--- NCPD Patrol v0.4b | terminal duty, scanner bonuses, explicit passenger boarding
+-- NCPD Patrol v0.4c | terminal duty, scanner bonuses, explicit passenger boarding
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -10,6 +10,8 @@ local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
 local dutyPoll, bonusPoll = 0, 0
 local bridgeErrorReported = false
+local scannerLogElapsed, scannerLogJobs, scannerLogTotal = 0, 0, 0
+local scannerLogState = nil
 -- The optional vcd_* record belongs to external vehicle mods,
 -- so we must test for its existence before trying to unlock it.
 local MODDED_POLICE_HELLA = "Vehicle.vcd_archer_hella_ncpd"
@@ -31,6 +33,30 @@ local function getPatrolSystem()
     end)
     if ok and system then return system end
     return nil
+end
+
+local function logScanner(patrol, force)
+    local ok, state, jobs, total, info = pcall(function()
+        return patrol:GetMonitorState(), patrol:GetShiftJobs(), patrol:GetShiftBonus(), patrol:GetMonitorDiagnostics()
+    end)
+    if not ok then
+        if not bridgeErrorReported then
+            bridgeErrorReported = true
+            status("Scanner diagnostics failed: " .. tostring(state))
+        end
+        return
+    end
+    if jobs > scannerLogJobs then
+        status("BONUS PAID: +EUR$" .. tostring(total - scannerLogTotal)
+            .. " | Paid this shift: " .. tostring(jobs) .. " | Total bonus: EUR$" .. tostring(total))
+        force = true
+    end
+    if force or state ~= scannerLogState or scannerLogElapsed >= 15 then
+        print("[NCPD Patrol] Scanner | " .. tostring(info))
+        scannerLogElapsed = 0
+        scannerLogState = state
+    end
+    scannerLogJobs, scannerLogTotal = jobs, total
 end
 
 -- Read-only record availability check; avoids reporting success for unknown vehicle IDs.
@@ -161,12 +187,16 @@ local function startShift()
         return
     end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 4 then error("Lua/redscript version mismatch") end
+        if patrol:Version() ~= 5 then error("Lua/redscript version mismatch; install all v0.4c files and restart the game") end
         patrol:BeginShift()
     end)
     if not ok then status("Cannot start shift: " .. tostring(err)); return end
     onDuty = true
     bonusPoll = 0
+    scannerLogElapsed, scannerLogJobs, scannerLogTotal = 0, 0, 0
+    scannerLogState = nil
+    bridgeErrorReported = false
+    logScanner(patrol, true)
     assignPatrolCar()
     ensurePoliceOutfit()
     print("[NCPD Patrol] On duty. Existing NCPD Scanner missions are unchanged.")
@@ -183,7 +213,10 @@ local function endShift()
         return
     end
     local patrol = getPatrolSystem()
-    if patrol then patrol:FinishShift() end
+    if patrol then
+        patrol:FinishShift()
+        logScanner(patrol, true)
+    end
     onDuty = false
     Partner.dismiss(status)
     status("Off duty. Vehicle and Police Uniform stay unlocked; worn outfit unchanged.")
@@ -194,7 +227,7 @@ local function toggleDuty()
 end
 
 registerForEvent("onInit", function()
-    status("v0.4b loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
+    status("v0.4c loaded. Start/End Shift at a Fast Travel terminal. Scanner bonus: EUR$1000 per eligible activity.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -210,6 +243,7 @@ registerForEvent("onUpdate", function(delta)
     end
     dutyPoll = dutyPoll + delta
     bonusPoll = bonusPoll + delta
+    if onDuty then scannerLogElapsed = scannerLogElapsed + delta end
     if dutyPoll >= 0.25 then
         dutyPoll = 0
         local ok, err = pcall(function()
@@ -219,12 +253,14 @@ registerForEvent("onUpdate", function(delta)
                 -- Loading a save reset the native session; old actor IDs are stale.
                 onDuty = false
                 Partner.reset()
+                scannerLogState = nil
             end
             local request = patrol:TakeDutyRequest()
             if request == 1 then startShift() elseif request == 2 then endShift() end
             if onDuty and bonusPoll >= 1 then
                 bonusPoll = 0
                 patrol:TickBonuses()
+                logScanner(patrol, false)
             end
         end)
         if not ok and not bridgeErrorReported then
@@ -245,7 +281,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.4b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.4c")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -299,12 +335,14 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                return (patrol:IsMonitorReady() and "Monitor ready" or "Monitor idle / waiting")
-                    .. " | Activities: " .. tostring(patrol:GetShiftJobs())
-                    .. " | Shift bonus: EUR$" .. tostring(patrol:GetShiftBonus())
-                    .. " | Last bonus paid: EUR$" .. tostring(patrol:GetLastBonusAmount())
+                if patrol:Version() ~= 5 then return "Version mismatch: install all v0.4c files and restart the game." end
+                return patrol:GetMonitorDiagnostics()
+                    .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
-            ImGui.TextWrapped(ok and info or "Scanner diagnostics unavailable")
+            ImGui.TextWrapped(ok and info or ("Scanner diagnostics failed: " .. tostring(info)))
+            if ImGui.Button("Log scanner diagnostics") then logScanner(patrol, true) end
+        else
+            ImGui.TextWrapped("NCPD Patrol redscript module unavailable.")
         end
         ImGui.Separator()
         ImGui.Text("STATUS / DIAGNOSTICS")
