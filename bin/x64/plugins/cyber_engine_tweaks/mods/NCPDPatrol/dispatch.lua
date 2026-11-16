@@ -58,18 +58,6 @@ function M.setVoiceEnabled(value, status)
     if status then status("Dispatch | Call voice " .. (value and "enabled" or "muted")) end
 end
 
-function M.refreshNavigation(patrol, status)
-    if not active or not patrol then return false end
-    active.gpsAttempts = active.gpsAttempts + 1
-    local ok, tracked = pcall(function()
-        return patrol:RefreshDispatchWaypoint(active.waypoint, active.position)
-    end)
-    active.gpsTracked = ok and tracked == true
-    navigation = ok and (active.gpsTracked and "Native tracking flag active" or "Refresh sent; native tracking flag pending")
-        or ("GPS refresh failed: " .. tostring(tracked))
-    if status then status("Dispatch navigation | " .. navigation) end
-    return active.gpsTracked
-end
 function M.setSoundEnabled(value, status)
     soundEnabled = value
     if status then status("Dispatch | Alert sound " .. (value and "enabled" or "muted")) end
@@ -78,7 +66,7 @@ end
 function M.testAudio(patrol, radio, status)
     local ok, result = pcall(function()
         if not patrol or not Game.GetPlayer() then error("Load a save first") end
-        if patrol:Version() ~= 8 then error("Install all v0.5c files and restart the game") end
+        if patrol:Version() ~= 9 then error("Install all v0.5d files and restart the game") end
         if radio then return patrol:PreviewPoliceRadio() end
         return patrol:PlayDispatchAlert()
     end)
@@ -139,7 +127,7 @@ function M.request(patrol, status)
         return false
     end
     local ok, result = pcall(function()
-        if patrol:Version() ~= 8 then error("Install all v0.5c Lua/redscript files and restart the game") end
+        if patrol:Version() ~= 9 then error("Install all v0.5d Lua/redscript files and restart the game") end
         if not patrol:IsOnDuty() then report("Start a shift before requesting a dispatch", status); return false end
         if failed then report("Dispatch stopped after an API error; end and restart the shift to retry", status); return false end
         if active then report("A dispatch is already assigned; complete or cancel it first", status); return false end
@@ -186,9 +174,9 @@ function M.request(patrol, status)
         active = chosen
         used[chosen.key] = true
         active.arrived = false
-        active.waypoint, active.gpsAttempts, active.gpsTracked = id, 0, false
+        active.waypoint = id
         countdown = 0
-        M.refreshNavigation(patrol)
+        navigation = "Dispatch marker active. Open and close the map if you need the GPS line."
         patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.", 8.0, soundEnabled, voiceEnabled)
         drawObjective(patrol:IsDispatchMenuOpen())
         report("Assigned: " .. chosen.label .. " | POI=" .. chosen.key .. " | distance=" .. tostring(math.floor(chosen.distance))
@@ -227,7 +215,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then hide(); return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 8 then return end
+        if patrol:Version() ~= 9 then return end
         if not onDuty or not patrol:IsOnDuty() then
             if dutySeen then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
@@ -237,7 +225,6 @@ function M.update(delta, onDuty, status, getPatrol)
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
         if active then
-            if not active.gpsTracked and active.gpsAttempts < 3 then M.refreshNavigation(patrol) end
             if patrol:GetScannerPhase(active.hash, active.marker) == gamedataMappinPhase.CompletedPhase then
                 clear(patrol)
                 completed = completed + 1

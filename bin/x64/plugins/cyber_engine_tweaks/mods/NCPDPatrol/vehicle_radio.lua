@@ -34,13 +34,18 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 8 then return end
+        if patrol:Version() ~= 9 then return end
         if not enabled or not onDuty or not patrol:IsOnDuty() then
             if currentKey then stop(patrol) end
             state = enabled and "OFF DUTY" or "Chatter muted"
             return
         end
         if failed then return end
+        if patrol:IsVehicleChatterPausedForVoice() then
+            currentKey = nil
+            state = "Paused for dispatch voice"
+            return
+        end
         local vehicle = Game.GetMountedVehicle(Game.GetPlayer())
         if not vehicle or not patrol:IsOwnedPoliceVehicle(vehicle) then
             if currentKey then stop(patrol) end

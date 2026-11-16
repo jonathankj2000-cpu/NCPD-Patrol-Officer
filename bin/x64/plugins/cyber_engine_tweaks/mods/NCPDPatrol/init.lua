@@ -1,4 +1,4 @@
--- NCPD Patrol v0.5c | local dispatch, GPS refresh, vehicle chatter and duty rules
+-- NCPD Patrol v0.5d | repeat-call recovery, voice diagnostics and stable markers
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -14,6 +14,7 @@ local dutyPoll, bonusPoll = 0, 0
 local bridgeErrorReported = false
 local scannerLogElapsed, scannerLogJobs, scannerLogTotal = 0, 0, 0
 local scannerLogState = nil
+local lastVoiceRequests = 0
 -- The optional vcd_* record belongs to external vehicle mods,
 -- so we must test for its existence before trying to unlock it.
 local MODDED_POLICE_HELLA = "Vehicle.vcd_archer_hella_ncpd"
@@ -189,7 +190,7 @@ local function startShift()
         return
     end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 8 then error("Lua/redscript version mismatch; install all v0.5c files and restart the game") end
+        if patrol:Version() ~= 9 then error("Lua/redscript version mismatch; install all v0.5d files and restart the game") end
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -239,7 +240,7 @@ end
 
 registerForEvent("onInit", function()
     Dispatch.init()
-    status("v0.5c loaded. Local dispatch, GPS refresh, vehicle chatter and criminal-activity shift termination.")
+    status("v0.5d loaded. Dispatch voice replay recovery and diagnostics. Marker navigation retained; GPS refresh attempts removed.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -261,6 +262,7 @@ registerForEvent("onUpdate", function(delta)
         local ok, err = pcall(function()
             local patrol = getPatrolSystem()
             if not patrol then return end
+            if patrol:Version() ~= 9 then return end
             patrol:EnforceDutyRules()
             if onDuty and not patrol:IsOnDuty() then
                 onDuty = false
@@ -283,6 +285,11 @@ registerForEvent("onUpdate", function(delta)
                 bonusPoll = 0
                 patrol:TickBonuses()
                 logScanner(patrol, false)
+            end
+            local requests = patrol:GetVoiceRequestCount()
+            if requests ~= lastVoiceRequests then
+                print("[NCPD Patrol] Voice | " .. tostring(patrol:GetVoiceDiagnostics()))
+                lastVoiceRequests = requests
             end
         end)
         if not ok and not bridgeErrorReported then
@@ -307,7 +314,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.5c")
+    local visible = ImGui.Begin("NCPD Patrol - v0.5d")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -326,7 +333,6 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Cancel active dispatch") then
             Dispatch.cancel(getPatrolSystem(), status)
         end
-        if ImGui.Button("Refresh dispatch GPS") then Dispatch.refreshNavigation(getPatrolSystem(), status) end
         if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
             Dispatch.setAutomatic(not Dispatch.isAutomatic(), status)
         end
@@ -343,6 +349,11 @@ registerForEvent("onDraw", function()
             Dispatch.testAudio(getPatrolSystem(), true, status)
         end
         ImGui.TextWrapped("The confirmed police radio line accompanies new dispatch notices. Custom on-scene briefs can be added later.")
+        local voicePatrol = getPatrolSystem()
+        if voicePatrol then
+            local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.5d files.")
+        end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
             VehicleRadio.setEnabled(not VehicleRadio.isEnabled(), getPatrolSystem(), status)
@@ -399,7 +410,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 8 then return "Version mismatch: install all v0.5c files and restart the game." end
+                if patrol:Version() ~= 9 then return "Version mismatch: install all v0.5d files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
