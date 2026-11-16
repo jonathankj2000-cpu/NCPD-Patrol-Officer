@@ -1,0 +1,4 @@
+# NCPD Patrol v0.2.3 - add the vanilla NCPD Archer Hella to the garage-eligible vehicle list.
+# From the official TweakXL wiki example, trimmed to just this vehicle.
+Vehicle.vehicle_list.list:
+  - !append-once Vehicle.v_standard2_archer_hella_police
