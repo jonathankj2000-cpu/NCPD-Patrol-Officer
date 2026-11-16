@@ -1,4 +1,4 @@
-// NCPD Patrol v0.5b. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.5c. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -20,6 +20,10 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     private let m_lastBonusAmount: Int32;
     private let m_noticeBusy: Bool;
     private let m_pendingNotices: array<ref<NCPDPatrolNotice>>;
+    private let m_noticeToken: Int32;
+    private let m_criminalTermination: Bool;
+    private let m_chatterVehicle: wref<VehicleObject>;
+    private let m_chatterActive: Bool;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolSystem") as NCPDPatrolSystem;
@@ -33,8 +37,31 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 7; }
+    public func Version() -> Int32 { return 8; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
+    public func WasTerminatedForCrime() -> Bool { return this.m_criminalTermination; }
+    public func HasWantedLevel() -> Bool {
+        let prevention: ref<PreventionSystem> = GameInstance.GetScriptableSystemsContainer(this.GetGameInstance()).Get(n"PreventionSystem") as PreventionSystem;
+        return IsDefined(prevention) && NotEquals(prevention.GetHeatStage(), EPreventionHeatStage.Heat_0);
+    }
+
+    public func EnforceDutyRules() -> Void {
+        if this.m_onDuty && this.HasWantedLevel() {
+            // Stop eligibility before another completion/payment can be processed.
+            this.m_onDuty = false;
+            this.m_requestedDuty = 0;
+            this.m_criminalTermination = true;
+            this.m_baselineReady = false;
+            this.m_monitorState = 0;
+            this.m_monitorReason = "SHIFT TERMINATED: CRIMINAL ACTIVITY";
+            ArrayClear(this.m_watchedKeys);
+            ArrayClear(this.m_watchedHashes);
+            ArrayClear(this.m_watchedMarkers);
+            this.StopVehicleChatter();
+            this.ClearDispatchWaypoints();
+            this.ShowPriorityMessage("NCPD: Shift terminated due to criminal activity.", 8.0);
+        };
+    }
     public func GetTerminalDutyState() -> Bool {
         if this.m_requestedDuty == 1 { return true; }
         if this.m_requestedDuty == 2 { return false; }
@@ -59,7 +86,12 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_shiftJobs = 0;
         this.m_shiftBonus = 0;
         this.m_noticeSession += 1;
+        this.m_noticeToken += 1;
         this.m_noticeBusy = false;
+        this.m_criminalTermination = false;
+        // Loading a save discards emitters from the old world; forget their IDs.
+        this.m_chatterVehicle = null;
+        this.m_chatterActive = false;
         ArrayClear(this.m_pendingNotices);
         this.m_lastBonusAmount = 0;
         this.m_allMappins = 0;
@@ -75,6 +107,11 @@ public class NCPDPatrolSystem extends ScriptableSystem {
 
     // Desired state, not a blind toggle: a stale terminal choice is harmless.
     public func RequestDuty(endShift: Bool) -> Void {
+        if !endShift && this.HasWantedLevel() {
+            this.m_requestedDuty = 0;
+            this.ShowPriorityMessage("NCPD: Cannot start a shift while wanted.", 8.0);
+            return;
+        };
         this.m_requestedDuty = endShift ? 2 : 1;
     }
 
@@ -86,6 +123,11 @@ public class NCPDPatrolSystem extends ScriptableSystem {
 
     public func BeginShift() -> Void {
         if this.m_onDuty { return; }
+        if this.HasWantedLevel() {
+            this.ShowPriorityMessage("NCPD: Cannot start a shift while wanted.", 8.0);
+            return;
+        };
+        this.m_criminalTermination = false;
         this.m_onDuty = true;
         this.m_shiftJobs = 0;
         this.m_shiftBonus = 0;
@@ -102,14 +144,18 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         if !this.m_onDuty { return; }
         // Check completion before turning duty off, including the last second.
         this.TickBonuses();
+        if !this.m_onDuty { return; };
         this.m_onDuty = false;
+        this.m_criminalTermination = false;
+        this.StopVehicleChatter();
+        this.ClearDispatchWaypoints();
         this.m_monitorState = 0;
         this.m_monitorReason = "OFF DUTY";
         this.m_baselineReady = false;
         ArrayClear(this.m_watchedKeys);
         ArrayClear(this.m_watchedHashes);
         ArrayClear(this.m_watchedMarkers);
-        this.ShowMessage(s"NCPD: Shift ended. \(this.m_shiftJobs) activities, +EUR$\(this.m_shiftBonus) bonus.");
+        this.ShowPriorityMessage(s"NCPD: Shift ended. \(this.m_shiftJobs) activities, +EUR$\(this.m_shiftBonus) bonus.", 4.0);
     }
 
     private func IsScannerVariant(variant: gamedataMappinVariant) -> Bool {
@@ -187,6 +233,36 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         return system.RegisterMappin(data, position);
     }
 
+    public func RefreshDispatchWaypoint(id: NewMappinID, position: Vector4) -> Bool {
+        let pins: array<ref<IMappin>>;
+        let tag: ref<NCPDPatrolDispatchMappinData>;
+        let board: ref<IBlackboard>;
+        let tracked: ref<IScriptable>;
+        let i: Int32 = 0;
+        let system: ref<MappinSystem> = GameInstance.GetMappinSystem(this.GetGameInstance());
+        if !this.m_onDuty || !IsDefined(system) { return false; };
+        pins = system.GetAllMappins();
+        while i < ArraySize(pins) {
+            if Equals(pins[i].GetNewMappinID(), id) {
+                tag = pins[i].GetScriptData() as NCPDPatrolDispatchMappinData;
+                if IsDefined(tag) {
+                    system.SetMappinActive(id, false);
+                    system.SetMappinPosition(id, position);
+                    system.SetMappinActive(id, true);
+                    board = GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_System);
+                    tracked = pins[i];
+                    board.SetVariant(GetAllBlackboardDefs().UI_System.TrackedMappin, ToVariant(tracked), true);
+                    // Re-signal the current UI state without opening or closing a menu.
+                    board.SignalVariant(GetAllBlackboardDefs().UI_System.TrackedMappin);
+                    board.SignalBool(GetAllBlackboardDefs().UI_System.IsInMenu);
+                    return pins[i].IsPlayerTracked();
+                };
+            };
+            i += 1;
+        };
+        return false;
+    }
+
     // Tag-based cleanup avoids reusing an entity/mappin ID from a previous load.
     public func ClearDispatchWaypoints() -> Void {
         let pins: array<ref<IMappin>>;
@@ -202,8 +278,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         };
     }
 
-    public func NotifyDispatch(text: String, duration: Float, opt alert: Bool) -> Void {
-        this.ShowMessage(text, false, duration, alert);
+    public func NotifyDispatch(text: String, duration: Float, opt alert: Bool, opt voice: Bool) -> Void {
+        this.ShowMessage(text, false, duration, alert, voice);
     }
 
     public func PlayDispatchAlert() -> Bool {
@@ -217,10 +293,40 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     public func PreviewPoliceRadio() -> Bool {
         let radio: ref<PoliceRadioSystem> = GameInstance.GetPoliceRadioSystem(this.GetGameInstance());
         if !IsDefined(radio) { return false; };
-        // Audition only: this documented entry is a pursuit line, not a bespoke brief.
-        // Do not alter heat, district, vehicle or police AI state to make it play.
+        // The user confirmed this existing line suits a new dispatch call.
         radio.PoliceRadioRequest(n"nc_heat_1_start");
         return true;
+    }
+
+    public func IsOwnedPoliceVehicle(vehicle: ref<VehicleObject>) -> Bool {
+        let record: wref<Vehicle_Record>;
+        if !IsDefined(vehicle) || !vehicle.IsPlayerVehicle() { return false; };
+        record = vehicle.GetRecord();
+        if !IsDefined(record) { return false; };
+        return Equals(vehicle.GetRecordID(), t"Vehicle.v_standard2_archer_hella_police")
+            || StrContains(ToString(record.Player_audio_resource()), "police");
+    }
+
+    public func BeginVehicleChatter(vehicle: ref<VehicleObject>) -> Bool {
+        let audio: ref<AudioSystem> = GameInstance.GetAudioSystem(this.GetGameInstance());
+        if !this.m_onDuty || this.HasWantedLevel() || !this.IsOwnedPoliceVehicle(vehicle) || !vehicle.IsPlayerMounted() || !IsDefined(audio) {
+            return false;
+        };
+        this.StopVehicleChatter();
+        this.m_chatterVehicle = vehicle;
+        // This vanilla NPC radio event is attached to the car's own audio object.
+        audio.Play(n"radio_car_police_npc", vehicle.GetEntityID());
+        this.m_chatterActive = true;
+        return true;
+    }
+
+    public func StopVehicleChatter() -> Void {
+        let audio: ref<AudioSystem> = GameInstance.GetAudioSystem(this.GetGameInstance());
+        if this.m_chatterActive && IsDefined(this.m_chatterVehicle) && IsDefined(audio) {
+            audio.Stop(n"radio_car_police_npc", this.m_chatterVehicle.GetEntityID());
+        };
+        this.m_chatterVehicle = null;
+        this.m_chatterActive = false;
     }
 
     public func IsDispatchMenuOpen() -> Bool {
@@ -241,6 +347,8 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         let awarded: Int32 = 0;
         let i: Int32 = 0;
         if !this.m_onDuty { return; }
+        this.EnforceDutyRules();
+        if !this.m_onDuty { return; };
         this.m_baselineReady = false;
         this.m_unknownPhases = 0;
         this.m_paymentFailures = 0;
@@ -348,11 +456,12 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         };
     }
 
-    private func ShowMessage(text: String, opt money: Bool, opt duration: Float, opt alert: Bool) -> Void {
+    private func ShowMessage(text: String, opt money: Bool, opt duration: Float, opt alert: Bool, opt voice: Bool) -> Void {
         let notice: ref<NCPDPatrolNotice> = new NCPDPatrolNotice();
         notice.text = text;
         notice.money = money;
         notice.alert = alert;
+        notice.voice = voice;
         notice.duration = duration;
         if notice.duration <= 0.0 { notice.duration = money ? 8.0 : 4.0; };
         this.QueueNotice(notice);
@@ -369,19 +478,34 @@ public class NCPDPatrolSystem extends ScriptableSystem {
             return;
         };
         this.m_noticeBusy = true;
+        this.m_noticeToken += 1;
         this.PresentNotice(notice);
-        delay.DelayCallback(NCPDPatrolNoticeFinished.Create(this, this.m_noticeSession), notice.duration, false);
+        delay.DelayCallback(NCPDPatrolNoticeFinished.Create(this, this.m_noticeSession, this.m_noticeToken), notice.duration, false);
     }
 
-    public func FinishNotice(session: Int32) -> Void {
+    public func FinishNotice(session: Int32, token: Int32) -> Void {
         let notice: ref<NCPDPatrolNotice>;
-        if session != this.m_noticeSession { return; };
+        if session != this.m_noticeSession || token != this.m_noticeToken { return; };
         this.m_noticeBusy = false;
         if ArraySize(this.m_pendingNotices) > 0 {
             notice = this.m_pendingNotices[0];
             ArrayErase(this.m_pendingNotices, 0);
             this.QueueNotice(notice);
         };
+    }
+
+    private func ShowPriorityMessage(text: String, duration: Float) -> Void {
+        let keep: array<ref<NCPDPatrolNotice>>;
+        let i: Int32 = 0;
+        // Keep receipts for money already paid, discard stale duty/dispatch messages.
+        while i < ArraySize(this.m_pendingNotices) {
+            if this.m_pendingNotices[i].money { ArrayPush(keep, this.m_pendingNotices[i]); };
+            i += 1;
+        };
+        this.m_pendingNotices = keep;
+        this.m_noticeToken += 1;
+        this.m_noticeBusy = false;
+        this.ShowMessage(text, false, duration);
     }
 
     private func PresentNotice(notice: ref<NCPDPatrolNotice>) -> Void {
@@ -393,6 +517,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         message.type = notice.money ? SimpleMessageType.Money : SimpleMessageType.Neutral;
         GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications)
             .SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(message), true);
-        if notice.alert { this.PlayDispatchAlert(); };
+        if this.m_onDuty && notice.alert { this.PlayDispatchAlert(); };
+        if this.m_onDuty && notice.voice { this.PreviewPoliceRadio(); };
     }
 }

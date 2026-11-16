@@ -8,6 +8,8 @@ local state = "OFF DUTY"
 local completed, candidateCount = 0, 0
 local failed = false
 local soundEnabled = true
+local voiceEnabled = true
+local navigation = "No active dispatch"
 
 local function distance(a, b)
     local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
@@ -27,6 +29,7 @@ local function clear(patrol)
     -- The native tag identifies our markers even if a save regenerated their IDs.
     patrol:ClearDispatchWaypoints()
     active = nil
+    navigation = "No active dispatch"
     hide()
 end
 
@@ -48,6 +51,25 @@ function M.completed() return completed end
 function M.seconds() return math.max(0, math.ceil(countdown)) end
 function M.candidates() return candidateCount end
 function M.isSoundEnabled() return soundEnabled end
+function M.isVoiceEnabled() return voiceEnabled end
+function M.navigationState() return navigation end
+function M.setVoiceEnabled(value, status)
+    voiceEnabled = value
+    if status then status("Dispatch | Call voice " .. (value and "enabled" or "muted")) end
+end
+
+function M.refreshNavigation(patrol, status)
+    if not active or not patrol then return false end
+    active.gpsAttempts = active.gpsAttempts + 1
+    local ok, tracked = pcall(function()
+        return patrol:RefreshDispatchWaypoint(active.waypoint, active.position)
+    end)
+    active.gpsTracked = ok and tracked == true
+    navigation = ok and (active.gpsTracked and "Native tracking flag active" or "Refresh sent; native tracking flag pending")
+        or ("GPS refresh failed: " .. tostring(tracked))
+    if status then status("Dispatch navigation | " .. navigation) end
+    return active.gpsTracked
+end
 function M.setSoundEnabled(value, status)
     soundEnabled = value
     if status then status("Dispatch | Alert sound " .. (value and "enabled" or "muted")) end
@@ -56,13 +78,13 @@ end
 function M.testAudio(patrol, radio, status)
     local ok, result = pcall(function()
         if not patrol or not Game.GetPlayer() then error("Load a save first") end
-        if patrol:Version() ~= 7 then error("Install all v0.5b files and restart the game") end
+        if patrol:Version() ~= 8 then error("Install all v0.5c files and restart the game") end
         if radio then return patrol:PreviewPoliceRadio() end
         return patrol:PlayDispatchAlert()
     end)
     if status then
         if ok and result then
-            status(radio and "Police radio preview requested: nc_heat_1_start. Listen in a vehicle; this is a pursuit line, not an automatic brief."
+            status(radio and "Dispatch voice test requested: nc_heat_1_start. The same line accompanies new dispatch notices."
                 or "Dispatch alert requested. Check that the short signal is audible.")
         else
             status("Audio preview unavailable: " .. tostring(result))
@@ -73,6 +95,7 @@ end
 
 function M.start(patrol, status)
     active, used = nil, {}
+    navigation = "No active dispatch"
     poll, completed, candidateCount = 0, 0, 0
     failed, dutySeen = false, true
     cleaned = false
@@ -100,6 +123,7 @@ function M.reset()
     active, used, dutySeen, cleaned = nil, {}, false, false
     countdown, poll, completed, candidateCount = 0, 0, 0, 0
     failed, state = false, "OFF DUTY"
+    navigation = "No active dispatch"
     hide()
 end
 
@@ -115,13 +139,15 @@ function M.request(patrol, status)
         return false
     end
     local ok, result = pcall(function()
-        if patrol:Version() ~= 7 then error("Install all v0.5b Lua/redscript files and restart the game") end
+        if patrol:Version() ~= 8 then error("Install all v0.5c Lua/redscript files and restart the game") end
         if not patrol:IsOnDuty() then report("Start a shift before requesting a dispatch", status); return false end
         if failed then report("Dispatch stopped after an API error; end and restart the shift to retry", status); return false end
         if active then report("A dispatch is already assigned; complete or cancel it first", status); return false end
         -- Observe a baseline before selecting so this target is eligible for its bonus.
         patrol:TickBonuses()
-        local near, all, seen = {}, {}, {}
+        if not patrol:IsOnDuty() then report("Shift inactive; check duty status", status); return false end
+        local tiers, all, seen = {{}, {}, {}}, {}, {}
+        local radii = {1000, 1500, 2000}
         local position = Game.GetPlayer():GetWorldPosition()
         for _, marker in ipairs(patrol:GetDispatchCandidates()) do
             local hash = marker:GetJournalPathHash()
@@ -133,19 +159,24 @@ function M.request(patrol, status)
                 if target and target.x == target.x and target.y == target.y and target.z == target.z
                     and math.abs(target.x) < 100000 and math.abs(target.y) < 100000 and math.abs(target.z) < 100000
                     and (target.x ~= 0 or target.y ~= 0 or target.z ~= 0) then
-                    local item = {marker = marker, hash = hash, key = key, position = target}
+                    local item = {marker = marker, hash = hash, key = key, position = target, distance = distance(position, target)}
                     all[#all + 1] = item
-                    if distance(position, target) <= 2500 then near[#near + 1] = item end
+                    for i, radius in ipairs(radii) do
+                        if item.distance <= radius then tiers[i][#tiers[i] + 1] = item end
+                    end
                 end
             end
         end
         candidateCount = #all
-        if #all == 0 then
+        local pool, radius = nil, nil
+        for i, range in ipairs(radii) do
+            if #tiers[i] > 0 then pool, radius = tiers[i], range; break end
+        end
+        if not pool then
             countdown = 30
-            report("No available unfinished scanner markers; retry after moving or starting another shift", status)
+            report("No available scanner within 1 km, 1.5 km or 2 km; retrying in 30 seconds", status)
             return false
         end
-        local pool = #near > 0 and near or all
         local chosen = pool[math.random(1, #pool)]
         chosen.label = chosen.marker:GetVariant() == gamedataMappinVariant.OutpostVariant
             and "Suspected organized crime" or "Assault in progress"
@@ -155,10 +186,13 @@ function M.request(patrol, status)
         active = chosen
         used[chosen.key] = true
         active.arrived = false
+        active.waypoint, active.gpsAttempts, active.gpsTracked = id, 0, false
         countdown = 0
-        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.", 8.0, soundEnabled)
+        M.refreshNavigation(patrol)
+        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.", 8.0, soundEnabled, voiceEnabled)
         drawObjective(patrol:IsDispatchMenuOpen())
-        report("Assigned: " .. chosen.label .. " | POI=" .. chosen.key .. " | waypoint placed", status)
+        report("Assigned: " .. chosen.label .. " | POI=" .. chosen.key .. " | distance=" .. tostring(math.floor(chosen.distance))
+            .. " m | search radius=" .. tostring(radius) .. " m | " .. navigation, status)
         return true
     end)
     if not ok then
@@ -193,7 +227,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then hide(); return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 7 then return end
+        if patrol:Version() ~= 8 then return end
         if not onDuty or not patrol:IsOnDuty() then
             if dutySeen then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
@@ -203,6 +237,7 @@ function M.update(delta, onDuty, status, getPatrol)
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
         if active then
+            if not active.gpsTracked and active.gpsAttempts < 3 then M.refreshNavigation(patrol) end
             if patrol:GetScannerPhase(active.hash, active.marker) == gamedataMappinPhase.CompletedPhase then
                 clear(patrol)
                 completed = completed + 1

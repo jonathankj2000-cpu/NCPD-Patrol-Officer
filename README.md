@@ -1,68 +1,76 @@
 # NCPD Patrol
 
-## v0.5b: longer notifications and dispatch audio
+## v0.5c: local dispatch, duty rules and vehicle chatter
 
-**[Download v0.5b](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5b_Dispatch_Audio_Notices_TEST.zip)**
+**[Download v0.5c](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5c_Local_Dispatch_Duty_Radio_TEST.zip)**
 
-Based on **v0.5a dispatch** and **v0.4c bonus/receipt**, both confirmed working in game by the user. The new notification queue, sound and native radio preview still need an in-game check.
+Based on the user's confirmed scanner bonus, receipt and dispatch setup. GPS refresh and vehicle chatter remain changes requiring an in-game test.
 
-### Notifications
+### Dispatch distance
 
-- New dispatch and **Incident resolved** notices last **8 seconds** each.
-- **On scene** and cancellation remain **4 seconds**.
-- Patrol notices share a queue, so the delayed bonus receipt does not cut Resolved short after two seconds. Each queued notice gets its full configured duration.
-- Money still transfers immediately. The receipt becomes eligible after 2 seconds, then waits for earlier patrol notices before displaying for 8 seconds. Notifications never grant money.
-- Pending notices and their callbacks belong to the loaded session; old callbacks cannot release or display a notice in a restored session.
+Assignments search within **1 km**, then **1.5 km**, then **2 km**, selecting from the first non-empty tier. The previous fallback to all known scanners is removed. If every tier is empty, automatic mode retries after 30 seconds. **Request dispatch now** still bypasses the wait. Distances are straight-line distances; the road route can be longer.
 
-### Dispatch alert and spoken-radio preview
+CET logs the selected radius and target distance. Eligibility still requires an active, unfinished Assault in Progress or Suspected Organized Crime POI, excluding paid/duplicate IDs and calls cancelled during the current shift.
 
-An accepted dispatch plays the existing short **`ui_phone_sms`** notification signal when its notice reaches the screen. This build supplies a short alert rather than a vehicle siren loop.
+### GPS update attempt
 
-CET's **DISPATCH** section adds:
+The tagged dispatch marker is reactivated and repositioned, and the UI tracked-mappin value and current menu-state signals are refreshed. No menu is opened and menu/time-dilation state is not changed. Refresh attempts are bounded to three, including initial placement. CET adds **Refresh dispatch GPS** and a native tracking-flag diagnostic.
 
-- **Mute / Enable dispatch alert** for automatic assignment alerts.
-- **Test dispatch alert** to audition the signal directly, including while assignment alerts are muted.
-- **Preview police radio (in vehicle)** to request the existing **`nc_heat_1_start`** line through the native PoliceRadioSystem. The script does not change heat, district, vehicle or police AI state to trigger it.
+This addresses the reported behaviour where the route appeared only after opening/closing the map. **Actual GPS-line rendering is not verified here.** Test the route before opening the map; if it still needs that workaround, report the navigation diagnostic before/after the refresh button and map open/close. A native tracking flag is diagnostic information, not proof that the line was rendered.
 
-The documented radio entry is used for pursuit dialogue. **An appropriate spoken on-scene briefing has not yet been selected**, so it is not played automatically on arrival. The preview lets the user check audibility and wording in game before selecting a fitting briefing. No custom recorded/generated speech or additional audio dependency is included.
+### Dispatch voice and ambient vehicle radio
 
-### Install and check
+The user-confirmed **`nc_heat_1_start`** police-radio line now accompanies a **new dispatch notification**. CET includes **Mute / Enable dispatch voice** and the existing preview. The short alert and eight-second dispatch/resolved notices remain. Custom on-scene voice waits for the user's briefing audio files.
 
-Requirements match v0.5a: Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL**, and compatible **redscript**. No additional dependency.
+Ambient chatter uses the existing **`radio_car_police_npc`** event, with the **car's entity ID** passed to the native audio system. It starts while on duty and mounted in an owned police car, and stops on that same car when exiting, switching vehicles, muting, ending duty or being terminated for crime. The controller checks every 0.25 seconds and starts one event per occupied vehicle rather than restarting it every frame.
 
-1. Exit the game completely. Extract the ZIP into the game folder containing `bin` and `r6`, replacing the mod files and including the new **NCPDPatrolNotice.reds** file.
-2. Load a save. In **CET → NCPD Patrol → DISPATCH**, try **Test dispatch alert**.
-3. Start a shift and **Request dispatch now**. Confirm the eight-second notification and one short alert. Earlier queued notices can delay when it appears.
-4. Travel to the incident. Check the existing four-second **On scene** message and HUD objective.
-5. Finish the scanner, including evidence collection. Check the full **Resolved** notification followed by the bonus receipt, and one money transfer.
-6. In a parked vehicle, try **Preview police radio (in vehicle)** and report the line's wording and whether it suits an arrival briefing.
+Eligibility requires **IsPlayerVehicle** and either the known patrol Hella record or a player audio-resource name containing `police`. This supports the patrol Hella and vehicles using police audio metadata; custom vehicles with other metadata can need explicit support. Civilian and unowned vehicles are excluded. CET includes **Mute / Enable vehicle chatter** and an entity/source diagnostic.
 
-### Retained patrol and dispatch
+The event name is present in the game's sound catalog. **Audibility and spatial playback need an in-game check.** Dispatch-call voice and the ambient car event have separate controls.
 
-One active, unfinished Assault in Progress or Suspected Organized Crime activity is selected at a time, preferring incidents within 2.5 km. Automatic calls wait 30–60 seconds initially and 60–120 seconds after resolution/cancellation, pausing in menus and combat. CET retains manual request, cancellation and pause/resume controls. Cancellation does not alter the vanilla scanner, and its ID is excluded for the remainder of that shift.
+### Criminal activity ends the shift
 
-The Custom Position waypoint, in-game HUD objective, shared saved/live completion state and tagged cleanup on End Shift/load remain. The normal road GPS line has not been independently verified. Dispatch continues to use the existing EUR$1000 scanner reward ledger, so it adds no duplicate bonus. Other eligible scanners still pay while on duty.
+Wanted heat is read from **PreventionSystem.GetHeatStage()**. A non-zero level during duty disables native duty and bonus eligibility, clears dispatch markers, stops vehicle chatter and displays this eight-second priority notification:
 
-Terminal Start/End Shift, partner following/combat/boarding, Police Hella and uniform controls remain available. Revive is not included in this build. Existing encounters are selected rather than regenerated; Reported Crime follow-ups are excluded.
+> NCPD: Shift terminated due to criminal activity.
+
+CET then dismisses the live partner and switches to OFF DUTY. Monitoring checks every 0.25 seconds, and the native reward tick checks again before processing a payment. **Start Shift is rejected while wanted**, including terminal requests.
+
+Already-paid money is retained and pending earned receipts can display after the termination notice. Pending assignment/arrival notices are discarded; notice tokens prevent an interrupted callback from cutting the new priority notice short. Loading a save follows the separate reset path, forgetting old partner/vehicle IDs instead of acting on them in the new world. The mod does not clear the game's wanted/chase state.
+
+### Install and test
+
+Requirements match v0.5b: Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL** and compatible **redscript**. No new dependency.
+
+1. Exit the game completely. Extract the ZIP into the game folder containing `bin` and `r6`, replacing all NCPDPatrol files, including the updated redscript and new **vehicle_radio.lua**.
+2. Start a shift and **Request dispatch now**. Check the distance/radius and whether GPS appears without opening the map. Try **Refresh dispatch GPS** if necessary.
+3. Confirm the approved voice accompanies the new dispatch notice.
+4. Enter your summoned police Hella. Check chatter starts, then stops when you get out. Test another owned police car and excluded civilian/unowned vehicles.
+5. Gain a wanted star during a shift. Check the termination notification, OFF DUTY state, partner dismissal, cleared dispatch and stopped car chatter.
+6. Check that duty cannot restart while wanted, and can restart after the wanted level ends.
 
 ### Validation
 
-- LuaJIT loading of all modules, actual CET module scenarios and the adapted authored native class: dispatch, HUD, automatic/manual controls, audio controls, duplicate suppression, mute and explicit previews.
-- Native reward/notification scenarios with chronological DelaySystem mocks: full 8/4/8-second durations, receipt ordering, no second money transfer, alert timing, queued alert delivery, restored-session isolation and missing-delay fallback.
-- Previous scanner completion/payment/receipt, terminal duty, partner, boarding and cleanup regressions pass.
-- redscript 1.0.1 syntax/type checking against source-derived game and Codeware contracts: no warnings or errors. These checks do not use the actual Cyberpunk 2.5 script cache and cannot verify live sound banks, voice content or HUD timing.
+- All six Lua modules pass LuaJIT loading.
+- The authored native class is exercised through a test-only syntax adapter with mocked game calls. Actual CET Lua modules run against it through a native-array conversion bridge.
+- Checks cover radius boundaries/tier expansion/2 km cap; bounded GPS updates and UI signals without opening a map; dispatch voice; owned/mounted police-car eligibility; vehicle-entity playback/stop/switch/mute; wanted reward cutoff; priority notification tokens; preservation of already-earned receipts; actual partner dismissal on crime; wanted start rejection; and save-load cleanup without reusing old IDs.
+- Prior scanner/payment/receipt, terminal, partner and vehicle boarding regressions pass.
+- redscript 1.0.1 reports no syntax/type errors or warnings against source-derived game/Codeware API contracts. This is not compilation against the actual Cyberpunk 2.5 script cache and cannot verify live audio banks, spatial playback or GPS rendering.
 
 ### Previous versions
 
-- [v0.5a: confirmed dispatch prototype](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5a_Scanner_Dispatch_TEST.zip)
-- [v0.4c: confirmed scanner bonus/receipt](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.4c_Scanner_Monitor_Fix_TEST.zip)
+- [v0.5b: longer notices and audio preview](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5b_Dispatch_Audio_Notices_TEST.zip)
+- [v0.5a: dispatch prototype](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5a_Scanner_Dispatch_TEST.zip)
+- [v0.4c: scanner bonus/receipt](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.4c_Scanner_Monitor_Fix_TEST.zip)
 
-To return to v0.5a, exit the game, remove `r6/scripts/NCPDPatrol/NCPDPatrolNotice.reds` and reinstall the complete v0.5a ZIP.
+To return to v0.5b, exit the game, remove `vehicle_radio.lua` and reinstall the complete v0.5b ZIP.
 
 ### API references
 
-- [Native police radio script and documented radio entries](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/policeRadioSystem.swift)
-- [PoliceRadioSystem audio-request API](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/gamePoliceRadioSystem.lua)
-- [Existing ui_phone_sms notification use](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/UI/fullscreen/notification/journalNotification.swift)
+- [Existing game sound-event catalog, including radio_car_police_npc](https://github.com/justarandomguyintheinternet/CP77_entSpawner/blob/93254747ba1156b26eb43fecef8e6b5336ce596a/resources/bin/x64/plugins/cyber_engine_tweaks/mods/entSpawner/data/spawnables/audio/sounds/sounds.txt)
+- [Native AudioSystem entity playback/stop API](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/audioSystem.swift)
+- [PreventionSystem heat-stage getter](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/preventionSystem.swift)
+- [Native quest tracker and tracked-mappin/menu signals](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/UI/quests/quest_tracker.swift)
+- [Existing police-radio entry](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/policeRadioSystem.swift)
 
-Installation ZIP SHA-256: `827d50543b6392f22d1ad0de309ec8ca1d43d026f08287c1a649e2ab407a394f`
+Installation ZIP SHA-256: `ab3d8889223f2b0fff64db1828fef6fcf5da2a5afbec650fcf7ad77656d8292f`

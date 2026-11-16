@@ -1,4 +1,4 @@
--- NCPD Patrol v0.5b | longer dispatch notices, alert sound and radio audition
+-- NCPD Patrol v0.5c | local dispatch, GPS refresh, vehicle chatter and duty rules
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -6,6 +6,7 @@
 
 local Partner = require("partner")
 local Dispatch = require("dispatch")
+local VehicleRadio = require("vehicle_radio")
 local onDuty = false
 local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
@@ -188,8 +189,9 @@ local function startShift()
         return
     end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 7 then error("Lua/redscript version mismatch; install all v0.5b files and restart the game") end
+        if patrol:Version() ~= 8 then error("Lua/redscript version mismatch; install all v0.5c files and restart the game") end
         patrol:BeginShift()
+        if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
     if not ok then status("Cannot start shift: " .. tostring(err)); return end
     onDuty = true
@@ -199,6 +201,7 @@ local function startShift()
     bridgeErrorReported = false
     logScanner(patrol, true)
     Dispatch.start(patrol, status)
+    VehicleRadio.reset()
     assignPatrolCar()
     ensurePoliceOutfit()
     print("[NCPD Patrol] On duty. Existing NCPD Scanner missions are unchanged.")
@@ -216,13 +219,18 @@ local function endShift()
     end
     local patrol = getPatrolSystem()
     if patrol then
+        VehicleRadio.finish(patrol)
         Dispatch.finish(patrol, status)
         patrol:FinishShift()
         logScanner(patrol, true)
     end
     onDuty = false
     Partner.dismiss(status)
-    status("Off duty. Vehicle and Police Uniform stay unlocked; worn outfit unchanged.")
+    if patrol and patrol:WasTerminatedForCrime() then
+        status("Shift terminated due to criminal activity.")
+    else
+        status("Off duty. Vehicle and Police Uniform stay unlocked; worn outfit unchanged.")
+    end
 end
 
 local function toggleDuty()
@@ -231,7 +239,7 @@ end
 
 registerForEvent("onInit", function()
     Dispatch.init()
-    status("v0.5b loaded. Longer dispatch/resolved notices and dispatch alert. Audio tests are available under DISPATCH.")
+    status("v0.5c loaded. Local dispatch, GPS refresh, vehicle chatter and criminal-activity shift termination.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -242,7 +250,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     if not isInGame() then
-        if onDuty then Partner.reset(); Dispatch.reset(); onDuty = false end
+        if onDuty then Partner.reset(); Dispatch.reset(); VehicleRadio.reset(); onDuty = false end
         return
     end
     dutyPoll = dutyPoll + delta
@@ -253,11 +261,20 @@ registerForEvent("onUpdate", function(delta)
         local ok, err = pcall(function()
             local patrol = getPatrolSystem()
             if not patrol then return end
+            patrol:EnforceDutyRules()
             if onDuty and not patrol:IsOnDuty() then
-                -- Loading a save reset the native session; old actor IDs are stale.
                 onDuty = false
-                Partner.reset()
-                Dispatch.reset()
+                if patrol:WasTerminatedForCrime() then
+                    VehicleRadio.finish(patrol)
+                    Dispatch.finish(patrol, status)
+                    Partner.dismiss(status)
+                    status("Shift terminated due to criminal activity.")
+                else
+                    -- Loading a save reset the native session; old actor IDs are stale.
+                    Partner.reset()
+                    Dispatch.reset()
+                    VehicleRadio.reset()
+                end
                 scannerLogState = nil
             end
             local request = patrol:TakeDutyRequest()
@@ -275,9 +292,11 @@ registerForEvent("onUpdate", function(delta)
     end
     Partner.update(delta, onDuty, status)
     Dispatch.update(delta, onDuty, status, getPatrolSystem)
+    VehicleRadio.update(delta, onDuty, status, getPatrolSystem)
 end)
 
 registerForEvent("onShutdown", function()
+    VehicleRadio.finish(getPatrolSystem())
     Dispatch.shutdown(getPatrolSystem())
     pcall(function()
         local patrol = getPatrolSystem()
@@ -288,7 +307,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.5b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.5c")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -300,13 +319,14 @@ registerForEvent("onDraw", function()
 
         ImGui.Separator()
         ImGui.Text("DISPATCH")
-        ImGui.TextWrapped("One scanner assignment at a time. Nearby incidents are preferred. Request a call now to skip the automatic wait.")
+        ImGui.TextWrapped("Dispatch searches within 1 km, then 1.5 km and 2 km. Empty searches retry after 30 seconds. Request a call now to skip the automatic wait.")
         if ImGui.Button("Request dispatch now") then
             Dispatch.request(getPatrolSystem(), status)
         end
         if ImGui.Button("Cancel active dispatch") then
             Dispatch.cancel(getPatrolSystem(), status)
         end
+        if ImGui.Button("Refresh dispatch GPS") then Dispatch.refreshNavigation(getPatrolSystem(), status) end
         if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
             Dispatch.setAutomatic(not Dispatch.isAutomatic(), status)
         end
@@ -316,10 +336,18 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Test dispatch alert") then
             Dispatch.testAudio(getPatrolSystem(), false, status)
         end
+        if ImGui.Button(Dispatch.isVoiceEnabled() and "Mute dispatch voice" or "Enable dispatch voice") then
+            Dispatch.setVoiceEnabled(not Dispatch.isVoiceEnabled(), status)
+        end
         if ImGui.Button("Preview police radio (in vehicle)") then
             Dispatch.testAudio(getPatrolSystem(), true, status)
         end
-        ImGui.TextWrapped("Radio preview uses an existing police pursuit line. Automatic spoken on-scene briefing is pending a suitable line.")
+        ImGui.TextWrapped("The confirmed police radio line accompanies new dispatch notices. Custom on-scene briefs can be added later.")
+        ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
+        if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
+            VehicleRadio.setEnabled(not VehicleRadio.isEnabled(), getPatrolSystem(), status)
+        end
+        ImGui.TextWrapped("Vehicle radio: " .. VehicleRadio.state())
         ImGui.TextWrapped(Dispatch.state())
         ImGui.Text("Dispatches completed: " .. tostring(Dispatch.completed()))
         if onDuty and Dispatch.isAutomatic() and not Dispatch.isActive() then
@@ -371,7 +399,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 7 then return "Version mismatch: install all v0.5b files and restart the game." end
+                if patrol:Version() ~= 8 then return "Version mismatch: install all v0.5c files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
