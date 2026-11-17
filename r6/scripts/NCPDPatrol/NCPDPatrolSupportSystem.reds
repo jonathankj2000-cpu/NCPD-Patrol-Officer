@@ -5,6 +5,8 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
     private let m_partnerState: Int32;
     private let m_treatmentTime: Float;
     private let m_recoveryTime: Float;
+    private let m_recoveryRepairs: Int32;
+    private let m_recoveryNoticePending: Bool;
     private let m_partnerRevision: Int32;
     private let m_backupRequested: Bool;
     private let m_backupActive: Bool;
@@ -18,14 +20,16 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
-    public func Version() -> Int32 { return 11; }
+    public func Version() -> Int32 { return 12; }
 
     private func ForgetWorld() -> Void {
         // Never issue cleanup operations using references from a loaded-away world.
         this.m_partner = null;
         this.m_partnerState = 0;
+        this.m_recoveryNoticePending = false;
         this.m_treatmentTime = 0.0;
         this.m_recoveryTime = 0.0;
+        this.m_recoveryRepairs = 0;
         this.m_partnerRevision += 1;
         this.m_backupRequested = false;
         this.m_backupActive = false;
@@ -59,6 +63,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
     }
 
     public func UnregisterPartner() -> Void {
+        this.m_recoveryNoticePending = false;
         let god: ref<GodModeSystem> = GameInstance.GetGodModeSystem(this.GetGameInstance());
         if IsDefined(this.m_partner) && this.m_partner.IsAttached() && IsDefined(god) {
             god.RemoveGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown");
@@ -76,6 +81,54 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
     public func GetPartnerState() -> Int32 { return this.m_partnerState; }
     public func GetPartnerRevision() -> Int32 { return this.m_partnerRevision; }
 
+    public func IsPartnerRecoveryReady() -> Bool {
+        let high: gamedataNPCHighLevelState;
+        let signals: ref<AISignalHandlerComponent>;
+        if !IsDefined(this.m_partner) || !this.m_partner.IsAttached() || !ScriptedPuppet.IsActive(this.m_partner) { return false; };
+        if StatusEffectSystem.ObjectHasStatusEffectWithTag(this.m_partner, n"FollowerDefeated") { return false; };
+        high = this.m_partner.GetHighLevelStateFromBlackboard();
+        if Equals(high, gamedataNPCHighLevelState.Unconscious) || Equals(high, gamedataNPCHighLevelState.Dead) { return false; };
+        signals = this.m_partner.GetSignalHandlerComponent();
+        return IsDefined(signals) && !signals.HasSignalWithTag(n"downed");
+    }
+
+    public func IsPartnerFollowerReady() -> Bool {
+        return this.m_partnerState == 1 && this.IsPartnerRecoveryReady() && this.m_partner.GetAIControllerComponent().IsPlayerCompanion();
+    }
+
+    public func ConfirmPartnerFollowerRestored() -> Void {
+        if this.IsDutyEligible() && this.m_recoveryNoticePending && this.IsPartnerFollowerReady() {
+            this.m_recoveryNoticePending = false;
+            this.Notice("NCPD: Partner revived. Returning to duty.");
+        };
+    }
+
+    public func RestorePartnerFollowerRole(role: ref<AIRole>) -> Bool {
+        if !this.IsDutyEligible() || this.m_partnerState != 1 || !this.IsPartnerRecoveryReady() || !IsDefined(role) { return false; };
+        if NotEquals(role.GetRoleEnum(), EAIRole.Follower) { return false; };
+        // Canonical role change updates the follower sense type, companion cache
+        // and NPCRoleChangeEvent without manually invoking private attach hooks.
+        AIHumanComponent.SetCurrentRole(this.m_partner, role);
+        return true;
+    }
+
+    public func GetPartnerDiagnostics() -> String {
+        let high: String;
+        let active: Bool;
+        let down: Bool;
+        let followerEffect: Bool;
+        let follower: Bool;
+        let signals: ref<AISignalHandlerComponent>;
+        if !IsDefined(this.m_partner) { return "No registered partner"; };
+        high = ToString(this.m_partner.GetHighLevelStateFromBlackboard());
+        active = ScriptedPuppet.IsActive(this.m_partner);
+        signals = this.m_partner.GetSignalHandlerComponent();
+        down = IsDefined(signals) && signals.HasSignalWithTag(n"downed");
+        followerEffect = StatusEffectSystem.ObjectHasStatusEffectWithTag(this.m_partner, n"FollowerDefeated");
+        follower = this.m_partner.GetAIControllerComponent().IsPlayerCompanion();
+        return s"aid state=\(this.m_partnerState) | high level=\(high) | active=\(active) | downed signal=\(down) | follower defeated=\(followerEffect) | follower target ready=\(follower)";
+    }
+
     private func InTreatmentRange() -> Bool {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) || !IsDefined(this.m_partner) || player.IsDead() || !this.m_partner.IsAttached() || this.m_partner.IsDead() { return false; };
@@ -89,6 +142,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         // Do not eject an injured passenger from a moving vehicle.
         if VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), this.m_partner) { return false; };
         this.m_partnerState = 2;
+        this.m_recoveryNoticePending = false;
         this.m_treatmentTime = 0.0;
         this.m_partnerRevision += 1;
         god.AddGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown");
@@ -132,27 +186,39 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
             if this.m_treatmentTime < 3.0 { return; };
             this.m_partnerState = 4;
             this.m_recoveryTime = 0.0;
+            this.m_recoveryRepairs = 0;
             this.m_partnerRevision += 1;
             this.m_partner.NCPDPatrolRefreshAidInteraction();
             GameInstance.GetStatPoolsSystem(this.GetGameInstance()).RequestSettingStatPoolValue(Cast<StatsObjectID>(this.m_partner.GetEntityID()), gamedataStatPoolType.Health, 100.0, null, true);
             StatusEffectHelper.RemoveStatusEffect(this.m_partner, t"BaseStatusEffect.Defeated");
             StatusEffectHelper.RemoveStatusEffect(this.m_partner, t"BaseStatusEffect.Unconscious");
             StatusEffectHelper.RemoveStatusEffect(this.m_partner, t"BaseStatusEffect.InvulnerableAfterDefeated");
+            // Hit reactions have a separate, difficulty-dependent companion
+            // defeat effect. The vanilla role-clearing path removes this tag.
+            StatusEffectHelper.RemoveStatusEffectsWithTag(this.m_partner, n"FollowerDefeated");
             ScriptedPuppet.SendResurrectEvent(this.m_partner);
             return;
         };
         if this.m_partnerState == 4 {
             this.m_recoveryTime += delta;
+            if this.m_recoveryRepairs == 0 && this.m_recoveryTime >= 0.5 {
+                this.m_partner.NCPDPatrolResumeAidAI();
+                this.m_recoveryRepairs += 1;
+            };
             if this.m_recoveryTime < 1.0 { return; };
-            if ScriptedPuppet.IsActive(this.m_partner) {
+            if this.IsPartnerRecoveryReady() {
                 god = GameInstance.GetGodModeSystem(this.GetGameInstance());
                 if IsDefined(god) { god.RemoveGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown"); };
                 this.m_partnerState = 1;
                 this.m_partnerRevision += 1;
                 this.m_partner.SetIsDefeatMechanicActive(false);
                 this.m_partner.NCPDPatrolRefreshAidInteraction();
-                this.Notice("NCPD: Partner revived. Returning to duty.");
+                this.m_recoveryNoticePending = true;
             } else {
+                if this.m_recoveryRepairs < 3 && this.m_recoveryTime >= 1.5 {
+                    this.m_partner.NCPDPatrolResumeAidAI();
+                    this.m_recoveryRepairs += 1;
+                };
                 if this.m_recoveryTime >= 5.0 {
                     this.m_partnerState = 2;
                     this.m_partnerRevision += 1;

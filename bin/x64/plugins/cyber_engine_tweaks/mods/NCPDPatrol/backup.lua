@@ -154,17 +154,18 @@ local function mount(unit, unmount)
 end
 
 local function driveToScene(support, status)
-    local command = AIVehicleFollowCommand.new()
-    command.target = target
+    local command = AIVehicleDriveToPointAutonomousCommand.new()
+    -- This is the request location, independent of dispatch and later movement.
+    command.targetPosition = Vector3.new(anchor.x, anchor.y, anchor.z)
     command.useKinematic, command.needDriver = false, true
-    command.secureTimeOut = 60
-    command.distanceMin, command.distanceMax = 10, 18
-    command.stopWhenTargetReached, command.useTraffic = true, true
-    command.trafficTryNeighborsForStart, command.trafficTryNeighborsForEnd = true, true
+    command.maxSpeed, command.minSpeed = 12, 0
+    command.minimumDistanceToTarget = 12
+    command.forcedStartSpeed = 0
+    command.clearTrafficOnPath, command.driveDownTheRoadIndefinitely = false, false
     car:GetAIComponent():SendCommand(command)
     drive = command
     phase, elapsed = "enroute", 0
-    report("Patrol car approaching", support, status)
+    report("Patrol approaching the fixed request location", support, status)
 end
 
 local function awayFromUnit(player)
@@ -208,12 +209,23 @@ local function updateActive(delta, support, patrol, status)
             phase = "lost"
             report("Patrol vehicle lost; leave the scene before another request", support, status)
             notice(patrol, "Backup vehicle lost. No additional unit available at this scene.")
-        elseif distance(car:GetWorldPosition(), target:GetWorldPosition()) <= 24 and math.abs(car:GetCurrentSpeed()) < 1.2 then
+        elseif distance(car:GetWorldPosition(), anchor) <= 28 then
             if drive then car:GetAIComponent():StopExecutingCommand(drive, false); drive = nil end
+            car:ForceBrakesUntilStoppedOrFor(8.0)
+            phase, elapsed = "stopping", 0
+            report("Patrol at request location; braking before exit", support, status)
+        elseif elapsed > 65 then error("Patrol could not reach the scene within 65 seconds") end
+    elseif phase == "stopping" then
+        if car:IsDestroyed() then
+            phase = "lost"
+            report("Patrol vehicle lost; leave the scene before another request", support, status)
+            notice(patrol, "Backup vehicle lost. No additional unit available at this scene.")
+        elseif math.abs(car:GetCurrentSpeed()) < 0.7 and elapsed >= 0.5 then
+            if distance(car:GetWorldPosition(), anchor) > 45 then error("Patrol stopped too far from the request location") end
             for _, unit in ipairs(units) do mount(unit, true) end
             phase, elapsed = "exiting", 0
-            report("Patrol arrived; officers disembarking", support, status)
-        elseif elapsed > 65 then error("Patrol could not reach the scene within 65 seconds") end
+            report("Patrol stopped; officers disembarking", support, status)
+        elseif elapsed > 10 then error("Patrol did not stop safely for crew exit") end
     elseif phase == "exiting" or phase == "onscene" then
         local ready = true
         for index, unit in ipairs(units) do

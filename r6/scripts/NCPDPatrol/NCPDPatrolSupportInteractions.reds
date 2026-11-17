@@ -63,6 +63,29 @@ public func NCPDPatrolRefreshAidInteraction() -> Void {
     this.UpdateLootInteraction();
 }
 
+@addMethod(NPCPuppet)
+public func NCPDPatrolResumeAidAI() -> Void {
+    let support: ref<NCPDPatrolSupportSystem> = NCPDPatrolSupportSystem.Get(this.GetGame());
+    let signals: ref<AISignalHandlerComponent>;
+    let signalID: Uint32;
+    let count: Int32 = 0;
+    if !IsDefined(support) || !support.IsDutyEligible() || !support.IsPartner(this) || support.GetPartnerState() != 4 || this.IsDead() { return; };
+    StatusEffectHelper.RemoveStatusEffectsWithTag(this, n"FollowerDefeated");
+    // A gate signal can outlive the health/status reset. Remove only downed
+    // signals on this owned actor, with a bounded loop and a checked result.
+    signals = this.GetSignalHandlerComponent();
+    if IsDefined(signals) {
+        while count < 8 && signals.IsHighestPriority(n"downed", signalID) {
+            if !signals.RemoveSignal(signalID) { break; };
+            count += 1;
+        };
+    };
+    this.GetSensesComponent().ToggleComponent(true);
+    this.GetBumpComponent().Toggle(true);
+    // The game uses this transition when its recoverable defeat effect ends.
+    NPCPuppet.ChangeHighLevelState(this, gamedataNPCHighLevelState.Relaxed);
+}
+
 @wrapMethod(ScriptedPuppet)
 protected final func UpdateLootInteraction() -> Void {
     let support: ref<NCPDPatrolSupportSystem> = NCPDPatrolSupportSystem.Get(this.GetGame());

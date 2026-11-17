@@ -66,7 +66,7 @@ end
 function M.testAudio(patrol, radio, status)
     local ok, result = pcall(function()
         if not patrol or not Game.GetPlayer() then error("Load a save first") end
-        if patrol:Version() ~= 11 then error("Install all v0.6a files and restart the game") end
+        if patrol:Version() ~= 12 then error("Install all v0.6b files and restart the game") end
         if radio then return patrol:PreviewPoliceRadio() end
         return patrol:PlayDispatchAlert()
     end)
@@ -127,7 +127,7 @@ function M.request(patrol, status)
         return false
     end
     local ok, result = pcall(function()
-        if patrol:Version() ~= 11 then error("Install all v0.6a Lua/redscript files and restart the game") end
+        if patrol:Version() ~= 12 then error("Install all v0.6b Lua/redscript files and restart the game") end
         if not patrol:IsOnDuty() then report("Start a shift before requesting a dispatch", status); return false end
         if failed then report("Dispatch stopped after an API error; end and restart the shift to retry", status); return false end
         if active then report("A dispatch is already assigned; complete or cancel it first", status); return false end
@@ -215,7 +215,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then hide(); return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 11 then return end
+        if patrol:Version() ~= 12 then return end
         if not onDuty or not patrol:IsOnDuty() then
             if dutySeen then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end

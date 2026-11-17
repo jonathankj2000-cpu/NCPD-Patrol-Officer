@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6a: one owned partner with native defeat/revive and boarding.
+-- NCPD Patrol v0.6b: one owned partner with native defeat/revive and boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
@@ -19,16 +19,32 @@ local followCommand = nil
 local vehicleFailed = false
 local supportState = 0
 local supportFailure = false
+local rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
 
 local function support()
     return Game.GetScriptableSystemsContainer():Get("NCPDPatrolSupportSystem")
 end
 
 function M.aidState()
+    if roleFailed then return "Revived; follower AI recovery failed (see diagnostics)" end
+    if rolePending then return "Revived; waiting for follower target" end
     local labels = { [0]="No registered partner", [1]="Active; death protection enabled",
         [2]="Down; approach to revive", [3]="Reviving; stay within 2.5 m",
         [4]="Waiting for native recovery" }
     return supportFailure and "Revive control failed; see CET log" or (labels[supportState] or "Unknown")
+end
+
+function M.diagnostics()
+    local ok, info = pcall(function() return support():GetPartnerDiagnostics() end)
+    return ok and tostring(info) or ("Partner AI diagnostics unavailable: " .. tostring(info))
+end
+
+local function restoreRole()
+    local role = AIFollowerRole.new()
+    role.followerRef = Game.CreateEntityReference('#player', {})
+    if not support():RestorePartnerFollowerRole(role) then error("Native follower role recovery refused") end
+    OfficerAI.friendly(officer)
+    roleAttempts = roleAttempts + 1
 end
 
 local function loaded()
@@ -109,6 +125,7 @@ function M.spawn(onDuty, status)
     followCommand = nil
     vehicleFailed = false
     supportState, supportFailure = 0, false
+    rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     timeout = 0
     pollTime = 0
     followTime = 0
@@ -117,6 +134,7 @@ function M.spawn(onDuty, status)
 end
 
 function M.dismiss(status)
+    rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     pcall(function()
         local system = support()
         if system then system:UnregisterPartner() end
@@ -155,6 +173,7 @@ end
 -- A loaded save has already removed non-persistent actors from the old world.
 -- Forget stale IDs without issuing a deletion into the newly loaded world.
 function M.reset()
+    rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     spawnId, officer, spawnWaiting, followCommand = nil, nil, false, nil
     timeout, pollTime, followTime = 0, 0, 0
     stateLabel = "Not spawned"
@@ -185,7 +204,7 @@ function M.update(delta, onDuty, status)
         spawnWaiting = false
         local attached, err = pcall(function()
             local system = support()
-            if not system or system:Version() ~= 11 or not system:RegisterPartner(officer) then
+            if not system or system:Version() ~= 12 or not system:RegisterPartner(officer) then
                 error("Native revive protection could not register our partner")
             end
             supportState = system:GetPartnerState()
@@ -211,16 +230,38 @@ function M.update(delta, onDuty, status)
             local previous = supportState
             supportState = system:GetPartnerState()
             if supportState ~= 1 then
+                rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
                 if previous == 1 then Boarding.cancel(officer); stopFollow() end
                 stateLabel = M.aidState()
                 return false
             end
             if previous ~= 1 then
                 Boarding.reset()
-                nativeFollower(officer)
-                stateLabel = "Revived; following"
-                followTime = 5
-                status("Partner recovered; follower role restored.")
+                rolePending, roleElapsed, roleAttempts, roleFailed = true, 0, 0, false
+                restoreRole()
+                stateLabel = "Revived; restoring follower AI"
+            end
+            if roleFailed then return false end
+            if rolePending then
+                if not patrol:IsDispatchMenuOpen() and delta > 0 and delta <= 0.5 then roleElapsed = roleElapsed + delta end
+                if roleElapsed < 0.5 then return false end
+                if system:IsPartnerFollowerReady() then
+                    rolePending = false
+                    sendFollow()
+                    system:ConfirmPartnerFollowerRestored()
+                    followTime = 0
+                    stateLabel = "Revived; follower target restored"
+                    status("Partner AI restored | " .. M.diagnostics())
+                else
+                    if roleElapsed >= 1.5 and roleAttempts < 2 then restoreRole() end
+                    if roleElapsed >= 4 then
+                        rolePending, roleFailed = false, true
+                        stateLabel = "Revived; follower recovery FAILED"
+                        status("Partner AI recovery failed | " .. M.diagnostics())
+                        patrol:NotifyDispatch("NCPD: Partner revived, but could not resume following.", 6)
+                    end
+                    return false
+                end
             end
             return true
         end)
@@ -230,6 +271,7 @@ function M.update(delta, onDuty, status)
             return
         end
         if not ready then return end
+        supportFailure = false
         local wasBusy = Boarding.busy()
         if not vehicleFailed then
             local boarded, err = pcall(Boarding.update, delta, officer, status, stopFollow)

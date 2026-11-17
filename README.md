@@ -1,69 +1,59 @@
 # NCPD Patrol
 
-## v0.6a: partner revive and one backup patrol
+## v0.6b: partner AI after revive and backup arrival
 
-**[Download v0.6a](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6a_Revive_Backup_Car_TEST.zip)**
+**[Download v0.6b](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6b_Revive_AI_Backup_Arrival_TEST.zip)**
 
-This first implementation adds aid for your spawned partner and a backup car with two officers. Normal use stays in the game: terminals for duty, the police-car trunk for backup and a body interaction for revive.
+This test build addresses two reports from v0.6a: the partner gets up after revive and remains idle despite the success notice, and backup drives past instead of stopping and unloading.
 
-### In-game controls
+### Partner recovery
 
-- **Duty:** start/end shift at a fast travel terminal as before.
-- **Backup:** on duty, approach the trunk of your owned police Hella and choose **Request NCPD Backup**, beside stash. It inherits the terminal's secondary interaction input, normally **R** in this setup. The vanilla stash action remains.
-- **Revive:** approach your downed partner and choose **Revive Partner**. Remain on foot within **2.5 m for three seconds**. The caption changes to **Reviving Partner - stay close**. Moving away or entering a vehicle interrupts treatment.
-- **Optional backup key:** choose a key in **CET Bindings > NCPD Patrol - Request backup**. No default key is assigned. The trunk, CET test button and key share the same unit limit.
+The previous success check observed life/status activity. That does not establish that AI has left a downed state. Recovery now removes the separate **FollowerDefeated** effects, clears only downed gate signals on the registered partner, restores senses/bump and requests the relaxed-state transition used by the game's recoverable defeat path.
 
-### Partner aid
+Readiness also checks high-level state, companion defeat effects and downed signals. The follower role is restored through **AIHumanComponent.SetCurrentRole**, which updates follower sense type, companion cache and the role-change event. Recovery no longer manually clears the existing role and invokes its private attach hook. Follow and boarding wait for the player target to become ready. Repairs/rebinds are bounded, and the return-to-duty notice waits for target readiness.
 
-Only the mod's registered partner receives immortal protection. When critically injured on foot (10% health or less), defeated or unconscious, that partner is downed and protected from further damage. Follow and boarding commands pause. The partner's body choices become the revive interaction; other NPC interactions retain vanilla behaviour.
+The same actor remains, with the existing three-second revive within 2.5 m and death protection. There is no new treatment animation or automatic replacement. If the partner still stops, use **Log partner AI diagnostics** in CET and send that line.
 
-Revive restores **the same actor** to full health, removes defeat/unconscious effects and requests native recovery. Following resumes once recovery is observed. Failed recovery allows another attempt. An injured passenger remains protected until exiting; the mod does not eject them from a moving vehicle.
+### Backup arrival
 
-The first version uses a timed interaction and native down/get-up behaviour, with **no V treatment animation**. CET includes **Test: down partner** for convenient testing; normal aid uses the in-world prompt.
+Backup is **independent of scanner dispatch locations**. It now drives to the fixed world position where assistance was requested, using a drive-to-point command instead of following the player/vehicle. Moving afterward does not move that destination.
 
-### Backup car
+Within 28 m, the drive command is stopped and native braking is applied only to the owned backup car. The crew remain seated while it brakes. Exit is requested after speed falls below 0.7 and the stop phase has lasted 0.5 seconds. Stopping over 45 m away or failing to stop within 10 seconds aborts and cleans up the response.
 
-One non-persistent NCPD Hella and two officers are created at a nearby approach point. The crew are initially seated there, and the car receives a native traffic-follow command. At low-speed arrival they use native unmount commands, move to the scene and support/hold there.
+One car/two officers, the secondary trunk action beside stash, the optional unbound CET key, one active-unit reservation, 150-m/three-second departure rearm and duty/load cleanup remain.
 
-Only one unit may be pending or active. Repeated inputs cannot create another patrol, and duplicate feedback is limited. A wreck or dead crew still consumes the scene's unit. For normal rearm, travel at least **150 m from the request scene, car and both officers for three seconds**. Their entities are deleted before another request becomes available.
+### Install and test
 
-End Shift and criminal termination also clean up. Partial failures roll back accepted IDs. Failed deletions retain the reservation and retry. Loading another save forgets old-world IDs, including after off-duty cleanup failures, without deleting anything in the new world. The player's vehicle and ambient NPCs are outside this cleanup.
+Exit the game completely and extract the entire ZIP into the game folder containing bin and r6, replacing all mod files. Restart. No new files or dependencies were added compared with v0.6a; both native systems use interface version 12.
 
-### First driving test
+1. Start a shift, revive the partner, walk away and enter a stopped car. Check that the same actor follows and boards. **Test: down partner** remains in CET.
+2. Request backup from your owned police Hella's trunk beside a clear road. Stay at the request point and check braking, stop and crew exit. Also test with no scanner dispatch active.
+3. A second request should remain blocked. Move at least 150 m from the request scene, car and officers for three seconds, then check rearm.
+4. Report the **Partner AI** diagnostics or **Backup** log/status if something remains wrong.
 
-**Test beside a clear road.** The approach point is projected to character navmesh; this is not a verified traffic-lane spawn API. Tight alleys, interiors, obstacles and off-road routing may fail. Actual seating, driving, exit animations, combat and world prompts require testing in Cyberpunk 2.5.
+### Requirements and retained features
 
-### Installation
+Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL** and compatible **redscript**. No additional dependency or required input binding.
 
-Requirements remain Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL** and compatible **redscript**. No new dependency.
+Terminal duty, bonus receipts, scanner dispatch, marker/HUD, partner boarding, vehicle-bound chatter and wanted termination remain. The GPS line still uses the map open/close workaround when necessary. Dispatch audio and chatter volume are unchanged.
 
-Exit the game completely and extract the entire ZIP into the game folder containing bin and r6, replacing all mod files and the interaction YAML. Include the new **backup.lua**, **officer_ai.lua**, **NCPDPatrolSupportSystem.reds** and **NCPDPatrolSupportInteractions.reds**. Keep the existing radio callback files.
+### Validation and limits
 
-Test stash/backup from the trunk, repeated-request rejection, departure/rearm, partner revive and End Shift cleanup. If something fails, report the exact **Backup** or partner status and any redscript errors.
+All eight Lua modules parse in LuaJIT. Redscript checks pass with zero warnings/errors against source-derived contracts, not the actual game script cache. Authored support/recovery helpers and actual CET modules execute in scenarios for active-but-downed AI, companion-effect cleanup, canonical role/target restoration, resumed boarding, bounded failures, fixed backup destination, braking on moving arrival, no moving-car exit, stopping timeout and prior duty/bonus/dispatch/cleanup regressions.
 
-### Retained behaviour
+Native AI, physics, mounting, audio and rendered UI are mocked. These checks verify control flow and API use, not actual in-game movement or animations. Clear roadside tests remain necessary: spawn positions use character navmesh, not a verified traffic-lane placement API.
 
-Existing terminal duty, bonus receipts, dispatch, marker/HUD, partner boarding and chatter remain. Open/close the world map when needed for the GPS line. Dispatch voice remains at v0.5e with its diagnostics; repeat audible playback is still unresolved. This build adds no audio files or chatter volume change.
+### Rollback
 
-### Validation
-
-All eight Lua modules parse in LuaJIT. Redscript checks pass with zero warnings or errors against source-derived contracts, not the actual game script cache. Authored support/interaction logic and actual CET modules execute in scenarios for same-actor recovery, menus, duplicate input, seating, vehicle commands, exits, distance rearm, partial failures, cleanup retries and duty/load boundaries, plus prior bonus/dispatch/boarding/radio regressions.
-
-Native game calls, driving, mounting and sound are mocked in these checks. Real game behaviour remains to be tested.
-
-### Previous version and rollback
-
-[v0.5e: radio state/replay test](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5e_Radio_State_Replay_TEST.zip)
-
-To return to v0.5e, exit the game, remove NCPDPatrolSupportSystem.reds and NCPDPatrolSupportInteractions.reds from r6/scripts/NCPDPatrol, plus backup.lua and officer_ai.lua from the CET mod folder, then reinstall its complete ZIP.
+[Download v0.6a](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6a_Revive_Backup_Car_TEST.zip). Exit the game and reinstall that complete ZIP. No added files need removal.
 
 ### API references
 
-- [Codeware 1.21.4 dynamic entity ownership and cleanup API](https://github.com/psiberx/cp2077-codeware/blob/v1.21.4/scripts/World/DynamicEntitySystem.reds)
-- [Game puppet interactions and recovery](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/puppet/scriptedPuppet.swift)
-- [NPC defeat/recovery and ragdoll rules](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/NPC/NPCPuppet.swift)
-- [Vehicle trunk actions](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/components/scriptComponents/vehicleComponentPS.swift)
-- [Native vehicle-follow command](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/AIVehicleFollowCommand.lua)
-- [Game driving handlers](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/commands/aiDriveCommandHandler.swift)
+- [Follower role initialization and companion-defeat cleanup](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/roles/aiRole.swift)
+- [Canonical AI role change and companion target](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/components/aiComponent.swift)
+- [Puppet life/activity and recovery](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/puppet/scriptedPuppet.swift)
+- [Native downed-signal API](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/AISignalHandlerComponent.lua)
+- [Native drive-to-point command](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/AIVehicleDriveToPointAutonomousCommand.lua)
+- [Native vehicle braking](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/vehicleBaseObject.lua)
 
-Archive SHA-256: `b6fd7f56a687bf3410e51314347668e819d33b24fa7acca108d1466ab9e81802`
+Archive SHA-256: `ec3491915fee818e98c51862a7811bdb1ab9221dfc70da65bb45c50caa14bece`
