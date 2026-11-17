@@ -1,6 +1,13 @@
-NCPD PATROL v0.8a - TRUNK PATROL MENU TEST
+NCPD PATROL v0.8b - TRUNK PATROL MENU TEST
 ========================================
-New in this build: tap the trunk's secondary interaction (normally R) for
+COMPILER FIX
+The timer now returns CeilF directly. CeilF returns Int32 in the game; the
+extra Cast<Int32> in v0.8a is invalid. The previous local API contract had
+incorrectly declared CeilF as returning Float. The corrected contract rejects
+the old expression and accepts the new getter. Both supplied game-compiler logs report this exact error at TrunkSystem line 87.
+No other gameplay logic changed.
+
+Trunk features: tap the trunk's secondary interaction (normally R) for
 backup, or hold it for about 0.5 seconds to open a native patrol choice list.
 The user confirmed v0.7f arrest payments and the lying handcuff loop work.
 The arrest code and compiled archive in this build are byte-for-byte unchanged.
@@ -8,7 +15,7 @@ The arrest code and compiled archive in this build are byte-for-byte unchanged.
 INSTALL AND FIRST TEST
 1. Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory
    containing bin, r6 and archive, replacing existing mod files. Restart;
-   CET announces v0.8a. Main/support interfaces remain 17; arrest interface 5;
+   CET announces v0.8b. Main/support interfaces remain 17; arrest interface 5;
    the new independent trunk bridge is version 1. No new runtime dependency.
 2. Start a shift at a Fast Travel terminal. Approach the stash interaction at
    your owned police car's trunk while on foot. The vanilla stash remains F.

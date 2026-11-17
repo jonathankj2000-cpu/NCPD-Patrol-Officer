@@ -34,3 +34,23 @@ For the game test: tap at the trunk for one backup, hold for the menu without
 backup, release without closing it, select with F and close with a fresh R.
 Check Busy with a live assignment, manual replacement while Busy, repair after
 ten gameplay seconds, partner replacement, and stats without progression payouts.
+
+## v0.8b compile regression
+
+`ceilf-contract.reds` records the real `CeilF(Float) -> Int32` signature from
+`Definitions/Game_Definitions/globals.lua`, corroborated by
+`DecompiledGameScripts/core/math/scalar.swift` in the pinned reference above.
+Both supplied game-2.50 compiler logs report this exact NO_MATCHING_OVERLOAD
+error at NCPDPatrolTrunkSystem.reds:87. The v0.8a local fixture incorrectly
+declared a Float return and missed an invalid
+identity cast. `check_ceil_type.py` extracts the actual production timer getter,
+checks that it compiles, then reinstates the old cast and requires rejection by
+the same compiler and contract. With the local compiler API driver:
+
+```sh
+python tests/trunk_menu/check_ceil_type.py /path/to/ncpd-check
+```
+
+This checks that specific type error; it does not substitute for the actual
+game compiler log or game cache. The normal LuaJIT logic checks still run as
+shown above and do not claim to check static native return types.

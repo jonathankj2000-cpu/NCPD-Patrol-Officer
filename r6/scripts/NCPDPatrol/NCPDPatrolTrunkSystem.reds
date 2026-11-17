@@ -84,7 +84,7 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     public func IsRepairPending() -> Bool { return this.m_repairPending; }
     public func GetRepairSeconds() -> Int32 {
         if !this.m_repairPending { return 0; };
-        return Cast<Int32>(CeilF(10.0 - this.m_repairElapsed));
+        return CeilF(10.0 - this.m_repairElapsed);
     }
 
     private func Refresh(vehicle: ref<VehicleObject>) -> Void {
