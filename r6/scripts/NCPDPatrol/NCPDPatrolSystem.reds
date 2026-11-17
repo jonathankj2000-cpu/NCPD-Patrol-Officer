@@ -286,6 +286,10 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         if amount > 0 { this.ShowMessage(s"DISPATCH BONUS PAID: +€$\(amount)", true, 8.0); };
     }
 
+    public func NotifyCareerReward(amount: Int32, milestone: Int32) -> Void {
+        if amount > 0 { this.ShowMessage(s"NCPD CAREER REWARD: +€$\(amount) | \(milestone) recorded activities", true, 8.0); };
+    }
+
     public func PlayDispatchAlert() -> Bool {
         let player: ref<GameObject> = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) { return false; };

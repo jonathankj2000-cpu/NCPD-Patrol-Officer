@@ -1,40 +1,44 @@
 # NCPD Patrol
 
-## v0.9b: varied dispatch briefings and €$500 completion supplements
+## v0.10a: NCPD Career computer page
 
-[Download the complete v0.9b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9b_Dispatch_Briefings_Rewards_TEST.zip)
+[Download the complete v0.10a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.10a_Career_Browser_TEST.zip)
 
-Dispatches now choose from **six journal titles, objectives and briefings**, without repeating the previous choice. Text stays broad enough for existing scanner incidents: respond, assess the scene, deal with threats and secure evidence. It does not invent specific gangs, hostages, injured officers or suspect counts.
+Adds an **NCPD Career** page to the in-game computer browser through [Browser Extension Framework](https://www.nexusmods.com/cyberpunk2077/mods/10038). The page shows your rank, progress toward the next promotion, the next milestone reward, and recorded scanner, dispatch and arrest totals.
 
-Finishing an **active assigned dispatch after On scene** earns a separate **€$500 supplement**. A successful transfer queues **DISPATCH BONUS PAID: +€$500** and prints a CET receipt. Scanner and arrest payments retain their own ledgers and receipts.
+The career uses scanner activities already recorded by NCPD Patrol while on duty. Existing recorded progress carries over across shifts and saves. Opening or refreshing the page never adds progress or grants money.
 
-- A persistent dispatch ledger pays each incident once, including across shifts and save/load.
-- Failed native transactions stay queued for retry; only successful transfers are marked paid or generate a paid receipt.
-- Timeout, cancellation, replacement and an incident resolved before attendance earn no dispatch supplement.
-- The native controller checks that the assigned scanner is completed before accepting success.
+| Recorded activities | Rank | Prototype milestone reward |
+| --- | --- | --- |
+| 0 | Probationary Officer | — |
+| 10 | Patrol Officer | €$1000 |
+| 20 | Senior Officer | €$1000 |
+| 40 | Corporal | €$1000 |
+| 60 | Sergeant | €$1000 |
+| 80 | Lieutenant | €$1000 |
+| 100 | Captain | €$1000 |
 
-The v0.9a rules continue: **3-minute arrival deadline**, paused in menus; **On scene within 60 m** stops the deadline; the subsequent fight has no deadline. Failure closes the assignment while leaving the original scanner available. Only one dispatch is active. Six reusable journal entries provide limited history, rather than an unlimited per-call log. Loading closes saved active calls, including the original v0.9a path.
+The progress bar measures the current promotion interval. For example, at 15 activities the page shows **5/10 in rank**, **15/20 total** and a half-filled bar. Milestones show **LOCKED**, **AVAILABLE** or **CLAIMED**.
+
+**Claim reward** collects the oldest available milestone, one per click. Claims work off duty at a computer. Each successful transfer produces its own **NCPD CAREER REWARD** receipt and is saved once per milestone. Failed transactions leave the reward available for another attempt. These are prototype cash rewards; the reward catalog can later be replaced with confirmed vehicle or equipment rewards. No vehicle, outfit or partner upgrade is granted in this version.
+
+Dispatch and arrest totals are shown separately. They do not grant additional career activity credits. Service rewards, scanner bonuses, €$500 dispatch supplements and arrest payments use separate records.
 
 ### Install and test
 
-Exit the game, extract the **entire ZIP** into the game directory and replace files. Restart; CET announces **v0.9b**. Both the dispatch archive and `.archive.xl` are required.
+1. Exit the game, extract the **entire ZIP** into the game directory and replace files. Restart; CET announces **v0.10a**.
+2. Install **Browser Extension 0.9.7**, its main framework package, to enable the page. Open a browser-capable computer, such as the one in V's apartment, go to **NETdir://ncity.pub** and select **NCPD Career**. The site address is **NETdir://ncpd.career**.
+3. Check your rank, progress and next reward. Use **Refresh record** to reload the snapshot. If you already have recorded milestones, claim one and check the separate receipt. Reopening the site or loading the same updated save must keep that reward claimed.
+4. **Cop Stats** at the vehicle trunk also shows the real career summary and points to the computer page.
 
-Dependencies are unchanged from v0.9a: Cyberpunk 2077 2.5 and compatible CET, RED4ext, Codeware, redscript, TweakXL and **[ArchiveXL](https://github.com/psiberx/cp2077-archive-xl/releases/tag/v1.28.8)** (1.28.8 recommended). Dependencies are not bundled.
+Browser Extension is optional for the rest of NCPD Patrol. Conditional imports/hooks keep the core mod usable without it. Dependencies otherwise remain those of v0.9b: Cyberpunk 2077 2.5 and compatible CET, RED4ext, Codeware, redscript, TweakXL and ArchiveXL (1.28.8 recommended). Frameworks are not bundled.
 
-1. Request a few dispatches and check journal variety. Consecutive titles should differ.
-2. Arrive and complete the assigned scanner. Check Completed and the **separate €$500 receipt**; other queued notices may appear first.
-3. Use CET **Test timeout: 15 s left (on route)** before arrival. Check Failed and no dispatch supplement.
-4. Test another call after success/failure, cancellation and a save/load during a call.
-5. Use **Log dispatch journal diagnostics** if needed. It includes readiness, selected briefing, native journal states and paid/pending dispatch supplements.
+### Validation and limits
 
-No retroactive dispatch reward is paid for v0.9a completions. Existing scanner/arrest bonus rules remain independent. The existing marker/GPS behavior remains; the map may need opening and closing for a route line.
+[Career checks](tests/career/README.md) execute authored rank/reward logic, actual page rendering decisions, real click handlers and browser lifecycle hooks through the shared syntax adapter. Native game/widget calls and BEF entry points are mocked. Tests cover progression boundaries, existing save records, claim failure/retry, six once-only rewards, save restore, stale contexts, refreshing and callback/registration cleanup without removing other sites. Existing arrest/trunk/dispatch regressions also pass.
 
-### Validation
+All **21 redscript files** pass source-derived API/BEF shape-contract checks with and without the optional framework, with zero warnings/errors. This is not compilation against an actual game cache or the installed BEF runtime. The career page's physical layout, framework registration and input, and real in-game money/receipt display still need a game test.
 
-[Portable checks](tests/dispatch_journal/README.md) run authored controller logic and actual CET dispatch/bridge code with native APIs mocked. Cases cover all six briefings, repeated outcomes, tracking/load/reuse, deadline boundaries, matching completion, exactly-once €$500 payments and persistent transaction retries. Existing arrest/trunk regressions also run. All 19 redscript files pass source-derived API contract checks; these are not the game's script cache.
+The full **42-file ZIP** is checked byte-for-byte. Existing arrest/dispatch archives and scanner/dispatch payment logic are preserved. Only a career-receipt entry point is added to the core, and trunk changes are limited to Cop Stats. Main/support interface **17**, arrest **5**, trunk **2**, journal **2**; career is **1**.
 
-The [asset builder](tools/build_dispatch_assets.py) compiles and round-trips the journal/localization with WolvenKit 9.1.1 and verifies exact archive extraction. The [release builder](tools/build_journal_release.py) checks all 12 Lua modules, preserved gameplay files and the 40-file install ZIP. Only a queued money-receipt entry point is added to the core scanner system; its existing payment code is identical. Native journal interface is now **2**; main/support **17**, arrest **5** and trunk **2** stay compatible.
-
-The user reported v0.9a working. The new text selection, €$500 transfers and receipt display still need in-game testing of this update.
-
-[Full instructions](README.txt) · [Previous v0.9a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9a_Dispatch_Journal_Deadline_TEST.zip) · [Earlier packages](releases)
+[Full instructions](README.txt) · [Previous v0.9b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9b_Dispatch_Briefings_Rewards_TEST.zip) · [Earlier packages](releases)

@@ -15,6 +15,7 @@ lua.globals().MOD_DIR=str(MOD)
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.globals().Trunk=lua.execute(translate(NATIVE/'NCPDPatrolTrunkSystem.reds'))
 lua.globals().Ledger=lua.execute(translate(NATIVE/'NCPDPatrolSystem.reds'))
+lua.globals().CareerNative=lua.execute(translate(NATIVE/'NCPDPatrolCareerSystem.reds'))
 
 def extract(source,pattern):
  m=re.search(pattern,source); assert m,pattern

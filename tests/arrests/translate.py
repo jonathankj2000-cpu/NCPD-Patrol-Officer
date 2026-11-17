@@ -4,7 +4,8 @@ import json,re
 def translate(path):
     source=Path(path).read_text()
     source=re.sub(r'protected\s+cb\s+func', 'public func', source)
-    source=re.sub(r'//[^\n]*','',source)
+    # Preserve URL literals such as NETdir:// while removing source comments.
+    source=re.sub(r'((?:[sntr])?"(?:\\.|[^"\\])*")|//[^\n]*',lambda m:m[1] or '',source)
     source=re.sub(r'\n\s*(\|\||&&)', r' \1', source)
     strings={}
     def quote(m):

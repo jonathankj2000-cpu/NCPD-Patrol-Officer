@@ -1,4 +1,4 @@
--- NCPD Patrol v0.9b | tap/hold trunk patrol menu
+-- NCPD Patrol v0.10a | tap/hold trunk patrol menu
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -212,11 +212,11 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.9b support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.10a support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.9b files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.10a files and restart the game") end
         local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 2 then error("Install the v0.9b trunk module and restart the game") end
+        if not trunk or trunk:Version() ~= 2 then error("Install the v0.10a trunk module and restart the game") end
         trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -285,7 +285,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.9b loaded. Dispatch journal: six briefings and EUR$500 completion supplements; 3-minute response deadline; ArchiveXL and the new dispatch archive/.xl are required. Native trunk controls and arrests retained.")
+    status("v0.10a loaded. NCPD Career: ranks, progress and milestone rewards; optional Browser Extension page; six dispatch briefings and EUR$500 dispatch supplements; ArchiveXL and the new dispatch archive/.xl are required. Native trunk controls and arrests retained.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -377,7 +377,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.9b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.10a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -423,7 +423,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.9b files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.10a files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -515,7 +515,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.9b files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.10a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

@@ -152,14 +152,11 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     }
 
     public func ShowStats() -> Void {
-        let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
-        let count: Int32;
-        let next: Int32 = 10;
-        if !this.IsEligible() { return; };
-        count = patrol.GetRecordedScannerCount();
-        if count >= 10 { next = 20; };
-        while next <= count { next += 20; };
-        this.Notice(s"COP STATS | Recorded on-duty scanner completions: \(count) | Next milestone: \(next) | Progression rewards: planned.", 10.0);
+        let career: ref<NCPDPatrolCareerSystem> = NCPDPatrolCareerSystem.Get(this.GetGameInstance());
+        let summary: String;
+        if !this.IsEligible() || !IsDefined(career) { return; };
+        summary = career.GetSummary();
+        this.Notice(s"COP STATS | \(summary) | Open NCPD Career in your computer browser.", 10.0);
     }
 
     public func Tick(delta: Float) -> Void {
