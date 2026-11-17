@@ -1,4 +1,4 @@
-// NCPD Patrol v0.5d. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.5e. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -32,6 +32,13 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     private let m_lastVoiceSource: String;
     private let m_lastVoiceStatus: String;
     private let m_recentBeforeVoice: String;
+    private let m_recentAfterVoice: String;
+    private let m_voiceAttempts: Int32;
+    private let m_voiceRevision: Int32;
+    private let m_voicePending: Bool;
+    private let m_voiceRequiresDuty: Bool;
+    private let m_heat1FlagBefore: Bool;
+    private let m_heat1FlagAfter: Bool;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolSystem") as NCPDPatrolSystem;
@@ -45,7 +52,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 9; }
+    public func Version() -> Int32 { return 10; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
     public func WasTerminatedForCrime() -> Bool { return this.m_criminalTermination; }
     public func HasWantedLevel() -> Bool {
@@ -103,10 +110,14 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.m_chatterActive = false;
         this.CancelDispatchVoiceWindow();
         this.m_voiceRequests = 0;
+        this.m_voiceAttempts = 0;
         this.m_voiceRestarts = 0;
         this.m_lastVoiceSource = "none";
         this.m_lastVoiceStatus = "No request this session";
         this.m_recentBeforeVoice = "none";
+        this.m_recentAfterVoice = "not sampled";
+        this.m_heat1FlagBefore = false;
+        this.m_heat1FlagAfter = false;
         ArrayClear(this.m_pendingNotices);
         this.m_lastBonusAmount = 0;
         this.m_allMappins = 0;
@@ -282,10 +293,11 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     }
 
     public func GetVoiceRequestCount() -> Int32 { return this.m_voiceRequests; }
+    public func GetVoiceDiagnosticRevision() -> Int32 { return this.m_voiceRevision; }
     public func IsVehicleChatterPausedForVoice() -> Bool { return this.m_chatterPausedForVoice; }
     public func GetVoiceDiagnostics() -> String {
         let queued: Int32 = ArraySize(this.m_pendingNotices);
-        return s"requests=\(this.m_voiceRequests) | restarts=\(this.m_voiceRestarts) | last=\(this.m_lastVoiceSource) | entry=nc_heat_1_start | pending notices=\(queued) | \(this.m_lastVoiceStatus) | recent before request=\(this.m_recentBeforeVoice)";
+        return s"requests=\(this.m_voiceRequests) | attempts=\(this.m_voiceAttempts) | restarts=\(this.m_voiceRestarts) | last=\(this.m_lastVoiceSource) | entry=nc_heat_1_start | pending native send=\(this.m_voicePending) | pending notices=\(queued) | heat1 flag before/after=\(this.m_heat1FlagBefore)/\(this.m_heat1FlagAfter) | \(this.m_lastVoiceStatus) | recent before=\(this.m_recentBeforeVoice) | recent after=\(this.m_recentAfterVoice)";
     }
 
     private func RequestPoliceRadio(source: String) -> Bool {
@@ -293,33 +305,90 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         let delay: ref<DelaySystem> = GameInstance.GetDelaySystem(this.GetGameInstance());
         if !IsDefined(radio) {
             this.m_lastVoiceStatus = "Radio system unavailable";
+            this.m_voiceRevision += 1;
             return false;
         };
         if this.HasWantedLevel() {
             this.m_lastVoiceStatus = "Skipped while wanted";
+            this.m_voiceRevision += 1;
             return false;
         };
-        this.m_recentBeforeVoice = this.ReadRecentRadioRequests(radio);
         this.m_voiceToken += 1;
+        this.m_voiceAttempts += 1;
+        this.m_voiceRevision += 1;
+        this.m_voicePending = true;
+        this.m_voiceRequiresDuty = this.m_onDuty;
+        this.m_lastVoiceSource = source;
+        this.m_recentBeforeVoice = this.ReadRecentRadioRequests(radio);
+        this.m_recentAfterVoice = "not sampled";
         this.m_chatterPausedForVoice = false;
         if this.m_onDuty && IsDefined(delay) {
-            // Stop our car emitter temporarily; the Lua controller resumes the
-            // currently occupied eligible car after this bounded voice window.
             this.StopVehicleChatter();
             this.m_chatterPausedForVoice = true;
-            delay.DelayCallback(NCPDPatrolVoiceWindow.Create(this, this.m_noticeSession, this.m_voiceToken), 12.0, false);
         };
-        if this.m_onDuty && this.m_ownsRadioRequest {
-            // Reset only a prior request owned by this shift, with zero wanted heat.
+        if this.m_onDuty && this.m_ownsRadioRequest && IsDefined(delay) {
+            // Do not issue the new request in the same call as aborting the old one.
             radio.AbortCurrentRadioLine();
             this.m_voiceRestarts += 1;
+            this.m_lastVoiceStatus = "Waiting 0.5 s after abort; native request not sent yet";
+            delay.DelayCallback(NCPDPatrolRadioStep.Create(this, this.m_noticeSession, this.m_voiceToken, 1), 0.5, false);
+        } else {
+            this.SendPreparedRadio(this.m_noticeSession, this.m_voiceToken);
         };
+        return true;
+    }
+
+    private func SendPreparedRadio(session: Int32, token: Int32) -> Void {
+        let radio: ref<PoliceRadioSystem>;
+        let delay: ref<DelaySystem>;
+        if session != this.m_noticeSession || token != this.m_voiceToken || !this.m_voicePending { return; };
+        this.m_voicePending = false;
+        this.m_voiceRevision += 1;
+        if (this.m_voiceRequiresDuty && !this.m_onDuty) || this.HasWantedLevel() {
+            this.m_lastVoiceStatus = "Cancelled before native send: duty/wanted state changed";
+            this.CancelDispatchVoiceWindow();
+            return;
+        };
+        radio = GameInstance.GetPoliceRadioSystem(this.GetGameInstance());
+        delay = GameInstance.GetDelaySystem(this.GetGameInstance());
+        if !IsDefined(radio) {
+            this.m_lastVoiceStatus = "Radio system unavailable at native send";
+            this.CancelDispatchVoiceWindow();
+            return;
+        };
+        this.m_heat1FlagBefore = radio.isHeat1LineRequestOngoing;
+        // Mirror PoliceRadioScriptSystem.PlayRadio for its documented heat-1 entry.
+        // This is a radio scheduling flag; wanted heat is never changed here.
+        radio.isHeat1LineRequestOngoing = false;
         radio.PoliceRadioRequest(n"nc_heat_1_start");
+        this.m_heat1FlagAfter = radio.isHeat1LineRequestOngoing;
         this.m_ownsRadioRequest = this.m_onDuty;
         this.m_voiceRequests += 1;
-        this.m_lastVoiceSource = source;
-        this.m_lastVoiceStatus = "Requested; native API does not acknowledge audible playback";
-        return true;
+        this.m_lastVoiceStatus = "Native request sent; awaiting history sample; audio unconfirmed";
+        if IsDefined(delay) {
+            if this.m_onDuty {
+                delay.DelayCallback(NCPDPatrolVoiceWindow.Create(this, session, token), 12.0, false);
+            };
+            delay.DelayCallback(NCPDPatrolRadioStep.Create(this, session, token, 2), 1.0, false);
+        } else {
+            this.m_chatterPausedForVoice = false;
+            this.m_recentAfterVoice = this.ReadRecentRadioRequests(radio);
+        };
+    }
+
+    public func AdvanceRadioStep(session: Int32, token: Int32, step: Int32) -> Void {
+        let radio: ref<PoliceRadioSystem>;
+        if session != this.m_noticeSession || token != this.m_voiceToken { return; };
+        if step == 1 {
+            this.SendPreparedRadio(session, token);
+        } else {
+            radio = GameInstance.GetPoliceRadioSystem(this.GetGameInstance());
+            if IsDefined(radio) {
+                this.m_recentAfterVoice = this.ReadRecentRadioRequests(radio);
+                this.m_lastVoiceStatus = "Native history sampled after 1 s; audible playback remains unconfirmed";
+                this.m_voiceRevision += 1;
+            };
+        };
     }
 
     private func ReadRecentRadioRequests(radio: ref<PoliceRadioSystem>) -> String {
@@ -336,6 +405,10 @@ public class NCPDPatrolSystem extends ScriptableSystem {
 
     private func CancelDispatchVoiceWindow() -> Void {
         this.m_voiceToken += 1;
+        this.m_voiceRevision += 1;
+        if this.m_voicePending { this.m_lastVoiceStatus = "Pending voice cancelled"; };
+        this.m_voicePending = false;
+        this.m_voiceRequiresDuty = false;
         this.m_chatterPausedForVoice = false;
         this.m_ownsRadioRequest = false;
     }
