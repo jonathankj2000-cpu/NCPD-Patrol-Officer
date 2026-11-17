@@ -22,10 +22,54 @@ Interactions.NCPDPatrolRevive:
   name: NCPDPatrolRevive
   caption: NCPDPatrol-Revive
 
-Interactions.NCPDPatrolReviving:
+# Each menu choice has its own native caption record. Sharing a record can make
+# the game replace custom captions with the inherited "Select destination".
+Interactions.NCPDPatrolAvailable:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolAvailable
+  caption: NCPDPatrol-Available
+
+Interactions.NCPDPatrolBusy:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolBusy
+  caption: NCPDPatrol-Busy
+
+Interactions.NCPDPatrolRepair:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolRepair
+  caption: NCPDPatrol-Repair
+
+Interactions.NCPDPatrolNewPartner:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolNewPartner
+  caption: NCPDPatrol-NewPartner
+
+Interactions.NCPDPatrolCancelDispatch:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolCancelDispatch
+  caption: NCPDPatrol-CancelDispatch
+
+Interactions.NCPDPatrolNewDispatch:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolNewDispatch
+  caption: NCPDPatrol-NewDispatch
+
+Interactions.NCPDPatrolCopStats:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolCopStats
+  caption: NCPDPatrol-CopStats
+
+Interactions.NCPDPatrolCloseMenu:
   $base: Interactions.SellectDestination
-  name: NCPDPatrolReviving
-  caption: NCPDPatrol-Reviving
+  name: NCPDPatrolCloseMenu
+  caption: NCPDPatrol-CloseMenu
 
 Interactions.NCPDPatrolReviving:
   $base: Interactions.SellectDestination

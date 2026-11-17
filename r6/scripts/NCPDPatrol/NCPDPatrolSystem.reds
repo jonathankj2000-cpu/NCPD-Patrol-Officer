@@ -1,6 +1,8 @@
 // NCPD Patrol v0.7b. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
+    // Read-only existing save ledger; activities before the mod are unknown.
+    public func GetRecordedScannerCount() -> Int32 { return ArraySize(this.m_paidActivities); }
     private persistent let m_paidActivities: array<CName>;
     private let m_onDuty: Bool;
     private let m_requestedDuty: Int32;

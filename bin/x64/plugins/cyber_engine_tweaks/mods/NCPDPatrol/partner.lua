@@ -195,6 +195,34 @@ function M.dismiss(status)
     end
 end
 
+-- Only replace the actor ID created by this module. Retain that ID on a
+-- rejected deletion so repeated requests cannot leave duplicate partners.
+function M.replace(onDuty, status)
+    if not onDuty or not loaded() then
+        if status then status("Partner replacement requires an active shift and loaded save.") end
+        return false
+    end
+    local ok, err = pcall(function()
+        local system = getSystem()
+        if not system or not system:IsReady() then error("DynamicEntitySystem not ready") end
+        if spawnId and system:IsManaged(spawnId) then
+            pcall(function() Boarding.cancel(officer); stopFollow() end)
+            if not system:DeleteEntity(spawnId) then error("Old partner deletion was not accepted; no replacement spawned") end
+        end
+    end)
+    if not ok then
+        if status then status("Partner replacement failed: " .. tostring(err)) end
+        return false
+    end
+    pcall(function()
+        local native = support()
+        if native then native:UnregisterPartner() end
+    end)
+    M.reset()
+    M.spawn(true, status or function() end)
+    return spawnId ~= nil
+end
+
 -- A loaded save has already removed non-persistent actors from the old world.
 -- Forget stale IDs without issuing a deletion into the newly loaded world.
 function M.reset()

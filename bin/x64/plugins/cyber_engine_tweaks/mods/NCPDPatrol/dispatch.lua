@@ -3,6 +3,7 @@ local HUD = require("dispatch_hud")
 local M = {}
 local active, used = nil, {}
 local automatic, dutySeen, cleaned = true, false, false
+local busy = false
 local countdown, poll = 0, 0
 local state = "OFF DUTY"
 local completed, candidateCount = 0, 0
@@ -46,6 +47,8 @@ function M.init() HUD.init() end
 function M.state() return state end
 function M.hudState() return HUD.state() end
 function M.isAutomatic() return automatic end
+function M.isBusy() return busy end
+function M.setBusy(value) busy = value == true end
 function M.isActive() return active ~= nil end
 function M.completed() return completed end
 function M.seconds() return math.max(0, math.ceil(countdown)) end
@@ -82,6 +85,7 @@ function M.testAudio(patrol, radio, status)
 end
 
 function M.start(patrol, status)
+    busy = false
     active, used = nil, {}
     navigation = "No active dispatch"
     poll, completed, candidateCount = 0, 0, 0
@@ -99,6 +103,7 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
+    busy = false
     local ok, err = pcall(clear, patrol)
     active, used, dutySeen = nil, {}, false
     countdown, poll, cleaned = 0, 0, ok
@@ -108,6 +113,7 @@ end
 
 -- Used after a load: never remove a marker by an ID from the previous world.
 function M.reset()
+    busy = false
     active, used, dutySeen, cleaned = nil, {}, false, false
     countdown, poll, completed, candidateCount = 0, 0, 0, 0
     failed, state = false, "OFF DUTY"
@@ -193,7 +199,7 @@ function M.request(patrol, status)
 end
 
 function M.cancel(patrol, status)
-    if not active then report("No active dispatch to cancel", status); return end
+    if not active then report("No active dispatch to cancel", status); return false end
     local ok, err = pcall(function()
         clear(patrol)
         countdown = math.random(60, 120)
@@ -205,6 +211,12 @@ function M.cancel(patrol, status)
         failed = true
         report("Dispatch cancellation failed: " .. tostring(err), status)
     end
+    return ok
+end
+
+function M.replace(patrol, status)
+    if active and not M.cancel(patrol, status) then return false end
+    return M.request(patrol, status)
 end
 
 function M.update(delta, onDuty, status, getPatrol)
@@ -240,7 +252,7 @@ function M.update(delta, onDuty, status, getPatrol)
                 report("On scene: " .. active.label, status)
             end
             drawObjective(inMenu)
-        elseif automatic and not inMenu and not Game.GetPlayer():IsInCombat() then
+        elseif automatic and not busy and not inMenu and not Game.GetPlayer():IsInCombat() then
             countdown = countdown - elapsed
             if countdown <= 0 then M.request(patrol, status) end
         end

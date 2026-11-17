@@ -1,4 +1,4 @@
--- NCPD Patrol v0.7f | partner aid and one backup patrol via native interactions
+-- NCPD Patrol v0.8a | tap/hold trunk patrol menu
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -9,6 +9,7 @@ local Dispatch = require("dispatch")
 local VehicleRadio = require("vehicle_radio")
 local Backup = require("backup")
 local Arrest = require("arrest")
+local Trunk = require("trunk")
 local onDuty = false
 local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
@@ -211,9 +212,12 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.7f support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.8a support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.7f files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.8a files and restart the game") end
+        local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
+        if not trunk or trunk:Version() ~= 1 then error("Install the v0.8a trunk module and restart the game") end
+        trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -243,6 +247,7 @@ local function endShift()
     end
     local patrol = getPatrolSystem()
     if patrol then
+        Trunk.finish()
         Backup.finish(getSupportSystem(), status)
         VehicleRadio.finish(patrol)
         Dispatch.finish(patrol, status)
@@ -271,6 +276,7 @@ local function forgetLoadedWorld()
     Dispatch.reset()
     VehicleRadio.reset()
     Arrest.reset()
+    Trunk.reset()
     onDuty = false
     scannerLogState = nil
     dutyPoll, bonusPoll = 0, 0
@@ -279,7 +285,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.7f loaded. Arrests use a private infinite lying workspot. Registration and separate EUR$250 payment are retained.")
+    status("v0.8a loaded. Trunk: tap secondary interaction for backup; hold 0.5 s for Patrol Menu. Arrests retain the confirmed private lying loop.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -292,6 +298,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     if not isInGame() then
+        Trunk.reset()
         Arrest.reset()
         if onDuty then Partner.reset(); Backup.reset(); Dispatch.reset(); VehicleRadio.reset(); onDuty = false end
         return
@@ -309,6 +316,7 @@ registerForEvent("onUpdate", function(delta)
             if onDuty and not patrol:IsOnDuty() then
                 onDuty = false
                 if patrol:WasTerminatedForCrime() then
+                    Trunk.finish()
                     Arrest.finish()
                     Backup.finish(getSupportSystem(), status)
                     VehicleRadio.finish(patrol)
@@ -322,6 +330,7 @@ registerForEvent("onUpdate", function(delta)
                     Dispatch.reset()
                     VehicleRadio.reset()
                     Arrest.reset()
+                    Trunk.reset()
                 end
                 scannerLogState = nil
             end
@@ -345,6 +354,7 @@ registerForEvent("onUpdate", function(delta)
     end
     Partner.update(delta, onDuty, status)
     Backup.update(delta, onDuty, getSupportSystem(), getPatrolSystem(), status)
+    Trunk.update(delta, onDuty, getPatrolSystem(), status)
     Dispatch.update(delta, onDuty, status, getPatrolSystem)
     VehicleRadio.update(delta, onDuty, status, getPatrolSystem)
     local arrestPaused = true
@@ -353,6 +363,7 @@ registerForEvent("onUpdate", function(delta)
 end)
 
 registerForEvent("onShutdown", function()
+    Trunk.finish()
     Backup.finish(getSupportSystem(), nil)
     VehicleRadio.finish(getPatrolSystem())
     Dispatch.shutdown(getPatrolSystem())
@@ -366,18 +377,26 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.7f")
+    local visible = ImGui.Begin("NCPD Patrol - v0.8a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
         ImGui.Text(onDuty and "ON DUTY" or "OFF DUTY")
         ImGui.TextWrapped("Use a Fast Travel terminal for Start Shift / End Shift. These controls remain available for diagnostics.")
+        ImGui.TextWrapped("At your owned police car's trunk: tap R for backup; hold about 0.5 s for Patrol Menu (uses your secondary interaction binding). Scroll and select with F; R closes.")
         if ImGui.Button(onDuty and "End Shift" or "Start Shift") then
             toggleDuty()
         end
 
         ImGui.Separator()
         ImGui.Text("DISPATCH")
+        ImGui.Text(Dispatch.isBusy() and "STATUS: BUSY" or "STATUS: AVAILABLE")
+        if ImGui.Button(Dispatch.isBusy() and "Set AVAILABLE" or "Set BUSY") then
+            Trunk.setBusy(not Dispatch.isBusy(), status)
+        end
+        if ImGui.Button("Cop Stats") then Trunk.showStats(status) end
+        local repairSeconds = Trunk.repairSeconds()
+        if repairSeconds > 0 then ImGui.Text("Vehicle repair: " .. tostring(repairSeconds) .. " s remaining") end
         ImGui.TextWrapped("Dispatch searches within 1 km, then 1.5 km and 2 km. Empty searches retry after 30 seconds. Request a call now to skip the automatic wait.")
         if ImGui.Button("Request dispatch now") then
             Dispatch.request(getPatrolSystem(), status)
@@ -404,7 +423,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.7f files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.8a files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -413,7 +432,7 @@ registerForEvent("onDraw", function()
         ImGui.TextWrapped("Vehicle radio: " .. VehicleRadio.state())
         ImGui.TextWrapped(Dispatch.state())
         ImGui.Text("Dispatches completed: " .. tostring(Dispatch.completed()))
-        if onDuty and Dispatch.isAutomatic() and not Dispatch.isActive() then
+        if onDuty and Dispatch.isAutomatic() and not Dispatch.isBusy() and not Dispatch.isActive() then
             ImGui.Text("Next automatic call in about " .. tostring(Dispatch.seconds()) .. " s (pauses in menus/combat).")
         end
         ImGui.TextWrapped("Objective display: " .. Dispatch.hudState())
@@ -487,7 +506,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.7f files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.8a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
