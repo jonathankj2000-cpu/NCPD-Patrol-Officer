@@ -15,5 +15,8 @@ public class NCPDPatrolEnglishText extends ModLocalizationPackage {
     protected func DefineTexts() -> Void {
         this.Text("NCPDPatrol-StartShift", "Start NCPD Shift");
         this.Text("NCPDPatrol-EndShift", "End NCPD Shift");
+        this.Text("NCPDPatrol-Backup", "Request NCPD Backup");
+        this.Text("NCPDPatrol-Revive", "Revive Partner");
+        this.Text("NCPDPatrol-Reviving", "Reviving Partner - stay close (3 s)");
     }
 }

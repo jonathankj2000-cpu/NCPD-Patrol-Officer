@@ -1,62 +1,69 @@
 # NCPD Patrol
 
-## v0.5e: radio state and deferred replay test
+## v0.6a: partner revive and one backup patrol
 
-**[Download v0.5e](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5e_Radio_State_Replay_TEST.zip)**
+**[Download v0.6a](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6a_Revive_Backup_Car_TEST.zip)**
 
-The second dispatch remained silent in v0.5d despite two native requests and one replay reset. Those counters establish sent calls; they do not establish audible playback or the cause of the silence.
+This first implementation adds aid for your spawned partner and a backup car with two officers. Normal use stays in the game: terminals for duty, the police-car trunk for backup and a body interaction for revive.
 
-### Changes
+### In-game controls
 
-The game resets **`isHeat1LineRequestOngoing`** before requesting `nc_heat_1_start` through `PoliceRadioScriptSystem.PlayRadio`. This build includes that step before its direct native request. The field controls radio scheduling; wanted heat is unchanged.
+- **Duty:** start/end shift at a fast travel terminal as before.
+- **Backup:** on duty, approach the trunk of your owned police Hella and choose **Request NCPD Backup**, beside stash. It inherits the terminal's secondary interaction input, normally **R** in this setup. The vanilla stash action remains.
+- **Revive:** approach your downed partner and choose **Revive Partner**. Remain on foot within **2.5 m for three seconds**. The caption changes to **Reviving Partner - stay close**. Moving away or entering a vehicle interrupts treatment.
+- **Optional backup key:** choose a key in **CET Bindings > NCPD Patrol - Request backup**. No default key is assigned. The trunk, CET test button and key share the same unit limit.
 
-For another request owned by the current shift, the mod aborts the prior radio line and waits **0.5 seconds** before sending. This separates abort and request. The delay is a test mitigation, not a proven engine cooldown. Duty and wanted eligibility are checked again before the deferred send. Ending duty, loading a save or superseding the request invalidates its pending callbacks.
+### Partner aid
 
-The mod reads native recent-request history again **one second after sending**. CET logs change at preparation, actual sending and later observation. The existing 12-second vehicle-chatter pause starts its release timer at the actual send; the normal controller can then resume the currently occupied eligible owned police car.
+Only the mod's registered partner receives immortal protection. When critically injured on foot (10% health or less), defeated or unconscious, that partner is downed and protected from further damage. Follow and boarding commands pause. The partner's body choices become the revive interaction; other NPC interactions retain vanilla behaviour.
 
-### Reading the Voice diagnostics
+Revive restores **the same actor** to full health, removes defeat/unconscious effects and requests native recovery. Following resumes once recovery is observed. Failed recovery allows another attempt. An injured passenger remains protected until exiting; the mod does not eject them from a moving vehicle.
 
-- `requests`: actual native sends; `attempts`: prepared requests.
-- `pending native send`: whether a deferred call is still waiting.
-- `heat1 flag before/after`: scheduling state around the native call.
-- `recent before` / `recent after`: observed native request history.
+The first version uses a timed interaction and native down/get-up behaviour, with **no V treatment animation**. CET includes **Test: down partner** for convenient testing; normal aid uses the in-world prompt.
 
-The native API returns no acknowledgement of audible playback. History is not a playback receipt, and repeated or unchanged history alone does not prove rejection. Speech is still requested when its queued dispatch notice reaches the screen. Requesting another dispatch while one is assigned creates no new assignment or voice request.
+### Backup car
 
-### Install and test
+One non-persistent NCPD Hella and two officers are created at a nearby approach point. The crew are initially seated there, and the car receives a native traffic-follow command. At low-speed arrival they use native unmount commands, move to the scene and support/hold there.
 
-Requirements: Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL** and compatible **redscript**. No additional dependency.
+Only one unit may be pending or active. Repeated inputs cannot create another patrol, and duplicate feedback is limited. A wreck or dead crew still consumes the scene's unit. For normal rearm, travel at least **150 m from the request scene, car and both officers for three seconds**. Their entities are deleted before another request becomes available.
 
-1. Exit the game completely. Extract the entire ZIP into the game folder containing `bin` and `r6`, replacing all mod files. Include the new **`NCPDPatrolRadioStep.reds`** and the existing `NCPDPatrolVoiceWindow.reds`.
-2. Load a save, start a shift and test two accepted dispatches in a vehicle. Complete or cancel the first assignment before requesting the next. **Preview police radio (in vehicle)** in CET can also test requests during duty.
-3. If a later call is silent, wait at least two seconds after its notice, then capture the **Voice** log line containing **`Native history sampled after 1 s`**. Include the first and second calls if possible. Two actual sends should show `requests=2`, with flag and before/after history fields.
-4. In an owned police car, check that chatter pauses and can resume after the 12-second window. Getting out or ending duty should keep it stopped.
+End Shift and criminal termination also clean up. Partial failures roll back accepted IDs. Failed deletions retain the reservation and retry. Loading another save forgets old-world IDs, including after off-duty cleanup failures, without deleting anything in the new world. The player's vehicle and ambient NPCs are outside this cleanup.
 
-### Retained behaviour and audio limits
+### First driving test
 
-Dispatch search tiers of 1/1.5/2 km, marker and HUD objective, bonus ledger/receipts, notification queue, vehicle-bound chatter, wanted termination/start rejection, terminal duty, partner and boarding remain. Open and close the world map when needed for the GPS line. On-scene voice awaits the user's briefing files.
+**Test beside a clear road.** The approach point is projected to character navmesh; this is not a verified traffic-lane spawn API. Tight alleys, interiors, obstacles and off-road routing may fail. Actual seating, driving, exit animations, combat and world prompts require testing in Cyberpunk 2.5.
 
-There are **zero bundled audio files**, **one dispatch scene entry** (`nc_heat_1_start`) and **one vehicle-chatter event** (`radio_car_police_npc`). The number of internal recordings behind these identifiers is unknown. `None` in recent history is an empty slot, not a silent sound file.
+### Installation
 
-Chatter volume remains unchanged. An event-specific gain control has not been verified for this native playback API.
+Requirements remain Cyberpunk 2077 **2.5**, matching **CET**, **Codeware 1.21.4**, **RED4ext 1.31.0+**, **TweakXL** and compatible **redscript**. No new dependency.
 
-### Validation and limits
+Exit the game completely and extract the entire ZIP into the game folder containing bin and r6, replacing all mod files and the interaction YAML. Include the new **backup.lua**, **officer_ai.lua**, **NCPDPatrolSupportSystem.reds** and **NCPDPatrolSupportInteractions.reds**. Keep the existing radio callback files.
 
-All six Lua modules load in LuaJIT. Redscript syntax/type checks pass against source-derived contracts, not the actual game script cache. Authored native logic is exercised through a syntax adapter with mocked game APIs; actual CET modules run against that logic in the scenarios. Checks cover flag reset, deferred sending, later history observation/logging, superseded callbacks, duty/wanted/load cancellation and prior reward, notice, vehicle, partner, boarding and navigation behaviour.
+Test stash/backup from the trunk, repeated-request rejection, departure/rearm, partner revive and End Shift cleanup. If something fails, report the exact **Backup** or partner status and any redscript errors.
 
-Real native scene playback still needs an in-game test.
+### Retained behaviour
 
-### Previous versions and rollback
+Existing terminal duty, bonus receipts, dispatch, marker/HUD, partner boarding and chatter remain. Open/close the world map when needed for the GPS line. Dispatch voice remains at v0.5e with its diagnostics; repeat audible playback is still unresolved. This build adds no audio files or chatter volume change.
 
-- [v0.5d: replay diagnostics](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5d_Voice_Replay_Diagnostics_TEST.zip)
-- [v0.5c: local dispatch, vehicle chatter and wanted termination](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5c_Local_Dispatch_Duty_Radio_TEST.zip)
+### Validation
 
-To return to v0.5d, exit the game, remove `r6/scripts/NCPDPatrol/NCPDPatrolRadioStep.reds` and reinstall its complete ZIP. Keep its `NCPDPatrolVoiceWindow.reds`.
+All eight Lua modules parse in LuaJIT. Redscript checks pass with zero warnings or errors against source-derived contracts, not the actual game script cache. Authored support/interaction logic and actual CET modules execute in scenarios for same-actor recovery, menus, duplicate input, seating, vehicle commands, exits, distance rearm, partial failures, cleanup retries and duty/load boundaries, plus prior bonus/dispatch/boarding/radio regressions.
+
+Native game calls, driving, mounting and sound are mocked in these checks. Real game behaviour remains to be tested.
+
+### Previous version and rollback
+
+[v0.5e: radio state/replay test](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.5e_Radio_State_Replay_TEST.zip)
+
+To return to v0.5e, exit the game, remove NCPDPatrolSupportSystem.reds and NCPDPatrolSupportInteractions.reds from r6/scripts/NCPDPatrol, plus backup.lua and officer_ai.lua from the CET mod folder, then reinstall its complete ZIP.
 
 ### API references
 
-- [Game police-radio script, including the scheduling-flag reset](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/policeRadioSystem.swift)
-- [Native police-radio request/history/abort API](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/gamePoliceRadioSystem.lua)
-- [Native audio-system API for vehicle playback](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/systems/audioSystem.swift)
+- [Codeware 1.21.4 dynamic entity ownership and cleanup API](https://github.com/psiberx/cp2077-codeware/blob/v1.21.4/scripts/World/DynamicEntitySystem.reds)
+- [Game puppet interactions and recovery](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/puppet/scriptedPuppet.swift)
+- [NPC defeat/recovery and ragdoll rules](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/NPC/NPCPuppet.swift)
+- [Vehicle trunk actions](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/components/scriptComponents/vehicleComponentPS.swift)
+- [Native vehicle-follow command](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/AIVehicleFollowCommand.lua)
+- [Game driving handlers](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/commands/aiDriveCommandHandler.swift)
 
-Archive SHA-256: `938b78e56e0567b3e1b9f10cf21c10bc43ff66772b1ce96b5b93f6ef7551f91c`
+Archive SHA-256: `b6fd7f56a687bf3410e51314347668e819d33b24fa7acca108d1466ab9e81802`

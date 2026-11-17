@@ -34,7 +34,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local patrol = getPatrol()
     if not patrol then return end
     local ok, err = pcall(function()
-        if patrol:Version() ~= 10 then return end
+        if patrol:Version() ~= 11 then return end
         if not enabled or not onDuty or not patrol:IsOnDuty() then
             if currentKey then stop(patrol) end
             state = enabled and "OFF DUTY" or "Chatter muted"

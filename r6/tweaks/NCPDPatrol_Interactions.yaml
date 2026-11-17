@@ -9,3 +9,25 @@ Interactions.NCPDPatrolEndShift:
   $base: Interactions.SellectDestination
   name: NCPDPatrolEndShift
   caption: NCPDPatrol-EndShift
+
+# Inherit the secondary interaction input used by the working duty terminal.
+# The game displays the player's current binding (normally R on this setup).
+Interactions.NCPDPatrolBackup:
+  $base: Interactions.SellectDestination
+  name: NCPDPatrolBackup
+  caption: NCPDPatrol-Backup
+
+Interactions.NCPDPatrolRevive:
+  $base: Interactions.SellectDestination
+  name: NCPDPatrolRevive
+  caption: NCPDPatrol-Revive
+
+Interactions.NCPDPatrolReviving:
+  $base: Interactions.SellectDestination
+  name: NCPDPatrolReviving
+  caption: NCPDPatrol-Reviving
+
+Interactions.NCPDPatrolReviving:
+  $base: Interactions.SellectDestination
+  name: NCPDPatrolReviving
+  caption: NCPDPatrol-Reviving

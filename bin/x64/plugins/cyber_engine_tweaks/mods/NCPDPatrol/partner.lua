@@ -1,11 +1,12 @@
--- NCPD Patrol v0.4c: One NCPD partner with explicit vehicle boarding.
+-- NCPD Patrol v0.6a: one owned partner with native defeat/revive and boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
--- Every state change initiated by player input; no nearby NPC is ever modified.
+-- No nearby NPC is ever modified.
 
 local M = {}
 local Boarding = require("boarding")
+local OfficerAI = require("officer_ai")
 local PARTNER_RECORD = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
 local spawnId = nil
 local officer = nil
@@ -16,6 +17,19 @@ local followTime = 0
 local stateLabel = "Not spawned"
 local followCommand = nil
 local vehicleFailed = false
+local supportState = 0
+local supportFailure = false
+
+local function support()
+    return Game.GetScriptableSystemsContainer():Get("NCPDPatrolSupportSystem")
+end
+
+function M.aidState()
+    local labels = { [0]="No registered partner", [1]="Active; death protection enabled",
+        [2]="Down; approach to revive", [3]="Reviving; stay within 2.5 m",
+        [4]="Waiting for native recovery" }
+    return supportFailure and "Revive control failed; see CET log" or (labels[supportState] or "Unknown")
+end
 
 local function loaded()
     return Game and Game.GetPlayer and Game.GetPlayer() ~= nil
@@ -38,27 +52,11 @@ local function stopFollow()
 end
 
 local function nativeFollower(target)
-    local ai = target:GetAIControllerComponent()
-    if not ai then error("Spawned NPC has no AI controller") end
-    if not target:IsAttached() then error("Spawned NPC not attached yet") end
-    local existing = ai:GetAIRole()
-    if existing then existing:OnRoleCleared(target) end
-    local role = AIFollowerRole.new()
-    role.followerRef = Game.CreateEntityReference('#player', {})
-    ai:SetAIRole(role)
-    ai:OnAttach()
-    local player = Game.GetPlayer()
-    local agent = target:GetAttitudeAgent()
-    local playerAgent = player:GetAttitudeAgent()
-    if agent and playerAgent then
-        agent:SetAttitudeGroup(playerAgent:GetAttitudeGroup())
-        agent:SetAttitudeTowards(playerAgent, EAIAttitude.AIA_Friendly)
-    end
-    target.isPlayerCompanionCachedTimeStamp = 0
+    OfficerAI.follower(target)
 end
 
 local function sendFollow()
-    if not officer or not loaded() or not officer:IsAttached() or Boarding.busy() then return end
+    if not officer or not loaded() or not officer:IsAttached() or Boarding.busy() or supportState ~= 1 then return end
     local ai = officer:GetAIControllerComponent()
     if not ai then return end
     local cmd = AIFollowTargetCommand.new()
@@ -110,6 +108,7 @@ function M.spawn(onDuty, status)
     Boarding.reset()
     followCommand = nil
     vehicleFailed = false
+    supportState, supportFailure = 0, false
     timeout = 0
     pollTime = 0
     followTime = 0
@@ -118,6 +117,11 @@ function M.spawn(onDuty, status)
 end
 
 function M.dismiss(status)
+    pcall(function()
+        local system = support()
+        if system then system:UnregisterPartner() end
+    end)
+    supportState, supportFailure = 0, false
     if not spawnId then
         officer = nil
         spawnWaiting = false
@@ -156,6 +160,7 @@ function M.reset()
     stateLabel = "Not spawned"
     Boarding.reset()
     vehicleFailed = false
+    supportState, supportFailure = 0, false
 end
 
 function M.update(delta, onDuty, status)
@@ -179,14 +184,52 @@ function M.update(delta, onDuty, status)
         officer = obj
         spawnWaiting = false
         local attached, err = pcall(function()
+            local system = support()
+            if not system or system:Version() ~= 11 or not system:RegisterPartner(officer) then
+                error("Native revive protection could not register our partner")
+            end
+            supportState = system:GetPartnerState()
             nativeFollower(officer)
             sendFollow()
         end)
+        if not attached then
+            M.dismiss(nil)
+            stateLabel = "Partner setup failed; actor dismissed"
+            status("Partner setup failed: " .. tostring(err))
+            return
+        end
         stateLabel = attached and "Spawned; follower commands sent" or "Spawned; follower setup FAILED"
         status(attached and "NCPD partner spawned; follow role and command sent." or ("Spawned but follower role failed: " .. tostring(err)))
         return
     end
     if officer then
+        local aidOK, ready = pcall(function()
+            local system = support()
+            local patrol = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem")
+            if not system or not patrol then error("Native support system unavailable") end
+            if not patrol:IsDispatchMenuOpen() then system:TickPartner(delta) end
+            local previous = supportState
+            supportState = system:GetPartnerState()
+            if supportState ~= 1 then
+                if previous == 1 then Boarding.cancel(officer); stopFollow() end
+                stateLabel = M.aidState()
+                return false
+            end
+            if previous ~= 1 then
+                Boarding.reset()
+                nativeFollower(officer)
+                stateLabel = "Revived; following"
+                followTime = 5
+                status("Partner recovered; follower role restored.")
+            end
+            return true
+        end)
+        if not aidOK then
+            if not supportFailure then status("Partner revive control failed: " .. tostring(ready)) end
+            supportFailure = true
+            return
+        end
+        if not ready then return end
         local wasBusy = Boarding.busy()
         if not vehicleFailed then
             local boarded, err = pcall(Boarding.update, delta, officer, status, stopFollow)
