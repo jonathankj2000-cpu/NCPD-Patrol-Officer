@@ -1,69 +1,61 @@
-NCPD PATROL v0.6b - REVIVE AI / BACKUP ARRIVAL TEST
-===============================================
-Addresses two v0.6a reports: the revived partner stands still despite the success
-notice, and backup cars drive past the player rather than stop and disembark.
+NCPD PATROL v0.6c - CONTROLLED REVIVE GATE PROBE
+==============================================
+The report already established that the partner gets up and stays still. This
+build changes the blocking condition before asking for a new observation.
 
-PARTNER RECOVERY
-The old success check only observed life/status activity. Native AI can still
-have a downed signal, an unconscious high-level state or a separate companion
-FollowerDefeated effect. v0.6b removes those companion effects, clears only downed
-gate signals on our registered partner, restores senses/bump and requests the
-same relaxed-state transition used by the game's recoverable defeat path.
-The readiness check now includes those AI states. Follower restoration uses the
-canonical AIHumanComponent.SetCurrentRole path, including follower sense type,
-companion cache and role-change event. It no longer manually clears/re-attaches
-the existing role during recovery. Follow and boarding wait for its player target.
-Repairs/rebinds are bounded. The return-to-duty notice waits for target readiness;
-a binding failure is reported rather than claimed as following.
-The same partner is retained, with the existing 3-second / 2.5-m revive interaction
-and death protection. No new treatment animation or automatic NPC replacement.
-If still stuck: CET > Log partner AI diagnostics. Send the Partner AI line, which
-includes aid state, high-level state, activity, downed signal, companion defeat
-and follower target readiness.
+ONE CONTROLLED CHANGE
+The user's v0.6b log showed aid state=2, active=true, high level=Relaxed,
+follower defeated=false, follower target ready=true, downed signal=true.
+The remaining downed tag alone no longer fails recovery readiness. Life/status,
+conscious high-level state, companion-defeat effects and follower-target checks
+remain. Immortal protection, the same actor and the revive interaction remain.
+Existing signal cleanup and role binding are retained. No signal-consumption or
+backup AI changes are included. This test does not establish that a residual
+signal is harmless to the engine; it removes the mod's veto so that can be tested.
 
-BACKUP ARRIVAL
-Backup is independent of scanner dispatch locations. It now receives a fixed
-world-position drive command at the request location, not a follow command aimed
-at a moving player/vehicle. The destination stays fixed if you move afterward.
-Within 28 m, the drive command is stopped and only our backup car receives native
-braking. The crew stay seated during braking. After the speed is below 0.7 and the
-stop phase has lasted 0.5 seconds, animated exit is requested. A stop over 45 m
-away or a failure to stop within 10 seconds aborts/cleans up the response.
-One car/two officers, trunk action, optional unbound CET key, unit reservation,
-150-m/3-second departure rearm and duty/load cleanup remain.
+AUTOMATIC OBSERVATION
+After revive and follower-target readiness, Revive probe log lines are armed.
+When both actors are on foot, outside combat/menus, with at least 5 m separation,
+the observer records the existing follow command's ID/state and the partner's
+maximum horizontal displacement over a three-second window. Periodic follow
+refresh is held during that one window to keep the sampled command stable.
+The observer sends no commands, moves/heals nobody and changes no native flags.
+Menus, combat and vehicles pause/restart observation. Standing next to the player
+is not classified as a movement failure. Native field errors are reported as
+unavailable and cannot stop partner control. The observer stops after its result.
+The result is Horizontal displacement observed or No horizontal displacement
+observed, with command state and the native AI flags on the same line.
+A command state does not prove movement; position change does not prove that
+follow caused it. The evidence will distinguish the mod gate from a continuing
+engine/control problem. Real gameplay is needed to resolve that question.
 
-INSTALL / TEST
-1. Exit the game completely. Extract the whole ZIP into the game folder containing
-   bin and r6, overwriting all files. Restart; both native systems report version12.
-2. Start a shift. Test revive, walk away and then enter a stopped car. Confirm
-   the same partner follows and boards. CET Test: down partner remains available.
-3. At a clear roadside location, request backup through the owned police Hella's
-   trunk action. Stay near the request point. Check the car brakes, stops and the
-   officers get out, including when no scanner dispatch is active.
-4. Repeated requests must stay blocked. Travel over 150 m from the request scene,
-   car and officers for three seconds to release the unit, then request again.
-5. If a problem remains, send Partner AI diagnostics or the Backup status/log
-   showing approach, braking, exit or failure. The arrival test is still in-game.
+INSTALL / GET THE NEW EVIDENCE
+1. Exit the game completely. Extract this whole ZIP into the game folder
+   containing bin and r6, overwriting the mod files. Include new revive_probe.lua.
+   Restart. Both native systems use version13; CET announces v0.6c.
+2. Use revive once in this new version. Normal play after revive arms/samples
+   automatically; there is no manual active-state setting or new hotkey.
+3. Send the Revive probe result line from CET. It includes aid state, residual
+   downed tag, follower target, command state, elapsed time and displacement.
+   The existing Log partner AI diagnostics button also includes probe status.
+If the probe is waiting, its status states whether menus/combat/vehicles or a
+follow distance under 5 m prevented a useful sample.
 
-REQUIREMENTS / RETAINED
-Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+, TweakXL and
-compatible redscript. No new dependency or input binding is required. Stash keeps
-its normal action; backup uses the secondary trunk choice (normally R here).
-Terminal duty, scanner bonuses/receipts, dispatch, marker/HUD, vehicle chatter and
-wanted termination remain. GPS still uses the map open/close workaround when
-needed. Dispatch voice and chatter volume are unchanged.
+SCOPE / REQUIREMENTS
+Backup code is byte-for-byte the v0.6b implementation. Duty, scanner bonuses,
+dispatch, boarding, wanted termination, chatter and radio behaviour are retained.
+Requirements: Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+,
+TweakXL and compatible redscript. No added dependency or required key binding.
 
-VALIDATION / LIMITS
-All eight Lua modules parse in LuaJIT. Redscript checks have zero warnings/errors
+VALIDATION
+Nine Lua modules parse in LuaJIT. Redscript checks pass with zero warnings/errors
 against source-derived contracts, not the actual game script cache. Authored
-support and recovery helpers plus actual CET modules execute in scenarios for
-active-but-downed AI, companion-effect cleanup, canonical role/target recovery,
-resumed boarding, bounded failure handling, fixed backup destination, braking a
-moving arrival, no moving-car exit, stopping timeout and prior regressions.
-Native AI, physics, mounting, audio and rendered UI are mocked. This validates
-control flow and API use; it cannot prove real movement, braking or animations.
-Clear roadside locations are still needed: spawn positions use character navmesh,
-not a verified traffic-lane placement API.
+support logic and actual CET modules run against simulated native boundaries.
+Checks cover the exact residual-tag combination, same-actor revival, a stable
+sampled follow command, movement/no movement, near-player demand, menu/combat/
+vehicle pauses, hitches, native property errors, world reset and prior regressions.
+These checks cannot verify actual Cyberpunk movement or the underlying cause.
 
 ROLLBACK
-Exit the game and reinstall the complete v0.6a ZIP. No added files to remove.
+Exit the game, remove revive_probe.lua from the CET mod folder and reinstall the
+complete v0.6b ZIP. Earlier archives remain on GitHub.

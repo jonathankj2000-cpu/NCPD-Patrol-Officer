@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6b: one owned partner with native defeat/revive and boarding.
+-- NCPD Patrol v0.6c: one owned partner with native defeat/revive and boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
@@ -7,6 +7,7 @@
 local M = {}
 local Boarding = require("boarding")
 local OfficerAI = require("officer_ai")
+local Probe = require("revive_probe")
 local PARTNER_RECORD = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
 local spawnId = nil
 local officer = nil
@@ -36,7 +37,7 @@ end
 
 function M.diagnostics()
     local ok, info = pcall(function() return support():GetPartnerDiagnostics() end)
-    return ok and tostring(info) or ("Partner AI diagnostics unavailable: " .. tostring(info))
+    return (ok and tostring(info) or ("Partner AI diagnostics unavailable: " .. tostring(info))) .. " | probe=" .. Probe.state()
 end
 
 local function restoreRole()
@@ -134,6 +135,7 @@ function M.spawn(onDuty, status)
 end
 
 function M.dismiss(status)
+    Probe.reset()
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     pcall(function()
         local system = support()
@@ -173,6 +175,7 @@ end
 -- A loaded save has already removed non-persistent actors from the old world.
 -- Forget stale IDs without issuing a deletion into the newly loaded world.
 function M.reset()
+    Probe.reset()
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     spawnId, officer, spawnWaiting, followCommand = nil, nil, false, nil
     timeout, pollTime, followTime = 0, 0, 0
@@ -204,7 +207,7 @@ function M.update(delta, onDuty, status)
         spawnWaiting = false
         local attached, err = pcall(function()
             local system = support()
-            if not system or system:Version() ~= 12 or not system:RegisterPartner(officer) then
+            if not system or system:Version() ~= 13 or not system:RegisterPartner(officer) then
                 error("Native revive protection could not register our partner")
             end
             supportState = system:GetPartnerState()
@@ -230,6 +233,7 @@ function M.update(delta, onDuty, status)
             local previous = supportState
             supportState = system:GetPartnerState()
             if supportState ~= 1 then
+                Probe.reset()
                 rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
                 if previous == 1 then Boarding.cancel(officer); stopFollow() end
                 stateLabel = M.aidState()
@@ -249,6 +253,7 @@ function M.update(delta, onDuty, status)
                     rolePending = false
                     sendFollow()
                     system:ConfirmPartnerFollowerRestored()
+                    Probe.begin(status)
                     followTime = 0
                     stateLabel = "Revived; follower target restored"
                     status("Partner AI restored | " .. M.diagnostics())
@@ -284,8 +289,12 @@ function M.update(delta, onDuty, status)
             end
         end
         if wasBusy and not Boarding.busy() then followTime = 5 end
+        local paused = true
+        pcall(function() paused = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem"):IsDispatchMenuOpen() end)
+        Probe.update(delta, officer, followCommand, status, function() return support():GetPartnerDiagnostics() end, paused)
         followTime = followTime + delta
-        if followTime >= 5 then
+        -- Keep the sampled command stable for this one bounded observation.
+        if followTime >= 5 and not Probe.isSampling() then
             followTime = 0
             local ok, err = pcall(sendFollow)
             if not ok then

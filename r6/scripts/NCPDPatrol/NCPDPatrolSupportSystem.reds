@@ -20,7 +20,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
-    public func Version() -> Int32 { return 12; }
+    public func Version() -> Int32 { return 13; }
 
     private func ForgetWorld() -> Void {
         // Never issue cleanup operations using references from a loaded-away world.
@@ -83,13 +83,13 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     public func IsPartnerRecoveryReady() -> Bool {
         let high: gamedataNPCHighLevelState;
-        let signals: ref<AISignalHandlerComponent>;
         if !IsDefined(this.m_partner) || !this.m_partner.IsAttached() || !ScriptedPuppet.IsActive(this.m_partner) { return false; };
         if StatusEffectSystem.ObjectHasStatusEffectWithTag(this.m_partner, n"FollowerDefeated") { return false; };
         high = this.m_partner.GetHighLevelStateFromBlackboard();
         if Equals(high, gamedataNPCHighLevelState.Unconscious) || Equals(high, gamedataNPCHighLevelState.Dead) { return false; };
-        signals = this.m_partner.GetSignalHandlerComponent();
-        return IsDefined(signals) && !signals.HasSignalWithTag(n"downed");
+        // Controlled v0.6c test: a residual gate signal is diagnostic evidence,
+        // not sufficient to classify an active, conscious partner as downed.
+        return true;
     }
 
     public func IsPartnerFollowerReady() -> Bool {
@@ -126,7 +126,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         down = IsDefined(signals) && signals.HasSignalWithTag(n"downed");
         followerEffect = StatusEffectSystem.ObjectHasStatusEffectWithTag(this.m_partner, n"FollowerDefeated");
         follower = this.m_partner.GetAIControllerComponent().IsPlayerCompanion();
-        return s"aid state=\(this.m_partnerState) | high level=\(high) | active=\(active) | downed signal=\(down) | follower defeated=\(followerEffect) | follower target ready=\(follower)";
+        return s"aid state=\(this.m_partnerState) | high level=\(high) | active=\(active) | downed signal=\(down) | follower defeated=\(followerEffect) | follower target ready=\(follower) | downed tag gate=diagnostic only";
     }
 
     private func InTreatmentRange() -> Bool {

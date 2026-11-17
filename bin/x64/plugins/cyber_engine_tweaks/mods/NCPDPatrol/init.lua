@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6b | partner aid and one backup patrol via native interactions
+-- NCPD Patrol v0.6c | partner aid and one backup patrol via native interactions
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -50,7 +50,7 @@ end
 local function requestBackup()
     local support = getSupportSystem()
     local ok, accepted = pcall(function()
-        return support and support:Version() == 12 and support:RequestBackup()
+        return support and support:Version() == 13 and support:RequestBackup()
     end)
     if not ok or not accepted then
         status("Backup request unavailable. Start a shift; only one patrol may be assigned.")
@@ -210,8 +210,8 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 12 then error("Install all v0.6b support files and restart the game") end
-        if patrol:Version() ~= 12 then error("Lua/redscript version mismatch; install all v0.6b files and restart the game") end
+        if not support or support:Version() ~= 13 then error("Install all v0.6c support files and restart the game") end
+        if patrol:Version() ~= 13 then error("Lua/redscript version mismatch; install all v0.6c files and restart the game") end
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -275,7 +275,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.6b loaded. Revive restores partner AI; backup drives to the request point and brakes before exit.")
+    status("v0.6c loaded. Revive gate probe: residual downed tag is diagnostic only. Follow-command state and displacement are logged automatically after revive.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -299,7 +299,7 @@ registerForEvent("onUpdate", function(delta)
         local ok, err = pcall(function()
             local patrol = getPatrolSystem()
             if not patrol then return end
-            if patrol:Version() ~= 12 then return end
+            if patrol:Version() ~= 13 then return end
             patrol:EnforceDutyRules()
             if onDuty and not patrol:IsOnDuty() then
                 onDuty = false
@@ -355,7 +355,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.6b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.6c")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -393,7 +393,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.6b files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.6c files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -468,7 +468,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 12 then return "Version mismatch: install all v0.6b files and restart the game." end
+                if patrol:Version() ~= 13 then return "Version mismatch: install all v0.6c files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
