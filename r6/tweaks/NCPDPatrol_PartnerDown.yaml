@@ -1,0 +1,5 @@
+# A private, reversible status. Never change the vanilla defeated record or NPCs.
+BaseStatusEffect.NCPDPatrolPartnerDown:
+  $base: BaseStatusEffect.DefeatedWithRecover
+  duration: BaseStats.InfiniteDuration
+  savable: false

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6c: one owned partner with native defeat/revive and boarding.
+-- NCPD Patrol v0.6d: one owned partner with native defeat/revive and boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
@@ -207,7 +207,7 @@ function M.update(delta, onDuty, status)
         spawnWaiting = false
         local attached, err = pcall(function()
             local system = support()
-            if not system or system:Version() ~= 13 or not system:RegisterPartner(officer) then
+            if not system or system:Version() ~= 14 or not system:RegisterPartner(officer) then
                 error("Native revive protection could not register our partner")
             end
             supportState = system:GetPartnerState()

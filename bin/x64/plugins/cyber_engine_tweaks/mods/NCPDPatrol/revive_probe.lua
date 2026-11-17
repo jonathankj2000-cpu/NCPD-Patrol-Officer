@@ -19,19 +19,41 @@ end
 local function commandInfo(command)
     if not command then return "command=none" end
     local ok, value = pcall(function()
-        return "command=" .. tostring(command.id) .. " | command state=" .. tostring(command.state)
+        return "command=" .. tostring(command.id) .. " | object state=" .. tostring(command.state)
     end)
-    return ok and value or "command state=unavailable"
+    return ok and value or "object state=unavailable"
 end
 
-local function emit(stage, command, distance, status, diagnostics)
+local function read(call)
+    local ok, value = pcall(call)
+    return ok and tostring(value) or "unavailable"
+end
+
+local function controllerInfo(npc, command)
+    local ok, ai = pcall(function() return npc:GetAIControllerComponent() end)
+    if not ok or not ai then return "controller=unavailable" end
+    local state = read(function() return ai:GetCommandState(command) end)
+    local executing = read(function() return ai:IsCommandExecuting("AIFollowTargetCommand", false) end)
+    local selected = read(function()
+        local current = ai:GetEnqueuedOrExecutingCommand("AIFollowTargetCommand", false)
+        return current and current.id or "none"
+    end)
+    local ticks = read(function() return ai:GetUpdateTickCount() end)
+    return "controller state=" .. state .. " | follow executing=" .. executing
+        .. " | selected follow=" .. selected .. " | AI ticks=" .. ticks
+end
+
+local function emit(stage, npc, command, distance, status, diagnostics)
     local text = "Revive probe | " .. stage .. " | " .. commandInfo(command)
         .. string.format(" | observed=%.2f s | max horizontal displacement=%.2f m | player distance=%.2f m", elapsed, greatest, distance)
     if diagnostics then
         local ok, value = pcall(diagnostics)
         if ok then text = text .. " | " .. tostring(value) end
     end
-    if status then status(text) end
+    if status then
+        status(text)
+        status("Revive controller | " .. controllerInfo(npc, command))
+    end
 end
 
 function M.reset()
@@ -42,7 +64,7 @@ end
 function M.begin(status)
     M.reset()
     mode, reason = "waiting", "Waiting for an on-foot follow distance of at least 5 m"
-    if status then status("Revive probe | armed after revive; command state and physical displacement will be observed automatically") end
+    if status then status("Revive probe | armed after revive; object/controller state and physical displacement will be observed automatically") end
 end
 
 function M.isSampling() return mode == "sampling" end
@@ -68,7 +90,7 @@ local function observe(delta, npc, command, status, diagnostics, paused)
         if distance < 5 or not command then return end
         mode, reason, origin, observedCommand = "sampling", "Observing existing follow command", position, command
         elapsed, poll, greatest = 0, 0, 0
-        emit("sample started", command, distance, status, diagnostics)
+        emit("sample started", npc, command, distance, status, diagnostics)
         return
     end
     if command ~= observedCommand then
@@ -85,10 +107,10 @@ local function observe(delta, npc, command, status, diagnostics, paused)
     if elapsed >= 3 or (distance < 2.5 and greatest >= 0.5) then
         mode = "done"
         reason = greatest >= 0.5 and "Horizontal displacement observed" or "No horizontal displacement observed"
-        emit(reason, observedCommand, distance, status, diagnostics)
+        emit(reason, npc, observedCommand, distance, status, diagnostics)
     elseif poll >= 1 then
         poll = 0
-        emit("sample", observedCommand, distance, status, diagnostics)
+        emit("sample", npc, observedCommand, distance, status, diagnostics)
     end
 end
 
