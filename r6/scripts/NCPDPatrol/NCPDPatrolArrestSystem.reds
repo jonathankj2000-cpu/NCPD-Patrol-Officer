@@ -16,7 +16,7 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolArrestSystem") as NCPDPatrolArrestSystem;
     }
 
-    public func Version() -> Int32 { return 2; }
+    public func Version() -> Int32 { return 3; }
     public func Reward() -> Int32 { return 250; }
     public func GetHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\arrest_workspot.ent"; }
     public func GetWorkspotResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot"; }
@@ -141,9 +141,14 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         if this.m_stage == 2 && this.m_elapsed > 10.0 { this.FailPose(this.m_token, "Arrest animation timed out"); };
     }
 
-    // The CET workspot controller calls this only after observing the expected
-    // clip for a stable interval. Repeat/stale callbacks are rejected here too.
-    public func ConfirmArrestPose(npc: ref<NPCPuppet>, token: Int32) -> Bool {
+    public func ConfirmObservedArrest(npc: ref<NPCPuppet>, token: Int32, proof: ref<NCPDPatrolArrestPlayback>) -> Bool {
+        if !IsDefined(proof) || !proof.Matches(npc, token) { return false; };
+        return this.ConfirmArrestPose(npc, token);
+    }
+
+    // The controller waits for stable native callbacks before calling the
+    // checked entry point above. Eligibility and duplicate/payment rules stay.
+    private func ConfirmArrestPose(npc: ref<NPCPuppet>, token: Int32) -> Bool {
         let transaction: ref<TransactionSystem>;
         let player: ref<PlayerPuppet>;
         let amount: Int32;

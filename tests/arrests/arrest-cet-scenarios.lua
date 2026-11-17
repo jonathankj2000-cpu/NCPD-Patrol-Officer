@@ -6,6 +6,8 @@ local nextID=5000
 local deleted,played,stopped={},{},{}
 local failDeletes=0
 local jumpCalls,playSignals={},{}
+local listeners,paths,lastDelivered={},{},{}
+local callbacksEnabled=true
 local autoClipOnJump=false
 local bankReady=true
 local missingComponent=false
@@ -37,18 +39,32 @@ function dynamic:DeleteEntity(id)
 end
 local ws={}
 function ws:IsActorInWorkspot(npc) return active[npc.id.hash]==true end
-function ws:GetDeviceUser(id) return bound[id.hash] end
+-- Reproduce the reported running animation with both legacy lookups empty.
+function ws:GetDeviceUser(id) return nil end
 function ws:PlayInDeviceSimple(helper,npc,free,actorComp,deviceComp,sync,slideTime,behaviour,callback)
     assert(not free and actorComp=='NCPDPatrolArrestPC' and slideTime==0 and behaviour==0)
     played[#played+1]={helper=helper,npc=npc};bound[helper:GetEntityID().hash]=npc;active[npc.id.hash]=true
+    paths[npc.id.hash]='base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot'
 end
-function ws:GetWorkspotInstance(id)
-    if active[id.hash] and clips[id.hash] then return {animName=clips[id.hash]} end
+function ws:GetWorkspotInstance(id) return nil end
+function ws:SendDebugCommandFunctionalTests(mode,npc,proof)
+    assert(mode==8192)
+    listeners[npc.id.hash]=proof
+    if callbacksEnabled and active[npc.id.hash] then
+        proof:OnInstanceCreated();proof:OnWorkspotSetup(paths[npc.id.hash]);proof:OnWorkspotStarted()
+        if clips[npc.id.hash] then proof:OnAnimationChanged(clips[npc.id.hash],{}) end
+    end
 end
 function ws:SendJumpToAnimEnt(npc,clip,instant)
     assert(instant==true)
     jumpCalls[#jumpCalls+1]={npc=npc,clip=clip}
-    if autoClipOnJump then clips[npc.id.hash]=clip end
+    if autoClipOnJump then
+        clips[npc.id.hash]=clip
+        if callbacksEnabled and listeners[npc.id.hash] then
+            listeners[npc.id.hash]:OnAnimationChanged(clip,{})
+            lastDelivered[npc.id.hash]=clip
+        end
+    end
 end
 function ws:SendPlaySignal(npc) playSignals[#playSignals+1]=npc end
 function ws:GetExtendedInfo(npc)
@@ -90,10 +106,12 @@ function depot:LoadResource(ref)
 end
 function ws:StopInDevice(npc)
     stopped[#stopped+1]=npc;active[npc.id.hash]=nil
+    if listeners[npc.id.hash] then listeners[npc.id.hash]:OnWorkspotFinished() end
     for id,actor in pairs(bound) do if actor==npc then bound[id]=nil end end
 end
 CName={new=function(v) return v end};DynamicEntitySpec={new=function() return {} end}
 WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
+workWorkspotDebugMode={FunctionalTests=8192}
 local looked
 Game={GetPlayer=function() return player end,GetDynamicEntitySystem=function() return dynamic end,
     GetWorkspotSystem=function() return ws end,
@@ -101,7 +119,16 @@ Game={GetPlayer=function() return player end,GetDynamicEntitySystem=function() r
     GetScriptableSystemsContainer=function() return {Get=function() return ArrestNative end} end,
     GetTargetingSystem=function() return {GetLookAtObject=function() return looked end} end}
 local function step(count,paused)
-    for _=1,count do Module.update(0.25,Patrol:IsOnDuty(),paused==true) end
+    for _=1,count do
+        if callbacksEnabled then
+            for id,proof in pairs(listeners) do
+                if active[id] and clips[id] and clips[id]~=lastDelivered[id] then
+                    proof:OnAnimationChanged(clips[id],{});lastDelivered[id]=clips[id]
+                end
+            end
+        end
+        Module.update(0.25,Patrol:IsOnDuty(),paused==true)
+    end
 end
 local function secure(npc)
     assert(ArrestNative:StartArrest(npc));step(8);assert(ArrestNative:GetStage()==2);step(2)
@@ -136,6 +163,7 @@ secure(c);clips[c.id.hash]='kneel__wrong_pose';step(36)
 assert(wallet==bank and not ArrestNative:IsArrested(c) and ArrestNative:GetStage()==0)
 local d=arrestSuspect(1005);secure(d)
 local helperID=nextID;bound[helperID]=nil;clips[d.id.hash]=CLIP
+listeners[d.id.hash]:OnWorkspotSetup('base\\foreign.workspot')
 local stopCount=#stopped;step(36)
 assert(wallet==bank and #stopped==stopCount,'foreign workspot was paid or stopped')
 
@@ -158,6 +186,7 @@ assert(next(managed)==nil and wallet==bank and ArrestNative:GetPaidArrests()==pa
 Patrol:BeginShift();local g=arrestSuspect(1008);secure(g)
 local oldDeleted,oldStopped=#deleted,#stopped
 helpers,managed,bound,active,clips={},{},{},{},{}
+listeners,paths,lastDelivered={},{},{}
 ArrestNative:OnRestored(1,1);Module.reset();step(4)
 assert(#deleted==oldDeleted and #stopped==oldStopped and wallet==bank)
 assert(ArrestNative:GetPaidArrests()==paid and ArrestNative:IsArrested(f))
@@ -167,6 +196,17 @@ autoClipOnJump=true
 local h=arrestSuspect(1009);bank=wallet
 secure(h);step(2)
 assert(ArrestNative:IsArrested(h) and wallet==bank+250,'explicit clip/play sequence did not complete')
+-- Native callbacks, not the empty instance/device lookups, keep the paid body
+-- in the lying pose. A transition is redirected once and cannot pay again.
+local paidBank=wallet;local jumpBefore=#jumpCalls
+clips[h.id.hash]=CLIP..'__to__stand__2h_on_sides__01';step(1)
+assert(#jumpCalls==jumpBefore+1 and clips[h.id.hash]==CLIP,'standing transition was not redirected')
+step(48)
+assert(active[h.id.hash] and wallet==paidBank,'paid arrest was released or paid again after three seconds')
+local heldProof=listeners[h.id.hash]
+heldProof:OnWorkspotSetup('base\\foreign.workspot')
+local stopsBefore=#stopped;step(2)
+assert(#stopped==stopsBefore and wallet==paidBank,'superseded paid playback was stopped or paid again')
 local j=arrestSuspect(1010);bankReady=false;bank=wallet
 local beforeLoads=bankLoads
 assert(ArrestNative:StartArrest(j));step(8);step(2)
@@ -187,7 +227,7 @@ step(1);assert(ArrestNative:GetStage()==0 and #stopped==wasStopped+1 and wallet=
 local counts={}
 for _,request in ipairs(jumpCalls) do
  local id=request.npc.id.hash;counts[id]=(counts[id] or 0)+1
- assert(counts[id]<=2,'clip selection was retried without a bound')
+ assert(counts[id]<=(id==h.id.hash and 3 or 2),'clip selection was retried without a bound')
 end
 -- Missing resources/components/tree fail before transfer; no T-pose request.
 for case=1,3 do
@@ -212,4 +252,32 @@ for case=1,3 do
     bankReady,loadFailure,rejectToken=true,false,false
 end
 assert(referenceCalls==0,'ResourceHelper was used on an asynchronous component property')
+-- Native active playback without callbacks is still insufficient evidence.
+callbacksEnabled=false;autoClipOnJump=true
+local silent=arrestSuspect(1030);bank=wallet
+secure(silent);step(20)
+assert(wallet==bank and not ArrestNative:IsArrested(silent),'active playback without callbacks paid')
+callbacksEnabled=true
+-- Missing clips and stale proof identities cannot reach the native transaction.
+local missing=arrestSuspect(1031);bank=wallet;autoClipOnJump=false
+secure(missing);local proof=listeners[missing.id.hash]
+proof:OnAnimationChanged(CLIP,{})
+assert(not ArrestNative:ConfirmObservedArrest(missing,ArrestNative:GetToken()+1,proof))
+assert(not ArrestNative:ConfirmObservedArrest(arrestSuspect(1032),ArrestNative:GetToken(),proof))
+proof:OnAnimationMissing(CLIP,{})
+assert(not ArrestNative:ConfirmObservedArrest(missing,ArrestNative:GetToken(),proof))
+step(20);assert(wallet==bank and not ArrestNative:IsArrested(missing))
+-- A paid hold whose transition requests are ignored stops after three seconds,
+-- even if native transition callbacks keep arriving. It cannot flood commands.
+autoClipOnJump=true
+local stubborn=arrestSuspect(1033);secure(stubborn);step(2)
+assert(ArrestNative:IsArrested(stubborn))
+bank=wallet;autoClipOnJump=false
+local beforeJumps=#jumpCalls;local stubbornProof=listeners[stubborn.id.hash]
+for _=1,16 do
+    clips[stubborn.id.hash]=CLIP..'__to__stand__2h_on_sides__01'
+    stubbornProof:OnAnimationChanged(clips[stubborn.id.hash],{})
+    step(1)
+end
+assert(#jumpCalls-beforeJumps<=3 and not active[stubborn.id.hash] and wallet==bank,'failed hold spammed, stayed active or paid again')
 Patrol:FinishShift();Module.finish();supportPlayer=nil

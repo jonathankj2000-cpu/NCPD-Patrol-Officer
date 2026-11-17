@@ -3,6 +3,7 @@ import json,re
 
 def translate(path):
     source=Path(path).read_text()
+    source=re.sub(r'protected\s+cb\s+func', 'public func', source)
     source=re.sub(r'//[^\n]*','',source)
     source=re.sub(r'\n\s*&&', ' &&', source)
     strings={}

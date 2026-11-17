@@ -1,124 +1,92 @@
-NCPD PATROL v0.7c - ARREST ASYNC RESOURCE LOAD TEST
-==============================================
-On duty, arrest living, downed human enemies through the game's primary body
-interaction (normally F). Each registered arrest pays EUR$250 exactly once for
-that actor identity in the save. This payment is separate from scanner bonuses.
+NCPD PATROL v0.7d - ARREST CALLBACK / LYING HOLD TEST
+==================================================
+The v0.7c in-game test confirmed visible handcuff animation. It did not reach
+payment: GetWorkspotInstance and GetDeviceUser were empty despite native active
+playback. The three-second confirmation timeout then deleted the helper.
+This build replaces that confirmation route with scoped native callbacks and
+attempts to redirect a standing transition back to the lying handcuff clip.
 
-USE
+INSTALL AND TEST
 1. Exit the game completely. Extract this ENTIRE ZIP into the game directory
-   containing bin, r6 and archive, replacing NCPD Patrol files. Include
-   archive/pc/mod/NCPDPatrol_Arrest.archive, arrest.lua, both Arrest redscripts
-   and NCPDPatrol_Arrest.yaml. The archive is unchanged from v0.7b.
-   Restart; CET announces v0.7c. Main/support interfaces use version 17;
-   the arrest interface uses version 2.
-2. Start a shift through the existing terminal interaction or CET.
-3. Incapacitate an ordinary human enemy without killing them. Approach/look at
-   the body and use Arrest suspect (primary interaction, normally F). Stay on
-   foot within 2.5 m for two seconds. There is no new required hotkey or CET step.
-4. The mod requests a lying handcuff workspot. It must observe the expected
-   non-transition clip, an active workspot and ownership by its private helper
-   for at least 0.5 seconds before registering and paying the arrest.
-5. Look for NCPD ARREST REGISTERED | +EUR$250. Ordinary body/loot choices return
-   after registration. The same body cannot be paid again by pressing F,
-   changing shift or loading a save that already contains that payment.
+   containing bin, r6 and archive, replacing the existing mod files. Include the
+   new r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds. Restart; CET announces
+   v0.7d. Main/support interfaces remain 17; the arrest interface is now 3.
+   The included NCPDPatrol_Arrest.archive is unchanged from v0.7b/v0.7c.
+2. Start a shift. Incapacitate an ordinary human enemy without killing them.
+   Approach/look at the body, use Arrest suspect (normally F), and remain on
+   foot within 2.5 m for two seconds. No additional binding or CET action.
+3. Expect a lying handcuff pose and NCPD ARREST REGISTERED | +EUR$250 after the
+   native callback proof has remained valid for half a second. The CET arrest
+   count should increase once. Repeating input or changing shift cannot pay
+   that saved actor identity again.
+4. Stay nearby for 15-20 seconds to check the hold. On an observed transition
+   after a lying clip, the controller re-selects the lying clip. This mechanism
+   still needs in-game validation: native forced exits may end the pose.
 
-ELIGIBILITY / INTERRUPTIONS
+CONFIRMATION AND HOLD
+A fresh NCPDPatrolArrestPlayback listener is registered for the suspect using
+SendDebugCommandFunctionalTests / FunctionalTests. It records OnWorkspotSetup,
+OnAnimationChanged, missing/skipped clips, finish and instance removal.
+Payment requires the expected native resource path and an allowed lying clip,
+the correct actor/request token, active playback outside entry/exit, and a
+stable half-second observation. A second setup, missing clip or ended context
+invalidates the proof. Active=true by itself and a void play request cannot pay.
+The old instance lookup is diagnostic only; instance=false can accompany a valid
+native callback. context=true means the fresh callback matches the expected
+resource and is not superseded/finished, not a GetDeviceUser result.
+The native payment entry point also checks the callback proof before the usual
+eligibility, range, token, duplicate identity and transaction checks.
+After payment the helper is retained. A standing/other transition after a real
+lying clip gets at most one jump per callback revision, with a half-second
+cooldown and at most three unacknowledged corrections. If it does not return
+within three seconds, playback is released. A finished/superseded context is
+released without controlling the replacement. Saved payment remains paid.
+No shared game resource, bank tree, animation or NPC life/AI state is rewritten.
+
+PAYMENT IS STILL INDEPENDENT
+NCPDPatrolArrestSystem retains its own saved paid-suspect ledger, fixed EUR$250
+reward, transaction, count and receipt queue. Scanner activity IDs, EUR$1000
+scanner payouts, scanner bonus counters and scanner receipts are unchanged.
+A failed transaction does not add the suspect to the paid ledger. Receipts never
+award money. Identity is by saved EntityID, not model or a combined shift total.
+
+ELIGIBILITY AND CLEANUP
 Dead bodies, active enemies, civilians, police, companions, bosses, robots,
-mounted actors and quest-marked bodies are excluded. Quest items also mark a
-body as quest-related; collect story/evidence items normally before expecting
-an arrest choice. A ragdoll or writhing animation alone does not establish life:
-both native death checks and defeated/unconscious state are used.
-The body interaction is enabled for eligible empty-inventory targets too.
-Menus pause treatment/confirmation. Range, death, mounting, wanted/off-duty or
-world changes cancel an unfinished arrest. Repeated events share one reservation.
-A missing/wrong/foreign animation or failed payment does not register an arrest.
-An unconfirmed pose times out rather than granting money for the request alone.
+mounted actors and quest-marked bodies are excluded. Quest/evidence items can
+mark a body as quest-related; loot them normally first. Eligible bodies with
+empty inventories can expose Arrest suspect. Normal body/loot choices return
+after registration or off duty. Menus pause treatment/confirmation. Death,
+mounting, moving away, wanted/off-duty or loading cancels unfinished arrests.
+The suspect is never respawned, deleted, healed, resurrected or made a follower.
+Only private nonpersistent helpers are deleted after leaving 60 m, shift end,
+body loss/death or lost playback. Failed deletions retain IDs for retry. A world
+load forgets old handles. Callback listeners are disarmed on cleanup; they keep
+bounded state and only a weak actor reference. Prisoner transport is not added.
+The existing vanilla ground/handcuff resource supplies animation and props.
+No AMM asset or dependency and no paired V animation is added.
 
-CHANGES IN v0.7c
-The v0.7b test found the archive, template, vanilla resource and correct attached
-helper, then aborted with "Arrest workspot reference could not be loaded".
-This was a mod API error: workspotResource is a ResourceAsyncReference, while
-Codeware ResourceHelper's reference methods accept only ResourceReference.
-This build uses ResourceDepot.LoadResource to obtain an asynchronous token and
-retains it for the helper's lifetime. It polls IsLoaded/IsFinished/IsFailed and
-reads GetResource only after loading. A pending token does not start playback
-or restart loading on every update. Refused/failed loads abort without payment.
-The existing PLATFORM_PC anchor, component name, tree-based clip selection,
-explicit jump/play, one retry and three-second unconfirmed-playback release are
-retained. No native script, archive, eligibility or payment rule changed.
+DIAGNOSTICS AND VALIDATION
+If it fails, send lines starting Arrest setup, Arrest resource token, Arrest
+bank, Arrest pose, Arrest native, Arrest hold and Arrest |. In the new pose line,
+source=native callback, clip, context and path show the actual confirmation.
+The native callback bridge and transition interruption still need an in-game
+test. The prior build's visible animation does not prove this new bridge works.
+10 Lua modules parse. All 14 redscripts compile against source-derived API
+contracts with zero warnings/errors, not an actual game cache. Actual authored
+callback/controller/payment code runs against mocked native boundaries. Tests
+cover empty old lookups with valid callbacks, missing/wrong/transition/foreign/
+superseded/stale proof, one separate payment, hold correction and bounded failed
+holds, asynchronous loading, menus/range, body choices and cleanup/world loads.
+These checks do not emulate rendered animation, native callback dispatch,
+physics, AI or native save loading. The archive is byte-identical to v0.7c.
+Partner revival/boarding/backup, scanner rewards, dispatch, radio and native
+main/support scripts are unchanged. Requirements remain game 2.5, matching CET,
+Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript.
 
-PAYMENT IS INDEPENDENT
-NCPDPatrolArrestSystem owns its saved paid-suspect ledger, fixed EUR$250 reward,
-transaction, count and receipt queue. It only reads common duty/wanted state.
-It does not call scanner monitoring/payment, alter paid activity IDs, increment
-activities or scanner bonus totals, or add money to the scanner receipt queue.
-Scanner payouts remain as before. The balance in the game's wallet naturally
-contains both kinds of money, but each arrest gets its own payment/receipt.
-The arrest count shown in CET/logs is paid actor identities in this save, not
-scanner activities or a combined shift bonus. Identity is by EntityID, not model.
-A newly spawned actor with a different ID is a different suspect.
-
-ANIMATION AND CLEANUP
-The small included archive contains an authored invisible gameObject anchor
-with a workWorkspotResourceComponent. It references the existing vanilla
-base/workspots/common/ground/
-generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot.
-No AMM entity, animation bank, script or dependency is bundled. No paired V
-animation or guaranteed visible handcuff prop is added.
-The suspect is not respawned, deleted, healed, resurrected or made a follower.
-Its defeated/unconscious state remains; the workspot controls the arrest pose.
-The mod stops only playback still bound to its own helper. It removes only its
-own non-persistent helpers when the player leaves 60 m, the body disappears/dies,
-or the shift ends. Failed helper deletions retain their IDs for retries.
-A world load forgets old handles without sending deletion into the new world.
-The paid identity survives even if the pose ends, the body is carried or ordinary
-engine population cleanup removes it. Prisoner transport is outside this build.
-
-TEST AND DIAGNOSTICS
-First test an average male/female human enemy on flat ground, using the same
-Arrest suspect interaction. In-game testing is needed to confirm playback and
-arrest after correcting the API mismatch. The earlier T-pose needs verification.
-If it fails, send CET lines beginning with Arrest setup |, Arrest bank |,
-Arrest bank names |, Arrest resource token |, Arrest pose |, Arrest native |
-and Arrest |. They distinguish resource readiness, the selected clip, native
-playback and the actor association.
-clip=none with instance=false means no Codeware instance was returned; it is not
-a native clip name. No change to defeated/unconscious states is made in this fix.
-The NCPD ARRESTS CET section shows the current status; CET is not needed to arrest.
-
-VALIDATION
-10 Lua modules parse in LuaJIT. All 13 redscripts compile against source-derived
-API contracts with zero warnings/errors, not against an actual game cache.
-Authored arrest logic and actual CET controller/wrappers execute with native
-boundaries mocked. Tests cover eligibility, menu/time/range guards, one payment
-per identity across shifts/loads, duplicate/stale callbacks, correct/incorrect/
-transition/foreign clip evidence, no payout from a void request, resource readiness,
-async-token readiness/failure, explicit clip/play, one retry, three-second
-release, body interactions, failed cleanup, death and loaded-away references.
-The actual scanner and arrest
-classes are exercised together: one scanner completion pays/counts EUR$1000,
-one arrest separately pays EUR$250, without mixing their ledgers or receipts.
-Earlier partner/boarding/backup/dispatch/radio/reward regressions also pass.
-The archive is compiled with WolvenKit 9.1.1, round-tripped to verify PLATFORM_PC,
-its new component name and native dependency, then extracted to verify entity bytes.
-The corrected async-property fixture rejects ResourceHelper and reproduces the
-v0.7b abort. The new controller passes pending/loaded/failed/refused-token cases.
-These checks do not emulate real animations, AI, physics or native save loading.
-
-RETAINED REQUIREMENTS
-Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and
-compatible redscript. No extra runtime dependency or new required binding.
-v0.6e partner health/voice observations remain; this is not an injury-voice fix.
-Scanner/support behaviour and prior receipts are preserved. Native interfaces
-remain 17/2 as in v0.7b; backup, boarding and follower helpers are unchanged.
-
-ROLLBACK TO v0.6e
-Exit the game. Remove these five additions, then reinstall the complete v0.6e ZIP:
-- archive/pc/mod/NCPDPatrol_Arrest.archive
-- bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua
-- r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds
-- r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds
-- r6/tweaks/NCPDPatrol_Arrest.yaml
-Keep the v0.6e partner-down YAML and partner-voice script. Prior archives remain
-on GitHub. Development asset source/build tool and portable tests are available
-in the repository and are not needed in the game-install ZIP.
+ROLLBACK
+To return to v0.7c, exit the game, remove the new
+r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds, then reinstall its full ZIP.
+Earlier complete ZIPs remain on GitHub. To return to v0.6e also remove arrest.lua,
+NCPDPatrolArrestSystem.reds, NCPDPatrolArrestInteractions.reds,
+r6/tweaks/NCPDPatrol_Arrest.yaml and archive/pc/mod/NCPDPatrol_Arrest.archive.
+Keep v0.6e's partner-down YAML and partner-voice script.
