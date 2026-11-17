@@ -38,7 +38,7 @@
               "name": {
                 "$type": "CName",
                 "$storage": "string",
-                "$value": "NCPDPatrolArrest"
+                "$value": "NCPDPatrolArrestPC"
               },
               "localTransform": {
                 "$type": "WorldTransform",
@@ -93,7 +93,7 @@
           "name": {
             "$type": "CName",
             "$storage": "string",
-            "$value": "NCPDPatrolArrest"
+            "$value": "NCPDPatrolArrestPC"
           },
           "localTransform": {
             "$type": "WorldTransform",
@@ -129,7 +129,8 @@
             "Flags": "Default"
           }
         }
-      ]
+      ],
+      "cookingPlatform": "PLATFORM_PC"
     },
     "EmbeddedFiles": []
   }

@@ -22,6 +22,100 @@ local function distance(a, b)
     return math.sqrt(x*x+y*y+z*z)
 end
 
+local function read(object, field)
+    local ok, value = pcall(function() return object[field] end)
+    if ok then return value end
+    return nil
+end
+
+local function isArrestClip(name)
+    return name:sub(1, 11) == "lie_ground_" and not name:find("__to__", 1, true)
+        and not name:find("uncuff", 1, true)
+        and (name:find("handcuff", 1, true) or name:find("cuffed", 1, true)) ~= nil
+end
+
+local function inspectTree(system, tree)
+    local stack, seen, names, nodes = {tree.rootEntry}, {}, {}, 0
+    while #stack > 0 and nodes < 256 do
+        local entry = table.remove(stack)
+        if entry and not seen[entry] then
+            seen[entry], nodes = true, nodes + 1
+            for _, field in ipairs({"animName", "idleAnim"}) do
+                local name = read(entry, field)
+                if name then
+                    local ok, text = pcall(function() return system:AnimationName(name) end)
+                    if ok and text ~= "" and text ~= "None" then names[text] = true end
+                end
+            end
+            local list = read(entry, "list")
+            if list then for _, child in ipairs(list) do stack[#stack+1] = child end end
+        end
+    end
+    local candidates, sample = {}, {}
+    for name in pairs(names) do
+        if #sample < 6 then sample[#sample+1] = name end
+        if isArrestClip(name) then candidates[#candidates+1] = name end
+    end
+    table.sort(candidates)
+    local selected = names[CLIP] and CLIP or candidates[1]
+    return selected, nodes, table.concat(sample, ", "), next(names) ~= nil and #stack == 0
+end
+
+local function prepare(system, unit, helper)
+    if not unit.component then
+        unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
+        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7b archive") end
+        local name = system:AnimationName(unit.component.name)
+        if name ~= "NCPDPatrolArrestPC" then error("Outdated arrest helper; replace NCPDPatrol_Arrest.archive and restart") end
+        print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
+    end
+    local loaded = ResourceHelper.IsReferenceLoaded(unit.component, CName.new("workspotResource"))
+    if not loaded and not unit.bindRequested then
+        unit.bindRequested = true
+        if not ResourceHelper.LoadReferenceResource(unit.component, CName.new("workspotResource"), system:GetWorkspotResource(), false) then
+            error("Arrest workspot reference could not be loaded")
+        end
+        print("[NCPD Patrol] Arrest setup | resource load requested; playback waits for readiness")
+        return false
+    end
+    if not loaded then return false end
+    local resource = ResourceHelper.GetReferenceResource(unit.component, CName.new("workspotResource"))
+    local tree = resource and read(resource, "workspotTree")
+    if not tree or not read(tree, "rootEntry") then
+        if unit.elapsed > 4 then error("Arrest resource loaded; workspot tree still not readable/ready") end
+        return false
+    end
+    if not unit.prepared then
+        local selected, nodes, sample, complete = inspectTree(system, tree)
+        print("[NCPD Patrol] Arrest bank | loaded=true | nodes=" .. nodes .. " | selected=" .. tostring(selected or "unavailable"))
+        print("[NCPD Patrol] Arrest bank names | " .. sample)
+        if not selected and complete then error("Loaded workspot contains no matching lying handcuff animation") end
+        unit.clip, unit.prepared = selected or CLIP, true
+        unit.resource = resource
+    end
+    return true
+end
+
+local function jump(unit)
+    workspots():SendJumpToAnimEnt(unit.npc, CName.new(unit.clip), true)
+    workspots():SendPlaySignal(unit.npc)
+end
+
+local function reportPose(unit, instance, clip, owner)
+    local active = workspots():IsActorInWorkspot(unit.npc)
+    local text = "clip=" .. tostring(clip) .. " | workspot=" .. tostring(active)
+        .. " | instance=" .. tostring(instance ~= nil) .. " | owner=" .. tostring(owner == true)
+    if text ~= unit.lastPose then
+        unit.lastPose = text
+        print("[NCPD Patrol] Arrest pose | " .. text)
+        local ok, info = pcall(function() return workspots():GetExtendedInfo(unit.npc) end)
+        if ok and info then
+            print("[NCPD Patrol] Arrest native | active=" .. tostring(read(info, "isActive"))
+                .. " | entering=" .. tostring(read(info, "entering")) .. " | exiting=" .. tostring(read(info, "exiting")))
+        end
+    end
+end
+
 local function ownsWorkspot(unit)
     return unit.started and unit.id and attached(unit.npc)
         and same(workspots():GetDeviceUser(unit.id), unit.npc)
@@ -51,6 +145,12 @@ local function create(system, npc, token)
     local dynamic = entities()
     if not dynamic or not dynamic:IsReady() then error("Codeware entity system unavailable") end
     if workspots():IsActorInWorkspot(npc) then error("Suspect is already in another workspot") end
+    local depot = Game.GetResourceDepot()
+    local template = depot:ResourceExists(system:GetHelperTemplate())
+    local bank = depot:ResourceExists(system:GetWorkspotResource())
+    print("[NCPD Patrol] Arrest setup | archive=" .. tostring(depot:ArchiveExists("NCPDPatrol_Arrest.archive"))
+        .. " | template=" .. tostring(template) .. " | bank=" .. tostring(bank))
+    if not template or not bank then error("Arrest animation resources unavailable; no playback requested") end
     local spec = DynamicEntitySpec.new()
     spec.templatePath = system:GetHelperTemplate()
     spec.position, spec.orientation = npc:GetWorldPosition(), npc:GetWorldOrientation()
@@ -58,7 +158,7 @@ local function create(system, npc, token)
     spec.alwaysSpawned, spec.spawnInView, spec.active = false, true, true
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
-    return {id=id, npc=npc, token=token, elapsed=0, stable=0, started=false, paid=false}
+    return {id=id, npc=npc, token=token, elapsed=0, playTime=0, stable=0, started=false, paid=false}
 end
 
 local function updateUnit(system, unit, delta, onDuty, paused)
@@ -86,23 +186,24 @@ local function updateUnit(system, unit, delta, onDuty, paused)
     local helper = entities():GetEntity(unit.id)
     if not helper or not helper:IsAttached() then return false end
     if not unit.started then
+        if not prepare(system, unit, helper) then return false end
         -- The helper references an existing vanilla ground/handcuff workspot.
         -- This starts no paired V animation and changes no NPC life/AI state.
-        workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrest"),
+        workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrestPC"),
             CName.new("None"), CName.new("None"), 0,
             WorkspotSlidingBehaviour.DontPlayAtResourcePosition, nil)
         unit.started = true
-        print("[NCPD Patrol] Arrest | Lying workspot requested; awaiting actual clip")
+        jump(unit)
+        print("[NCPD Patrol] Arrest | Lying workspot and explicit clip/play requested; awaiting observation")
         return false
     end
+    unit.playTime = unit.playTime + delta
     local instance = workspots():GetWorkspotInstance(unit.npc:GetEntityID())
     local clip = instance and system:AnimationName(instance.animName) or "none"
-    if clip ~= unit.lastClip then
-        unit.lastClip = clip
-        print("[NCPD Patrol] Arrest pose | clip=" .. tostring(clip))
-    end
-    local matches = clip:sub(1, #CLIP) == CLIP and not clip:find("__to__", 1, true)
-    if matches and workspots():IsActorInWorkspot(unit.npc) and ownsWorkspot(unit) then
+    local owned = ownsWorkspot(unit)
+    reportPose(unit, instance, clip, owned)
+    local matches = isArrestClip(clip)
+    if matches and workspots():IsActorInWorkspot(unit.npc) and owned then
         unit.stable = unit.stable + delta
         if unit.stable >= 0.5 then
             if system:ConfirmArrestPose(unit.npc, unit.token) then
@@ -115,6 +216,15 @@ local function updateUnit(system, unit, delta, onDuty, paused)
         end
     else
         unit.stable = 0
+        if not unit.retried and unit.playTime >= 0.5 and ownsWorkspot(unit) then
+            unit.retried = true
+            jump(unit)
+            print("[NCPD Patrol] Arrest | Clip/play retried once after workspot entry")
+        end
+        if unit.playTime >= 3 then
+            fail(system, unit, "No matching arrest clip after entry; playback released, no payment")
+            return cleanup(unit)
+        end
     end
     return false
 end
@@ -132,7 +242,7 @@ end
 function M.finish()
     pcall(function()
         local system = native()
-        if system and system:Version() == 1 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
+        if system and system:Version() == 2 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
     end)
     for index = #units, 1, -1 do
         local unit = units[index]
@@ -148,7 +258,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 1 then error("Install all v0.7a arrest scripts and restart the game") end
+        if not system or system:Version() ~= 2 then error("Install all v0.7b arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

@@ -1,5 +1,5 @@
-NCPD PATROL v0.7a - ARRESTS / SEPARATE PAYMENT TEST
-=================================================
+NCPD PATROL v0.7b - ARREST WORKSPOT STARTUP TEST
+==============================================
 On duty, arrest living, downed human enemies through the game's primary body
 interaction (normally F). Each registered arrest pays EUR$250 exactly once for
 that actor identity in the save. This payment is separate from scanner bonuses.
@@ -8,8 +8,8 @@ USE
 1. Exit the game completely. Extract this ENTIRE ZIP into the game directory
    containing bin, r6 and archive, replacing NCPD Patrol files. Include the new
    archive/pc/mod/NCPDPatrol_Arrest.archive, arrest.lua, both Arrest redscripts
-   and NCPDPatrol_Arrest.yaml. Restart; CET announces v0.7a. Main/support native
-   interfaces use version 16; the independent arrest interface uses version 1.
+   and NCPDPatrol_Arrest.yaml. The archive changed: replace it too, then restart.
+   CET announces v0.7b. Main/support interfaces use version 17; arrests version 2.
 2. Start a shift through the existing terminal interaction or CET.
 3. Incapacitate an ordinary human enemy without killing them. Approach/look at
    the body and use Arrest suspect (primary interaction, normally F). Stay on
@@ -32,6 +32,18 @@ Menus pause treatment/confirmation. Range, death, mounting, wanted/off-duty or
 world changes cancel an unfinished arrest. Repeated events share one reservation.
 A missing/wrong/foreign animation or failed payment does not register an arrest.
 An unconfirmed pose times out rather than granting money for the request alone.
+
+CHANGES FROM v0.7a
+The previous in-game test reached a T-pose, reported no Codeware workspot instance,
+then returned to the original writhing animation after cancellation. No arrest
+payment was made. That observation does not establish a single root cause.
+This build corrects two startup omissions: the anchor is explicitly cooked for
+PLATFORM_PC, and playback explicitly selects a lying handcuff clip and sends play.
+It checks that the template and vanilla resource exist, validates the new helper
+component NCPDPatrolArrestPC, and waits for its loaded, readable workspot tree.
+The tree supplies the clip selection; clip/play can be retried once after entry.
+Unconfirmed playback is released after three seconds (overall setup limit eight
+seconds). The animation confirmation, eligibility and payment rules are unchanged.
 
 PAYMENT IS INDEPENDENT
 NCPDPatrolArrestSystem owns its saved paid-suspect ledger, fixed EUR$250 reward,
@@ -61,12 +73,14 @@ The paid identity survives even if the pose ends, the body is carried or ordinar
 engine population cleanup removes it. Prisoner transport is outside this build.
 
 TEST AND DIAGNOSTICS
-First test an average male/female human enemy on flat ground. The native resource
-path and clip candidates are verified in reference catalogues; actual game entry
-into this workspot from a defeated body has not been tested here. Animation and
-F/input/loot UI compatibility need an in-game test. This is a first test build.
-If no pose starts or no payment occurs, send CET lines beginning with Arrest |
-and Arrest pose |. They show progression, the observed clip or the failure.
+First test an average male/female human enemy on flat ground, using the same
+Arrest suspect interaction. In-game testing is needed to establish whether these
+startup changes resolve the reported T-pose and permit a confirmed arrest.
+If it fails, send CET lines beginning with Arrest setup |, Arrest bank |,
+Arrest bank names |, Arrest pose |, Arrest native | and Arrest |. They distinguish
+resource readiness, the selected clip, native playback and the actor association.
+clip=none with instance=false means no Codeware instance was returned; it is not
+a native clip name. No change to defeated/unconscious states is made in this fix.
 The NCPD ARRESTS CET section shows the current status; CET is not needed to arrest.
 
 VALIDATION
@@ -75,13 +89,14 @@ API contracts with zero warnings/errors, not against an actual game cache.
 Authored arrest logic and actual CET controller/wrappers execute with native
 boundaries mocked. Tests cover eligibility, menu/time/range guards, one payment
 per identity across shifts/loads, duplicate/stale callbacks, correct/incorrect/
-transition/foreign clip evidence, no payout from a void request, body interactions,
-failed cleanup, death and loaded-away references. The actual scanner and arrest
+transition/foreign clip evidence, no payout from a void request, resource readiness,
+explicit clip/play, one retry, three-second release, body interactions, failed
+cleanup, death and loaded-away references. The actual scanner and arrest
 classes are exercised together: one scanner completion pays/counts EUR$1000,
 one arrest separately pays EUR$250, without mixing their ledgers or receipts.
 Earlier partner/boarding/backup/dispatch/radio/reward regressions also pass.
-The archive is compiled with WolvenKit 9.1.1, round-tripped to verify its component
-and native dependency, then extracted to verify exact entity bytes.
+The archive is compiled with WolvenKit 9.1.1, round-tripped to verify PLATFORM_PC,
+its new component name and native dependency, then extracted to verify entity bytes.
 These checks do not emulate real animations, AI, physics or native save loading.
 
 RETAINED REQUIREMENTS

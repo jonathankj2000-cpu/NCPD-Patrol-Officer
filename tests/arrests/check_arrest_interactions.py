@@ -1,6 +1,5 @@
 from pathlib import Path
-import tempfile
-import re,sys
+import re,sys,tempfile
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
@@ -15,10 +14,11 @@ for name in ['GetValidChoices','OnInteractionUsed','OnInteraction','UpdateLootIn
     while depth:
         depth+=(source[end]=='{')-(source[end]=='}');end+=1
     methods.append(source[start:end].replace('protected cb func','public func').replace('protected final func','public func'))
-scratch=tempfile.TemporaryDirectory()
+scratch=tempfile.TemporaryDirectory(prefix='ncpd-arrest-tests-')
 path=Path(scratch.name)/'arrest-interaction-wrappers.reds'
 path.write_text('public class WrapperFixture extends IScriptable {\n'+'\n'.join(methods)+'\n}')
 translated=translate(path).replace('local choice = nil','local choice = {choiceMetaData={type={}},captionParts={}}')
+scratch.cleanup()
 lua=LuaRuntime(unpack_returned_tuples=True)
 lua.execute(Path(HERE/'mappin-native-mocks.lua').read_text())
 lua.globals().Patrol=lua.execute(translate(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds'))

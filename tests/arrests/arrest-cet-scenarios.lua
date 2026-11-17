@@ -5,12 +5,23 @@ local helpers,managed,bound,active,clips={},{},{},{},{}
 local nextID=5000
 local deleted,played,stopped={},{},{}
 local failDeletes=0
+local jumpCalls,playSignals={},{}
+local autoClipOnJump=false
+local componentReady=true
+local missingComponent=false
+local resourceAvailable=true
+local treeAvailable=true
+local boundComponents={}
 local dynamic={IsReady=function() return true end}
 function dynamic:CreateEntity(spec)
     assert(spec.recordID==nil and spec.templatePath=='base\\ncpd_patrol\\arrest_workspot.ent')
     assert(not spec.persistState and not spec.persistSpawn and not spec.alwaysSpawned and spec.spawnInView and spec.active)
     nextID=nextID+1;local id={hash=nextID}
-    helpers[id.hash]={GetEntityID=function() return id end,IsAttached=function() return true end};managed[id.hash]=true
+    local component={name='NCPDPatrolArrestPC',ready=componentReady}
+    boundComponents[id.hash]=component
+    helpers[id.hash]={GetEntityID=function() return id end,IsAttached=function() return true end,
+        FindComponentByType=function(_,kind) assert(kind=='workWorkspotResourceComponent'); if not missingComponent then return component end end}
+    managed[id.hash]=true
     return id
 end
 function dynamic:GetEntity(id) return helpers[id.hash] end
@@ -25,12 +36,35 @@ local ws={}
 function ws:IsActorInWorkspot(npc) return active[npc.id.hash]==true end
 function ws:GetDeviceUser(id) return bound[id.hash] end
 function ws:PlayInDeviceSimple(helper,npc,free,actorComp,deviceComp,sync,slideTime,behaviour,callback)
-    assert(not free and actorComp=='NCPDPatrolArrest' and slideTime==0 and behaviour==0)
+    assert(not free and actorComp=='NCPDPatrolArrestPC' and slideTime==0 and behaviour==0)
     played[#played+1]={helper=helper,npc=npc};bound[helper:GetEntityID().hash]=npc;active[npc.id.hash]=true
 end
 function ws:GetWorkspotInstance(id)
-    if active[id.hash] then return {animName=clips[id.hash] or 'none'} end
+    if active[id.hash] and clips[id.hash] then return {animName=clips[id.hash]} end
 end
+function ws:SendJumpToAnimEnt(npc,clip,instant)
+    assert(instant==true)
+    jumpCalls[#jumpCalls+1]={npc=npc,clip=clip}
+    if autoClipOnJump then clips[npc.id.hash]=clip end
+end
+function ws:SendPlaySignal(npc) playSignals[#playSignals+1]=npc end
+function ws:GetExtendedInfo(npc)
+    return {isActive=active[npc.id.hash] and clips[npc.id.hash]~=nil,entering=active[npc.id.hash] and clips[npc.id.hash]==nil,exiting=false}
+end
+ResourceHelper={
+    IsReferenceLoaded=function(component,field) assert(field=='workspotResource'); return component.ready end,
+    LoadReferenceResource=function(component,field,path,wait)
+        assert(field=='workspotResource' and wait==false)
+        component.requested=true;return true
+    end,
+    GetReferenceResource=function(component,field)
+        if not treeAvailable then return {workspotTree=nil} end
+        return {workspotTree={rootEntry={idleAnim='lie_ground_0__2h_back_handcuffs_a__01',list={
+            {animName='lie_ground_0__2h_back_handcuffs_a__01__shuffle__01'},
+            {animName='lie_ground_0__2h_back_handcuffs_a__01__to__stand__01'}
+        }}}}
+    end
+}
 function ws:StopInDevice(npc)
     stopped[#stopped+1]=npc;active[npc.id.hash]=nil
     for id,actor in pairs(bound) do if actor==npc then bound[id]=nil end end
@@ -40,6 +74,8 @@ WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
 local looked
 Game={GetPlayer=function() return player end,GetDynamicEntitySystem=function() return dynamic end,
     GetWorkspotSystem=function() return ws end,
+    GetResourceDepot=function() return {ArchiveExists=function() return true end,
+        ResourceExists=function(_,ref) return resourceAvailable end} end,
     GetScriptableSystemsContainer=function() return {Get=function() return ArrestNative end} end,
     GetTargetingSystem=function() return {GetLookAtObject=function() return looked end} end}
 local function step(count,paused)
@@ -55,7 +91,7 @@ looked=a;local refreshes=a.refreshes;step(2)
 assert(a.refreshes==refreshes+1,'newly focused body was not refreshed once')
 step(5);assert(a.refreshes==refreshes+1,'focused body refresh spammed')
 secure(a)
-assert(#played==1 and wallet==bank,'void animation request granted money')
+assert(#played==1 and #jumpCalls>=1 and #playSignals>=1 and wallet==bank,'missing explicit clip request or payment from void request')
 clips[a.id.hash]=CLIP..'__to__stand__2h_on_sides__01';step(4)
 assert(wallet==bank,'exit/transition animation counted as arrest')
 clips[a.id.hash]=CLIP;step(1)
@@ -103,4 +139,39 @@ helpers,managed,bound,active,clips={},{},{},{},{}
 ArrestNative:OnRestored(1,1);Module.reset();step(4)
 assert(#deleted==oldDeleted and #stopped==oldStopped and wallet==bank)
 assert(ArrestNative:GetPaidArrests()==paid and ArrestNative:IsArrested(f))
+-- The reported T-pose/no-instance case is modelled by Play alone not
+-- delivering a clip. Explicit clip selection/start supplies it in this case.
+autoClipOnJump=true
+local h=arrestSuspect(1009);bank=wallet
+secure(h);step(2)
+assert(ArrestNative:IsArrested(h) and wallet==bank+250,'explicit clip/play sequence did not complete')
+local j=arrestSuspect(1010);componentReady=false;bank=wallet
+assert(ArrestNative:StartArrest(j));step(8);step(2)
+local calls=#played;local component=boundComponents[nextID]
+assert(component.requested and not component.ready and #played==calls)
+step(4);assert(#played==calls and wallet==bank,'unloaded resource entered the animation graph')
+component.ready=true;componentReady=true;step(4)
+assert(ArrestNative:IsArrested(j) and wallet==bank+250)
+-- Unconfirmed playback is released after three seconds rather than holding
+-- the reported T-pose for the original eight-second window.
+autoClipOnJump=false
+local waiting=arrestSuspect(1014);bank=wallet
+secure(waiting);local wasStopped=#stopped
+step(10);assert(ArrestNative:GetStage()==2)
+step(1);assert(ArrestNative:GetStage()==0 and #stopped==wasStopped+1 and wallet==bank)
+-- No unit floods repeated jump commands while waiting for evidence.
+local counts={}
+for _,request in ipairs(jumpCalls) do
+ local id=request.npc.id.hash;counts[id]=(counts[id] or 0)+1
+ assert(counts[id]<=2,'clip selection was retried without a bound')
+end
+-- Missing resources/components/tree fail before transfer; no T-pose request.
+for case=1,3 do
+    local suspect=arrestSuspect(1010+case)
+    resourceAvailable=case~=1;missingComponent=case==2;treeAvailable=case~=3
+    local before=#played;bank=wallet
+    assert(ArrestNative:StartArrest(suspect));step(30)
+    assert(wallet==bank and #played==before and not ArrestNative:IsArrested(suspect),'invalid preflight played or paid')
+    resourceAvailable,missingComponent,treeAvailable=true,false,true
+end
 Patrol:FinishShift();Module.finish();supportPlayer=nil

@@ -43,9 +43,13 @@ def main():
         run("convert", "serialize", entity, "--outpath", roundtrip)
         data = json.loads((roundtrip / "arrest_workspot.ent.json").read_text(encoding="utf-8-sig"))
         root = data["Data"]["RootChunk"]
+        if root.get("cookingPlatform") != "PLATFORM_PC":
+            raise RuntimeError("Anchor must be cooked for PC")
         components = root["components"]
         if len(components) != 1 or components[0]["$type"] != "workWorkspotResourceComponent":
             raise RuntimeError("Anchor component did not survive serialization")
+        if components[0]["name"]["$value"] != "NCPDPatrolArrestPC":
+            raise RuntimeError("Outdated arrest component name")
         if components[0]["workspotResource"]["DepotPath"]["$value"] != RESOURCE:
             raise RuntimeError("Unexpected workspot dependency")
 

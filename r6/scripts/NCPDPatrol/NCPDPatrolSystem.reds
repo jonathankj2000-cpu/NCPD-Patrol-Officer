@@ -1,4 +1,4 @@
-// NCPD Patrol v0.7a. Paid activity IDs belong to the same save as the money.
+// NCPD Patrol v0.7b. Paid activity IDs belong to the same save as the money.
 // Duty and baseline state intentionally reset when loading a save.
 public class NCPDPatrolSystem extends ScriptableSystem {
     private persistent let m_paidActivities: array<CName>;
@@ -52,7 +52,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ResetSession();
     }
 
-    public func Version() -> Int32 { return 16; }
+    public func Version() -> Int32 { return 17; }
     public func IsOnDuty() -> Bool { return this.m_onDuty; }
     public func WasTerminatedForCrime() -> Bool { return this.m_criminalTermination; }
     public func HasWantedLevel() -> Bool {

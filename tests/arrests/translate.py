@@ -105,3 +105,4 @@ def translate(path):
     translated+='\n'.join(lines)+'\nreturn Patrol'
     for key,value in strings.items():translated=translated.replace(key,value)
     return translated
+

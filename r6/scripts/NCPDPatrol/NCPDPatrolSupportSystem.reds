@@ -26,7 +26,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
-    public func Version() -> Int32 { return 16; }
+    public func Version() -> Int32 { return 17; }
 
     private func ForgetWorld() -> Void {
         // Never issue cleanup operations using references from a loaded-away world.
