@@ -11,9 +11,7 @@ function GetLocalizedTextByKey(key) return key end
 function GetPlayer() return player end
 EngineTime={ToFloat=function(_,value) return value end}
 GameInstance={GetEngineTime=function() return clock end}
-TweakDBInterface={GetCName=function(_,id,default)
- assert(id=='Interactions.NCPDPatrolBackup.action'); return default
-end}
+TweakDBInterface={GetCName=function() error('Interaction.action is a String, not CName') end}
 ListenerAction={
  GetName=function(_,a) return a.name end,
  IsButtonJustPressed=function(_,a) return a.kind=='press' end,
@@ -24,8 +22,8 @@ player={position={x=0,y=0,z=0},attached=true,dead=false,mounted=false}
 function player:GetWorldPosition() return self.position end
 function player:IsAttached() return self.attached end
 function player:IsDead() return self.dead end
-function player:RegisterInputListener(obj,name) assert(obj==Trunk and name=='Choice2'); listenerAdds=listenerAdds+1 end
-function player:UnregisterInputListener(obj,name) assert(obj==Trunk and name=='Choice2'); listenerRemoves=listenerRemoves+1 end
+function player:RegisterInputListener() error('Trunk interactions must not require raw input listeners') end
+function player:UnregisterInputListener() error('Trunk interactions must not require raw input listeners') end
 local function car(id)
  local v={id=id,attached=true,owned=true,destroyed=false,position={x=0,y=2,z=0},refreshes=0,repairs=0}
  function v:IsAttached() return self.attached end
@@ -58,49 +56,49 @@ local function reset()
  vehicle.attached=true; vehicle.owned=true; vehicle.destroyed=false; vehicle.noTrunk=false
  clock=clock+2; notices={}; backupCalls=0; Trunk:Tick(0.01)
 end
-local function input(kind,name) Trunk:OnAction({name=name or 'Choice2',kind=kind},{}) end
 local function advance(seconds,step)
  step=step or 0.25
  for _=1,math.floor(seconds/step+0.00001) do clock=clock+step; Trunk:Tick(step) end
 end
-local function tap() input('press'); Trunk:BeginGesture(vehicle); clock=clock+0.10; input('release') end
-local function hold() input('press'); Trunk:BeginGesture(vehicle); advance(0.5) end
+local function tap() TrunkPS:OnNCPDPatrolBackupAction({}) end
+local function hold() TrunkPS:OnNCPDPatrolOpenTrunkMenuAction({}) end
+function TrunkPS:GetGameInstance() return {} end
+function TrunkPS:GetOwnerEntity() return vehicle end
+EntityNotificationType={SendThisEventToEntity='forward'}
+NCPDPatrolTrunkSystem={Get=function() return Trunk end}
 
--- Input before native interaction, interaction before input, and release before interaction.
-reset(); input('press'); Trunk:BeginGesture(vehicle); assert(backupCalls==0)
-clock=clock+0.1; input('release'); assert(backupCalls==1 and not Trunk:IsOpenFor(vehicle))
-Trunk:BeginGesture(vehicle); assert(backupCalls==1, 'duplicate release event called backup twice')
-reset(); Trunk:BeginGesture(vehicle); input('press'); clock=clock+0.1; input('release'); assert(backupCalls==1)
-reset(); input('press'); clock=clock+0.1; input('release'); Trunk:BeginGesture(vehicle); assert(backupCalls==1)
+-- The game sends no BUTTON_PRESSED for Choice2. Exercise only its real
+-- release callback; the removed implementation waited for that missing press.
+assert(AcceptedBackupEvent=='BUTTON_RELEASED' and AcceptedHoldEvent=='BUTTON_HOLD_COMPLETE')
+reset(); tap(); assert(backupCalls==1 and not Trunk:IsOpenFor(vehicle))
+assert(Trunk.OnAction==nil and Trunk.BeginGesture==nil)
 reset(); hold(); assert(Trunk:IsOpenFor(vehicle) and backupCalls==0)
-input('release'); Trunk:Select(0,vehicle); assert(Trunk:IsOpenFor(vehicle), 'opening release closed menu')
-clock=clock+0.3; input('press'); Trunk:Select(0,vehicle); input('release')
+hold(); assert(Trunk:IsOpenFor(vehicle) and backupCalls==0)
+-- A cached backup action cannot execute after the hold opened the menu.
+tap(); assert(backupCalls==0 and Trunk:IsOpenFor(vehicle))
+TrunkPS:OnNCPDPatrolTrunkMenuAction({GetCommand=function() return 0 end})
 assert(not Trunk:IsOpenFor(vehicle) and backupCalls==0)
-reset(); input('press'); clock=clock+0.75; input('release'); Trunk:BeginGesture(vehicle)
-assert(Trunk:IsOpenFor(vehicle) and backupCalls==0, 'late native hold callback requested backup')
-reset(); input('press','Reload'); advance(1); input('release','Reload'); assert(backupCalls==0)
-reset(); input('press'); advance(1); input('release'); assert(backupCalls==0, 'unrelated R press authorized trunk')
-reset(); Trunk:BeginGesture(vehicle); advance(0.5); assert(backupCalls==0, 'missing input must fail closed')
-assert(notices[#notices].text:find('input not received',1,true))
-reset(); input('press'); Trunk:BeginGesture(vehicle); player.position.x=10; advance(0.5); input('release')
-assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
-reset(); input('press'); Trunk:BeginGesture(vehicle); paused=true; advance(0.5); input('release'); paused=false
-assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+-- Native callbacks work even before the first CET Tick; no listener setup race.
+reset(); Trunk:OnAttach(); tap(); assert(backupCalls==1)
+reset(); Trunk:OnAttach(); hold(); assert(Trunk:IsOpenFor(vehicle) and backupCalls==0)
+reset(); player.position.x=10; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); paused=true; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); hold(); paused=true; advance(0.25); assert(not Trunk:IsOpenFor(vehicle))
 reset(); hold(); player.mounted=true; Trunk:Tick(0.1); assert(not Trunk:IsOpenFor(vehicle))
-reset(); player.dead=true; tap(); assert(backupCalls==0)
-reset(); vehicle.owned=false; tap(); assert(backupCalls==0)
-reset(); vehicle.noTrunk=true; tap(); assert(backupCalls==0)
-reset(); vehicle.destroyed=true; tap(); assert(backupCalls==0)
+reset(); player.dead=true; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); vehicle.owned=false; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); vehicle.noTrunk=true; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); vehicle.destroyed=true; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
+reset(); onDuty=false; tap(); hold(); assert(backupCalls==0 and not Trunk:IsOpenFor(vehicle))
 
 -- Selection is scoped to the authorized open trunk, command queue consumes once.
 reset(); Trunk:Select(3,vehicle); assert(Trunk:TakeCommand()==0)
 hold(); Trunk:Select(3,otherVehicle); assert(Trunk:TakeCommand()==0)
-Trunk:Select(3,vehicle); assert(Trunk:TakeCommand()==3 and Trunk:TakeCommand()==0)
-input('release'); clock=clock+0.3; hold(); Trunk:Select(1,vehicle)
-assert(Trunk:IsBusy()); input('release'); clock=clock+0.3; hold(); Trunk:Select(1,vehicle); assert(not Trunk:IsBusy())
--- A second queued operation cannot replace the first operation before CET polls it.
-input('release'); clock=clock+0.3; hold(); Trunk:Select(4,vehicle)
-input('release'); clock=clock+0.3; hold(); Trunk:Select(5,vehicle)
+TrunkPS:OnNCPDPatrolTrunkMenuAction({GetCommand=function() return 3 end})
+assert(Trunk:TakeCommand()==3 and Trunk:TakeCommand()==0)
+hold(); Trunk:Select(1,vehicle); assert(Trunk:IsBusy())
+hold(); Trunk:Select(1,vehicle); assert(not Trunk:IsBusy())
+hold(); Trunk:Select(4,vehicle); hold(); Trunk:Select(5,vehicle)
 assert(Trunk:TakeCommand()==4 and Trunk:TakeCommand()==0)
 
 -- The same 10-second request survives mounting and never switches to another car.
@@ -116,8 +114,8 @@ assert(vehicle.repairs==repaired and not Trunk:IsRepairPending())
 reset(); assert(Trunk:RequestRepair(vehicle)); vehicle.destroyed=true; advance(10); assert(not Trunk:IsRepairPending())
 reset(); assert(Trunk:RequestRepair(vehicle)); wanted=true; advance(10)
 assert(not Trunk:IsRepairPending() and not Trunk:IsBusy() and Trunk:TakeCommand()==0)
-reset(); assert(Trunk:RequestRepair(vehicle)); advance(3); local removes=listenerRemoves
-Trunk:OnRestored(1,1); assert(listenerRemoves==removes, 'load called old listener')
+reset(); assert(Trunk:RequestRepair(vehicle)); advance(3); local refreshes=vehicle.refreshes
+Trunk:OnRestored(1,1); assert(vehicle.refreshes==refreshes, 'load refreshed old vehicle')
 assert(not Trunk:IsRepairPending() and not Trunk:IsOpenFor(vehicle))
 
 reset(); hold(); Trunk:Select(3,vehicle); assert(Trunk:RequestRepair(vehicle)); Trunk:SetBusy(true)
@@ -148,6 +146,47 @@ for command=0,6 do
  assert(MenuAction.interactionChoice.caption:find('NCPDPatrol-',1,true))
 end
 MenuAction:Initialize(1,true); assert(MenuAction:GetTweakDBChoiceRecord()=='NCPDPatrolAvailable')
+
+-- Execute both actual trunk wrappers: stash plus separate tap/hold entries,
+-- then the seven native menu choices, then restoration of vanilla stash.
+local function prime(proto)
+ function proto:SetUp(ps) self.ps=ps end
+ function proto:AddDeviceName(name) self.deviceName=name end
+ function proto:CreateActionWidgetPackage() end
+ function proto:CreateInteraction() self.interactionChoice={captionParts={}} end
+end
+prime(MenuAction); prime(OpenAction); prime(BackupAction)
+function NewBackupAction() return setmetatable({kind='backup'}, {__index=BackupAction}) end
+function NewOpenAction() return setmetatable({kind='open'}, {__index=OpenAction}) end
+function NewMenuAction() return setmetatable({kind='menu'}, {__index=MenuAction}) end
+function AsBackupAction(a) if a.kind=='backup' then return a end end
+function AsOpenAction(a) if a.kind=='open' then return a end end
+function AsMenuAction(a) if a.kind=='menu' then return a end end
+function Deref(a) return a end
+function ArrayPush(a,v) a[a.n]=v; a.n=a.n+1 end
+function ArrayClear(a) for i=0,a.n-1 do a[i]=nil end; a.n=0 end
+function TrunkPS:GetDeviceName() return 'car' end
+function TrunkPS:GetIsDestroyed() return vehicle.destroyed end
+function wrappedMethod(actions,context) ArrayPush(actions,{kind='stash'}) end
+reset(); local actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==3 and actions[0].kind=='stash' and actions[1].kind=='backup' and actions[2].kind=='open')
+assert(actions[1]:GetTweakDBChoiceRecord()=='NCPDPatrolBackup')
+assert(actions[2]:GetTweakDBChoiceRecord()=='NCPDPatrolOpenTrunkMenu')
+TrunkPS:NCPDPatrolAddBackupAction(actions); TrunkPS:NCPDPatrolAddTrunkMenuOpener(actions); assert(actions.n==3)
+hold(); actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==7 and actions[0].kind=='menu' and actions[6]:GetCommand()==0)
+for i=0,actions.n-1 do assert(actions[i].kind=='menu') end
+TrunkPS:OnNCPDPatrolTrunkMenuAction(actions[6]); actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==3 and actions[0].kind=='stash')
+actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
+assert(actions.n==3 and actions[1].kind=='backup' and actions[2].kind=='open')
+hold(); actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
+assert(actions.n==7 and actions[6].kind=='menu')
+Trunk:CloseMenu(); vehicle.owned=false; actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
+assert(actions.n==1 and actions[0].kind=='stash')
+reset(); onDuty=false; actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==1 and actions[0].kind=='stash')
+reset()
 
 -- Execute the actual repair wrapper: health routine, four tires and visual resets.
 local repairedParts={}; local tires={}; local body,glass,health,fx,visual=0,0,0,0,0

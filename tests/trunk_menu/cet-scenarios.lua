@@ -70,7 +70,7 @@ managed[2]=nil; assert(Partner.replace(true,status)); assert(createCount==3 and 
 
 -- Actual CET bridge consumes queued actions once and synchronizes BUSY before polling.
 local queue=0; local reports={}; local takeCount=0; local tickCount=0
-local nativeTrunk={Version=function() return 1 end,Tick=function() tickCount=tickCount+1 end,
+local nativeTrunk={Version=function() return 2 end,Tick=function() tickCount=tickCount+1 end,
  IsBusy=function() return true end,TakeCommand=function() takeCount=takeCount+1; local c=queue; queue=0; return c end,
  ReportCommand=function(_,text) reports[#reports+1]=text end,FinishSession=function() end}
 Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)

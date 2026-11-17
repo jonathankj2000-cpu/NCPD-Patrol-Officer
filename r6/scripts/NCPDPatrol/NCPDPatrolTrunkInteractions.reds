@@ -1,3 +1,48 @@
+// The engine supplies the hold icon, hold timing and input arbitration.
+public class NCPDPatrolOpenTrunkMenuAction extends ActionBool {
+    public func SetProperties() -> Void {
+        this.actionName = n"NCPDPatrolOpenTrunkMenuAction";
+        this.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(this.actionName, false, n"NCPDPatrol-PatrolMenu", n"NCPDPatrol-PatrolMenu");
+        this.CreateActionWidgetPackage();
+        this.CreateInteraction();
+        this.interactionChoice.caption = GetLocalizedTextByKey(n"NCPDPatrol-PatrolMenu");
+        InteractionChoiceCaption.Clear(this.interactionChoice.captionParts);
+        InteractionChoiceCaption.AddTextPart(this.interactionChoice.captionParts, this.interactionChoice.caption);
+    }
+    public func GetTweakDBChoiceRecord() -> String { return "NCPDPatrolOpenTrunkMenu"; }
+}
+
+@addMethod(VehicleComponentPS)
+private func NCPDPatrolAddTrunkMenuOpener(actions: script_ref<[ref<DeviceAction>]>) -> Void {
+    let trunk: ref<NCPDPatrolTrunkSystem> = NCPDPatrolTrunkSystem.Get(this.GetGameInstance());
+    let action: ref<NCPDPatrolOpenTrunkMenuAction>;
+    let i: Int32 = 0;
+    if !IsDefined(trunk) || !trunk.CanUseTrunk(this.GetOwnerEntity()) || trunk.IsOpenFor(this.GetOwnerEntity()) { return; };
+    while i < ArraySize(Deref(actions)) {
+        if IsDefined(Deref(actions)[i] as NCPDPatrolOpenTrunkMenuAction) { return; };
+        i += 1;
+    };
+    action = new NCPDPatrolOpenTrunkMenuAction();
+    action.clearanceLevel = 2;
+    action.SetUp(this);
+    action.SetProperties();
+    action.AddDeviceName(this.GetDeviceName());
+    ArrayPush(Deref(actions), action);
+}
+
+@addMethod(VehicleComponentPS)
+public final func OnNCPDPatrolOpenTrunkMenuAction(evt: ref<NCPDPatrolOpenTrunkMenuAction>) -> EntityNotificationType {
+    let trunk: ref<NCPDPatrolTrunkSystem> = NCPDPatrolTrunkSystem.Get(this.GetGameInstance());
+    if IsDefined(trunk) { trunk.OpenMenu(this.GetOwnerEntity()); };
+    return EntityNotificationType.SendThisEventToEntity;
+}
+
+@addMethod(VehicleComponent)
+protected cb func OnNCPDPatrolOpenTrunkMenuAction(evt: ref<NCPDPatrolOpenTrunkMenuAction>) -> Bool {
+    this.NCPDPatrolRefreshTrunk();
+    return true;
+}
+
 public class NCPDPatrolTrunkMenuAction extends ActionBool {
     private let m_command: Int32;
     private let m_busy: Bool;

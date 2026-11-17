@@ -1,16 +1,26 @@
 # NCPD Patrol
 
-## v0.8b: trunk menu compiler fix
+## v0.8c: native trunk tap and hold
 
-**[Download the complete v0.8b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.8b_Trunk_Compile_Fix_TEST.zip)**
+**[Download the complete v0.8c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.8c_Native_Trunk_Hold_TEST.zip)**
 
-v0.8b fixes the exact `NO_MATCHING_OVERLOAD` error reported in both game-2.50 compiler logs at `NCPDPatrolTrunkSystem.reds:87`. `CeilF(Float)` already returns `Int32`; the repair countdown now returns it directly, removing the invalid `Cast<Int32>`. The previous local contract mistakenly declared a Float return. A new type regression compiles the actual corrected getter and requires the original expression to fail with the same verified signature. The remaining gameplay code is unchanged from v0.8a.
+Fixes v0.8b's **"Trunk input not received"** failure. The native `InteractionActions` context sends only `BUTTON_RELEASED` for `Choice2`; the old custom listener required a press that this action never delivers. The interaction record's `action` is also a String, not CName. v0.8c removes that listener and its custom half-second timer, using two separate native choices:
 
-At your owned police car's trunk while **ON DUTY**, **tap and release R for backup** or **hold about 0.5 seconds for Patrol Menu**. The native secondary interaction binding is used, so remapping applies. Scroll the choice list and select with **F**; a fresh **R** closes it. The vanilla stash returns when the menu closes. If the game delivers the interaction event on release, the held menu opens then.
+- **Request NCPD Backup**: short **R**, via `Choice2`.
+- **Patrol Menu**: **hold R**, via `Choice2_Hold`, with the game's hold icon and timing (vanilla about **0.3 s**).
 
-The user confirmed v0.7f arrests pay and suspects remain lying in handcuffs. **Arrest source and the compiled archive are unchanged in v0.8b.**
+Both follow the player's secondary-interaction binding. No new key, input XML or Input Loader dependency is required. The v0.8b countdown compiler fix is retained.
+
+### Install and test
+
+1. Exit the game completely. Extract the **entire ZIP** into the directory containing **bin, r6 and archive**, replacing files, and restart. CET announces **v0.8c**. Main/support interfaces stay **17**, arrests **5**; the trunk bridge is now **2**.
+2. Start a shift and approach your owned police car's trunk on foot. Expect the vanilla stash plus **two separate backup/menu prompts**, including the hold icon. Tap R for one backup; hold R until the indicator completes for Patrol Menu. The hold must not also request backup.
+3. Check that releasing the opening hold leaves the menu open. Scroll and select with **F**; a fresh **R** closes it. Stash and entry choices return on closing/selecting. Moving away, mounting, game menus, wanted status or shift end also close it.
+
+The release/hold entry callbacks and both actual PS trunk wrappers pass local tests. **The native input manager's physical hold/release arbitration, icons and menu rendering still need an in-game test.** See [installation and behavior details](README.txt).
 
 ### Menu
+
 
 | Choice | Behavior |
 | --- | --- |
@@ -23,30 +33,18 @@ The user confirmed v0.7f arrests pay and suspects remain lying in handcuffs. **A
 
 Cop Stats reads the existing persistent scanner-payment ledger in the current save. It counts scanner completions whose bonus was registered; activities completed before monitoring was installed are unknown. Arrest payments/counts remain separate. The existing CET automatic-dispatch setting remains a separate preference. New shifts start Available. Pending repairs cancel on shift end, wanted status, loading or loss/destruction of the requested vehicle; destroyed cars are not resurrected.
 
-### Install and test
+### Retained behavior
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing **bin, r6 and archive**, replacing files. Restart; CET announces **v0.8b**. Main/support interfaces remain **17**, arrest interface **5**, and the independent trunk bridge is **1**.
-2. Start a shift, approach your owned police car's trunk, then test a short R tap versus a hold. A hold must not also request backup. Releasing the opening hold must leave the menu open. Stash F must return on closing.
-3. Test Busy with an active assignment, manually request another call while Busy, and switch Available again. Try repair on a damaged vehicle, enter it while waiting, and check the ten-second completion and visible damage reset. Try partner replacement and Cop Stats.
-4. Menu layout, native input/event delivery and visible repair effects still need an in-game test. Report the displayed notice and **Patrol menu** CET lines if tap/hold fails. Existing GPS behavior still may require opening/closing the map.
+The user reported the remaining controls working through CET. Dispatch/partner/backup controllers, main/support systems, revive interaction wrappers, repair wrapper/timer, Cop Stats/payment logic and all arrest source/YAML/archive are verified unchanged from v0.8b. The confirmed v0.7f lying handcuff resource remains identical. Existing Fast Travel duty, scanner bonus/receipts, dispatch HUD/radio, vehicle chatter and wanted termination remain. GPS can still require opening/closing the map.
 
-No new hotkey or runtime dependency is required. Existing Fast Travel duty controls, scanner bonuses, dispatch/radio/HUD, vehicle-local chatter, wanted termination, partner follow/combat/boarding/revive, one backup patrol and separate EUR$250 lying arrests are retained. See [installation and behavior details](README.txt).
+### Validation and references
 
-### Validation
+All **11 Lua modules** parse. All **18 redscripts** compile with zero warnings/errors against source-derived API contracts, **not an actual game cache**. [Portable trunk checks](tests/trunk_menu/README.md) execute the authored backup/hold/menu action classes and entry callbacks, both PS trunk wrappers/action-list helpers, stash/menu restoration and existing repair/stats/dispatch/partner logic. The input fixture uses the actual release-only and hold-complete accepted event contract; requiring a raw listener or CName action lookup fails fixtures. Existing scanner, radio, revive, boarding, backup and arrest regressions pass. The original invalid CeilF cast remains rejected by a type regression.
 
-All **11 Lua modules** parse in LuaJIT. The repaired getter passes the real-return-type contract and the original cast is rejected. All **18 redscripts** compile with **zero warnings/errors** against source-derived API contracts, **not the actual game cache**. [Portable trunk checks](tests/trunk_menu/README.md) execute authored native input/menu/repair/stats logic and actual CET dispatch/partner/bridge modules with native boundaries mocked. They cover event orders and duplicate suppression, no backup without a trunk action, missing input failing closed, scope/closing, Busy versus active/manual calls, waypoint cleanup failure, exact-vehicle repair timing/pause/repeat/cancellation, partner replacement failure, read-only milestones, and duty/world cleanup. Existing reward, dispatch/radio, partner/revive/boarding, backup and arrest checks pass.
-
-[Arrest checks](tests/arrests/README.md) and [asset build sources](assets/arrest/README.md) remain available. Arrest source/YAML/archive and revive interaction wrappers are verified byte-for-byte unchanged from the confirmed v0.7f base. Native input delivery, choice-list rendering, vehicle graphics/physics, real AI and native save loading are not emulated. Requirements remain game 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript.
+The native hold/release definitions are in [InteractionActions](https://github.com/jackhumbert/cyberpunk2077-input-loader/blob/2758cd8ab54e340f4531a1e0adb13d8b0231d998/fallback/inputContexts.xml). The minimal test excerpt is not installed. Native input arbitration/delivery, UI rendering, real AI/vehicle graphics and native save loading are not emulated. [Arrest tests](tests/arrests/README.md) and [asset sources](assets/arrest/README.md) remain available. Requirements stay game 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript.
 
 ### Rollback
 
-Exit the game, remove the four new files below, and reinstall the complete [v0.7f ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7f_Private_Lying_Loop_TEST.zip):
+The full [v0.8b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.8b_Trunk_Compile_Fix_TEST.zip) restores the preceding trunk build. To return to the confirmed [v0.7f ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7f_Private_Lying_Loop_TEST.zip), remove `trunk.lua` plus `NCPDPatrolTrunkSystem.reds`, `NCPDPatrolTrunkInteractions.reds` and `NCPDPatrolTrunkVehicle.reds`, then reinstall its complete ZIP. Earlier packages remain in [releases](releases). The arrest archive is identical.
 
-- `bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/trunk.lua`
-- `r6/scripts/NCPDPatrol/NCPDPatrolTrunkSystem.reds`
-- `r6/scripts/NCPDPatrol/NCPDPatrolTrunkInteractions.reds`
-- `r6/scripts/NCPDPatrol/NCPDPatrolTrunkVehicle.reds`
-
-Older complete ZIPs remain in [releases](releases). The v0.7f arrest archive is identical.
-
-ZIP SHA-256: `16499f4ca45a3ee1faacc51271667c473d282f48d7314e04b03c19ea524e1571`
+ZIP SHA-256: `ed971e58926822a7df77de74c3f1967717654efc430b2f2aa1d112a84d74662f`

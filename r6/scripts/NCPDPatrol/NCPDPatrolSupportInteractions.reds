@@ -36,6 +36,7 @@ public final func GetTrunkActions(actions: script_ref<[ref<DeviceAction>]>, cons
     if this.NCPDPatrolAddTrunkMenu(actions) { return; };
     // Outside the patrol menu the vanilla stash remains beside backup.
     this.NCPDPatrolAddBackupAction(actions);
+    this.NCPDPatrolAddTrunkMenuOpener(actions);
 }
 
 @wrapMethod(VehicleComponentPS)
@@ -44,12 +45,13 @@ public final func GetPlayerTrunkActions(actions: script_ref<[ref<DeviceAction>]>
     if this.GetIsDestroyed() { return; };
     if this.NCPDPatrolAddTrunkMenu(actions) { return; };
     this.NCPDPatrolAddBackupAction(actions);
+    this.NCPDPatrolAddTrunkMenuOpener(actions);
 }
 
 @addMethod(VehicleComponentPS)
 public final func OnNCPDPatrolBackupAction(evt: ref<NCPDPatrolBackupAction>) -> EntityNotificationType {
     let trunk: ref<NCPDPatrolTrunkSystem> = NCPDPatrolTrunkSystem.Get(this.GetGameInstance());
-    if IsDefined(trunk) { trunk.BeginGesture(this.GetOwnerEntity()); };
+    if IsDefined(trunk) { trunk.RequestBackupAtTrunk(this.GetOwnerEntity()); };
     return EntityNotificationType.SendThisEventToEntity;
 }
 

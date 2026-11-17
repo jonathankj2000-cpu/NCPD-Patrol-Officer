@@ -1,0 +1,12 @@
+<!-- Minimal reference excerpt, not an installed input configuration.
+     jackhumbert/cyberpunk2077-input-loader at
+     2758cd8ab54e340f4531a1e0adb13d8b0231d998/fallback/inputContexts.xml -->
+<bindings>
+  <context name="InteractionActions">
+    <action name="Choice2" map="Choice2" priority="-1" />
+    <action name="Choice2_Hold" map="Choice2" priority="-2" />
+  </context>
+  <hold action="Choice2_Hold" timeout="0.3" />
+  <acceptedEvents action="Choice2"><event name="BUTTON_RELEASED" /></acceptedEvents>
+  <acceptedEvents action="Choice2_Hold"><event name="BUTTON_HOLD_COMPLETE" /></acceptedEvents>
+</bindings>

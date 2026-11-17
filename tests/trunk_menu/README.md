@@ -7,50 +7,57 @@ python tests/trunk_menu/check_trunk.py
 ```
 
 An optional first argument selects a separate game-install root. The harness
-uses the shared syntax adapter in `tests/arrests/translate.py`, executes the
-actual authored trunk system/menu action/repair wrapper and scanner-count
-getter, and runs the actual CET `dispatch.lua`, `partner.lua` and `trunk.lua`
-modules in LuaJIT. Native boundaries are mocked; no game process is required.
+uses the shared syntax adapter in `tests/arrests/translate.py`. It executes the
+actual trunk system, backup/hold/menu action classes, both PS trunk wrappers,
+entry callbacks and action-list helpers, repair wrapper and scanner-count getter.
+Actual CET `dispatch.lua`, `partner.lua` and `trunk.lua` run in LuaJIT. Native APIs,
+casts and action constructors are mocked; branch/loop/routing logic is authored.
 
-Cases cover input before/after the interaction and release, hold/tap distinction,
-release suppression, duplicates, other inputs, missing input failing closed,
-range/mount/pause/death/ownership guards, action record mapping, scoped menu
-selection, command consumption, busy automatic versus active/manual calls,
-waypoint cleanup failure, ten-second repair against the original vehicle,
-menu pauses and repeated requests, lost/wrecked vehicle and duty/load cancellation,
-partner deletion rejection/unready/missing actors, and read-only milestones.
-The native repair wrapper is executed against health, tire and body/glass mocks.
-Existing arrest and scanner payment ledgers stay independent.
+The v0.8b failure waited for a press on `Choice2`, which accepts only
+`BUTTON_RELEASED` in the native `InteractionActions` context. `Choice2_Hold`
+accepts `BUTTON_HOLD_COMPLETE`, shares the same binding, has higher priority and
+uses a vanilla 0.3-second hold. InteractionBase `action` is a String, not CName.
+v0.8c uses two explicit native interaction records; it has no raw input listener,
+press prerequisite or custom hold timer. Entry callbacks also work before the
+first CET Tick. Calls to the old listener or incorrect CName lookup fail fixtures.
 
-Reference signatures come from the decompiled `VehicleComponent`,
-`VehicleComponentPS`, `vehicleWheeledBaseObject` and listener definitions in
-[MOD_Development_Reference](https://github.com/In-Question/MOD_Development_Reference/tree/81d996b584a693e8b0f0b20526a9fa38b5c83fe7),
+The minimal [native input excerpt](native-choice-context.xml) is a test reference
+from [Input Loader's fallback vanilla context](https://github.com/jackhumbert/cyberpunk2077-input-loader/blob/2758cd8ab54e340f4531a1e0adb13d8b0231d998/fallback/inputContexts.xml).
+It is **not installed into the game** and introduces no Input Loader dependency.
+The tests check that the authored backup/hold records use these exact native
+input names/events; they do not recreate the native input manager's arbitration.
+
+Cases cover release-only backup, native hold callbacks, duplicate menu open,
+old cached backup after hold, scoped commands, both actual trunk action lists,
+stash/menu restoration, range/mount/pause/death/ownership/duty guards, busy versus
+active/manual dispatch, cleanup failure, exact-vehicle ten-second repair,
+menu pauses/repeated requests/lost vehicles, partner deletion rejection,
+read-only milestones and world/duty cleanup. Native repair health, tires and
+body/glass boundaries are mocked. Scanner/arrest ledgers remain separate.
+
+Reference methods/metadata come from `VehicleComponent`, `VehicleComponentPS`,
+`InteractionBase_Record`, `gameinteractionsChoiceEvent` and `vehicleWheeledBaseObject`
+in [MOD_Development_Reference](https://github.com/In-Question/MOD_Development_Reference/tree/81d996b584a693e8b0f0b20526a9fa38b5c83fe7),
 and Codeware's [DynamicEntitySystem](https://github.com/psiberx/cp2077-codeware/blob/60c4ab59035f5eda98669464e78f8027813e1953/scripts/World/DynamicEntitySystem.reds).
-The production radio control uses the same engine-time press/release pattern.
 
-These are logic/contract checks. They do not validate native input delivery,
-the rendered choice list, real repair visuals/physics, AI or save loading.
-For the game test: tap at the trunk for one backup, hold for the menu without
-backup, release without closing it, select with F and close with a fresh R.
-Check Busy with a live assignment, manual replacement while Busy, repair after
-ten gameplay seconds, partner replacement, and stats without progression payouts.
+These are logic/contract checks. Native input arbitration, hold/release delivery,
+rendered icons/choice list, repair visuals/physics, AI and native save loading
+still need in-game testing. At the trunk expect separate tap-R backup and hold-R
+Patrol Menu prompts. Hold must not request backup, and its release must leave the
+menu open. Scroll/F select; a fresh R closes and restores the stash/entry choices.
 
-## v0.8b compile regression
+## Countdown type regression
 
-`ceilf-contract.reds` records the real `CeilF(Float) -> Int32` signature from
-`Definitions/Game_Definitions/globals.lua`, corroborated by
-`DecompiledGameScripts/core/math/scalar.swift` in the pinned reference above.
-Both supplied game-2.50 compiler logs report this exact NO_MATCHING_OVERLOAD
-error at NCPDPatrolTrunkSystem.reds:87. The v0.8a local fixture incorrectly
-declared a Float return and missed an invalid
-identity cast. `check_ceil_type.py` extracts the actual production timer getter,
-checks that it compiles, then reinstates the old cast and requires rejection by
-the same compiler and contract. With the local compiler API driver:
+`ceilf-contract.reds` records `CeilF(Float) -> Int32` from the reference globals
+and `core/math/scalar.swift`. Both supplied game-2.50 compiler logs confirmed the
+v0.8a invalid identity cast at `NCPDPatrolTrunkSystem.reds:87`. The previous local
+fixture incorrectly declared a Float return. v0.8b fixed the getter; v0.8c retains
+it. `check_ceil_type.py` compiles the actual corrected getter, reinstates the old
+cast and requires its rejection with the same contract. With the local compiler
+API driver:
 
 ```sh
 python tests/trunk_menu/check_ceil_type.py /path/to/ncpd-check
 ```
 
-This checks that specific type error; it does not substitute for the actual
-game compiler log or game cache. The normal LuaJIT logic checks still run as
-shown above and do not claim to check static native return types.
+This checks that specific type error; it does not replace the actual game cache.

@@ -14,8 +14,17 @@ Interactions.NCPDPatrolEndShift:
 # The game displays the player's current binding (normally R on this setup).
 Interactions.NCPDPatrolBackup:
   $base: Interactions.SellectDestination
+  action: Choice2
   name: NCPDPatrolBackup
   caption: NCPDPatrol-Backup
+
+# Same secondary binding, with the engine's native hold icon/timing. Choice2
+# accepts release only; Choice2_Hold accepts BUTTON_HOLD_COMPLETE (vanilla 0.3 s).
+Interactions.NCPDPatrolOpenTrunkMenu:
+  $base: Interactions.SellectDestination
+  action: Choice2_Hold
+  name: NCPDPatrolOpenTrunkMenu
+  caption: NCPDPatrol-PatrolMenu
 
 Interactions.NCPDPatrolRevive:
   $base: Interactions.SellectDestination
@@ -68,6 +77,7 @@ Interactions.NCPDPatrolCopStats:
 
 Interactions.NCPDPatrolCloseMenu:
   $base: Interactions.SellectDestination
+  action: Choice2
   name: NCPDPatrolCloseMenu
   caption: NCPDPatrol-CloseMenu
 

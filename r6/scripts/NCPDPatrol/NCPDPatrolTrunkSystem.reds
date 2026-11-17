@@ -1,17 +1,5 @@
 // Independent, transient bridge. No changes to scanner or arrest payments.
 public class NCPDPatrolTrunkSystem extends ScriptableSystem {
-    private let m_player: wref<PlayerPuppet>;
-    private let m_input: CName;
-    private let m_keyDown: Bool;
-    private let m_pressedAt: Float;
-    private let m_serial: Int32;
-    private let m_handledSerial: Int32;
-    private let m_releaseSerial: Int32;
-    private let m_releasedAt: Float;
-    private let m_releaseDuration: Float;
-    private let m_pendingVehicle: wref<VehicleObject>;
-    private let m_pendingAt: Float;
-    private let m_waitingForPress: Bool;
     private let m_menuVehicle: wref<VehicleObject>;
     private let m_busy: Bool;
     private let m_command: Int32;
@@ -22,21 +10,13 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolTrunkSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolTrunkSystem") as NCPDPatrolTrunkSystem;
     }
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func OnDetach() -> Void { this.FinishSession(); }
 
     private func ForgetWorld() -> Void {
-        // Loading already invalidated the previous world's listeners and objects.
-        this.m_player = null;
-        this.m_keyDown = false;
-        this.m_serial = 0;
-        this.m_handledSerial = -1;
-        this.m_releaseSerial = 0;
-        this.m_releasedAt = -999.0;
-        this.m_pendingVehicle = null;
-        this.m_waitingForPress = false;
+        // Loading invalidated the previous world's objects; never refresh them here.
         this.m_menuVehicle = null;
         this.m_busy = false;
         this.m_command = 0;
@@ -45,9 +25,6 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
         this.m_repairElapsed = 0.0;
     }
 
-    private func Now() -> Float {
-        return EngineTime.ToFloat(GameInstance.GetEngineTime(this.GetGameInstance()));
-    }
     private func Notice(text: String, opt seconds: Float) -> Void {
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
         if seconds <= 0.0 { seconds = 6.0; };
@@ -95,92 +72,27 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     public func CloseMenu() -> Void {
         let vehicle: ref<VehicleObject> = this.m_menuVehicle;
         this.m_menuVehicle = null;
-        this.m_pendingVehicle = null;
-        this.m_waitingForPress = false;
         this.Refresh(vehicle);
     }
-    private func OpenMenu(vehicle: ref<VehicleObject>) -> Void {
-        if !this.CanUseTrunk(vehicle) { return; };
+    // Native interaction records select release versus hold. Choice2 only
+    // delivers BUTTON_RELEASED; Choice2_Hold delivers BUTTON_HOLD_COMPLETE.
+    // No raw key listener, press event or local hold timer is required.
+    public func OpenMenu(vehicle: ref<VehicleObject>) -> Bool {
+        if !this.CanUseTrunk(vehicle) || IsDefined(this.m_menuVehicle) { return false; };
         this.m_menuVehicle = vehicle;
-        this.m_pendingVehicle = null;
-        this.m_waitingForPress = false;
         this.Refresh(vehicle);
+        return true;
     }
-
-    // The native interaction authorizes this particular trunk; an R press by
-    // itself never requests backup or opens a menu elsewhere in the world.
-    public func BeginGesture(vehicle: ref<VehicleObject>) -> Void {
-        let age: Float = this.Now() - this.m_releasedAt;
-        if !this.CanUseTrunk(vehicle) || IsDefined(this.m_menuVehicle) { return; };
-        if this.m_keyDown {
-            if this.m_serial == this.m_handledSerial { return; };
-            this.m_pendingVehicle = vehicle;
-            this.m_waitingForPress = false;
-            this.ResolveHold();
-            return;
-        };
-        if this.m_releaseSerial > 0 && age >= 0.0 && age <= 0.20 {
-            if this.m_releaseSerial == this.m_handledSerial { return; };
-            this.ResolveReleasedGesture(vehicle);
-            return;
-        };
-        // Some interaction handlers run before the input listener in a frame.
-        this.m_pendingVehicle = vehicle;
-        this.m_pendingAt = this.Now();
-        this.m_waitingForPress = true;
-    }
-    private func ResolveHold() -> Void {
-        if !this.m_keyDown || this.m_waitingForPress || !IsDefined(this.m_pendingVehicle)
-            || this.m_serial == this.m_handledSerial || this.Now() - this.m_pressedAt < 0.50 { return; };
-        this.m_handledSerial = this.m_serial;
-        this.OpenMenu(this.m_pendingVehicle);
-    }
-    private func ResolveReleasedGesture(vehicle: ref<VehicleObject>) -> Void {
-        let support: ref<NCPDPatrolSupportSystem>;
-        if this.m_releaseSerial == this.m_handledSerial { return; };
-        this.m_handledSerial = this.m_releaseSerial;
-        this.m_pendingVehicle = null;
-        this.m_waitingForPress = false;
-        if !this.CanUseTrunk(vehicle) { return; };
-        if this.m_releaseDuration >= 0.50 {
-            this.OpenMenu(vehicle);
-        } else {
-            support = NCPDPatrolSupportSystem.Get(this.GetGameInstance());
-            if IsDefined(support) { support.RequestBackupAtTrunk(vehicle); };
-        };
-    }
-
-    protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
-        if NotEquals(ListenerAction.GetName(action), this.m_input) || !this.IsEligible() { return false; };
-        if ListenerAction.IsButtonJustPressed(action) {
-            if !this.m_keyDown {
-                this.m_keyDown = true;
-                this.m_serial += 1;
-                this.m_pressedAt = this.Now();
-                this.m_waitingForPress = false;
-            };
-        };
-        if ListenerAction.IsButtonJustReleased(action) && this.m_keyDown {
-            this.m_keyDown = false;
-            this.m_releaseSerial = this.m_serial;
-            this.m_releasedAt = this.Now();
-            this.m_releaseDuration = this.m_releasedAt - this.m_pressedAt;
-            if IsDefined(this.m_pendingVehicle) && !this.m_waitingForPress {
-                this.ResolveReleasedGesture(this.m_pendingVehicle);
-            };
-        };
-        // Observe only. Vanilla input consumption and all other keys are intact.
-        return false;
+    public func RequestBackupAtTrunk(vehicle: ref<VehicleObject>) -> Bool {
+        let support: ref<NCPDPatrolSupportSystem> = NCPDPatrolSupportSystem.Get(this.GetGameInstance());
+        // Discard an old queued release if the hold already opened the menu.
+        if !this.CanUseTrunk(vehicle) || IsDefined(this.m_menuVehicle) || !IsDefined(support) { return false; };
+        return support.RequestBackupAtTrunk(vehicle);
     }
 
     public func Select(command: Int32, vehicle: ref<VehicleObject>) -> Void {
         if !this.IsOpenFor(vehicle) { return; };
         if command == 0 {
-            // Releasing the R used to open the menu must not close it again.
-            if this.m_keyDown && this.m_serial == this.m_handledSerial { return; };
-            if !this.m_keyDown && this.m_releaseSerial == this.m_handledSerial
-                && this.Now() - this.m_releasedAt <= 0.20 { return; };
-            this.m_handledSerial = this.m_serial;
             this.CloseMenu();
             return;
         };
@@ -251,45 +163,19 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     }
 
     public func Tick(delta: Float) -> Void {
-        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
         if !this.IsEligible() { this.FinishSession(); return; };
-        if !IsDefined(this.m_player) {
-            this.m_player = player;
-            this.m_input = TweakDBInterface.GetCName(t"Interactions.NCPDPatrolBackup.action", n"Choice2");
-            player.RegisterInputListener(this, this.m_input);
-        };
         if patrol.IsDispatchMenuOpen() {
             this.CloseMenu();
-            this.m_keyDown = false;
-            this.m_handledSerial = this.m_serial;
             return;
         };
         if IsDefined(this.m_menuVehicle) && !this.CanUseTrunk(this.m_menuVehicle) { this.CloseMenu(); };
-        if IsDefined(this.m_pendingVehicle) {
-            if !this.CanUseTrunk(this.m_pendingVehicle) {
-                this.m_pendingVehicle = null;
-                this.m_waitingForPress = false;
-            } else {
-                if this.m_waitingForPress && this.Now() - this.m_pendingAt > 0.30 {
-                    this.m_pendingVehicle = null;
-                    this.m_waitingForPress = false;
-                    this.Notice("NCPD: Trunk input not received. Try releasing and pressing the secondary interaction again.");
-                } else {
-                    this.ResolveHold();
-                };
-            };
-        };
         // A paused game never advances the ten-second service timer.
         if delta > 0.0 && delta <= 0.50 { this.TickRepair(delta); };
     }
 
     public func FinishSession() -> Void {
-        if IsDefined(this.m_player) { this.m_player.UnregisterInputListener(this, this.m_input); };
-        this.m_player = null;
         this.CloseMenu();
-        this.m_keyDown = false;
-        this.m_handledSerial = this.m_serial;
         this.m_busy = false;
         this.m_command = 0;
         this.m_repairPending = false;
