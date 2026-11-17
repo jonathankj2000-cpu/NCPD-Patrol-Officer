@@ -5,7 +5,7 @@ WolvenKit CLI 9.1.1 requires .NET 10.
 from pathlib import Path
 import argparse,json,shutil,subprocess,tempfile
 ROOT=Path(__file__).resolve().parents[1]
-KEYS={'NCPDPatrol_Dispatch_Title','NCPDPatrol_Dispatch_Objective','NCPDPatrol_Dispatch_Description'}
+KEYS={f'NCPDPatrol_Dispatch_{field}'+('' if i==0 else f'_{i}') for i in range(6) for field in ['Title','Objective','Description']}
 
 def validate(journal,texts):
  root=journal['Data']['RootChunk'];assert root['$type']=='gameJournalResource'
@@ -13,14 +13,23 @@ def validate(journal,texts):
  def data(v):return v['Data']
  entry=data(root['entry']);assert entry['$type']=='gameJournalRootFolderEntry'
  folder=data(entry['entries'][0]);assert folder['id']=='quests/minor_quest'
- quest=data(folder['entries'][0]);assert quest['$type']=='gameJournalQuest' and quest['id']=='ncpd_patrol_dispatch' and quest['type']=='MinorQuest'
- phase=data(quest['entries'][0]);assert phase['$type']=='gameJournalQuestPhase' and phase['id']=='main'
- objective=data(phase['entries'][0]);assert objective['$type']=='gameJournalQuestObjective' and objective['id']=='resolve' and not objective['optional']
- description=data(objective['entries'][0]);assert description['$type']=='gameJournalQuestDescription' and description['id']=='briefing'
- assert all(len(v['entries'])==1 for v in [entry,folder,quest,phase,objective])
- assert {quest['title']['value'],objective['description']['value'],description['description']['value']}==KEYS
+ assert len(entry['entries'])==1 and len(folder['entries'])==6
+ used_keys=set();handles={'0','1'}
+ for i,handle in enumerate(folder['entries']):
+  quest=data(handle);suffix='' if i==0 else f'_{i}'
+  assert quest['$type']=='gameJournalQuest' and quest['id']=='ncpd_patrol_dispatch'+suffix and quest['type']=='MinorQuest'
+  phase_handle=quest['entries'][0];phase=data(phase_handle);assert phase['$type']=='gameJournalQuestPhase' and phase['id']=='main'
+  objective_handle=phase['entries'][0];objective=data(objective_handle);assert objective['$type']=='gameJournalQuestObjective' and objective['id']=='resolve' and not objective['optional']
+  description_handle=objective['entries'][0];description=data(description_handle);assert description['$type']=='gameJournalQuestDescription' and description['id']=='briefing'
+  assert all(len(v['entries'])==1 for v in [quest,phase,objective])
+  for v in [handle,phase_handle,objective_handle,description_handle]:
+   assert v['HandleId'] not in handles;handles.add(v['HandleId'])
+  keys={quest['title']['value'],objective['description']['value'],description['description']['value']}
+  assert keys=={f'NCPDPatrol_Dispatch_{field}'+suffix for field in ['Title','Objective','Description']}
+  assert not keys & used_keys;used_keys.update(keys)
+ assert used_keys==KEYS
  tr=texts['Data']['RootChunk'];assert tr['$type']=='JsonResource' and tr['cookingPlatform']=='PLATFORM_PC'
- rows=data(tr['root'])['entries'];assert len(rows)==3 and {r['secondaryKey'] for r in rows}==KEYS
+ rows=data(tr['root'])['entries'];assert len(rows)==18 and {r['secondaryKey'] for r in rows}==KEYS
  assert all(r['femaleVariant'] and int(r['primaryKey'])==0 for r in rows)
  serialized=json.dumps(root)
  assert 'gameJournalQuestMapPin' not in serialized and 'generic_gameplay_quest' not in serialized

@@ -1,41 +1,40 @@
 # NCPD Patrol
 
-## v0.9a: dispatch journal and response deadline prototype
+## v0.9b: varied dispatch briefings and €$500 completion supplements
 
-[Download the full v0.9a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9a_Dispatch_Journal_Deadline_TEST.zip)
+[Download the complete v0.9b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9b_Dispatch_Briefings_Rewards_TEST.zip)
 
-**New dependency: [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl/releases/tag/v1.28.8)** for Cyberpunk 2077 2.5. Version 1.28.8 is recommended; it is not bundled. Existing CET, RED4ext, Codeware, redscript and TweakXL requirements remain.
+Dispatches now choose from **six journal titles, objectives and briefings**, without repeating the previous choice. Text stays broad enough for existing scanner incidents: respond, assess the scene, deal with threats and secure evidence. It does not invent specific gangs, hostages, injured officers or suspect counts.
 
-Exit the game, extract the **whole ZIP** into the game directory and replace files. Restart; CET announces **v0.9a**. Both the new dispatch archive and its .archive.xl must be installed.
+Finishing an **active assigned dispatch after On scene** earns a separate **€$500 supplement**. A successful transfer queues **DISPATCH BONUS PAID: +€$500** and prints a CET receipt. Scanner and arrest payments retain their own ledgers and receipts.
 
-This prototype adds one reusable native journal entry, **NCPD Dispatch**, with one objective: **Resolve the marked NCPD incident**.
+- A persistent dispatch ledger pays each incident once, including across shifts and save/load.
+- Failed native transactions stay queued for retry; only successful transfers are marked paid or generate a paid receipt.
+- Timeout, cancellation, replacement and an incident resolved before attendance earn no dispatch supplement.
+- The native controller checks that the assigned scanner is completed before accepting success.
 
-- Dispatch assignment starts a **3-minute arrival deadline**, displayed in the existing dispatch HUD.
-- Within **60 m**, On scene stops the deadline; the following fight has no deadline.
-- Resolving the assigned scanner after attendance records **Succeeded**.
-- Timeout records **Failed**, closes our assignment and removes our marker. The vanilla scanner remains available.
-- Cancellation/shift end deactivates our entry. Wanted termination records failure.
-- Loading ends the active duty/dispatch session as before; a saved active journal entry is deactivated after load.
-- The previous tracked story objective is restored only when our dispatch was still tracked.
-- Busy keeps an active assignment/deadline while blocking new automatic calls.
-- **Scanner/arrest payments are unchanged.** Journal completion does not award another payment.
-- The existing script marker is retained. Native quest GPS and unlimited per-call journal history are separate work.
+The v0.9a rules continue: **3-minute arrival deadline**, paused in menus; **On scene within 60 m** stops the deadline; the subsequent fight has no deadline. Failure closes the assignment while leaving the original scanner available. Only one dispatch is active. Six reusable journal entries provide limited history, rather than an unlimited per-call log. Loading closes saved active calls, including the original v0.9a path.
 
-### Test
+### Install and test
 
-1. Request a call and check the normal journal and response countdown. Arrive, finish the scanner and check Completed.
-2. Request another call over 60 m away. Use CET **Test timeout: 15 s left (on route)**, remain away outside menus and check Failed. The scanner should remain playable.
-3. Request another call after success/failure to test reuse. Test cancellation and a save/load during an active assignment.
-4. Use **Log dispatch journal diagnostics** if the entry is absent, refuses reset or has wrong states. Include readiness, stage, quest and objective fields.
+Exit the game, extract the **entire ZIP** into the game directory and replace files. Restart; CET announces **v0.9b**. Both the dispatch archive and `.archive.xl` are required.
 
-The native entry's rendering, reuse and save behavior are the purpose of this game test. A rejected journal operation is reported rather than silently replaced by fake completion.
+Dependencies are unchanged from v0.9a: Cyberpunk 2077 2.5 and compatible CET, RED4ext, Codeware, redscript, TweakXL and **[ArchiveXL](https://github.com/psiberx/cp2077-archive-xl/releases/tag/v1.28.8)** (1.28.8 recommended). Dependencies are not bundled.
 
-### Implementation and validation
+1. Request a few dispatches and check journal variety. Consecutive titles should differ.
+2. Arrive and complete the assigned scanner. Check Completed and the **separate €$500 receipt**; other queued notices may appear first.
+3. Use CET **Test timeout: 15 s left (on route)** before arrival. Check Failed and no dispatch supplement.
+4. Test another call after success/failure, cancellation and a save/load during a call.
+5. Use **Log dispatch journal diagnostics** if needed. It includes readiness, selected briefing, native journal states and paid/pending dispatch supplements.
 
-The dispatcher drives the public JournalManager entry-state API on its own pre-authored paths. It does not use CreateScriptedQuestFromTemplate or the related stubbed cloning APIs. ArchiveXL merges a small journal and localization resource; no original quest or scanner state is rewritten.
+No retroactive dispatch reward is paid for v0.9a completions. Existing scanner/arrest bonus rules remain independent. The existing marker/GPS behavior remains; the map may need opening and closing for a route line.
 
-The resources are compiled, round-tripped and extracted byte-for-byte by [the asset builder](tools/build_dispatch_assets.py). [Portable checks](tests/dispatch_journal/README.md) execute authored controller logic and actual CET dispatch code with native boundaries mocked. Existing arrest/trunk checks are retained. A local source-contract compile completed before the workspace executor disconnected; hosted checks finish resource building, logic checks and ZIP validation. None replaces a real game-cache/UI test.
+### Validation
 
-Main/support interfaces stay **17**, arrest **5**, trunk **2**; the new journal controller is **1**. Partner/backup, scanner payouts, revive, native trunk controls and the confirmed arrest loop/archive are retained.
+[Portable checks](tests/dispatch_journal/README.md) run authored controller logic and actual CET dispatch/bridge code with native APIs mocked. Cases cover all six briefings, repeated outcomes, tracking/load/reuse, deadline boundaries, matching completion, exactly-once €$500 payments and persistent transaction retries. Existing arrest/trunk regressions also run. All 19 redscript files pass source-derived API contract checks; these are not the game's script cache.
 
-[Full instructions and rollback](README.txt). [Previous v0.8c ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.8c_Native_Trunk_Hold_TEST.zip). The confirmed [v0.7f prototype](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7f_Private_Lying_Loop_TEST.zip) remains available.
+The [asset builder](tools/build_dispatch_assets.py) compiles and round-trips the journal/localization with WolvenKit 9.1.1 and verifies exact archive extraction. The [release builder](tools/build_journal_release.py) checks all 12 Lua modules, preserved gameplay files and the 40-file install ZIP. Only a queued money-receipt entry point is added to the core scanner system; its existing payment code is identical. Native journal interface is now **2**; main/support **17**, arrest **5** and trunk **2** stay compatible.
+
+The user reported v0.9a working. The new text selection, €$500 transfers and receipt display still need in-game testing of this update.
+
+[Full instructions](README.txt) · [Previous v0.9a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9a_Dispatch_Journal_Deadline_TEST.zip) · [Earlier packages](releases)

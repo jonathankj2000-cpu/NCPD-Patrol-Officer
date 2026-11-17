@@ -282,6 +282,10 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         this.ShowMessage(text, false, duration, alert, voice);
     }
 
+    public func NotifyDispatchReward(amount: Int32) -> Void {
+        if amount > 0 { this.ShowMessage(s"DISPATCH BONUS PAID: +€$\(amount)", true, 8.0); };
+    }
+
     public func PlayDispatchAlert() -> Bool {
         let player: ref<GameObject> = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) { return false; };

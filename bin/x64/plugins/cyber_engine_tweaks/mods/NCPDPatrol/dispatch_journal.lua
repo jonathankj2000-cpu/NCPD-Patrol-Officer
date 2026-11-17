@@ -3,21 +3,29 @@ local M = {}
 local reported = false
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolDispatchJournalSystem")
-    if not system or system:Version() ~= 1 then error("Install all v0.9a journal files and restart the game") end
+    if not system or system:Version() ~= 2 then error("Install all v0.9b journal files and restart the game") end
     return system
 end
 function M.reset() reported = false end -- forget only; no loaded-away handles
 function M.update(delta, status)
-    local ok, err = pcall(function() native():Tick(delta) end)
+    local ok, err = pcall(function()
+        local system = native()
+        system:Tick(delta)
+        for _ = 1, 8 do
+            local receipt = system:TakeDispatchReceipt()
+            if not receipt or receipt == "" then break end
+            if status then status(receipt) end
+        end
+    end)
     if not ok and not reported then
         reported = true
         if status then status("Dispatch journal | " .. tostring(err)) end
     end
 end
-function M.begin(hash, position)
+function M.begin(hash, position, briefing)
     local ok, token, reason = pcall(function()
         local system = native()
-        local id = system:BeginDispatch(hash, position)
+        local id = system:BeginDispatch(hash, position, briefing or 0)
         return id, system:GetReason()
     end)
     if not ok then return nil, tostring(token) end
@@ -33,10 +41,10 @@ function M.snapshot(token)
     if not ok then return 6, 0, tostring(stage) end
     return stage, remaining, reason
 end
-function M.complete(token)
+function M.complete(token, marker)
     local ok, accepted, reason = pcall(function()
         local system = native()
-        local result = system:CompleteDispatch(token)
+        local result = system:CompleteDispatch(token, marker)
         return result, system:GetReason()
     end)
     if not ok then return false, tostring(accepted) end

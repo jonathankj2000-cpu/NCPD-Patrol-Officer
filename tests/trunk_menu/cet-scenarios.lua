@@ -19,9 +19,13 @@ function dispatchPatrol:IsOnDuty() return nativeDuty end
 function dispatchPatrol:IsDispatchMenuOpen() return pausedUI end
 function dispatchPatrol:ClearDispatchWaypoints() if failClear then error('cleanup rejected') end; clears=clears+1 end
 function dispatchPatrol:TickBonuses() bonusTicks=bonusTicks+1 end
-function dispatchPatrol:GetDispatchCandidates() return candidates end
+function dispatchPatrol:GetDispatchCandidates()
+ local available={};for _,v in ipairs(candidates) do if v.phase~='complete' then available[#available+1]=v end end
+ return available
+end
 function dispatchPatrol:PlaceDispatchWaypoint() placements=placements+1; return {value=placements} end
 function dispatchPatrol:NotifyDispatch(text) notices[#notices+1]={text=text} end
+function dispatchPatrol:NotifyDispatchReward(amount) self:NotifyDispatch('DISPATCH BONUS PAID: +'..amount) end
 function dispatchPatrol:GetScannerPhase(hash,marker) return marker.phase end
 gamedataMappinVariant={OutpostVariant='organized'}
 gamedataMappinPhase={CompletedPhase='complete'}

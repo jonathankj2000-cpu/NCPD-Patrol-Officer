@@ -20,21 +20,126 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_Dispatch_Title",
-              "femaleVariant": "NCPD Dispatch",
+              "femaleVariant": "NCPD Dispatch: Incident Response",
               "maleVariant": ""
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_Dispatch_Objective",
-              "femaleVariant": "Resolve the marked NCPD incident.",
+              "femaleVariant": "Respond to the marked incident and resolve the situation.",
               "maleVariant": ""
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_Dispatch_Description",
-              "femaleVariant": "Respond to the marked incident before the response deadline, then resolve the NCPD Scanner activity. The response timer stops on arrival. This dispatch may expire without removing the original scanner activity.",
+              "femaleVariant": "Dispatch has flagged an incident at the marked location. Your patrol is assigned to respond, assess the scene and deal with any active threats. Secure available evidence before clearing the call.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_1",
+              "femaleVariant": "NCPD Dispatch: Unit Requested",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_1",
+              "femaleVariant": "Attend the reported incident and clear the call.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_1",
+              "femaleVariant": "An available patrol unit is requested at the marked location. The situation remains unconfirmed. Approach with caution, establish what is happening and bring the incident under control.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_2",
+              "femaleVariant": "NCPD Dispatch: Scene Security",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_2",
+              "femaleVariant": "Secure the marked scene and resolve the incident.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_2",
+              "femaleVariant": "The marked location requires police attention. Attend the scene, deal with any remaining threats and secure available evidence. Dispatch will keep the call open until the incident is resolved.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_3",
+              "femaleVariant": "NCPD Dispatch: Patrol Assignment",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_3",
+              "femaleVariant": "Respond to the assigned location and clear the incident.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_3",
+              "femaleVariant": "Your patrol has been assigned a call at the marked location. Proceed to the scene, assess the situation and take the action needed to restore order. Clear the call once the incident has been handled.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_4",
+              "femaleVariant": "NCPD Dispatch: Incident Check",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_4",
+              "femaleVariant": "Check the marked location and resolve the reported incident.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_4",
+              "femaleVariant": "An incident at the marked location requires a patrol response. Details are limited. Attend the scene, confirm the situation and handle any threats or evidence before reporting the call clear.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_5",
+              "femaleVariant": "NCPD Dispatch: Area Response",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_5",
+              "femaleVariant": "Attend the marked scene and bring the situation under control.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_5",
+              "femaleVariant": "Dispatch is directing your unit to an incident in the marked area. Make contact with the scene, secure the location and resolve the situation. Complete the evidence check before clearing the assignment.\n\nRespond within 3 minutes. The response deadline ends when you reach the scene. Dispatch completion supplement: €$500.",
               "maleVariant": ""
             }
           ]

@@ -1,7 +1,7 @@
-name: Dispatch journal prototype
+name: Dispatch briefings and rewards prototype
 on:
   push:
-    branches: [prototype/dispatch-journal-v09a]
+    branches: [prototype/dispatch-briefings-v09b]
     paths-ignore:
       - 'releases/**'
       - 'archive/pc/mod/NCPDPatrol_Dispatch.archive'
@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: dispatch-journal-prototype
+  group: dispatch-briefings-v09b
   cancel-in-progress: true
 jobs:
   verify-and-package:
@@ -32,7 +32,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add archive/pc/mod/NCPDPatrol_Dispatch.archive releases/NCPD_Patrol_v0.9a_Dispatch_Journal_Deadline_TEST.zip releases/NCPD_Patrol_v0.9a_verification.json
+          git add archive/pc/mod/NCPDPatrol_Dispatch.archive releases/NCPD_Patrol_v0.9b_Dispatch_Briefings_Rewards_TEST.zip releases/NCPD_Patrol_v0.9b_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified v0.9a dispatch journal prototype package"
-          git push origin HEAD:prototype/dispatch-journal-v09a
+          git commit -m "Build verified v0.9b dispatch briefings and rewards package"
+          git push origin HEAD:prototype/dispatch-briefings-v09b

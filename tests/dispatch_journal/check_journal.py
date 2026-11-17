@@ -1,6 +1,6 @@
 """Execute authored journal controller and actual CET dispatch modules."""
 from pathlib import Path
-import sys
+import sys, json, importlib.util
 HERE=Path(__file__).resolve().parent
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else HERE.parents[1]
 sys.path.insert(0,str(HERE.parent/'arrests'))
@@ -15,5 +15,9 @@ lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'scenarios.lua').read_text())
 src=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds').read_text()
 assert 'CreateScriptedQuestFromTemplate' not in src
-assert 'GetTransactionSystem' not in src and 'GiveItem' not in src and 'TrackEntry(null)' not in src
-print('PASS: journal controller and dispatcher: arrival/deadline boundary, pause, success/fail/cancel, reuse/rejection, assets, tracking, stale tokens, load cleanup and separate scanner rewards (native APIs mocked)')
+assert 'TrackEntry(null)' not in src
+assert 'm_paidActivities' not in src and 'm_paidSuspects' not in src
+spec=importlib.util.spec_from_file_location('build_dispatch_assets',ROOT/'tools/build_dispatch_assets.py')
+builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
+builder.validate(json.loads((ROOT/'assets/dispatch/dispatch.journal.json').read_text()),json.loads((ROOT/'assets/dispatch/dispatch_onscreens.json.json').read_text()))
+print('PASS: actual journal/dispatch logic: six briefings, deadline/arrival, success/fail/cancel, tracking/load/reuse, exactly-once EUR$500 supplements and durable failed-payment retries; separate scanner/arrest ledgers (native APIs mocked)')

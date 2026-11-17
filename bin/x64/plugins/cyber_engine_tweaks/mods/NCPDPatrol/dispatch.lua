@@ -13,6 +13,14 @@ local failed = false
 local soundEnabled = true
 local voiceEnabled = true
 local navigation = "No active dispatch"
+local lastBriefing = nil
+
+local function chooseBriefing()
+    if lastBriefing == nil then return math.random(0, 5) end
+    local nextBriefing = math.random(0, 4)
+    if nextBriefing >= lastBriefing then nextBriefing = nextBriefing + 1 end
+    return nextBriefing
+end
 
 local function distance(a, b)
     local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
@@ -202,13 +210,15 @@ function M.request(patrol, status)
         local chosen = pool[math.random(1, #pool)]
         chosen.label = chosen.marker:GetVariant() == gamedataMappinVariant.OutpostVariant
             and "Suspected organized crime" or "Assault in progress"
-        local token, journalError = Journal.begin(chosen.hash, chosen.position)
+        local briefing = chooseBriefing()
+        local token, journalError = Journal.begin(chosen.hash, chosen.position, briefing)
         if not token then
             countdown = 30
             report("Journal unavailable: " .. tostring(journalError), status)
             return false
         end
         active = chosen
+        lastBriefing = briefing
         active.journalToken = token
         patrol:ClearDispatchWaypoints()
         local id = patrol:PlaceDispatchWaypoint(chosen.position)
@@ -218,7 +228,7 @@ function M.request(patrol, status)
         active.waypoint = id
         countdown = 0
         navigation = "Dispatch marker active. Open and close the map if you need the GPS line."
-        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location.", 8.0, soundEnabled, voiceEnabled)
+        patrol:NotifyDispatch("NCPD DISPATCH: " .. chosen.label .. ". Respond to the marked location. Dispatch completion supplement: €$500.", 8.0, soundEnabled, voiceEnabled)
         drawObjective(patrol:IsDispatchMenuOpen())
         report("Assigned: " .. chosen.label .. " | POI=" .. chosen.key .. " | distance=" .. tostring(math.floor(chosen.distance))
             .. " m | search radius=" .. tostring(radius) .. " m | " .. navigation, status)
@@ -305,7 +315,7 @@ function M.update(delta, onDuty, status, getPatrol)
                     patrol:NotifyDispatch("NCPD: Incident resolved before your arrival. Assignment withdrawn.", 6.0)
                     return
                 end
-                local accepted, message = Journal.complete(active.journalToken)
+                local accepted, message = Journal.complete(active.journalToken, active.marker)
                 if not accepted then error("Journal completion rejected: " .. tostring(message)) end
                 clear(patrol)
                 completed = completed + 1

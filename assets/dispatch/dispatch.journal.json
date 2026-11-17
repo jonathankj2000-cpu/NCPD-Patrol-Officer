@@ -77,6 +77,271 @@
                       },
                       "type": "MinorQuest"
                     }
+                  },
+                  {
+                    "HandleId": "6",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch_1",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "7",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "8",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "9",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description_1"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective_1"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title_1"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  },
+                  {
+                    "HandleId": "10",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch_2",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "11",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "12",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "13",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description_2"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective_2"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title_2"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  },
+                  {
+                    "HandleId": "14",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch_3",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "15",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "16",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "17",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description_3"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective_3"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title_3"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  },
+                  {
+                    "HandleId": "18",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch_4",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "19",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "20",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "21",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description_4"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective_4"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title_4"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  },
+                  {
+                    "HandleId": "22",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch_5",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "23",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "24",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "25",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description_5"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective_5"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title_5"
+                      },
+                      "type": "MinorQuest"
+                    }
                   }
                 ]
               }
