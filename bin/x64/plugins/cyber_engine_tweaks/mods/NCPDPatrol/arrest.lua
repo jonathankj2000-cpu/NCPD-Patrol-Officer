@@ -64,7 +64,7 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7d archive") end
+        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7e archive") end
         local name = system:AnimationName(unit.component.name)
         if name ~= "NCPDPatrolArrestPC" then error("Outdated arrest helper; replace NCPDPatrol_Arrest.archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
@@ -95,11 +95,11 @@ local function prepare(system, unit, helper)
         return false
     end
     if not unit.prepared then
-        local selected, nodes, sample, complete = inspectTree(system, tree)
+        local selected, nodes, sample = inspectTree(system, tree)
         print("[NCPD Patrol] Arrest bank | loaded=true | nodes=" .. nodes .. " | selected=" .. tostring(selected or "unavailable"))
         print("[NCPD Patrol] Arrest bank names | " .. sample)
-        if not selected and complete then error("Loaded workspot contains no matching lying handcuff animation") end
-        unit.clip, unit.prepared = selected or CLIP, true
+        if not selected then error("Loaded workspot has no readable lying handcuff candidate") end
+        unit.clip, unit.prepared = selected, true
         unit.resource = resource
     end
     return true
@@ -110,33 +110,29 @@ local function jump(unit)
     workspots():SendPlaySignal(unit.npc)
 end
 
-local function reportPose(unit, clip, owner, info)
-    local active = workspots():IsActorInWorkspot(unit.npc)
-    local ok, instance = pcall(function() return workspots():GetWorkspotInstance(unit.npc:GetEntityID()) end)
-    local text = "source=native callback | clip=" .. tostring(clip) .. " | workspot=" .. tostring(active)
-        .. " | instance=" .. tostring(ok and instance ~= nil) .. " | context=" .. tostring(owner == true)
-        .. " | path=" .. unit.proof:GetPath()
-    if text ~= unit.lastPose then
-        unit.lastPose = text
-        print("[NCPD Patrol] Arrest pose | " .. text)
-        if info then
-            print("[NCPD Patrol] Arrest native | active=" .. tostring(read(info, "isActive"))
-                .. " | entering=" .. tostring(read(info, "entering")) .. " | exiting=" .. tostring(read(info, "exiting")))
-        end
+local function activationSource(unit)
+    return unit.proof:HasResult() and "native play result" or "native activation fallback"
+end
+
+local function reportActivation(unit)
+    local proof = unit.proof
+    local stable = math.floor(math.min(proof:StableTime(), proof:RequiredTime()) * 4) / 4
+    local text = "source=" .. activationSource(unit) .. " | result="
+        .. (proof:HasResult() and tostring(proof:ResultSucceeded()) or "not received")
+        .. " | in workspot=" .. tostring(proof:IsPresent()) .. " | active=" .. tostring(proof:NativeActive())
+        .. " | entering=" .. tostring(proof:Entering()) .. " | exiting=" .. tostring(proof:Exiting())
+        .. " | stable=" .. string.format("%.2f", stable) .. "/" .. string.format("%.2f", proof:RequiredTime()) .. " s"
+    if text ~= unit.lastActivation then
+        unit.lastActivation = text
+        print("[NCPD Patrol] Arrest activation | " .. text)
     end
 end
 
-local function ownsWorkspot(unit)
-    return unit.started and unit.id and attached(unit.npc)
-        and unit.proof and unit.proof:OwnsPlayback()
-end
-
 local function cleanup(unit)
-    -- A superseded/finished callback context is no longer ours to stop.
-    local owned = ownsWorkspot(unit)
     if unit.proof then unit.proof:Disarm() end
-    if owned then workspots():StopInDevice(unit.npc) end
     unit.started = false
+    -- Release only our managed helper. No unverified StopInDevice command is
+    -- sent to an ambient actor whose current device cannot be inspected.
     if not unit.id then return true end
     local system = entities()
     if not system or not system:IsReady() then return false end
@@ -169,30 +165,20 @@ local function create(system, npc, token)
     spec.alwaysSpawned, spec.spawnInView, spec.active = false, true, true
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
-    return {id=id, npc=npc, token=token, elapsed=0, playTime=0, stable=0, started=false, paid=false}
+    return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false}
 end
 
-local function holdLying(unit, delta, info)
-    if not ownsWorkspot(unit) then return false end
-    if unit.proof:IsLyingClip() then
-        unit.holdWait, unit.holdAttempts, unit.holdCooldown = 0, 0, 0
-        return true
+local function keepLying(unit)
+    if not unit.proof:IsActive() then return end
+    if (unit.playTime or 0) < (unit.nextHold or 1) then return end
+    unit.nextHold = unit.playTime + 1
+    -- No clip telemetry is available here. Re-select the known lying clip at
+    -- most once per second, without advancing the bank with another play signal.
+    workspots():SendJumpToAnimEnt(unit.npc, CName.new(unit.clip), true)
+    unit.holdRequests = (unit.holdRequests or 0) + 1
+    if unit.holdRequests == 1 or unit.holdRequests % 15 == 0 then
+        print("[NCPD Patrol] Arrest hold | lying clip reselected | requests=" .. unit.holdRequests .. " | interval=1 s | observed clip=unavailable")
     end
-    if not unit.proof:HasSeenLying() or not info or not read(info, "isActive") then return false end
-    unit.holdWait = (unit.holdWait or 0) + delta
-    unit.holdCooldown = math.max(0, (unit.holdCooldown or 0) - delta)
-    local revision = unit.proof:GetRevision()
-    -- Re-select only on an observed transition after a real lying clip. One
-    -- command per callback revision; a missing response is released, not spammed.
-    if revision ~= unit.lastHoldRevision and unit.holdCooldown == 0 and (unit.holdAttempts or 0) < 3 then
-        unit.lastHoldRevision = revision
-        unit.holdAttempts = (unit.holdAttempts or 0) + 1
-        unit.holdCooldown = 0.5
-        workspots():SendJumpToAnimEnt(unit.npc, CName.new(unit.clip), true)
-        print("[NCPD Patrol] Arrest hold | returning observed transition to lying clip")
-    end
-    if unit.holdWait >= 3 then error("Arrest hold did not return to a lying clip") end
-    return false
 end
 
 local function updateUnit(system, unit, delta, onDuty, paused)
@@ -200,24 +186,19 @@ local function updateUnit(system, unit, delta, onDuty, paused)
     if unit.retiring then return cleanup(unit) end
     local player = Game.GetPlayer()
     if not attached(unit.npc) or unit.npc:IsDead() or not player then
-        fail(system, unit, "Suspect unavailable; arrest animation released")
+        fail(system, unit, "Suspect unavailable; arrest helper released")
         return cleanup(unit)
     end
+    if unit.started then
+        if not paused then unit.playTime = (unit.playTime or 0) + delta end
+        unit.proof:Tick(delta, paused)
+    end
     if unit.paid then
-        if distance(player, unit.npc) > 60 then unit.retiring = true; return cleanup(unit) end
-        if paused then return false end
-        if not ownsWorkspot(unit) then
-            print("[NCPD Patrol] Arrest hold | native context ended; saved payment retained")
+        if distance(player, unit.npc) > 60 or unit.proof:IsFinished() then
             unit.retiring = true
             return cleanup(unit)
         end
-        local info = workspots():GetExtendedInfo(unit.npc)
-        if not info or not read(info, "isActive") or not workspots():IsActorInWorkspot(unit.npc) then
-            unit.retiring = true
-            return cleanup(unit)
-        end
-        reportPose(unit, system:AnimationName(unit.proof:GetClip()), true, info)
-        holdLying(unit, delta, info)
+        if not paused then keepLying(unit) end
         return false
     end
     if system:GetStage() ~= 2 or system:GetToken() ~= unit.token or not same(system:GetTarget(), unit.npc) then
@@ -227,59 +208,37 @@ local function updateUnit(system, unit, delta, onDuty, paused)
     if paused then return false end
     unit.elapsed = unit.elapsed + delta
     if unit.elapsed > 8 then
-        fail(system, unit, "Lying arrest animation not confirmed; no arrest payment")
+        fail(system, unit, "Native arrest activation not confirmed; no arrest payment")
         return cleanup(unit)
     end
     local helper = entities():GetEntity(unit.id)
     if not helper or not helper:IsAttached() then return false end
     if not unit.started then
         if not prepare(system, unit, helper) then return false end
-        -- The helper references an existing vanilla ground/handcuff workspot.
-        -- This starts no paired V animation and changes no NPC life/AI state.
+        unit.proof = NCPDPatrolArrestPlayback.new()
+        if not system:ArmPlayback(unit.npc, helper, unit.token, unit.proof) then
+            error("Arrest playback could not arm a clean native start")
+        end
+        unit.started = true
         workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrestPC"),
             CName.new("None"), CName.new("None"), 0,
-            WorkspotSlidingBehaviour.DontPlayAtResourcePosition, nil)
-        unit.started = true
-        unit.proof = NCPDPatrolArrestPlayback.new()
-        unit.proof:Arm(unit.npc, unit.token)
-        workspots():SendDebugCommandFunctionalTests(workWorkspotDebugMode.FunctionalTests, unit.npc, unit.proof)
+            WorkspotSlidingBehaviour.DontPlayAtResourcePosition, helper)
         jump(unit)
-        print("[NCPD Patrol] Arrest | Workspot requested; native callback listener armed")
+        print("[NCPD Patrol] Arrest request | requested clip=" .. unit.clip .. " | observed clip=unavailable | result recipient=private helper")
         return false
     end
-    unit.playTime = unit.playTime + delta
-    local clip = system:AnimationName(unit.proof:GetClip())
-    local info = workspots():GetExtendedInfo(unit.npc)
-    local owned = ownsWorkspot(unit)
-    reportPose(unit, clip, owned, info)
-    if not unit.listenerRetried and unit.playTime >= 0.5 and unit.proof:GetPath() == "" then
-        unit.listenerRetried = true
-        workspots():SendDebugCommandFunctionalTests(workWorkspotDebugMode.FunctionalTests, unit.npc, unit.proof)
-        print("[NCPD Patrol] Arrest | Native callback registration retried once after entry")
+    reportActivation(unit)
+    if unit.proof:IsFinished() then
+        fail(system, unit, "Native arrest playback ended before confirmation; no payment")
+        return cleanup(unit)
     end
-    holdLying(unit, delta, info)
-    local matches = unit.proof:IsLyingClip()
-    if matches and workspots():IsActorInWorkspot(unit.npc) and owned
-        and info and read(info, "isActive") and not read(info, "entering") and not read(info, "exiting") then
-        unit.stable = unit.stable + delta
-        if unit.stable >= 0.5 then
-            if system:ConfirmObservedArrest(unit.npc, unit.token, unit.proof) then
-                unit.paid = true
-                print("[NCPD Patrol] Arrest | Registered; separate EUR$250 arrest payment")
-            else
-                unit.retiring = true
-                return cleanup(unit)
-            end
-        end
-    else
-        unit.stable = 0
-        if not unit.retried and unit.playTime >= 0.5 and ownsWorkspot(unit) then
-            unit.retried = true
-            jump(unit)
-            print("[NCPD Patrol] Arrest | Clip/play retried once after workspot entry")
-        end
-        if unit.playTime >= 3 then
-            fail(system, unit, "No matching native arrest callback after entry; playback released, no payment")
+    if unit.proof:Matches(unit.npc, unit.token) then
+        if system:ConfirmActivatedArrest(unit.npc, unit.token, unit.proof) then
+            unit.paid = true
+            print("[NCPD Patrol] Arrest | Registered via " .. activationSource(unit) .. "; separate EUR$250 payment")
+            keepLying(unit)
+        else
+            unit.retiring = true
             return cleanup(unit)
         end
     end
@@ -299,7 +258,7 @@ end
 function M.finish()
     pcall(function()
         local system = native()
-        if system and system:Version() == 3 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
+        if system and system:Version() == 4 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
     end)
     for index = #units, 1, -1 do
         local unit = units[index]
@@ -315,7 +274,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 3 then error("Install all v0.7d arrest scripts and restart the game") end
+        if not system or system:Version() ~= 4 then error("Install all v0.7e arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

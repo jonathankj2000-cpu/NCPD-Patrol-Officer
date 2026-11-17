@@ -11,12 +11,13 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
     private let m_revision: Int32;
     private let m_receipts: array<String>;
     private let m_receiptTime: Float;
+    private let m_playback: ref<NCPDPatrolArrestPlayback>;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolArrestSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolArrestSystem") as NCPDPatrolArrestSystem;
     }
 
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     public func Reward() -> Int32 { return 250; }
     public func GetHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\arrest_workspot.ent"; }
     public func GetWorkspotResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot"; }
@@ -28,6 +29,7 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         // The saved payment ledger survives loads and shift changes. References
         // and workspot ownership from the old world must never be reused.
         this.m_target = null;
+        this.m_playback = null;
         this.m_stage = 0;
         this.m_elapsed = 0.0;
         this.m_token += 1;
@@ -90,6 +92,7 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
     public func CancelArrest(reason: String) -> Void {
         let npc: ref<NPCPuppet> = this.m_target;
         this.m_target = null;
+        this.m_playback = null;
         this.m_stage = 0;
         this.m_elapsed = 0.0;
         this.m_token += 1;
@@ -136,18 +139,33 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
             this.m_stage = 2;
             this.m_elapsed = 0.0;
             this.m_target.NCPDPatrolRefreshArrestInteraction();
-            this.SetStatus("Securing complete; waiting for the lying arrest animation");
+            this.SetStatus("Securing complete; waiting for arrest playback activation");
         };
         if this.m_stage == 2 && this.m_elapsed > 10.0 { this.FailPose(this.m_token, "Arrest animation timed out"); };
     }
 
-    public func ConfirmObservedArrest(npc: ref<NPCPuppet>, token: Int32, proof: ref<NCPDPatrolArrestPlayback>) -> Bool {
-        if !IsDefined(proof) || !proof.Matches(npc, token) { return false; };
+    public func ArmPlayback(npc: ref<NPCPuppet>, helper: ref<GameObject>, token: Int32, proof: ref<NCPDPatrolArrestPlayback>) -> Bool {
+        if this.m_stage != 2 || token != this.m_token || npc != this.m_target || IsDefined(this.m_playback) { return false; };
+        if !IsDefined(proof) || !this.IsEligibleSuspect(npc) || !this.InRange(npc) { return false; };
+        if !proof.Arm(npc, helper, token) { return false; };
+        this.m_playback = proof;
+        return true;
+    }
+
+    public func AcceptPlayResult(helperID: EntityID, success: Bool) -> Bool {
+        if this.m_stage != 2 || !IsDefined(this.m_playback) { return false; };
+        if !this.m_playback.AcceptResult(helperID, success) { return false; };
+        if !success { this.FailPose(this.m_token, "Native arrest playback was rejected"); };
+        return true;
+    }
+
+    public func ConfirmActivatedArrest(npc: ref<NPCPuppet>, token: Int32, proof: ref<NCPDPatrolArrestPlayback>) -> Bool {
+        if !IsDefined(proof) || proof != this.m_playback || !proof.Matches(npc, token) { return false; };
         return this.ConfirmArrestPose(npc, token);
     }
 
-    // The controller waits for stable native callbacks before calling the
-    // checked entry point above. Eligibility and duplicate/payment rules stay.
+    // Registration credits completed securing and acknowledged native
+    // activation. It does not claim to have inspected the rendered clip.
     private func ConfirmArrestPose(npc: ref<NPCPuppet>, token: Int32) -> Bool {
         let transaction: ref<TransactionSystem>;
         let player: ref<PlayerPuppet>;
