@@ -7,6 +7,7 @@ local poll, lastRevision = 0, -1
 local label = "Ready on duty; EUR$250 per arrest"
 local unavailableReported = false
 local lastLook = nil
+local configuredLoop, configuredSource = nil, nil
 
 local function native()
     return Game.GetScriptableSystemsContainer():Get("NCPDPatrolArrestSystem")
@@ -61,53 +62,89 @@ local function inspectTree(system, tree)
     return selected, nodes, table.concat(sample, ", "), next(names) ~= nil and #stack == 0
 end
 
+local function loadedResource(unit, key, stateKey, path, label)
+    if not unit[key] then unit[key] = Game.GetResourceDepot():LoadResource(path) end
+    local token = unit[key]
+    if not token then error(label .. " load returned no token") end
+    local loaded, finished, failed = token:IsLoaded(), token:IsFinished(), token:IsFailed()
+    local state = "loaded=" .. tostring(loaded) .. " | finished=" .. tostring(finished) .. " | failed=" .. tostring(failed)
+    if state ~= unit[stateKey] then
+        unit[stateKey] = state
+        print("[NCPD Patrol] Arrest resource token | " .. label .. " | " .. state)
+    end
+    if failed then error(label .. " asynchronous load failed") end
+    if not loaded then
+        if finished then error(label .. " finished without a loaded resource") end
+        return nil
+    end
+    return token:GetResource()
+end
+
+local function entryClass(system, entry)
+    return entry and system:AnimationName(entry:GetClassName()) or "missing"
+end
+
+local function validateLoop(system, tree)
+    local root = tree.rootEntry
+    local list = root and read(root, "list")
+    local loop = list and list[1]
+    local children = loop and read(loop, "list")
+    local pause = children and children[1]
+    if entryClass(system, root) ~= "workSequence" or not list or #list ~= 1
+        or entryClass(system, loop) ~= "workSequence" or not children or #children ~= 1
+        or entryClass(system, pause) ~= "workPauseClip" then error("Outdated or invalid private arrest loop topology") end
+    if not root.loopInfinitely or not loop.loopInfinitely or tree.initialCanUseExits
+        or tree.useTimeLimitForSequences or system:AnimationName(loop.idleAnim) ~= CLIP
+        or loop.id.id ~= 2 then error("Private arrest resource is not the expected exit-free lying loop") end
+    return loop.id.id
+end
+
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7e archive") end
+        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.7f archive") end
         local name = system:AnimationName(unit.component.name)
-        if name ~= "NCPDPatrolArrestPC" then error("Outdated arrest helper; replace NCPDPatrol_Arrest.archive and restart") end
+        if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the v0.7f archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
     end
-    -- workspotResource is a ResourceAsyncReference. ResourceHelper's reference
-    -- methods accept only synchronous ResourceReference properties, so use a
-    -- depot token and retain it for the helper's lifetime instead.
-    if not unit.bankToken then
-        unit.bankToken = Game.GetResourceDepot():LoadResource(system:GetWorkspotResource())
-        if not unit.bankToken then error("Arrest resource load returned no token") end
-        print("[NCPD Patrol] Arrest setup | async bank load requested")
-    end
-    local loaded, finished, failed = unit.bankToken:IsLoaded(), unit.bankToken:IsFinished(), unit.bankToken:IsFailed()
-    local state = "loaded=" .. tostring(loaded) .. " | finished=" .. tostring(finished) .. " | failed=" .. tostring(failed)
-    if state ~= unit.lastLoad then
-        unit.lastLoad = state
-        print("[NCPD Patrol] Arrest resource token | " .. state)
-    end
-    if failed then error("Arrest workspot asynchronous load failed") end
-    if not loaded then
-        if finished then error("Arrest workspot load finished without a loaded resource") end
-        return false
-    end
-    local resource = unit.bankToken:GetResource()
-    local tree = resource and read(resource, "workspotTree")
-    if not tree or not read(tree, "rootEntry") then
-        if unit.elapsed > 4 then error("Arrest resource loaded; workspot tree still not readable/ready") end
+    -- Preload both async references before using the component. No reference
+    -- helper writes or native source-resource mutations are performed.
+    local source = loadedResource(unit, "bankToken", "sourceLoad", system:GetWorkspotResource(), "vanilla bindings")
+    local resource = loadedResource(unit, "loopToken", "loopLoad", system:GetLoopResource(), "private loop")
+    if not source or not resource then return false end
+    local sourceTree, tree = read(source, "workspotTree"), read(resource, "workspotTree")
+    if not sourceTree or not read(sourceTree, "rootEntry") or not tree or not read(tree, "rootEntry") then
+        if unit.elapsed > 4 then error("Loaded arrest resources have no readable/ready trees") end
         return false
     end
     if not unit.prepared then
-        local selected, nodes, sample = inspectTree(system, tree)
-        print("[NCPD Patrol] Arrest bank | loaded=true | nodes=" .. nodes .. " | selected=" .. tostring(selected or "unavailable"))
+        local selected, nodes, sample = inspectTree(system, sourceTree)
+        if selected ~= CLIP then error("Vanilla bindings do not expose the intended lying idle") end
+        unit.entry = validateLoop(system, tree)
+        if not configuredLoop then
+            local bindings = read(sourceTree, "finalAnimsets")
+            if not bindings or #bindings == 0 then error("Vanilla workspot animation bindings are unreadable") end
+            -- Only the mod-owned resource receives these dependency/prop fields.
+            -- Its authored root, loop flags, tags, status and exits stay intact.
+            tree.finalAnimsets = bindings
+            for _, field in ipairs({"workspotRig", "globalProps", "initialActions", "itemsPolicy", "propsPlaySyncAnim", "censorshipFlags", "whitelistVisualTags", "blacklistVisualTags"}) do
+                local value = read(sourceTree, field)
+                if value ~= nil then tree[field] = value end
+            end
+            configuredLoop, configuredSource = resource, source
+            print("[NCPD Patrol] Arrest loop | private bindings configured | setups=" .. #bindings .. " | entry=2 | infinite=true | natural exits=false")
+        end
+        unit.clip, unit.resource, unit.prepared = CLIP, resource, true
+        print("[NCPD Patrol] Arrest bank | vanilla nodes=" .. nodes .. " | selected idle=" .. selected)
         print("[NCPD Patrol] Arrest bank names | " .. sample)
-        if not selected then error("Loaded workspot has no readable lying handcuff candidate") end
-        unit.clip, unit.prepared = selected, true
-        unit.resource = resource
     end
     return true
 end
 
 local function jump(unit)
-    workspots():SendJumpToAnimEnt(unit.npc, CName.new(unit.clip), true)
-    workspots():SendPlaySignal(unit.npc)
+    -- The idle belongs to a container, not necessarily a workAnimClip leaf.
+    -- Jump to our actual infinite sequence by entry ID; do not advance it.
+    workspots():SendJumpCommandEnt(unit.npc, unit.entry, true)
 end
 
 local function activationSource(unit)
@@ -155,9 +192,10 @@ local function create(system, npc, token)
     local depot = Game.GetResourceDepot()
     local template = depot:ResourceExists(system:GetHelperTemplate())
     local bank = depot:ResourceExists(system:GetWorkspotResource())
+    local loop = depot:ResourceExists(system:GetLoopResource())
     print("[NCPD Patrol] Arrest setup | archive=" .. tostring(depot:ArchiveExists("NCPDPatrol_Arrest.archive"))
-        .. " | template=" .. tostring(template) .. " | bank=" .. tostring(bank))
-    if not template or not bank then error("Arrest animation resources unavailable; no playback requested") end
+        .. " | template=" .. tostring(template) .. " | bank=" .. tostring(bank) .. " | loop=" .. tostring(loop))
+    if not template or not bank or not loop then error("Arrest animation resources unavailable; no playback requested") end
     local spec = DynamicEntitySpec.new()
     spec.templatePath = system:GetHelperTemplate()
     spec.position, spec.orientation = npc:GetWorldPosition(), npc:GetWorldOrientation()
@@ -166,19 +204,6 @@ local function create(system, npc, token)
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
     return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false}
-end
-
-local function keepLying(unit)
-    if not unit.proof:IsActive() then return end
-    if (unit.playTime or 0) < (unit.nextHold or 1) then return end
-    unit.nextHold = unit.playTime + 1
-    -- No clip telemetry is available here. Re-select the known lying clip at
-    -- most once per second, without advancing the bank with another play signal.
-    workspots():SendJumpToAnimEnt(unit.npc, CName.new(unit.clip), true)
-    unit.holdRequests = (unit.holdRequests or 0) + 1
-    if unit.holdRequests == 1 or unit.holdRequests % 15 == 0 then
-        print("[NCPD Patrol] Arrest hold | lying clip reselected | requests=" .. unit.holdRequests .. " | interval=1 s | observed clip=unavailable")
-    end
 end
 
 local function updateUnit(system, unit, delta, onDuty, paused)
@@ -190,15 +215,14 @@ local function updateUnit(system, unit, delta, onDuty, paused)
         return cleanup(unit)
     end
     if unit.started then
-        if not paused then unit.playTime = (unit.playTime or 0) + delta end
         unit.proof:Tick(delta, paused)
     end
     if unit.paid then
         if distance(player, unit.npc) > 60 or unit.proof:IsFinished() then
+            if unit.proof:IsFinished() then print("[NCPD Patrol] Arrest loop | released after playback or actor state ended | active=" .. tostring(unit.proof:NativeActive()) .. " | exiting=" .. tostring(unit.proof:Exiting())) end
             unit.retiring = true
             return cleanup(unit)
         end
-        if not paused then keepLying(unit) end
         return false
     end
     if system:GetStage() ~= 2 or system:GetToken() ~= unit.token or not same(system:GetTarget(), unit.npc) then
@@ -220,11 +244,11 @@ local function updateUnit(system, unit, delta, onDuty, paused)
             error("Arrest playback could not arm a clean native start")
         end
         unit.started = true
-        workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrestPC"),
+        workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrestLoop"),
             CName.new("None"), CName.new("None"), 0,
             WorkspotSlidingBehaviour.DontPlayAtResourcePosition, helper)
         jump(unit)
-        print("[NCPD Patrol] Arrest request | requested clip=" .. unit.clip .. " | observed clip=unavailable | result recipient=private helper")
+        print("[NCPD Patrol] Arrest request | private infinite idle | entry=" .. unit.entry .. " | requested clip=" .. unit.clip .. " | observed clip=unavailable | result recipient=private helper")
         return false
     end
     reportActivation(unit)
@@ -236,7 +260,6 @@ local function updateUnit(system, unit, delta, onDuty, paused)
         if system:ConfirmActivatedArrest(unit.npc, unit.token, unit.proof) then
             unit.paid = true
             print("[NCPD Patrol] Arrest | Registered via " .. activationSource(unit) .. "; separate EUR$250 payment")
-            keepLying(unit)
         else
             unit.retiring = true
             return cleanup(unit)
@@ -251,6 +274,7 @@ function M.state() return label end
 -- IDs or stop old actor handles in a newly attached world.
 function M.reset()
     units, observedToken, poll, lastRevision = {}, nil, 0, -1
+    configuredLoop, configuredSource = nil, nil
     label, unavailableReported = "Ready on duty; EUR$250 per arrest", false
     lastLook = nil
 end
@@ -258,7 +282,7 @@ end
 function M.finish()
     pcall(function()
         local system = native()
-        if system and system:Version() == 4 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
+        if system and system:Version() == 5 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
     end)
     for index = #units, 1, -1 do
         local unit = units[index]
@@ -274,7 +298,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 4 then error("Install all v0.7e arrest scripts and restart the game") end
+        if not system or system:Version() ~= 5 then error("Install all v0.7f arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

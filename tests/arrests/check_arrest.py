@@ -27,10 +27,40 @@ with tempfile.TemporaryDirectory(prefix='ncpd-result-wrapper-') as scratch:
     lua.globals().ResultReceiver=lua.execute(translate(wrapper))
 lua.globals().MOD_DIR=str(Path(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol').resolve())
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
+import json
+asset=json.loads(Path(ROOT/'assets/arrest/arrest_lying_loop.workspot.json').read_text())
+handles={}
+def collect(value):
+    if isinstance(value,dict):
+        if 'HandleId' in value and 'Data' in value: handles[value['HandleId']]=value['Data']
+        for child in value.values(): collect(child)
+    elif isinstance(value,list):
+        for child in value: collect(child)
+collect(asset)
+def resolve(value): return value['Data'] if 'Data' in value else handles[value['HandleRefId']]
+def native_entry(value):
+    node=resolve(value)
+    out={'className':node['$type'],'id':{'id':node['id']['id']}}
+    if 'list' in node: out['list']=[native_entry(child) for child in node['list']]
+    if 'idleAnim' in node: out['idleAnim']=node['idleAnim']['$value']
+    if 'loopInfinitely' in node: out['loopInfinitely']=bool(node['loopInfinitely'])
+    return out
+asset_tree=resolve(asset['Data']['RootChunk']['workspotTree'])
+private_tree={'rootEntry':native_entry(asset_tree['rootEntry']),
+    'initialCanUseExits':bool(asset_tree['initialCanUseExits']),
+    'useTimeLimitForSequences':bool(asset_tree['useTimeLimitForSequences']),
+    'finalAnimsets':[], 'customTransitionAnims':[], 'statusEffectID':0,
+    'tags':['NCPDPatrolArrestLoop']}
+def to_lua(value):
+    if isinstance(value,dict):return lua.table_from({key:to_lua(child) for key,child in value.items()})
+    if isinstance(value,list):return lua.table_from([to_lua(child) for child in value])
+    return value
+lua.globals().PrivateLoopTree=to_lua(private_tree)
+lua.execute("local function methods(entry) function entry:GetClassName() return self.className end; for _,child in ipairs(entry.list or {}) do methods(child) end end; methods(PrivateLoopTree.rootEntry)")
 lua.execute(Path(HERE/'arrest-cet-scenarios.lua').read_text())
 assert any('source=native activation fallback' in line for line in logs)
 assert any('source=native play result' in line for line in logs)
 assert any('Registered via native activation fallback' in line for line in logs)
 assert any('observed clip=unavailable' in line for line in logs)
-assert any('Arrest hold | lying clip reselected' in line for line in logs)
-print('PASS: actual activation proof/controller/result handler: absent debug callbacks and nil legacy lookups; stable clean native entry pays once; exact-helper positive/negative/stale results; no-entry/transition/paused/dead/range/wanted/load guards; one-second hold budget; async resource failures; independent scanner/arrest 1000/250 payments (native APIs mocked)')
+assert any('Arrest loop | private bindings configured' in line for line in logs)
+print('PASS: actual activation proof/controller/result handler: absent debug callbacks and nil legacy lookups; stable clean native entry pays once; exact-helper positive/negative/stale results; no-entry/transition/paused/dead/range/wanted/load guards; authored infinite idle and one entry-ID jump with no replay signals; async resource failures; independent scanner/arrest 1000/250 payments (native APIs mocked)')

@@ -1,45 +1,44 @@
 # NCPD Patrol
 
-## v0.7e: register arrests through native activation
+## v0.7f: private infinite lying workspot
 
-**[Download the complete v0.7e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7e_Arrest_Native_Activation_TEST.zip)**
+**[Download the complete v0.7f test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7f_Private_Lying_Loop_TEST.zip)**
 
-The v0.7d test showed active playback but no debug callback path or clip data. Registration now credits **completed securing plus stable native activation**. It no longer requires a readable animation name. **This changes the confirmation policy: activation does not prove which clip is rendered.** The requested vanilla handcuff animation was visibly confirmed in the earlier game test.
+The user confirmed arrest registration and payment work in v0.7e. The remaining issue is the pose: the vanilla workspot proceeds through standing/idle, then returns to the defeated animation. v0.7f uses a private resource containing only an **infinite lying idle**, with no standing/exit nodes. This tests the preferred loop approach; no suspect despawn is added.
 
 ### Install and test
 
-1. Exit the game completely. Extract the **entire ZIP** into the game directory containing **bin, r6 and archive**, replacing the mod files. Include the new **NCPDPatrolArrestEvents.reds** and updated **NCPDPatrolArrestPlayback.reds**. Restart; CET announces **v0.7e**. Main/support interfaces remain **17**, arrests use **4**. The archive is unchanged.
-2. While **ON DUTY**, incapacitate an ordinary human enemy without killing them. Approach/look at the body and use **Arrest suspect**, normally **F**. Remain on foot within **2.5 m until the receipt**. Securing takes two seconds, followed by activation confirmation. No extra binding or CET action.
-3. Expect **NCPD ARREST REGISTERED | +EUR$250** and one increase in the arrest count. Repeating input, changing shift or loading a save containing that payment cannot pay the same saved identity again.
-4. Stay nearby for **15–20 seconds** to test the pose keeper. After registration, it re-selects the lying handcuff clip **at most once per second**, without additional play signals. Native forced exits can end the pose. Physical holding still needs an in-game test.
-5. If it fails, send **Arrest activation**, **Arrest request**, **Arrest hold** and **Arrest |** lines. Activation reports the source, result status, native flags and stable/required seconds. **observed clip=unavailable** is intentional: metadata names describe requested clips.
+1. Exit the game completely. Extract the **entire ZIP** into the game directory containing **bin, r6 and archive**, replacing existing files. **Replace NCPDPatrol_Arrest.archive too**: it now contains the helper and the new private loop. Restart; CET announces **v0.7f**. Main/support interfaces remain **17**; arrests use **5**.
+2. While **ON DUTY**, incapacitate an ordinary human enemy without killing them, approach/look at the body and use **Arrest suspect**, normally **F**. Stay on foot within **2.5 m until the separate +EUR$250 receipt**. No extra binding or CET action.
+3. Remain nearby for **30–60 seconds**. Check whether the suspect stays lying with hands behind the back. Try another average human rig, including female if available. The same paid identity cannot pay again.
+4. If the pose ends or payment fails, send **Arrest loop**, **Arrest request**, **Arrest activation** and **Arrest |** lines. Setup should say **entry=2 | infinite=true | natural exits=false**. An outdated helper component is rejected before playback.
 
-### Native confirmation
+### Resource loop
 
-The resource must load and contain a lying handcuff candidate. A native proof is armed for the exact actor, helper and request token immediately before playback. It refuses a pre-existing workspot, then requires a transition into **IsActorInWorkspot + active playback**, outside entry/exit.
+The authored `arrest_lying_loop.workspot` has a native Root → Output → WorkspotHub graph. Its root sequence and the inner lying sequence loop infinitely. A 30-second pause holds `lie_ground_0__2h_back_handcuffs_a__01` as the idle before repeating. There are no standing clips, exit nodes or custom transitions; natural exits and sequence time limits are disabled. The controller makes **one jump to entry ID 2**, which is distinct from serialized handle ID 6. It sends no play/advance signal and performs no periodic restart.
 
-The normal **PlayInDeviceCallbackEvent** is addressed to the private helper. A positive result from that exact recipient requires **0.75 s** of continuous native activation. If no result arrives, **1.5 s** continuous activation supplies the fallback. A negative result while pending cancels the arrest. Other helper IDs, duplicate results and stale requests are ignored. A positive result without settled activation cannot pay.
+Before use, the controller loads the functioning vanilla handcuff resource and copies its animation/rig and item/prop bindings into the **mod-owned resource only**, once per world. It retains the existing animation-setup hashes and all rig setups because those animation sets are unchanged. It does not copy the source's root, standing transitions, tags or status effect. No original game tree or cache entry is rewritten and no animation binary is bundled. See [asset source and API notes](assets/arrest/README.md).
 
-Both routes recheck duty/wanted state, life/eligibility, range, token and duplicate identity before the transaction. A void request alone cannot pay. Menus and oversized frame deltas cannot fast-forward registration. Functional-test callbacks and instance/device-user lookups are no longer required. There is no per-clip rendering verification in this version.
+The compiled tree proves the intended topology, not the motion rendered by a particular rig or whether game AI can force an exit. **The physical loop still needs an in-game test.**
 
-### Pose keeper and cleanup
+### Confirmed arrest behavior retained
 
-The initial working workspot request is retained. Re-selection starts only after registration, with at least one second between jumps. No shared workspot resource/tree, NPC health, defeated state or AI role is changed. Commands stop on lost/ending native activation, death, mounting, removed downed state, helper loss, duty end or scene departure over 60 m. Only private managed helpers are deleted; declined deletions are retried. No unverified StopInDevice is sent to ambient actors. Loading forgets stale handles. No AMM dependency, paired V animation or prisoner transport is added.
+The v0.7e registration, eligibility, activation proof, production-result receiver, persistent paid identities, **EUR$250** transaction and receipts are retained. The native system only adds the private loop path and advances its interface version. Securing takes two seconds; registration then requires **0.75 s** settled activation with a positive result from the exact helper, or **1.5 s** when no result arrives. A pending negative result vetoes registration. Void requests and wrong/stale/duplicate results cannot pay. This verifies native activation, not a rendered clip. Menu/hitch, life, duty/wanted, range and duplicate-identity guards remain.
 
-### Separate payments
+Arrests have their own ledger, count, reward and receipt queue. Scanner activity IDs, **EUR$1000** payouts, scanner bonus totals and scanner receipts are unchanged. Failed transactions do not mark the actor paid; receipts never award money. Paid identities survive a pose ending, shifts and saves containing that payment.
 
-Arrests retain their own persistent paid-identity ledger, **EUR$250** transaction, count and receipt queue. Scanner activity IDs, **EUR$1000** payouts, scanner bonus totals and scanner receipts are unchanged. Receipts never award money. Failed transactions do not mark a suspect paid; earned payment remains if the pose ends or normal engine cleanup removes the body.
-
-Dead/active/civilian/police/companion/boss/robot/mounted/quest-marked targets are excluded. Quest/evidence items can mark a body as quest-related; loot those normally first. Eligible empty-inventory bodies expose the arrest interaction. Normal body/loot choices return after registration or off duty. Moving away, death, mounting, wanted, duty end or loading cancels unfinished registration.
+Dead/active/civilian/police/companion/boss/robot/mounted/quest-marked bodies are excluded. Quest/evidence items can mark a body as quest-related; loot them normally first. Empty-inventory eligible bodies expose the action. Normal body/loot choices return after registration or off duty. Actor-state/playback loss, duty end or scene departure over 60 m releases private helpers, with deletion retries. Loading forgets old handles and clears the binding cache. No ambient NPC is deleted, healed, resurrected or assigned an AI role; no unverified StopInDevice is sent to it. No AMM dependency, paired V animation or prisoner transport is added.
 
 ### Validation and limits
 
-All **10 Lua modules** parse in LuaJIT. All **15 redscripts** compile with zero warnings/errors against source-derived API contracts, **not an actual game cache**. Tests run the actual native proof, controller, result receiver, interactions and payment code against mocked native boundaries. They cover absent debug data, stable native fallback, positive/negative/foreign/stale helper results, no-entry/transition states, timers/menus, eligibility/range/death/wanted, asynchronous resources, one-second command limits, cleanup/world loads and independent **1000/250** scanner/arrest payments.
+WolvenKit 9.1.1 compiles and round-trips both authored resources. Checks verify the PC graph, entry IDs, infinite sequences, absence of natural exits/transitions and exact packed/extracted bytes. All **10 Lua modules** parse. All **15 redscripts** compile with zero warnings/errors against source-derived API contracts, **not an actual game cache**.
 
-These checks do not emulate native event dispatch, rendered animation, AI, physics or native save loading. The receipt and physical hold still need an in-game test. [Asset/API research](assets/arrest/README.md) and [portable checks](tests/arrests/README.md) are available. The archive, partner revival/boarding/backup, scanner monitoring, dispatch, radio and main/support scripts are unchanged. Requirements remain game 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript.
+The [portable checks](tests/arrests/README.md) consume the actual loop JSON and execute authored activation/controller/result/interaction/payment code with native APIs mocked. They cover one entry-ID jump without replay signals, source/private resource readiness, rig/setup copying without editing native source data, invalid/missing loop rejection, unchanged registration, independent **1000/250** scanner/arrest payments, menus/range/life/wanted and cleanup/world loads. Real metadata initialization, native event dispatch, rendering, AI, physics and native save loading are not emulated.
+
+Partner revive/boarding/backup, scanner monitoring, dispatch, radio and main/support scripts are unchanged. Requirements remain game 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript.
 
 ### Rollback
 
-Earlier full ZIPs remain in [releases](releases). To return to **v0.7d**, exit the game, remove **r6/scripts/NCPDPatrol/NCPDPatrolArrestEvents.reds**, then reinstall its complete ZIP. Returning to **v0.7c** also requires removing **NCPDPatrolArrestPlayback.reds**. See the included README for removing arrests entirely when returning to v0.6e.
+Exit the game and reinstall the complete [v0.7e ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7e_Arrest_Native_Activation_TEST.zip), **including its original archive**. v0.7f adds no new install-file paths. Earlier complete ZIPs remain in [releases](releases).
 
-Archive SHA-256: `5ecca81515cc13b9bab30a94c329919f848bc1b055668ce3eb7112d52e0a1868`
+Archive SHA-256: `5a6f34aaa942f0259824528764e0e61c102ae70e4efa1750509ba8249553de28`

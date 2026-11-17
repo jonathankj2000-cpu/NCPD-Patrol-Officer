@@ -17,9 +17,10 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolArrestSystem") as NCPDPatrolArrestSystem;
     }
 
-    public func Version() -> Int32 { return 4; }
+    public func Version() -> Int32 { return 5; }
     public func Reward() -> Int32 { return 250; }
     public func GetHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\arrest_workspot.ent"; }
+    public func GetLoopResource() -> ResRef { return r"base\\ncpd_patrol\\arrest_lying_loop.workspot"; }
     public func GetWorkspotResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot"; }
     public func AnimationName(name: CName) -> String { return NameToString(name); }
     private func OnAttach() -> Void { this.ForgetWorld(); }

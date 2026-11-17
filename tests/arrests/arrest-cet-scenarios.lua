@@ -8,8 +8,9 @@ local deleted,played,jumps,signals,results={},{},{},{},{}
 local failDeletes=0
 local resultMode,entryMode='none','active'
 local bankReady,resourceAvailable,treeAvailable,missingComponent=true,true,true,false
+local loopAvailable,loopReady=true,true
 local loadFailure,rejectToken=false,false
-local tokens,loadCount={},0
+local tokens,loopTokens,loadCount={},{},0
 local dynamic={IsReady=function() return true end}
 function dynamic:CreateEntity(spec)
  assert(spec.recordID==nil and spec.templatePath=='base\\ncpd_patrol\\arrest_workspot.ent')
@@ -18,7 +19,7 @@ function dynamic:CreateEntity(spec)
  local helper=supportActor(nextID,'private helper',spec.position.x,spec.position.y,spec.position.z)
  function helper:FindComponentByType(kind)
   assert(kind=='workWorkspotResourceComponent')
-  if not missingComponent then return {name='NCPDPatrolArrestPC'} end
+  if not missingComponent then return {name='NCPDPatrolArrestLoop'} end
  end
  function helper:OnPlayInDeviceCallbackEvent(event) return ResultReceiver.OnPlayInDeviceCallbackEvent(self,event) end
  helpers[nextID]=helper;managed[nextID]=true
@@ -43,34 +44,47 @@ function ws:GetWorkspotInstance(id) error('legacy instance lookup must not be re
 function ws:SendDebugCommandFunctionalTests(...) error('functional-test callback registration must not be required') end
 function ws:StopInDevice(...) error('unverified ambient actor stop attempted') end
 function ws:PlayInDeviceSimple(helper,npc,free,actorComp,deviceComp,sync,slideTime,behaviour,recipient)
- assert(not free and actorComp=='NCPDPatrolArrestPC' and slideTime==0 and behaviour==0 and recipient==helper)
+ assert(not free and actorComp=='NCPDPatrolArrestLoop' and slideTime==0 and behaviour==0 and recipient==helper)
  played[#played+1]={helper=helper,npc=npc,time=clock};bound[helper.id.hash]=npc
  inWS[npc.id.hash]=entryMode~='none'
  flags[npc.id.hash]={isActive=entryMode=='active' or entryMode=='exiting',entering=entryMode=='entering',exiting=entryMode=='exiting'}
  if resultMode~='none' then results[#results+1]={helper=helper,success=resultMode=='success'} end
 end
-function ws:SendJumpToAnimEnt(npc,clip,instant)
- assert(instant==true and clip=='lie_ground_0__2h_back_handcuffs_a__01')
- jumps[#jumps+1]={npc=npc,time=clock}
+function ws:SendJumpToAnimEnt(...) error('idle names must not be used as leaf animation jumps') end
+function ws:SendJumpCommandEnt(npc,entry,instant)
+ assert(instant==true and entry==2)
+ jumps[#jumps+1]={npc=npc,time=clock,entry=entry}
 end
-function ws:SendPlaySignal(npc) signals[#signals+1]=npc end
-local depot={ArchiveExists=function() return true end,ResourceExists=function() return resourceAvailable end}
+function ws:SendPlaySignal(...) error('do not advance the infinite loop with a play signal') end
+local SourceTree={rootEntry={idleAnim='lie_ground_0__2h_back_handcuffs_a__01',list={
+ {animName='lie_ground_0__2h_back_handcuffs_a__01__shuffle__01'},
+ {animName='lie_ground_0__2h_back_handcuffs_a__01__to__stand__01'}
+}},finalAnimsets={
+ {rig='native male rig',animations={hash='source-male-hash'},loadingHandles={'native male animations'}},
+ {rig='native female rig',animations={hash='source-female-hash'},loadingHandles={'native female animations'}}},
+ initialCanUseExits=true,statusEffectID='native status must not be copied',tags={'native tag'},
+ customTransitionAnims={'native standing transition'},globalProps={'native cuffs'},initialActions={'native item action'},
+ itemsPolicy=7,propsPlaySyncAnim=false,workspotRig='native rig'}
+local PrivateResource={workspotTree=PrivateLoopTree}
+local depot={ArchiveExists=function() return true end,ResourceExists=function(_,path)
+ return resourceAvailable and (path~='base\\ncpd_patrol\\arrest_lying_loop.workspot' or loopAvailable)
+end}
 function depot:LoadResource(path)
- assert(path=='base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot')
+ local isLoop=path=='base\\ncpd_patrol\\arrest_lying_loop.workspot'
+ assert(isLoop or path=='base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot')
  loadCount=loadCount+1;if rejectToken then return nil end
- local token={loaded=bankReady,finished=bankReady or loadFailure,failed=loadFailure}
+ local ready=(isLoop and loopReady) or (not isLoop and bankReady)
+ local token={loaded=ready,finished=ready or (not isLoop and loadFailure),failed=not isLoop and loadFailure}
  function token:IsLoaded() return self.loaded end
  function token:IsFinished() return self.finished end
  function token:IsFailed() return self.failed end
  function token:GetResource()
   assert(self.loaded,'read before asynchronous load completed')
+  if isLoop then return PrivateResource end
   if not treeAvailable then return {} end
-  return {workspotTree={rootEntry={idleAnim='lie_ground_0__2h_back_handcuffs_a__01',list={
-   {animName='lie_ground_0__2h_back_handcuffs_a__01__shuffle__01'},
-   {animName='lie_ground_0__2h_back_handcuffs_a__01__to__stand__01'}
-  }}}}
+  return {workspotTree=SourceTree}
  end
- tokens[#tokens+1]=token;return token
+ if isLoop then loopTokens[#loopTokens+1]=token else tokens[#tokens+1]=token end;return token
 end
 ResourceHelper=setmetatable({},{__index=function() error('ResourceHelper cannot load the async component field') end})
 CName={new=function(v)return v end};DynamicEntitySpec={new=function()return {} end};WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
@@ -116,7 +130,11 @@ for _,request in ipairs(jumps) do
   previous=request.time;requests=requests+1
  end
 end
-assert(requests>=15 and #signals==1,'paid pose was not maintained or play signals were repeated')
+assert(requests==1 and #signals==0,'native infinite loop was repeatedly jumped or advanced')
+assert(PrivateLoopTree.rootEntry.list[1].loopInfinitely and not PrivateLoopTree.initialCanUseExits)
+assert(#PrivateLoopTree.finalAnimsets==2 and PrivateLoopTree.finalAnimsets[1].animations.hash=='source-male-hash')
+assert(SourceTree.initialCanUseExits and SourceTree.statusEffectID=='native status must not be copied' and SourceTree.customTransitionAnims[1]=='native standing transition')
+assert(PrivateLoopTree.statusEffectID==0 and PrivateLoopTree.tags[1]=='NCPDPatrolArrestLoop' and #PrivateLoopTree.customTransitionAnims==0,'source behavior leaked into private loop')
 assert(receiptMessages[#receiptMessages].message=='NCPD ARREST REGISTERED | +EUR$250')
 -- A production success belongs to one private recipient; it still requires
 -- native activation. Duplicate and late result events cannot award money.
@@ -204,7 +222,7 @@ for case=1,6 do
  assert(wallet==bank and #played==before and ArrestNative:GetStage()==0,'invalid resource played or paid')
  resourceAvailable,missingComponent,treeAvailable,bankReady,loadFailure,rejectToken=true,false,true,true,false,false
 end
--- A paid body's revival or entry into an exit stops pose commands, preserving
+-- A paid body's revival or entry into an exit releases the helper, preserving
 -- the reward. The keeper cannot restore life state or re-enter a finished spot.
 for case=1,2 do
  local npc=arrestSuspect(1140+case);local h=secure(npc);step(6)
@@ -223,6 +241,28 @@ assert(#deleted==deletedBefore and wallet==bank and ArrestNative:GetPaidArrests(
 local fresh=arrestSuspect(1151);local freshHelper=secure(fresh)
 assert(not oldHelper:OnPlayInDeviceCallbackEvent({wasPlayInDeviceSuccessful=false}))
 step(6);assert(wallet==bank+250 and ArrestNative:IsArrested(fresh))
+releasePaid()
+-- The private loop is an independent required asset. Missing or pending loop
+-- data cannot fall back to the vanilla tree with its standing transitions.
+Module.reset();loopAvailable=false
+local noLoop=arrestSuspect(1160);bank=wallet;before=#played
+assert(ArrestNative:StartArrest(noLoop));step(12)
+assert(wallet==bank and #played==before);loopAvailable=true
+Module.reset();loopReady=false
+local slowLoop=arrestSuspect(1161);bank=wallet;before=#played
+secure(slowLoop);local loopToken=loopTokens[#loopTokens];local loadsBefore=loadCount
+step(4);assert(wallet==bank and #played==before and loadCount==loadsBefore)
+loopToken.loaded=true;loopToken.finished=true;loopReady=true;step(8)
+assert(wallet==bank+250 and ArrestNative:IsArrested(slowLoop));releasePaid()
+-- Guard malformed loop topology and unreadable source bindings before playback.
+for case=1,2 do
+ Module.reset();bank=wallet;before=#played
+ local originalBindings=SourceTree.finalAnimsets
+ if case==1 then PrivateLoopTree.initialCanUseExits=true else SourceTree.finalAnimsets={} end
+ local npc=arrestSuspect(1161+case);secure(npc);step(20)
+ assert(wallet==bank and #played==before and not ArrestNative:IsArrested(npc))
+ PrivateLoopTree.initialCanUseExits=false;SourceTree.finalAnimsets=originalBindings
+end
 -- Duty end releases private helpers without undoing already-paid identities.
 bank=wallet;count=ArrestNative:GetPaidArrests()
 Patrol:FinishShift();Module.finish();step(4)

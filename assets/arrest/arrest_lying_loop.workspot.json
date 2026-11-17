@@ -1,0 +1,164 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "workWorkspotResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "nodesToInit": [
+        {
+          "HandleId": "0",
+          "Data": {
+            "$type": "animAnimNode_Root",
+            "id": 4294967295,
+            "nodes": [
+              {
+                "HandleId": "1",
+                "Data": {
+                  "$type": "animAnimNode_Output",
+                  "id": 4294967295,
+                  "node": {
+                    "$type": "animPoseLink",
+                    "node": {
+                      "HandleId": "2",
+                      "Data": {
+                        "$type": "animAnimNode_WorkspotHub",
+                        "id": 4294967295,
+                        "eventFilterType": "Default"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "HandleRefId": "1"
+        },
+        {
+          "HandleRefId": "2"
+        }
+      ],
+      "variables": {
+        "HandleId": "3",
+        "Data": {
+          "$type": "animAnimVariableContainer"
+        }
+      },
+      "animFeatures": [
+        {
+          "$type": "animAnimFeatureEntry",
+          "name": {
+            "$type": "CName",
+            "$storage": "string",
+            "$value": "UpdateWorkspot"
+          },
+          "className": {
+            "$type": "CName",
+            "$storage": "string",
+            "$value": "animAnimFeatureUpdateWorkspot"
+          }
+        }
+      ],
+      "workspotTree": {
+        "HandleId": "4",
+        "Data": {
+          "$type": "workWorkspotTree",
+          "animGraphSlotName": {
+            "$type": "CName",
+            "$storage": "string",
+            "$value": "WORKSPOT"
+          },
+          "rootEntry": {
+            "HandleId": "5",
+            "Data": {
+              "$type": "workSequence",
+              "id": {
+                "$type": "workWorkEntryId",
+                "id": 1
+              },
+              "flags": 0,
+              "category": "Any",
+              "idleAnim": {
+                "$type": "CName",
+                "$storage": "string",
+                "$value": "None"
+              },
+              "disableAutoTransition": 1,
+              "loopInfinitely": 1,
+              "previousLoopInfinitely": 0,
+              "list": [
+                {
+                  "HandleId": "6",
+                  "Data": {
+                    "$type": "workSequence",
+                    "id": {
+                      "$type": "workWorkEntryId",
+                      "id": 2
+                    },
+                    "flags": 0,
+                    "category": "Any",
+                    "idleAnim": {
+                      "$type": "CName",
+                      "$storage": "string",
+                      "$value": "lie_ground_0__2h_back_handcuffs_a__01"
+                    },
+                    "disableAutoTransition": 1,
+                    "loopInfinitely": 1,
+                    "previousLoopInfinitely": 0,
+                    "list": [
+                      {
+                        "HandleId": "7",
+                        "Data": {
+                          "$type": "workPauseClip",
+                          "id": {
+                            "$type": "workWorkEntryId",
+                            "id": 3
+                          },
+                          "flags": 32,
+                          "timeMin": 30.0,
+                          "timeMax": 30.0,
+                          "blendOutTime": 0.2
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "idCounter": 3,
+          "initialCanUseExits": 0,
+          "useTimeLimitForSequences": 0,
+          "frezeAtTheLastFrame_UseWithCaution": 0,
+          "customTransitionAnims": [],
+          "finalAnimsets": [],
+          "globalProps": [],
+          "initialActions": [],
+          "tags": {
+            "$type": "redTagList",
+            "tags": [
+              {
+                "$type": "CName",
+                "$storage": "string",
+                "$value": "NCPDPatrolArrestLoop"
+              }
+            ]
+          },
+          "autoTransitionBlendTime": 0.2
+        }
+      },
+      "rootNode": {
+        "HandleRefId": "0"
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

@@ -38,7 +38,7 @@
               "name": {
                 "$type": "CName",
                 "$storage": "string",
-                "$value": "NCPDPatrolArrestPC"
+                "$value": "NCPDPatrolArrestLoop"
               },
               "localTransform": {
                 "$type": "WorldTransform",
@@ -69,7 +69,7 @@
                 "DepotPath": {
                   "$type": "ResourcePath",
                   "$storage": "string",
-                  "$value": "base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot"
+                  "$value": "base\\ncpd_patrol\\arrest_lying_loop.workspot"
                 },
                 "Flags": "Default"
               }
@@ -93,7 +93,7 @@
           "name": {
             "$type": "CName",
             "$storage": "string",
-            "$value": "NCPDPatrolArrestPC"
+            "$value": "NCPDPatrolArrestLoop"
           },
           "localTransform": {
             "$type": "WorldTransform",
@@ -124,7 +124,7 @@
             "DepotPath": {
               "$type": "ResourcePath",
               "$storage": "string",
-              "$value": "base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot"
+              "$value": "base\\ncpd_patrol\\arrest_lying_loop.workspot"
             },
             "Flags": "Default"
           }
