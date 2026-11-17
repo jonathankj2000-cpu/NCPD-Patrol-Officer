@@ -15,17 +15,24 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
     private let m_claimButton: wref<inkCanvas>;
     private let m_refreshButton: wref<inkCanvas>;
     private let m_revision: Int32;
+    private let m_state: ref<NCPDPatrolCareerBrowserState>;
 
     public func Init(logic: ref<BrowserGameController>) -> Void {
         super.Init(logic);
-        this.m_owner = logic.GetPlayerControlledObject();
+        this.m_owner = this.m_deviceObject;
         this.m_siteData.address = "NETdir://ncpd.career";
         this.m_siteData.shortName = "NCPD Career";
-        // BEF's homepage name is a link. No fabricated vanilla icon resource.
+        // Keep BEF's valid default icon until a dedicated icon is authored.
         this.m_revision = 0;
+        if IsDefined(this.m_owner) {
+            this.m_state = NCPDPatrolCareerBrowserState.Get(this.m_owner.GetGame());
+            if IsDefined(this.m_state) { this.m_state.ReportBrowser(logic); };
+        };
     }
     public func Uninit() -> Void {
         this.ReleasePageCallbacks();
+        if IsDefined(this.m_state) { this.m_state.ReportClosed(); };
+        this.m_state = null;
         this.m_owner = null;
         super.Uninit();
     }
@@ -86,7 +93,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
     private func RefreshPage() -> Void {
         if !IsDefined(this.m_owner) || !this.m_owner.IsAttached() { return; };
         this.m_revision += 1;
-        this.LoadPageByAddress(s"NETdir://ncpd.career/record?revision=\(this.m_revision)");
+        this.m_deviceLogicController.LoadPageByAddress(s"NETdir://ncpd.career/record?revision=\(this.m_revision)");
     }
     protected cb func OnClaimReleased(event: ref<inkPointerEvent>) -> Bool {
         let career: ref<NCPDPatrolCareerSystem>;
@@ -130,6 +137,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         let promotion: String;
         let reward: String;
         let status: String;
+        if IsDefined(this.m_state) { this.m_state.ReportPage(address); };
         this.ReleasePageCallbacks();
         root.SetName(n"NCPDPatrolCareerPage");
         root.SetSize(1600.0, 1000.0);
@@ -211,13 +219,29 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
 private let m_ncpdPatrolCareerSite: ref<NCPDPatrolCareerSiteListener>;
 
 @if(ModuleExists("BrowserExtension.System"))
+@addMethod(BrowserGameController)
+public func NCPDPatrolEnsureCareerSite() -> Void {
+    if IsDefined(this.m_ncpdPatrolCareerSite) { return; };
+    this.m_ncpdPatrolCareerSite = new NCPDPatrolCareerSiteListener();
+    this.m_ncpdPatrolCareerSite.Init(this);
+}
+
+@if(ModuleExists("BrowserExtension.System"))
 @wrapMethod(BrowserGameController)
 protected cb func OnInitialize() -> Bool {
     let result: Bool = wrappedMethod();
-    if IsDefined(this.m_ncpdPatrolCareerSite) { this.m_ncpdPatrolCareerSite.Uninit(); };
-    this.m_ncpdPatrolCareerSite = new NCPDPatrolCareerSiteListener();
-    this.m_ncpdPatrolCareerSite.Init(this);
+    this.NCPDPatrolEnsureCareerSite();
     return result;
+}
+
+// The native game controller calls SetWebsiteData before loading homepage data.
+// Register here too, before BEF composes the custom slots, without depending on
+// which mod's OnInitialize wrapper is outermost.
+@if(ModuleExists("BrowserExtension.System"))
+@wrapMethod(BrowserController)
+public final func SetWebsiteData() -> Void {
+    if IsDefined(this.m_gameController) { this.m_gameController.NCPDPatrolEnsureCareerSite(); };
+    wrappedMethod();
 }
 
 @if(ModuleExists("BrowserExtension.System"))

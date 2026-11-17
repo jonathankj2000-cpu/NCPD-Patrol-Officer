@@ -1,8 +1,12 @@
 # NCPD Patrol
 
-## v0.10a: NCPD Career computer page
+## v0.10b: career browser registration and navigation fix
 
-[Download the complete v0.10a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.10a_Career_Browser_TEST.zip)
+[Download the complete v0.10b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.10b_Career_Browser_Registration_FIX.zip)
+
+Corrects a real v0.10a API error: `LoadPageByAddress` belongs to `BrowserGameController`, not `BrowserEventsListener`. Refresh/claim now navigate through the controller. Registration is idempotent and is also ensured before the native browser loads website data. The listener uses BEF's actual computer device context.
+
+If the homepage entry is missing, keep that computer's Net browser open, open CET and use **Log career browser diagnostics**. The output reports the compiled BEF module, runtime enabled/bypass/blocked state, browser hooks, per-device registration and page requests. **Open NCPD Career (computer browser)** tests direct navigation on that same computer without changing BEF settings.
 
 Adds an **NCPD Career** page to the in-game computer browser through [Browser Extension Framework](https://www.nexusmods.com/cyberpunk2077/mods/10038). The page shows your rank, progress toward the next promotion, the next milestone reward, and recorded scanner, dispatch and arrest totals.
 
@@ -26,7 +30,7 @@ Dispatch and arrest totals are shown separately. They do not grant additional ca
 
 ### Install and test
 
-1. Exit the game, extract the **entire ZIP** into the game directory and replace files. Restart; CET announces **v0.10a**.
+1. Exit the game, extract the **entire ZIP** into the game directory and replace files. Restart; CET announces **v0.10b**.
 2. Install **Browser Extension 0.9.7**, its main framework package, to enable the page. Open a browser-capable computer, such as the one in V's apartment, go to **NETdir://ncity.pub** and select **NCPD Career**. The site address is **NETdir://ncpd.career**.
 3. Check your rank, progress and next reward. Use **Refresh record** to reload the snapshot. If you already have recorded milestones, claim one and check the separate receipt. Reopening the site or loading the same updated save must keep that reward claimed.
 4. **Cop Stats** at the vehicle trunk also shows the real career summary and points to the computer page.
@@ -35,10 +39,10 @@ Browser Extension is optional for the rest of NCPD Patrol. Conditional imports/h
 
 ### Validation and limits
 
-[Career checks](tests/career/README.md) execute authored rank/reward logic, actual page rendering decisions, real click handlers and browser lifecycle hooks through the shared syntax adapter. Native game/widget calls and BEF entry points are mocked. Tests cover progression boundaries, existing save records, claim failure/retry, six once-only rewards, save restore, stale contexts, refreshing and callback/registration cleanup without removing other sites. Existing arrest/trunk/dispatch regressions also pass.
+[Career checks](tests/career/README.md) execute authored rank/reward logic, actual page rendering decisions, real click handlers and browser lifecycle hooks through the shared syntax adapter. Native game/widget calls are mocked. Tests execute the pinned BEF base Init/Uninit and actual Register/Unregister/GetSitesData/GetWebPage methods, including their per-device filtering. Tests cover progression boundaries, existing save records, claim failure/retry, six once-only rewards, save restore, stale contexts, refreshing and callback/registration cleanup without removing other sites. Existing arrest/trunk/dispatch regressions also pass.
 
-All **21 redscript files** pass source-derived API/BEF shape-contract checks with and without the optional framework, with zero warnings/errors. This is not compilation against an actual game cache or the installed BEF runtime. The career page's physical layout, framework registration and input, and real in-game money/receipt display still need a game test.
+All **22 redscript files** pass source-derived API checks with and without BEF, including the actual pinned BEF base class, with zero warnings/errors. The old v0.10a listener navigation call is rejected by the corrected check. This is not compilation against an actual game cache or the user's installed BEF runtime. The career page's physical layout, framework registration and input, and real in-game money/receipt display still need a game test.
 
-The full **42-file ZIP** is checked byte-for-byte. Existing arrest/dispatch archives and scanner/dispatch payment logic are preserved. Only a career-receipt entry point is added to the core, and trunk changes are limited to Cop Stats. Main/support interface **17**, arrest **5**, trunk **2**, journal **2**; career is **1**.
+The full **43-file ZIP** is checked byte-for-byte. Existing arrest/dispatch archives and scanner/dispatch payment logic are preserved. Only a career-receipt entry point is added to the core, and trunk changes are limited to Cop Stats. Main/support interface **17**, arrest **5**, trunk **2**, journal **2**; career is **1**.
 
 [Full instructions](README.txt) · [Previous v0.9b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.9b_Dispatch_Briefings_Rewards_TEST.zip) · [Earlier packages](releases)

@@ -60,17 +60,44 @@ assert(f:Text(host.page):find('REWARD PAID',1,true) and not f:Click(claim),'stal
 assert(f:Click(site.m_claimButton) and wallet==1000,'same milestone paid again')
 assert(f.loads[1]~=f.loads[2],'refresh address did not change')
 
--- Repeated browser initialization removes our old registration without touching others.
-oldClaim=site.m_claimButton;assert(host:OnInitialize());assert(not f.registration[site])
-assert(not oldClaim.callbacks.OnRelease and f.registration[external])
+-- Initialization is idempotent, and the same listener is present before BEF
+-- composes a homepage. Registry lookup must match the computer, not the player.
+local sites=host:GetCustomSites()
+assert(sites.n==1 and sites[0].address=='NETdir://ncpd.career' and sites[0].shortName=='NCPD Career')
+assert(FrameworkSystem:GetSitesData(GetPlayer()).n==0,'registered against the player instead of the computer')
+oldClaim=site.m_claimButton;assert(host:OnInitialize());assert(f.registration[site] and host:GetCustomSites().n==1)
+local spawn=setmetatable({m_gameController=host},{__index=PageSpawnPrototype})
+spawn:SetWebsiteData();assert(host:GetCustomSites().n==1)
+assert(BrowserState:GetDiagnostics():find('career registered=true',1,true))
+assert(f.registration[external])
 local replacement=host.m_ncpdPatrolCareerSite;host.page=replacement:GetWebPage('NETdir://ncpd.career')
 oldClaim=replacement.m_claimButton;assert(host:OnUninitialize())
 assert(not oldClaim.callbacks.OnRelease and not f.registration[replacement] and f.registration[external])
+local foreign={GetDevice=function() return host.device end,GetSiteData=function() return {address='NETdir://other.site',shortName='Other site'} end}
+FrameworkSystem:Register(foreign)
+assert(host:GetCustomSites().n==1 and host:GetCustomSites()[0].address=='NETdir://other.site')
+host:OnInitialize();assert(host:GetCustomSites().n==2);host:OnUninitialize()
+assert(host:GetCustomSites().n==1 and host:GetCustomSites()[0].address=='NETdir://other.site','other site registration was removed')
 assert(not replacement:OnClaimReleased({IsAction=function() return true end}) and wallet==1000)
 
 -- Native context becomes stale while changing worlds; reading or clicking cannot pay.
 f:Reset(20);host=f:Host();host:OnInitialize();site=host.m_ncpdPatrolCareerSite
-host.page=site:GetWebPage('NETdir://ncpd.career');GetPlayer().attached=false
+host.page=site:GetWebPage('NETdir://ncpd.career');GetPlayer().attached=false;host.device.attached=false
 assert(not f:Click(site.m_claimButton) and wallet==0)
 host.page=site:GetWebPage('NETdir://ncpd.career');assert(not IsDefined(site.m_claimButton))
 assert(not f:Text(host.page):find('ON-DUTY ACTIVITIES',1,true))
+
+-- A page-spawn callback can initialize registration even when it precedes our
+-- normal initialization hook. Other devices cannot use this site's listener.
+f:Reset(15);host=f:Host();spawn=setmetatable({m_gameController=host},{__index=PageSpawnPrototype})
+assert(host:GetCustomSites().n==0);spawn:SetWebsiteData();assert(host:GetCustomSites().n==1)
+assert(FrameworkSystem:GetWebPage('NETdir://ncpd.career',{})==nil)
+assert(BrowserState:OpenCareer() and host.page and wallet==0)
+assert(BrowserState:GetDiagnostics():find('page requests=1',1,true))
+f.befEnabled=false;assert(not BrowserState:OpenCareer())
+assert(BrowserState:GetDiagnostics():find('enabled=false',1,true));f.befEnabled=true
+f.befBypass=true;assert(not BrowserState:OpenCareer());f.befBypass=false
+ArrayPush(FrameworkSystem.m_blockedAddress,'NETdir://ncpd.career')
+assert(not BrowserState:OpenCareer() and BrowserState:GetDiagnostics():find('address blocked=true',1,true))
+ArrayClear(FrameworkSystem.m_blockedAddress);host:OnUninitialize()
+assert(not BrowserState:OpenCareer() and host:GetCustomSites().n==0)

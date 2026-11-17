@@ -9,6 +9,7 @@ ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else HERE.parents[1]
 sys.path.insert(0,str(HERE.parent/'arrests'))
 from translate import translate
 from lupa.luajit21 import LuaRuntime
+from bef_reference import sources
 NATIVE=ROOT/'r6/scripts/NCPDPatrol'
 lua=LuaRuntime(unpack_returned_tuples=True)
 lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
@@ -25,6 +26,26 @@ def extract(source,pattern):
 source=(NATIVE/'NCPDPatrolCareerBrowser.reds').read_text()
 with tempfile.TemporaryDirectory(prefix='ncpd-career-page-') as scratch:
  p=Path(scratch)/'Listener.reds'
+ refs=sources()
+ base=extract(refs['BrowserExtension.Classes.reds'],r'public class BrowserEventsListener\b')
+ base=base.replace('protected let','private let').replace('new inkCanvas()','NativeWidget("inkCanvas")')
+ p.write_text(base);lua.globals().FrameworkBase=lua.execute(translate(p))
+ methods=[]
+ for name in ['Register','Unregister','GetSitesData','GetWebPage','IsAddressBlocked']:
+  method=extract(refs['BrowserExtension.System.reds'],r'public (?:final )?func '+name+r'\(')
+  method=method.replace('for listener in this.m_listeners {','let referenceIndex: Int32 = 0; while referenceIndex < ArraySize(this.m_listeners) { let listener: ref<BrowserEventsListener> = this.m_listeners[referenceIndex]; referenceIndex += 1;')
+  methods.append(method)
+ p.write_text('public class FrameworkSystem extends IScriptable {\nprivate let m_listeners: array<ref<IScriptable>>;\nprivate let m_blockedAddress: array<String>;\n'+'\n'.join(methods)+'\n}')
+ lua.globals().FrameworkSystem=lua.execute(translate(p))
+ state=(NATIVE/'NCPDPatrolCareerBrowserState.reds').read_text()
+ # Select the installed-module branch, as redscript's compiler does. Production
+ # still gets a separate native compile with the module absent.
+ for name in ['CheckRegistry','FrameworkStatus','OpenCareer']:
+  pattern=r'@if\(!ModuleExists\("BrowserExtension.System"\)\)\s+(?:private|public) func '+name+r'\('
+  fragment=extract(state,pattern);state=state.replace(fragment,'')
+ state=re.sub(r'(?m)^[ \t]*@if\(ModuleExists\("BrowserExtension.System"\)\)\s*\n','',state)
+ p.write_text(extract(state,r'public class NCPDPatrolCareerBrowserState\b'))
+ lua.globals().BrowserState=lua.execute(translate(p))
  listener=extract(source,r'public class NCPDPatrolCareerSiteListener\b')
  # Only constructor/base-runtime boundaries are replaced. Rendering decisions,
  # exact widget text, event guards and reward calls are authored production code.
@@ -33,13 +54,17 @@ with tempfile.TemporaryDirectory(prefix='ncpd-career-page-') as scratch:
  for kind in ['inkText','inkCanvas','inkRectangle','inkVerticalPanel','inkHorizontalPanel']:
   listener=listener.replace('new '+kind+'()',f'NativeWidget("{kind}")')
  p.write_text(listener);lua.globals().ListenerPrototype=lua.execute(translate(p))
- hooks=extract(source,r'protected cb func OnInitialize\(')+'\n'+extract(source,r'protected cb func OnUninitialize\(')
+ hooks=extract(source,r'public func NCPDPatrolEnsureCareerSite\(')+'\n'+extract(source,r'protected cb func OnInitialize\(')+'\n'+extract(source,r'protected cb func OnUninitialize\(')
  hooks=hooks.replace('new NCPDPatrolCareerSiteListener()','NativeListener()')
  p.write_text('public class BrowserHookFixture extends IScriptable {\n'+hooks+'\n}')
  lua.globals().HookPrototype=lua.execute(translate(p))
+ p.write_text('public class PageSpawnFixture extends IScriptable {\n'+extract(source,r'public final func SetWebsiteData\(')+'\n}')
+ lua.globals().PageSpawnPrototype=lua.execute(translate(p))
 lua.execute((HERE/'native-mocks.lua').read_text())
 lua.execute((HERE/'scenarios.lua').read_text())
-assert source.count('@if(ModuleExists("BrowserExtension.System"))')==7
+assert source.count('@if(ModuleExists("BrowserExtension.System"))')==9
+assert 'this.LoadPageByAddress(' not in source
+assert 'this.m_deviceLogicController.LoadPageByAddress(' in source
 assert 'GetWebPage(address: String)' in source and 'ClaimNextReward()' in source
 assert 'CreateScriptedQuest' not in source
-print('PASS: authored career model/browser: ranks/progress/milestones, existing scanner ledger, independent stats and once-only service payments; native UI render text, real claim/refresh callbacks, registration/cleanup and stale-world guards (native/BEF boundaries mocked)')
+print('PASS: career/page logic with actual pinned BEF base Init/Uninit, Register/Unregister, per-device GetSitesData/GetWebPage; controller navigation, pre-homepage registration, diagnostics, callbacks and once-only rewards (native boundaries mocked)')

@@ -10,6 +10,8 @@ function Core:GetGameInstance() return {} end
 function Dispatch:GetGameInstance() return {} end
 function Arrests:GetGameInstance() return {} end
 function Career:GetGameInstance() return {} end
+function BrowserState:GetGameInstance() return {} end
+NCPDPatrolCareerBrowserState={Get=function() return BrowserState end}
 function Core:NotifyCareerReward(amount,threshold) CareerFixture.notices[#CareerFixture.notices+1]={amount=amount,threshold=threshold} end
 NCPDPatrolSystem={Get=function() return Core end}
 NCPDPatrolDispatchJournalSystem={Get=function() return Dispatch end}
@@ -22,6 +24,11 @@ GameInstance.GetScriptableSystemsContainer=function()
  end}
 end
 function IsDefined(v) return v~=nil and v~=0 end
+function StrBeginsWith(s,prefix) return s:sub(1,#prefix)==prefix end
+function ArrayRemove(a,v) for i=0,a.n-1 do if a[i]==v then ArrayErase(a,i);return end end end
+BrowserExtensionSystem={GetInstance=function() return FrameworkSystem end}
+function FrameworkSystem:IsEnabled() return CareerFixture.befEnabled~=false end
+function FrameworkSystem:ShouldBypassBrowserExtension() return CareerFixture.befBypass==true end
 
 function CareerFixture:SetCount(n) Core.m_paidActivities={n=n} end
 function CareerFixture:Reset(n)
@@ -32,6 +39,8 @@ function CareerFixture:Reset(n)
  Career.m_claimedMilestones={n=0};Career:OnAttach()
  Dispatch.m_paidDispatches={n=3};Dispatch.m_pendingDispatchRewards={n=1}
  Arrests.m_paidSuspects={n=7}
+ FrameworkSystem.m_listeners={n=0};FrameworkSystem.m_blockedAddress={n=0}
+ BrowserState:OnAttach();self.befEnabled=true;self.befBypass=false
 end
 function NativeColor() return {Red=0,Green=0,Blue=0,Alpha=0} end
 inkEAnchor={Fill='fill',Centered='center'}
@@ -60,17 +69,26 @@ function NativeWidget(kind)
  return w
 end
 function NativeBrowserInit(listener,host)
- listener.m_siteData={};listener.host=host;CareerFixture.registration[listener]=true
+ listener.m_siteData={};listener.host=host
+ FrameworkBase.Init(listener,host)
+ CareerFixture.registration[listener]=true
 end
-function NativeBrowserUninit(listener) CareerFixture.registration[listener]=nil end
-function ListenerPrototype:LoadPageByAddress(address)
- CareerFixture.loads[#CareerFixture.loads+1]=address
- self.host.page=self:GetWebPage(address)
+function NativeBrowserUninit(listener)
+ FrameworkBase.Uninit(listener)
+ CareerFixture.registration[listener]=nil
 end
+setmetatable(ListenerPrototype,{__index=FrameworkBase})
 function NativeListener() return setmetatable({}, {__index=ListenerPrototype}) end
 function wrappedMethod() CareerFixture.hostCalls=CareerFixture.hostCalls+1;return true end
 function CareerFixture:Host()
- return setmetatable({GetPlayerControlledObject=function() return player end}, {__index=HookPrototype})
+ local device={attached=true,GetGame=function() return {} end,IsAttached=function(self) return self.attached end}
+ local host={device=device,GetPlayerControlledObject=function() return player end,GetOwnerEntity=function() return device end}
+ function host:GetCustomSites() return FrameworkSystem:GetSitesData(self.device) end
+ function host:LoadPageByAddress(address)
+  CareerFixture.loads[#CareerFixture.loads+1]=address
+  self.page=FrameworkSystem:GetWebPage(address,self.device)
+ end
+ return setmetatable(host, {__index=HookPrototype})
 end
 function CareerFixture:Text(root)
  local text={};local function walk(w)

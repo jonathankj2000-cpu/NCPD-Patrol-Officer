@@ -44,9 +44,14 @@ public native class inkPointerEvent extends IScriptable {
  public final native const func IsAction(action: CName) -> Bool;
 }
 public native class inkGameController extends IScriptable {
+ public final native func GetOwnerEntity() -> ref<Entity>;
  public final native func GetPlayerControlledObject() -> ref<GameObject>;
 }
 public class BrowserGameController extends inkGameController {
  protected cb func OnInitialize() -> Bool { return true; }
  protected cb func OnUninitialize() -> Bool { return true; }
+}
+public class BrowserController extends IScriptable {
+ private let m_gameController: wref<BrowserGameController>;
+ public final func SetWebsiteData() -> Void {}
 }

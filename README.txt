@@ -1,4 +1,4 @@
-NCPD PATROL v0.10a - CAREER COMPUTER PAGE TEST
+NCPD PATROL v0.10b - CAREER BROWSER REGISTRATION FIX
 ==========================================
 NCPD Career appears in the in-game computer browser through Browser Extension
 Framework. It shows rank, promotion progress, next reward, milestones and
@@ -6,7 +6,7 @@ recorded scanner/dispatch/arrest totals. No CET menu is needed for normal use.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the game directory containing bin,
-r6 and archive, replacing files. Restart; CET announces v0.10a.
+r6 and archive, replacing files. Restart; CET announces v0.10b.
 For the computer page install the main Browser Extension 0.9.7 framework:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Do not install its CustomSiteExample in place of the main framework.
@@ -17,8 +17,7 @@ Dependencies are not bundled.
 
 OPEN THE PAGE
 Use a browser-capable computer, such as V's apartment computer. Open the Net
-browser homepage NETdir://ncity.pub and click NCPD Career. It is a text link;
-this prototype does not need a custom website icon archive.
+browser homepage NETdir://ncity.pub and click NCPD Career. The site uses BEF's valid default placeholder icon; click the NCPD Career name.
 Site address: NETdir://ncpd.career
 The page shows a snapshot. Refresh record reloads it; claiming also refreshes.
 Cop Stats at the vehicle trunk now shows the actual career summary and points
@@ -76,22 +75,41 @@ TEST
    Compilation errors need the redscript log; visual/input issues need the
    observed behavior and a screenshot of the page.
 
+BROWSER FIX / DIAGNOSTICS
+v0.10a used LoadPageByAddress on the wrong object. BEF defines it on
+BrowserGameController; refresh and claim now use that controller. Initialization
+is idempotent, and registration is ensured before SetWebsiteData loads the
+homepage. The listener uses BEF's actual computer device, not a guessed owner.
+
+If the entry is still absent, keep the computer's Net browser open and use CET:
+ Log career browser diagnostics
+This reports BEF module presence, runtime enabled/bypass state, address blocking,
+init hooks, actual per-device registry matching and page requests.
+ Open NCPD Career (computer browser)
+This tests direct navigation on the current computer. It does not enable BEF,
+remove address blocks or bypass framework restrictions. Send the diagnostic
+line if normal homepage access still fails. For compilation failures send the
+current redscript log instead.
+
 VALIDATION
-All 21 authored redscript files pass offline source-derived API/BEF shape
-contract checks with and without BEF, with zero warnings/errors. Portable tests
-execute the career controller, page rendering choices, click handlers and
-browser registration/cleanup hooks with native widget and BEF calls mocked.
-Arrest/trunk/dispatch regressions also run; all 12 Lua modules parse. The full
-42-file ZIP is validated byte-for-byte. This does not establish actual game
-cache compatibility, BEF runtime behavior, screen layout or physical input.
-Those are the purpose of the in-game test of this version.
+All 22 production redscript files pass source-derived API checks with BEF's
+actual pinned base class and with BEF absent. The old listener navigation call
+is rejected by the corrected API check. Tests execute BEF's actual Init/Uninit,
+Register/Unregister and per-device GetSitesData/GetWebPage methods. Native game
+calls, rendering/input and framework configuration are mocked. Pinned reference
+sources are downloaded only by developer tests and are not installed in game.
+Career/payment, callback cleanup, delayed initialization and diagnostics checks
+pass, along with prior arrest/trunk/dispatch regressions. All 12 Lua modules
+parse. The 43-file ZIP is validated byte-for-byte. Actual screen visibility,
+input and the user's installed runtime still need an in-game test.
 
 Confirmed arrest/dispatch archives and payment logic are preserved. The core
 receives only a new queued career receipt method. Trunk changes are limited
 to Cop Stats. Main/support 17, arrest 5, trunk 2, journal 2; new career 1.
 
 ROLLBACK
-To return to v0.9b, exit the game and remove these two new files:
+To return to v0.9b, exit the game and remove these three career files:
  r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds
  r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds
+ r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds
 Then reinstall the entire v0.9b ZIP. Earlier packages remain on GitHub.
