@@ -1,0 +1,13 @@
+# The ordinary primary interaction, normally F on keyboard. Inherit the
+# player's primary mapping; never hardcode a new key or use Choice2/terminal R.
+Interactions.NCPDPatrolArrest:
+  $base: Interactions.Loot
+  name: NCPDPatrolArrest
+  caption: NCPDPatrol-Arrest
+  action: Choice1
+
+Interactions.NCPDPatrolArresting:
+  $base: Interactions.Loot
+  name: NCPDPatrolArresting
+  caption: NCPDPatrol-Arresting
+  action: Choice1

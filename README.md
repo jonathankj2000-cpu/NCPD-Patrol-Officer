@@ -1,42 +1,50 @@
 # NCPD Patrol
 
-## v0.6e: post-revive health and voice test
+## v0.7a: arrests with a separate payment
 
-**[Download v0.6e](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6e_Revive_Health_Voice_TEST.zip)**
+**[Download the complete v0.7a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.7a_Arrests_Separate_Payment_TEST.zip)**
 
-The user confirmed that v0.6d's down/revive, following, combat and vehicle boarding work in-game. The remaining report is repeated injury dialogue **only after revive**. Actual health during the complaint has not yet been measured.
+While ON DUTY, use **Arrest suspect** on a living, downed human enemy through the primary body interaction, normally **F**. Stay on foot within **2.5 m for two seconds**. The mod then requests a lying handcuff pose. Only a stable matching clip in an active workspot owned by the private helper permits registration and an individual **EUR$250** payment.
 
-### Healing and observation
+Each arrest has its own **NCPD ARREST REGISTERED | +EUR$250** receipt. **Arrests do not contribute to scanner activities or scanner bonus totals.** `NCPDPatrolArrestSystem` owns its own saved payment ledger, transaction, count and receipt queue; it only reads common duty/wanted state. The scanner system, paid activity IDs and scanner receipt queue are untouched. Money from either source enters the ordinary wallet.
 
-The existing request for **100% health** now follows removal of the recoverable down effect. During protected recovery, the mod reads the native health pool back after at least one second. Below 99%, it requests full health **once more** and reads back on the next eligible tick. There is no repeated healing during normal following/combat. A rejected heal retains its actual low readback in diagnostics.
+### Install and test
 
-After follower restoration, **Partner health after revive** prints current health, Wounded/combat flags, revive count, before/after healing measurements and whether a retry occurred. Current health can differ from the earlier recovery measurement through later combat. Before a completed revive, `heal measured=false` marks the before/after fields as unmeasured.
+1. Exit the game completely. Extract the **entire ZIP** into the game directory containing **bin, r6 and archive**, replacing the existing mod files. Include the new **NCPDPatrol_Arrest.archive**, **arrest.lua**, both **Arrest redscripts** and **NCPDPatrol_Arrest.yaml**. Restart; CET announces **v0.7a**, main/support interfaces **16**, arrest interface **1**.
+2. Start a shift using the existing terminal or CET control. Incapacitate an ordinary human enemy without killing them, approach/look at the body, and press the primary interaction for **Arrest suspect**. No additional binding or CET action is required.
+3. Stay close until the arrest pose is observed. Expect the separate EUR$250 receipt. The same paid actor cannot yield another arrest payment by repeating the input, changing shift or loading a save containing that payment.
+4. If the pose or payment fails, send CET lines beginning **Arrest |** and **Arrest pose |**. They show the observed animation or failure. Start with average male/female human enemies on flat ground.
 
-The new **NCPDPatrolPartnerVoice.reds** observes script voice requests for this mod's registered partner on duty. **Partner VO request** prints the requested context, script source and health/Wounded/combat snapshot at request time. It always preserves the original call, arguments, delay and return value. It never mutes or replays speech.
+Dead bodies, active enemies, civilians, police, companions, bosses, robots, mounted actors and quest-marked bodies are excluded. Carried quest/evidence items also set the quest marker; loot those normally first. Eligible empty-inventory bodies can expose the arrest action. Ordinary body/loot choices return after arrest or off duty. Menus pause treatment and confirmation; death, mounting, moving away, wanted/off-duty or loading cancels an unfinished arrest.
 
-Logging is automatic, at most once per two seconds and 30 lines per partner/revive; each sample contains the latest request. It is not an exhaustive recording list, cannot capture every native audio route, and does not prove audible playback. A 100% snapshot rules out low health at that request. A Wounded flag alone does not identify the cause of a spoken line. No speculative status cleanup is applied.
+### Lying animation and ownership
 
-### Install and report
+The included 8 KiB archive contains an authored invisible `gameObject` anchor referencing the vanilla `generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot`. It bundles no animation bank or AMM files and adds no AMM dependency. No paired V animation is required. A visible handcuff prop is not guaranteed.
 
-1. Exit the game completely. Extract the **entire ZIP** into the game directory containing bin and r6, overwriting NCPD Patrol files. Include the new **NCPDPatrolPartnerVoice.reds** and the existing **NCPDPatrol_PartnerDown.yaml**. Restart; CET announces **v0.6e**, native interfaces **15**.
-2. Start a fresh shift/partner and down/revive normally. The existing **Test: down partner** button also works. No new binding or log arming is required.
-3. If the complaint continues, send **Partner health after revive** and **Partner VO request** lines. If no VO request is captured, send the health line. The existing **Log partner AI diagnostics** button also prints current health while he complains.
+The CET controller checks the expected non-transition `lie_ground_0__2h_back_handcuffs_a__01` clip (including shuffle variants), active playback and the private helper's actor association for at least 0.5 seconds. A void playback request, wrong clip, another device or a timeout never qualifies for payment. Native registration also rejects duplicate/stale callbacks and rechecks the suspect and range.
 
-### Preserved behaviour and validation
+The mod never respawns/deletes/heals/resurrects an ambient suspect or assigns it a follower role. It removes only its own non-persistent helpers after scene departure over 60 m, shift end or body loss/death, and retries declined deletions. It stops only playback still associated with that helper. Loading forgets stale handles. The saved paid-identity ledger remains if the pose ends, the body is carried or ordinary engine cleanup removes it. A new actor with a different EntityID is a new suspect. Prisoner transport is outside this first build.
 
-The private infinite **DefeatedWithRecover** record, revive interaction, follower helper, boarding, backup and movement/controller probe are unchanged from v0.6d. Scanner rewards, dispatch, radio and chatter logic remain; compatibility guards advance to interface 15. Requirements remain Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+, TweakXL and compatible redscript.
+### Validation and limits
 
-Nine Lua modules parse in LuaJIT. Eleven redscripts pass the local compiler with zero warnings/errors against source-derived API contracts, **not the actual game cache**. Authored support logic, the actual voice wrapper and CET modules execute against mocked native boundaries. Checks cover rejected healing, single retry, truthful low readback, no ongoing healing loop, repeated same-actor revive, voice scoping and argument/call/return preservation, logging bounds/rearming, lifecycle guards and prior regressions. In-game healing/audio still need confirmation.
+10 Lua modules parse in LuaJIT. All 13 redscripts compile with zero warnings/errors against source-derived API contracts, **not the actual game cache**. Authored native logic, actual CET control and interaction wrappers execute against mocked native boundaries. Checks cover eligibility, timing/menus/range, duplicate/stale events, shifts/loads, payment failure, clip/ownership evidence, body choices, cleanup failures and old-world handles. The actual scanner/arrest classes pay **1000 for a scanner completion and 250 for an arrest independently**, with separate counts, histories and receipts. Previous partner/boarding/backup/dispatch/radio/reward checks pass.
+
+The archive is built with WolvenKit Console 9.1.1. Its component/reference survives serialization and packing/extraction preserves exact entity bytes. [Asset source and rebuild instructions](assets/arrest/README.md) and [portable logic checks](tests/arrests/README.md) are included in the repository.
+
+**The F interaction and transition from a defeated NPC into the workspot still need in-game confirmation.** Catalogue/API evidence and local checks cannot verify rendered animation, AI, physics or native save loading. This is a first test build; an unconfirmed pose is cancelled without payment.
+
+Requirements remain Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and compatible redscript. No extra runtime dependency. v0.6e partner health/voice observations are retained; the reported post-revive dialogue has not been declared fixed. Scanner/support logic is preserved apart from compatibility version guards; backup/boarding/follower helpers are byte-identical to v0.6e.
 
 ### Rollback
 
-**[Download confirmed v0.6d](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6d_Recoverable_Partner_TEST.zip)**. Exit the game, remove **r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds**, then reinstall the complete v0.6d ZIP. Keep its PartnerDown YAML.
+**[Download v0.6e](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6e_Revive_Health_Voice_TEST.zip)**. Exit the game and remove the five additions below before reinstalling that complete ZIP:
 
-### API references
+- `archive/pc/mod/NCPDPatrol_Arrest.archive`
+- `bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua`
+- `r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds`
+- `r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds`
+- `r6/tweaks/NCPDPatrol_Arrest.yaml`
 
-- [Health pool percentage and setting APIs](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/gameStatPoolsSystem.lua)
-- [Script voice request entry point](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/entity/gameObject.swift)
-- [Hit-reaction voice contexts](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/Tasks/ReactionTasks/aiHitReactionTasks.swift)
-- [Wounded status type](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/Conditions/aiStatusEffectCondition.swift)
+Keep its partner-down YAML and partner-voice script. Previous archives remain available.
 
-Archive SHA-256: `1efe824bda7a9488eb306a275dd89bd0fbfcca39445f074167285d1af6c9d291`
+Archive SHA-256: `7c93d5b9d5975c52f40a5d73ad4e0a7484c5516e6c179e47095db6010d3a0dff`

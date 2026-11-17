@@ -18,5 +18,7 @@ public class NCPDPatrolEnglishText extends ModLocalizationPackage {
         this.Text("NCPDPatrol-Backup", "Request NCPD Backup");
         this.Text("NCPDPatrol-Revive", "Revive Partner");
         this.Text("NCPDPatrol-Reviving", "Reviving Partner - stay close (3 s)");
+        this.Text("NCPDPatrol-Arrest", "Arrest suspect");
+        this.Text("NCPDPatrol-Arresting", "Arresting suspect - stay close");
     }
 }

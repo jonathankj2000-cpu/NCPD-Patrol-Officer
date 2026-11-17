@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6e | partner aid and one backup patrol via native interactions
+-- NCPD Patrol v0.7a | partner aid and one backup patrol via native interactions
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -8,6 +8,7 @@ local Partner = require("partner")
 local Dispatch = require("dispatch")
 local VehicleRadio = require("vehicle_radio")
 local Backup = require("backup")
+local Arrest = require("arrest")
 local onDuty = false
 local overlayOpen = false
 local lastMessage = "Ready. Load a save and start a shift."
@@ -50,7 +51,7 @@ end
 local function requestBackup()
     local support = getSupportSystem()
     local ok, accepted = pcall(function()
-        return support and support:Version() == 15 and support:RequestBackup()
+        return support and support:Version() == 16 and support:RequestBackup()
     end)
     if not ok or not accepted then
         status("Backup request unavailable. Start a shift; only one patrol may be assigned.")
@@ -210,9 +211,9 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 15 then error("Install all v0.6e support files and restart the game") end
+        if not support or support:Version() ~= 16 then error("Install all v0.7a support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 15 then error("Lua/redscript version mismatch; install all v0.6e files and restart the game") end
+        if patrol:Version() ~= 16 then error("Lua/redscript version mismatch; install all v0.7a files and restart the game") end
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -249,6 +250,7 @@ local function endShift()
         logScanner(patrol, true)
     end
     onDuty = false
+    Arrest.finish()
     Partner.dismiss(status)
     if patrol and patrol:WasTerminatedForCrime() then
         status("Shift terminated due to criminal activity.")
@@ -268,6 +270,7 @@ local function forgetLoadedWorld()
     Backup.reset()
     Dispatch.reset()
     VehicleRadio.reset()
+    Arrest.reset()
     onDuty = false
     scannerLogState = nil
     dutyPoll, bonusPoll = 0, 0
@@ -276,7 +279,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.6e loaded. Recoverable revive retained; healing is read back after recovery. Partner health and script voice requests are logged for the post-revive complaint.")
+    status("v0.7a loaded. On-duty arrests: primary interaction on eligible living, downed enemies. Separate EUR$250 per confirmed arrest; scanner bonus accounting unchanged.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -289,6 +292,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     if not isInGame() then
+        Arrest.reset()
         if onDuty then Partner.reset(); Backup.reset(); Dispatch.reset(); VehicleRadio.reset(); onDuty = false end
         return
     end
@@ -300,11 +304,12 @@ registerForEvent("onUpdate", function(delta)
         local ok, err = pcall(function()
             local patrol = getPatrolSystem()
             if not patrol then return end
-            if patrol:Version() ~= 15 then return end
+            if patrol:Version() ~= 16 then return end
             patrol:EnforceDutyRules()
             if onDuty and not patrol:IsOnDuty() then
                 onDuty = false
                 if patrol:WasTerminatedForCrime() then
+                    Arrest.finish()
                     Backup.finish(getSupportSystem(), status)
                     VehicleRadio.finish(patrol)
                     Dispatch.finish(patrol, status)
@@ -316,6 +321,7 @@ registerForEvent("onUpdate", function(delta)
                     Backup.reset()
                     Dispatch.reset()
                     VehicleRadio.reset()
+                    Arrest.reset()
                 end
                 scannerLogState = nil
             end
@@ -341,6 +347,9 @@ registerForEvent("onUpdate", function(delta)
     Backup.update(delta, onDuty, getSupportSystem(), getPatrolSystem(), status)
     Dispatch.update(delta, onDuty, status, getPatrolSystem)
     VehicleRadio.update(delta, onDuty, status, getPatrolSystem)
+    local arrestPaused = true
+    pcall(function() arrestPaused = getPatrolSystem():IsDispatchMenuOpen() end)
+    Arrest.update(delta, onDuty, arrestPaused)
 end)
 
 registerForEvent("onShutdown", function()
@@ -351,12 +360,13 @@ registerForEvent("onShutdown", function()
         local patrol = getPatrolSystem()
         if patrol then patrol:ResetSession() end
     end)
+    Arrest.finish()
     Partner.dismiss(function() end)
 end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.6e")
+    local visible = ImGui.Begin("NCPD Patrol - v0.7a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -394,7 +404,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.6e files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.7a files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -461,6 +471,11 @@ registerForEvent("onDraw", function()
         ImGui.TextWrapped("Dismiss removes your partner for the current shift. Use Spawn partner if you want to call another one.")
 
         ImGui.Separator()
+        ImGui.Text("NCPD ARRESTS")
+        ImGui.TextWrapped("On duty, approach a living, downed enemy and use Arrest suspect (primary interaction, normally F). Stay within 2.5 m for 2 seconds. A confirmed lying arrest pose pays EUR$250 once per suspect, separately from scanner bonuses.")
+        ImGui.TextWrapped("Arrest: " .. Arrest.state())
+        ImGui.TextWrapped("Civilians, police, companions, bosses and quest-marked bodies are excluded in this first build. Normal body/loot choices return after arrest.")
+        ImGui.Separator()
         ImGui.Text("NCPD BACKUP")
         ImGui.TextWrapped("On duty, use Request NCPD Backup at your owned police car's trunk, beside stash. One car with two officers responds. Optional key: CET Bindings > NCPD Patrol - Request backup.")
         if ImGui.Button("Request backup patrol") then requestBackup() end
@@ -472,7 +487,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 15 then return "Version mismatch: install all v0.6e files and restart the game." end
+                if patrol:Version() ~= 16 then return "Version mismatch: install all v0.7a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
