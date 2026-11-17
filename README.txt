@@ -1,4 +1,4 @@
-NCPD PATROL v0.7b - ARREST WORKSPOT STARTUP TEST
+NCPD PATROL v0.7c - ARREST ASYNC RESOURCE LOAD TEST
 ==============================================
 On duty, arrest living, downed human enemies through the game's primary body
 interaction (normally F). Each registered arrest pays EUR$250 exactly once for
@@ -6,10 +6,11 @@ that actor identity in the save. This payment is separate from scanner bonuses.
 
 USE
 1. Exit the game completely. Extract this ENTIRE ZIP into the game directory
-   containing bin, r6 and archive, replacing NCPD Patrol files. Include the new
+   containing bin, r6 and archive, replacing NCPD Patrol files. Include
    archive/pc/mod/NCPDPatrol_Arrest.archive, arrest.lua, both Arrest redscripts
-   and NCPDPatrol_Arrest.yaml. The archive changed: replace it too, then restart.
-   CET announces v0.7b. Main/support interfaces use version 17; arrests version 2.
+   and NCPDPatrol_Arrest.yaml. The archive is unchanged from v0.7b.
+   Restart; CET announces v0.7c. Main/support interfaces use version 17;
+   the arrest interface uses version 2.
 2. Start a shift through the existing terminal interaction or CET.
 3. Incapacitate an ordinary human enemy without killing them. Approach/look at
    the body and use Arrest suspect (primary interaction, normally F). Stay on
@@ -33,17 +34,18 @@ world changes cancel an unfinished arrest. Repeated events share one reservation
 A missing/wrong/foreign animation or failed payment does not register an arrest.
 An unconfirmed pose times out rather than granting money for the request alone.
 
-CHANGES FROM v0.7a
-The previous in-game test reached a T-pose, reported no Codeware workspot instance,
-then returned to the original writhing animation after cancellation. No arrest
-payment was made. That observation does not establish a single root cause.
-This build corrects two startup omissions: the anchor is explicitly cooked for
-PLATFORM_PC, and playback explicitly selects a lying handcuff clip and sends play.
-It checks that the template and vanilla resource exist, validates the new helper
-component NCPDPatrolArrestPC, and waits for its loaded, readable workspot tree.
-The tree supplies the clip selection; clip/play can be retried once after entry.
-Unconfirmed playback is released after three seconds (overall setup limit eight
-seconds). The animation confirmation, eligibility and payment rules are unchanged.
+CHANGES IN v0.7c
+The v0.7b test found the archive, template, vanilla resource and correct attached
+helper, then aborted with "Arrest workspot reference could not be loaded".
+This was a mod API error: workspotResource is a ResourceAsyncReference, while
+Codeware ResourceHelper's reference methods accept only ResourceReference.
+This build uses ResourceDepot.LoadResource to obtain an asynchronous token and
+retains it for the helper's lifetime. It polls IsLoaded/IsFinished/IsFailed and
+reads GetResource only after loading. A pending token does not start playback
+or restart loading on every update. Refused/failed loads abort without payment.
+The existing PLATFORM_PC anchor, component name, tree-based clip selection,
+explicit jump/play, one retry and three-second unconfirmed-playback release are
+retained. No native script, archive, eligibility or payment rule changed.
 
 PAYMENT IS INDEPENDENT
 NCPDPatrolArrestSystem owns its saved paid-suspect ledger, fixed EUR$250 reward,
@@ -74,11 +76,12 @@ engine population cleanup removes it. Prisoner transport is outside this build.
 
 TEST AND DIAGNOSTICS
 First test an average male/female human enemy on flat ground, using the same
-Arrest suspect interaction. In-game testing is needed to establish whether these
-startup changes resolve the reported T-pose and permit a confirmed arrest.
+Arrest suspect interaction. In-game testing is needed to confirm playback and
+arrest after correcting the API mismatch. The earlier T-pose needs verification.
 If it fails, send CET lines beginning with Arrest setup |, Arrest bank |,
-Arrest bank names |, Arrest pose |, Arrest native | and Arrest |. They distinguish
-resource readiness, the selected clip, native playback and the actor association.
+Arrest bank names |, Arrest resource token |, Arrest pose |, Arrest native |
+and Arrest |. They distinguish resource readiness, the selected clip, native
+playback and the actor association.
 clip=none with instance=false means no Codeware instance was returned; it is not
 a native clip name. No change to defeated/unconscious states is made in this fix.
 The NCPD ARRESTS CET section shows the current status; CET is not needed to arrest.
@@ -90,21 +93,24 @@ Authored arrest logic and actual CET controller/wrappers execute with native
 boundaries mocked. Tests cover eligibility, menu/time/range guards, one payment
 per identity across shifts/loads, duplicate/stale callbacks, correct/incorrect/
 transition/foreign clip evidence, no payout from a void request, resource readiness,
-explicit clip/play, one retry, three-second release, body interactions, failed
-cleanup, death and loaded-away references. The actual scanner and arrest
+async-token readiness/failure, explicit clip/play, one retry, three-second
+release, body interactions, failed cleanup, death and loaded-away references.
+The actual scanner and arrest
 classes are exercised together: one scanner completion pays/counts EUR$1000,
 one arrest separately pays EUR$250, without mixing their ledgers or receipts.
 Earlier partner/boarding/backup/dispatch/radio/reward regressions also pass.
 The archive is compiled with WolvenKit 9.1.1, round-tripped to verify PLATFORM_PC,
 its new component name and native dependency, then extracted to verify entity bytes.
+The corrected async-property fixture rejects ResourceHelper and reproduces the
+v0.7b abort. The new controller passes pending/loaded/failed/refused-token cases.
 These checks do not emulate real animations, AI, physics or native save loading.
 
 RETAINED REQUIREMENTS
 Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1, TweakXL and
 compatible redscript. No extra runtime dependency or new required binding.
 v0.6e partner health/voice observations remain; this is not an injury-voice fix.
-Scanner/support behaviour and prior receipts are preserved; only their interface
-version guards advance. Backup, boarding and follower helper are unchanged.
+Scanner/support behaviour and prior receipts are preserved. Native interfaces
+remain 17/2 as in v0.7b; backup, boarding and follower helpers are unchanged.
 
 ROLLBACK TO v0.6e
 Exit the game. Remove these five additions, then reinstall the complete v0.6e ZIP:

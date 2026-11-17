@@ -7,18 +7,21 @@ local deleted,played,stopped={},{},{}
 local failDeletes=0
 local jumpCalls,playSignals={},{}
 local autoClipOnJump=false
-local componentReady=true
+local bankReady=true
 local missingComponent=false
 local resourceAvailable=true
 local treeAvailable=true
-local boundComponents={}
+local bankTokens={}
+local bankLoads=0
+local referenceCalls=0
+local loadFailure=false
+local rejectToken=false
 local dynamic={IsReady=function() return true end}
 function dynamic:CreateEntity(spec)
     assert(spec.recordID==nil and spec.templatePath=='base\\ncpd_patrol\\arrest_workspot.ent')
     assert(not spec.persistState and not spec.persistSpawn and not spec.alwaysSpawned and spec.spawnInView and spec.active)
     nextID=nextID+1;local id={hash=nextID}
-    local component={name='NCPDPatrolArrestPC',ready=componentReady}
-    boundComponents[id.hash]=component
+    local component={name='NCPDPatrolArrestPC',workspotResource='async reference'}
     helpers[id.hash]={GetEntityID=function() return id end,IsAttached=function() return true end,
         FindComponentByType=function(_,kind) assert(kind=='workWorkspotResourceComponent'); if not missingComponent then return component end end}
     managed[id.hash]=true
@@ -52,19 +55,39 @@ function ws:GetExtendedInfo(npc)
     return {isActive=active[npc.id.hash] and clips[npc.id.hash]~=nil,entering=active[npc.id.hash] and clips[npc.id.hash]==nil,exiting=false}
 end
 ResourceHelper={
-    IsReferenceLoaded=function(component,field) assert(field=='workspotResource'); return component.ready end,
+    -- Codeware 1.21.4 rejects ResourceAsyncReference properties in all three
+    -- methods. v0.7b incorrectly treated this field as ResourceReference.
+    IsReferenceLoaded=function(component,field)
+        assert(field=='workspotResource'); referenceCalls=referenceCalls+1;return false
+    end,
     LoadReferenceResource=function(component,field,path,wait)
         assert(field=='workspotResource' and wait==false)
-        component.requested=true;return true
+        referenceCalls=referenceCalls+1;return false
     end,
     GetReferenceResource=function(component,field)
+        referenceCalls=referenceCalls+1;return nil
+    end
+}
+local depot={ArchiveExists=function() return true end,ResourceExists=function(_,ref) return resourceAvailable end}
+function depot:LoadResource(ref)
+    assert(ref=='base\\workspots\\common\\ground\\generic__lie_ground_lean_front_handcuffs_a__aggressive__01.workspot')
+    bankLoads=bankLoads+1
+    if rejectToken then return nil end
+    local token={loaded=bankReady,failed=loadFailure,finished=bankReady or loadFailure}
+    function token:IsLoaded() return self.loaded end
+    function token:IsFailed() return self.failed end
+    function token:IsFinished() return self.finished end
+    function token:GetResource()
+        assert(self.loaded,'read a resource before its asynchronous load completed')
         if not treeAvailable then return {workspotTree=nil} end
         return {workspotTree={rootEntry={idleAnim='lie_ground_0__2h_back_handcuffs_a__01',list={
             {animName='lie_ground_0__2h_back_handcuffs_a__01__shuffle__01'},
             {animName='lie_ground_0__2h_back_handcuffs_a__01__to__stand__01'}
         }}}}
     end
-}
+    bankTokens[#bankTokens+1]=token
+    return token
+end
 function ws:StopInDevice(npc)
     stopped[#stopped+1]=npc;active[npc.id.hash]=nil
     for id,actor in pairs(bound) do if actor==npc then bound[id]=nil end end
@@ -74,8 +97,7 @@ WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
 local looked
 Game={GetPlayer=function() return player end,GetDynamicEntitySystem=function() return dynamic end,
     GetWorkspotSystem=function() return ws end,
-    GetResourceDepot=function() return {ArchiveExists=function() return true end,
-        ResourceExists=function(_,ref) return resourceAvailable end} end,
+    GetResourceDepot=function() return depot end,
     GetScriptableSystemsContainer=function() return {Get=function() return ArrestNative end} end,
     GetTargetingSystem=function() return {GetLookAtObject=function() return looked end} end}
 local function step(count,paused)
@@ -145,12 +167,14 @@ autoClipOnJump=true
 local h=arrestSuspect(1009);bank=wallet
 secure(h);step(2)
 assert(ArrestNative:IsArrested(h) and wallet==bank+250,'explicit clip/play sequence did not complete')
-local j=arrestSuspect(1010);componentReady=false;bank=wallet
+local j=arrestSuspect(1010);bankReady=false;bank=wallet
+local beforeLoads=bankLoads
 assert(ArrestNative:StartArrest(j));step(8);step(2)
-local calls=#played;local component=boundComponents[nextID]
-assert(component.requested and not component.ready and #played==calls)
+local calls=#played;local token=bankTokens[#bankTokens]
+assert(not token.loaded and bankLoads==beforeLoads+1)
 step(4);assert(#played==calls and wallet==bank,'unloaded resource entered the animation graph')
-component.ready=true;componentReady=true;step(4)
+assert(bankLoads==beforeLoads+1,'asynchronous load was restarted on each poll')
+token.loaded=true;token.finished=true;bankReady=true;step(4)
 assert(ArrestNative:IsArrested(j) and wallet==bank+250)
 -- Unconfirmed playback is released after three seconds rather than holding
 -- the reported T-pose for the original eight-second window.
@@ -174,4 +198,18 @@ for case=1,3 do
     assert(wallet==bank and #played==before and not ArrestNative:IsArrested(suspect),'invalid preflight played or paid')
     resourceAvailable,missingComponent,treeAvailable=true,false,true
 end
+-- A failed or refused async load cannot transfer the body or pay an arrest.
+for case=1,3 do
+    local suspect=arrestSuspect(1020+case)
+    local before=#played;bank=wallet
+    bankReady=false;loadFailure=case==1;rejectToken=case==2
+    assert(ArrestNative:StartArrest(suspect));step(10)
+    if case==3 then
+        local token=bankTokens[#bankTokens];token.finished=true
+    end
+    step(8)
+    assert(ArrestNative:GetStage()==0 and #played==before and wallet==bank,'failed async load played or paid')
+    bankReady,loadFailure,rejectToken=true,false,false
+end
+assert(referenceCalls==0,'ResourceHelper was used on an asynchronous component property')
 Patrol:FinishShift();Module.finish();supportPlayer=nil

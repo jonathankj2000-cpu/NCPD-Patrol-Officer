@@ -64,22 +64,31 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7b archive") end
+        if not unit.component then error("Arrest helper has no workspot component; reinstall the complete v0.7c archive") end
         local name = system:AnimationName(unit.component.name)
         if name ~= "NCPDPatrolArrestPC" then error("Outdated arrest helper; replace NCPDPatrol_Arrest.archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
     end
-    local loaded = ResourceHelper.IsReferenceLoaded(unit.component, CName.new("workspotResource"))
-    if not loaded and not unit.bindRequested then
-        unit.bindRequested = true
-        if not ResourceHelper.LoadReferenceResource(unit.component, CName.new("workspotResource"), system:GetWorkspotResource(), false) then
-            error("Arrest workspot reference could not be loaded")
-        end
-        print("[NCPD Patrol] Arrest setup | resource load requested; playback waits for readiness")
+    -- workspotResource is a ResourceAsyncReference. ResourceHelper's reference
+    -- methods accept only synchronous ResourceReference properties, so use a
+    -- depot token and retain it for the helper's lifetime instead.
+    if not unit.bankToken then
+        unit.bankToken = Game.GetResourceDepot():LoadResource(system:GetWorkspotResource())
+        if not unit.bankToken then error("Arrest resource load returned no token") end
+        print("[NCPD Patrol] Arrest setup | async bank load requested")
+    end
+    local loaded, finished, failed = unit.bankToken:IsLoaded(), unit.bankToken:IsFinished(), unit.bankToken:IsFailed()
+    local state = "loaded=" .. tostring(loaded) .. " | finished=" .. tostring(finished) .. " | failed=" .. tostring(failed)
+    if state ~= unit.lastLoad then
+        unit.lastLoad = state
+        print("[NCPD Patrol] Arrest resource token | " .. state)
+    end
+    if failed then error("Arrest workspot asynchronous load failed") end
+    if not loaded then
+        if finished then error("Arrest workspot load finished without a loaded resource") end
         return false
     end
-    if not loaded then return false end
-    local resource = ResourceHelper.GetReferenceResource(unit.component, CName.new("workspotResource"))
+    local resource = unit.bankToken:GetResource()
     local tree = resource and read(resource, "workspotTree")
     if not tree or not read(tree, "rootEntry") then
         if unit.elapsed > 4 then error("Arrest resource loaded; workspot tree still not readable/ready") end
@@ -258,7 +267,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 2 then error("Install all v0.7b arrest scripts and restart the game") end
+        if not system or system:Version() ~= 2 then error("Install all v0.7c arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.
