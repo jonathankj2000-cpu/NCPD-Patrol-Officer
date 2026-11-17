@@ -1,0 +1,45 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title",
+              "femaleVariant": "NCPD Dispatch",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective",
+              "femaleVariant": "Resolve the marked NCPD incident.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description",
+              "femaleVariant": "Respond to the marked incident before the response deadline, then resolve the NCPD Scanner activity. The response timer stops on arrival. This dispatch may expire without removing the original scanner activity.",
+              "maleVariant": ""
+            }
+          ]
+        }
+      }
+    }
+  }
+}

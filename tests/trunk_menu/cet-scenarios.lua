@@ -4,7 +4,8 @@ package.loaded.dispatch_hud={init=function() end,set=function(text,visible) hud.
 local Dispatch=require('dispatch')
 local candidates={}; local placements,clears,bonusTicks=0,0,0
 local pausedUI=false; local fighting=false; local nativeDuty=true; local failClear=false
-local gamePlayer={GetWorldPosition=function() return {x=10,y=10,z=0,w=1} end,
+local gamePlayer={pos={x=10,y=10,z=0,w=1},GetWorldPosition=function(self) return self.pos end,
+ IsAttached=function() return true end,IsDead=function() return false end,
  GetWorldOrientation=function() return {} end,IsInCombat=function() return fighting end}
 local function candidate(id,x)
  return {id=id,phase='active',GetJournalPathHash=function(self) return self.id end,
@@ -13,6 +14,7 @@ local function candidate(id,x)
 end
 local dispatchPatrol={}
 function dispatchPatrol:Version() return 17 end
+function dispatchPatrol:HasWantedLevel() return false end
 function dispatchPatrol:IsOnDuty() return nativeDuty end
 function dispatchPatrol:IsDispatchMenuOpen() return pausedUI end
 function dispatchPatrol:ClearDispatchWaypoints() if failClear then error('cleanup rejected') end; clears=clears+1 end
@@ -23,7 +25,11 @@ function dispatchPatrol:NotifyDispatch(text) notices[#notices+1]={text=text} end
 function dispatchPatrol:GetScannerPhase(hash,marker) return marker.phase end
 gamedataMappinVariant={OutpostVariant='organized'}
 gamedataMappinPhase={CompletedPhase='complete'}
-Game={GetPlayer=function() return gamePlayer end}
+Game={GetPlayer=function() return gamePlayer end,GetScriptableSystemsContainer=function()
+ return {Get=function(_,name) if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end end}
+end}
+GetPlayer=function() return gamePlayer end
+NCPDPatrolSystem.Get=function() return dispatchPatrol end
 local function tick(seconds) for _=1,seconds do Dispatch.update(1,true,nil,function() return dispatchPatrol end) end end
 Dispatch.start(dispatchPatrol); Dispatch.setAutomatic(true); Dispatch.setBusy(true)
 candidates={candidate(1,500),candidate(2,600),candidate(3,700)}
@@ -32,7 +38,7 @@ assert(not Dispatch.isActive() and Dispatch.seconds()==time and placements==0, '
 assert(Dispatch.request(dispatchPatrol)); assert(Dispatch.isActive() and Dispatch.isBusy(), 'manual call blocked while BUSY')
 tick(2); assert(Dispatch.isActive(), 'BUSY cancelled active call')
 local assignedId=tonumber(Dispatch.state():match('POI=(%d+)'))
-for _,v in ipairs(candidates) do if v.id==assignedId then v.phase='complete' end end
+for _,v in ipairs(candidates) do if v.id==assignedId then gamePlayer.pos=v:GetWorldPosition();v.phase='complete' end end
 tick(1); assert(not Dispatch.isActive() and Dispatch.completed()==1, 'BUSY stopped completion monitoring')
 Dispatch.setBusy(false); tick(125); assert(Dispatch.isActive())
 local placed=placements; assert(Dispatch.replace(dispatchPatrol)); assert(placements==placed+1 and Dispatch.isActive())
@@ -51,7 +57,10 @@ local system={IsReady=function() return entityReady end,
  CreateEntity=function(_,spec) assert(spec.persistState==false and spec.persistSpawn==false); createCount=createCount+1; managed[createCount]=true; return createCount end,
  DeleteEntity=function(_,id) assert(managed[id]); deleteCount=deleteCount+1; if not deleteAccepted then return false end; managed[id]=nil; return true end}
 Game.GetDynamicEntitySystem=function() return system end
-Game.GetScriptableSystemsContainer=function() return {Get=function(_,name) if name=='NCPDPatrolSupportSystem' then return nativeSupport end end} end
+Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
+ if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end
+ if name=='NCPDPatrolSupportSystem' then return nativeSupport end
+end} end
 TweakDB={GetRecord=function() return {} end}
 TweakDBID={new=function(id) return id end}
 DynamicEntitySpec={new=function() return {} end}
@@ -74,6 +83,7 @@ local nativeTrunk={Version=function() return 2 end,Tick=function() tickCount=tic
  IsBusy=function() return true end,TakeCommand=function() takeCount=takeCount+1; local c=queue; queue=0; return c end,
  ReportCommand=function(_,text) reports[#reports+1]=text end,FinishSession=function() end}
 Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
+ if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end
  if name=='NCPDPatrolTrunkSystem' then return nativeTrunk end
  if name=='NCPDPatrolSupportSystem' then return nativeSupport end
 end} end

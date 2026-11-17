@@ -1,5 +1,6 @@
 -- Dispatch selects existing scanner activities; rewards remain in redscript.
 local HUD = require("dispatch_hud")
+local Journal = require("dispatch_journal")
 local M = {}
 local active, used = nil, {}
 local automatic, dutySeen, cleaned = true, false, false
@@ -7,6 +8,7 @@ local busy = false
 local countdown, poll = 0, 0
 local state = "OFF DUTY"
 local completed, candidateCount = 0, 0
+local failedCalls, lastOutcome = 0, "No dispatch result this shift"
 local failed = false
 local soundEnabled = true
 local voiceEnabled = true
@@ -40,6 +42,10 @@ local function drawObjective(inMenu)
     local metres = distance(player:GetWorldPosition(), active.position)
     local objective = active.arrived and "Resolve the incident and collect evidence"
         or ("Respond to the incident - " .. tostring(math.floor(metres + 0.5)) .. " m")
+    if not active.arrived then
+        local _, seconds = Journal.snapshot(active.journalToken)
+        objective = objective .. string.format("\nResponse deadline: %02d:%02d", math.floor(seconds / 60), seconds % 60)
+    end
     HUD.set("NCPD DISPATCH\n" .. active.label .. "\n" .. objective, not inMenu)
 end
 
@@ -51,6 +57,18 @@ function M.isBusy() return busy end
 function M.setBusy(value) busy = value == true end
 function M.isActive() return active ~= nil end
 function M.completed() return completed end
+function M.failedCount() return failedCalls end
+function M.lastOutcome() return lastOutcome end
+function M.journalDiagnostics() return Journal.diagnostics() end
+function M.armTimeoutTest(patrol, status)
+    if not active or not Journal.armTimeout(active.journalToken) then
+        if status then status("Dispatch | Timeout test needs an active call more than 60 m away, before On scene.") end
+        return false
+    end
+    if patrol then patrol:NotifyDispatch("NCPD TEST: Response deadline shortened to 15 seconds. Remain away from the scene to test expiry.", 6.0) end
+    if status then status("Dispatch | TEST: 15-second response deadline armed") end
+    return true
+end
 function M.seconds() return math.max(0, math.ceil(countdown)) end
 function M.candidates() return candidateCount end
 function M.isSoundEnabled() return soundEnabled end
@@ -85,10 +103,12 @@ function M.testAudio(patrol, radio, status)
 end
 
 function M.start(patrol, status)
+    Journal.reset()
     busy = false
     active, used = nil, {}
     navigation = "No active dispatch"
     poll, completed, candidateCount = 0, 0, 0
+    failedCalls, lastOutcome = 0, "No dispatch result this shift"
     failed, dutySeen = false, true
     cleaned = false
     local ok, err = pcall(clear, patrol)
@@ -103,6 +123,12 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
+    Journal.update(0, status)
+    if active then
+        local stage, _, reason = Journal.snapshot(active.journalToken)
+        if stage == 4 then failedCalls = failedCalls + 1; lastOutcome = "FAILED | " .. tostring(reason) end
+    end
+    Journal.cancel(active and active.journalToken or 0, "Shift ended")
     busy = false
     local ok, err = pcall(clear, patrol)
     active, used, dutySeen = nil, {}, false
@@ -113,10 +139,12 @@ end
 
 -- Used after a load: never remove a marker by an ID from the previous world.
 function M.reset()
+    Journal.reset()
     busy = false
     active, used, dutySeen, cleaned = nil, {}, false, false
     countdown, poll, completed, candidateCount = 0, 0, 0, 0
     failed, state = false, "OFF DUTY"
+    failedCalls, lastOutcome = 0, "No dispatch result this shift"
     navigation = "No active dispatch"
     hide()
 end
@@ -174,10 +202,17 @@ function M.request(patrol, status)
         local chosen = pool[math.random(1, #pool)]
         chosen.label = chosen.marker:GetVariant() == gamedataMappinVariant.OutpostVariant
             and "Suspected organized crime" or "Assault in progress"
+        local token, journalError = Journal.begin(chosen.hash, chosen.position)
+        if not token then
+            countdown = 30
+            report("Journal unavailable: " .. tostring(journalError), status)
+            return false
+        end
+        active = chosen
+        active.journalToken = token
         patrol:ClearDispatchWaypoints()
         local id = patrol:PlaceDispatchWaypoint(chosen.position)
         if not id or not id.value or id.value == 0 then error("Game did not return a dispatch waypoint ID") end
-        active = chosen
         used[chosen.key] = true
         active.arrived = false
         active.waypoint = id
@@ -190,6 +225,7 @@ function M.request(patrol, status)
         return true
     end)
     if not ok then
+        if active then Journal.cancel(active.journalToken, "Dispatch setup failed") end
         pcall(clear, patrol)
         failed = true
         report("Dispatch request failed: " .. tostring(result), status)
@@ -201,11 +237,14 @@ end
 function M.cancel(patrol, status)
     if not active then report("No active dispatch to cancel", status); return false end
     local ok, err = pcall(function()
+        local cancelled, message = Journal.cancel(active.journalToken, "Assignment cancelled")
+        if not cancelled then error(message) end
         clear(patrol)
         countdown = math.random(60, 120)
         patrol:NotifyDispatch("NCPD DISPATCH: Assignment cancelled.", 4.0)
     end)
     if ok then
+        lastOutcome = "CANCELLED | Assignment cancelled"
         report("Assignment cancelled; ready for another call", status)
     else
         failed = true
@@ -220,6 +259,7 @@ function M.replace(patrol, status)
 end
 
 function M.update(delta, onDuty, status, getPatrol)
+    Journal.update(delta, status)
     poll = poll + delta
     if poll < 1 then return end
     local elapsed = math.min(poll, 2)
@@ -237,16 +277,45 @@ function M.update(delta, onDuty, status, getPatrol)
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
         if active then
+            local stage, _, reason = Journal.snapshot(active.journalToken)
+            if stage == 4 or stage == 5 or stage == 6 or stage == -1 then
+                clear(patrol)
+                countdown = math.random(60, 120)
+                if stage == 4 then
+                    failedCalls = failedCalls + 1
+                    lastOutcome = "FAILED | " .. tostring(reason)
+                    patrol:NotifyDispatch("NCPD DISPATCH FAILED: " .. tostring(reason) .. ". Assignment closed.", 8.0)
+                elseif stage == 6 then
+                    failed = true
+                    lastOutcome = "JOURNAL ERROR | " .. tostring(reason)
+                    patrol:NotifyDispatch("NCPD: Dispatch journal error. Check CET diagnostics before requesting another call.", 8.0)
+                else
+                    lastOutcome = "CANCELLED | " .. tostring(reason)
+                end
+                report(lastOutcome, status)
+                return
+            end
             if patrol:GetScannerPhase(active.hash, active.marker) == gamedataMappinPhase.CompletedPhase then
+                if stage ~= 2 then
+                    Journal.cancel(active.journalToken, "Incident resolved before attendance")
+                    clear(patrol)
+                    countdown = math.random(60, 120)
+                    lastOutcome = "CLOSED | Incident resolved before attendance"
+                    report(lastOutcome, status)
+                    patrol:NotifyDispatch("NCPD: Incident resolved before your arrival. Assignment withdrawn.", 6.0)
+                    return
+                end
+                local accepted, message = Journal.complete(active.journalToken)
+                if not accepted then error("Journal completion rejected: " .. tostring(message)) end
                 clear(patrol)
                 completed = completed + 1
+                lastOutcome = "COMPLETED | Incident resolved"
                 countdown = math.random(60, 120)
                 patrol:NotifyDispatch("NCPD DISPATCH: Incident resolved. Stand by for your next call.", 8.0)
                 report("Incident resolved | Dispatches completed: " .. tostring(completed), status)
                 return
             end
-            if not inMenu and not active.arrived
-                and distance(Game.GetPlayer():GetWorldPosition(), active.position) <= 60 then
+            if not inMenu and not active.arrived and stage == 2 then
                 active.arrived = true
                 patrol:NotifyDispatch("NCPD DISPATCH: On scene. Resolve the incident and collect evidence.", 4.0)
                 report("On scene: " .. active.label, status)
@@ -265,6 +334,7 @@ function M.update(delta, onDuty, status, getPatrol)
 end
 
 function M.shutdown(patrol)
+    Journal.cancel(active and active.journalToken or 0, "Mod shutdown")
     if patrol then pcall(clear, patrol) end
     M.reset()
     HUD.shutdown()

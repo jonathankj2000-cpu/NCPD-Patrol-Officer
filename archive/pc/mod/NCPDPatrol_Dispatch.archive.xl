@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\dispatch\dispatch.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\dispatch\dispatch_onscreens.json

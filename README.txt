@@ -1,80 +1,80 @@
-NCPD PATROL v0.8c - NATIVE TRUNK TAP / HOLD TEST
-==============================================
-Fix for v0.8b's "Trunk input not received" message. The vanilla input context
-only sends BUTTON_RELEASED for Choice2; the old listener waited for a press
-that this action never supplies. InteractionBase.action is also String, not
-CName. This build removes the raw listener and custom half-second timer.
-Two native choices now use Choice2 (backup) and Choice2_Hold (Patrol Menu).
-The game supplies the separate hold icon, timing and input arbitration.
-The v0.8b repair-countdown compiler fix remains in place.
+NCPD PATROL v0.9a - DISPATCH JOURNAL / RESPONSE DEADLINE TEST
+==========================================================
+One reusable native journal entry with one objective, driven by the existing
+scanner dispatcher. The current marker is retained; native quest GPS is not
+introduced. The v0.8c trunk controls and confirmed arrest system are retained.
 
-INSTALL AND FIRST TEST
-1. Exit the game completely. Extract the ENTIRE ZIP into the game directory
-   containing bin, r6 and archive, replacing all existing mod files. Restart;
-   CET announces v0.8c. Main/support interfaces remain 17, arrests 5; the trunk
-   bridge is now 2. No manual file removal or new runtime dependency is needed.
-2. Start a shift. Approach your owned police car's trunk while on foot. Expect
-   the vanilla stash plus TWO separate native actions: Request NCPD Backup
-   on a short R press, and Patrol Menu with the hold-R icon. Remapping follows
-   the game's secondary-interaction binding; no custom hotkey is required.
-3. Tap and release R: request one backup patrol. Hold R until the native hold
-   indicator completes: open the patrol choice list without requesting backup.
-   Vanilla Choice2_Hold uses about 0.3 seconds; the mod does not edit this timeout.
-4. Scroll the list and use F to select. A fresh R closes the menu. The opening
-   hold's release is arbitrated by the native interaction system. Check that
-   the menu stays open on release and that no backup is sent by that hold.
-   Closing/selecting restores stash and both trunk entry choices. Walking away,
-   mounting, game menus, wanted status or shift end close it too.
-5. Test the physical hold/release and icons in game. Local tests execute native
-   entry callbacks and PS wrappers but do not emulate the actual input manager
-   or rendered UI. The removed "Trunk input not received" path no longer exists.
+REQUIREMENTS AND INSTALL
+1. Install ArchiveXL for Cyberpunk 2077 2.5 (1.28.8 recommended):
+   https://github.com/psiberx/cp2077-archive-xl/releases/tag/v1.28.8
+   ArchiveXL is a NEW dependency and is not bundled. Existing CET, RED4ext,
+   Codeware, redscript and TweakXL requirements remain.
+2. Exit the game completely. Extract the ENTIRE ZIP into the game directory
+   containing bin, r6 and archive, replacing files. Restart; CET says v0.9a.
+   Install BOTH NCPDPatrol_Dispatch.archive and its .archive.xl file.
+   Do not install the assets/tools/tests folders from the source repository.
+3. Start a shift and request a dispatch. Look in the normal quest journal for
+   NCPD Dispatch with one objective: Resolve the marked NCPD incident.
+   The journal entry is reused; this is not an unlimited permanent call history.
 
-PATROL MENU (GAMEPLAY LOGIC RETAINED)
-- Available / Busy: Busy pauses new automatic dispatch assignments. The active
-  assignment, its marker, objective, completion monitoring and bonus continue.
-  Manual requests remain available. The CET automatic-calls preference remains
-  separate; a new shift starts Available.
-- Request vehicle repair (10 s): one free repair after ten gameplay seconds.
-  Menus pause the timer. It repairs the exact requested car, including if you
-  enter or move away. Duplicate requests neither stack nor reset the timer.
-  Vehicle loss/destruction, wanted status, shift end or loading cancel it.
-  The native health, tire, body/glass and damage-effect wrapper is unchanged.
-- Request new partner: replace only the recorded mod-created partner. Failed
-  deletion retains the old ID and prevents an extra spawn.
-- Cancel dispatch: clear the mod marker/objective without completing/changing
-  the vanilla activity.
-- Request new dispatch: cancel the assignment, then try another eligible
-  scanner within the existing 1/1.5/2 km search tiers. Cleanup failure blocks
-  replacement; no alternative means no new assignment. Works while Busy.
-- Cop Stats: recorded on-duty paid-scanner completions and the next milestone:
-  10, 20, 40, 60, 80, 100, 120, etc. Historical completions before monitoring
-  are unknown. Progression rewards remain planned, not awarded. Arrests are
-  counted/paid separately.
+BEHAVIOR
+- A dispatch begins with a 3-minute RESPONSE deadline shown in the dispatch HUD.
+  Menus pause it; invalid/oversized frame deltas do not consume it.
+- Within 60 m the controller records On scene and clears the deadline. There
+  is no deadline for the following fight. Arrival is checked before expiry,
+  independently of slower scanner-completion polling.
+- Resolving the assigned scanner after attendance sets the objective/phase/
+  quest to Succeeded, and increments completed dispatches.
+- Missing the response deadline sets them to Failed and clears our marker/HUD.
+  The original scanner remains available. Its existing bonus rules still apply.
+- An incident resolved before attendance withdraws the assignment without a
+  completed-dispatch credit.
+- Manual cancellation and shift end deactivate our entry. Wanted termination
+  records failure. The previous tracked story objective is restored only if our
+  dispatch was still tracked; a player's newer selection is respected.
+- Busy pauses NEW automatic calls; an existing response deadline continues.
+- Loading a save ends the current duty session as before. An old active journal
+  entry is deactivated on the next loaded-world tick. Completed/failed history
+  remains until the next assignment resets the single reusable entry.
+- No new payment is issued by journal success/failure. Scanner and arrest money,
+  ledgers and receipts are unchanged. There is no progression system in this test.
+- Missing journal resources or rejected activation/reset produce diagnostics
+  instead of pretending that a native journal quest was created.
 
-RETAINED FEATURES
-Fast Travel duty controls; partner following/combat/boarding/revive; one capped
-backup car/two officers; scanner bonuses/receipts; dispatch HUD, marker/radio;
-vehicle-local chatter; wanted termination; independent EUR$250 lying arrests.
-Arrest code/YAML/archive, aid wrappers, dispatch/partner/backup controllers,
-main/support systems, repair wrapper/timer and stats/payment logic are verified
-unchanged from v0.8b. GPS may still require opening/closing the map.
+MANUAL TEST
+1. Request a dispatch, check its journal/objective and countdown, then arrive.
+   Confirm the timer disappears. Resolve the scanner and check Completed.
+2. Request another call more than 60 m away. In CET use:
+   Test timeout: 15 s left (on route)
+   Stay away and outside game menus for 15 gameplay seconds; check Failed,
+   cleared marker, and that the vanilla scanner is still available.
+3. Request another call after failure. Check reactivation and cancellation.
+4. Save/load during an active call. The shift should be off and the active
+   dispatch should close, while previously paid money remains unchanged.
+5. If the journal is absent, refuses reuse or looks wrong, send the CET
+   Log dispatch journal diagnostics output. It reports readiness, requested
+   stage and actual quest/objective states.
 
-VALIDATION
-All 11 Lua modules parse. All 18 redscripts compile with zero warnings/errors
-against source-derived API contracts, not the actual game cache. Tests execute
-both real trunk PS wrappers, native backup/hold/menu entry callbacks, caption
-records, stash/menu restoration, native release-only event contract, range/
-ownership/pause/duty/life guards and existing repair/stats/dispatch/partner logic.
-The original invalid CeilF cast remains rejected by a separate type regression.
-Existing scanner, radio, revive, boarding, backup and arrest regressions pass.
-Native input arbitration, rendered icons/choice list, AI, vehicle graphics and
-native save loading still require in-game validation. No new input XML is
-installed. No Input Loader dependency is introduced.
-Requirements remain game 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.1,
-TweakXL and compatible redscript.
+VALIDATION AND LIMITS
+The authored journal/localization compile and round-trip in WolvenKit 9.1.1.
+The build checks one quest/phase/objective, its localization keys, no journal
+mappin at the origin, and exact archive extraction bytes. Portable tests run the
+authored native controller through a syntax adapter with native APIs mocked,
+plus the actual CET dispatcher/bridge and existing arrest/trunk regressions.
+A source-derived native API contract compile completed locally before the
+execution environment disconnected. Hosted checks package the install ZIP.
+These do not establish native cache compatibility, rendered quest UI,
+reactivation behavior or native save loading; those require the game test.
+The scripted-quest cloning APIs which returned false in the examined game
+source are not used. Only our own journal paths are written.
 
-ROLLBACK
-Reinstall the full v0.8b ZIP to return to the previous trunk test. For the
-confirmed v0.7f arrest build: remove trunk.lua plus NCPDPatrolTrunkSystem.reds,
-NCPDPatrolTrunkInteractions.reds and NCPDPatrolTrunkVehicle.reds, then reinstall
-its entire ZIP. The arrest archive is identical. Older ZIPs remain on GitHub.
+PRESERVED / ROLLBACK
+Partner/revive/boarding, backup, scanner payments, main/support systems, native
+trunk controls and arrest code/archive are retained. GPS may still require
+opening/closing the map.
+To return to v0.8c, exit the game and remove these four added install files:
+  bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_journal.lua
+  r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds
+  archive/pc/mod/NCPDPatrol_Dispatch.archive
+  archive/pc/mod/NCPDPatrol_Dispatch.archive.xl
+Then reinstall the complete v0.8c ZIP. Earlier packages remain on GitHub.

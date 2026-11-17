@@ -1,0 +1,89 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "gameJournalResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "entry": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "gameJournalRootFolderEntry",
+          "id": "",
+          "journalEntryOverrideDataList": [],
+          "entries": [
+            {
+              "HandleId": "1",
+              "Data": {
+                "$type": "gameJournalFolderEntry",
+                "id": "quests/minor_quest",
+                "journalEntryOverrideDataList": [],
+                "entries": [
+                  {
+                    "HandleId": "2",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_dispatch",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "3",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "4",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "resolve",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "5",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Dispatch_Description"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Dispatch_Objective"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_Dispatch_Title"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
