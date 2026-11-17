@@ -1,56 +1,42 @@
 # NCPD Patrol
 
-## v0.6d: recoverable partner test
+## v0.6e: post-revive health and voice test
 
-**[Download v0.6d](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6d_Recoverable_Partner_TEST.zip)**
+**[Download v0.6e](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6e_Revive_Health_Voice_TEST.zip)**
 
-The v0.6c in-game probe confirmed that the revived partner stayed still: zero horizontal displacement over three seconds. The tracked command object's state stayed **Enqueued**. That alone did not establish the controller's actual execution state.
+The user confirmed that v0.6d's down/revive, following, combat and vehicle boarding work in-game. The remaining report is repeated injury dialogue **only after revive**. Actual health during the complaint has not yet been measured.
 
-### Different down cycle
+### Healing and observation
 
-The partner now uses a private status derived from vanilla **DefeatedWithRecover**, with infinite duration until manual revive. Revive restores health and removes that effect, letting the game's recoverable-status removal callback run. The ordinary **Defeated / ResurrectEvent** cycle and manual downed-signal, senses, bump and high-level repairs have been removed.
+The existing request for **100% health** now follows removal of the recoverable down effect. During protected recovery, the mod reads the native health pool back after at least one second. Below 99%, it requests full health **once more** and reads back on the next eligible tick. There is no repeated healing during normal following/combat. A rejected heal retains its actual low readback in diagnostics.
 
-The same actor, scoped death protection, 3-second treatment within 2.5 m, interruptions and native Revive Partner interaction remain. Recovery waits for active/conscious state and effect removal, then uses canonical follower-role assignment and companion-target confirmation. Vanilla status records and ambient officers are unchanged. No new V treatment animation is added.
+After follower restoration, **Partner health after revive** prints current health, Wounded/combat flags, revive count, before/after healing measurements and whether a retry occurred. Current health can differ from the earlier recovery measurement through later combat. Before a completed revive, `heal measured=false` marks the before/after fields as unmeasured.
 
-The new record is checked at registration for existence, recoverable type and infinite duration. Include the new YAML when installing.
+The new **NCPDPatrolPartnerVoice.reds** observes script voice requests for this mod's registered partner on duty. **Partner VO request** prints the requested context, script source and health/Wounded/combat snapshot at request time. It always preserves the original call, arguments, delay and return value. It never mutes or replays speech.
 
-### Automatic evidence
+Logging is automatic, at most once per two seconds and 30 lines per partner/revive; each sample contains the latest request. It is not an exhaustive recording list, cannot capture every native audio route, and does not prove audible playback. A 100% snapshot rules out low health at that request. A Wounded flag alone does not identify the cause of a spoken line. No speculative status cleanup is applied.
 
-**Revive probe** records the tracked follow command's ID and **object state**, maximum horizontal displacement and native partner flags. A separate **Revive controller** line reads the controller's state for that command, whether a follow command executes, the selected follow command's ID and the AI update tick count.
+### Install and report
 
-The selected ID can differ from the tracked command. States alone do not prove motion. Each optional read fails independently as unavailable. The observer sends/cancels no commands and changes no native state.
+1. Exit the game completely. Extract the **entire ZIP** into the game directory containing bin and r6, overwriting NCPD Patrol files. Include the new **NCPDPatrolPartnerVoice.reds** and the existing **NCPDPatrol_PartnerDown.yaml**. Restart; CET announces **v0.6e**, native interfaces **15**.
+2. Start a fresh shift/partner and down/revive normally. The existing **Test: down partner** button also works. No new binding or log arming is required.
+3. If the complaint continues, send **Partner health after revive** and **Partner VO request** lines. If no VO request is captured, send the health line. The existing **Log partner AI diagnostics** button also prints current health while he complains.
 
-Sampling arms automatically after revive and target confirmation, then waits for both actors on foot, outside combat/menus and at least 5 m apart. It holds periodic follow refresh during one three-second window, reports once and stops. Close-range standing is not treated as failed following.
+### Preserved behaviour and validation
 
-### Install and test
+The private infinite **DefeatedWithRecover** record, revive interaction, follower helper, boarding, backup and movement/controller probe are unchanged from v0.6d. Scanner rewards, dispatch, radio and chatter logic remain; compatibility guards advance to interface 15. Requirements remain Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+, TweakXL and compatible redscript.
 
-1. Exit the game completely. Extract the **entire ZIP** into the game directory containing bin and r6, overwriting the mod files. Include **r6/tweaks/NCPDPatrol_PartnerDown.yaml**. Restart; CET announces **v0.6d**, native interfaces **14**.
-2. **Start a new shift with a fresh partner.** An NPC already defeated by an older build cannot test the replacement down cycle.
-3. Down/revive that partner. The existing **Test: down partner** button can trigger this without combat. Approach, use **Revive Partner** and stay within 2.5 m for 3 seconds.
-4. Resume normal play and check following/boarding. Logging arms automatically. If still stuck, send both **Revive probe** and **Revive controller** result lines. No manual active-state setting or log arming is needed.
-
-A waiting probe reports which distance/menu/combat/vehicle condition prevents sampling.
-
-### Retained scope
-
-Backup is byte-for-byte v0.6c/v0.6b. Duty, scanner bonuses/receipts, dispatch, boarding, wanted termination, chatter and radio behaviour remain. Requirements: Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+, TweakXL and compatible redscript. No added dependency or required binding.
-
-### Validation and limits
-
-Nine Lua modules parse in LuaJIT. Ten redscripts pass the local checker with zero warnings/errors against source-derived API contracts, **not the actual game script cache**. Authored support logic and actual CET modules execute against simulated native boundaries. Checks cover repeated same-actor revival, indefinite manual downing, missing/wrong configuration, pending effect removal, blocked recovery, canonical role binding, treatment/menu/vehicle/wanted/load guards, object/controller state disagreement, measured/no displacement, optional API failures, bounded logging and prior regressions.
-
-This cannot verify actual AI, navigation, animations or game physics. The recoverable callback exists in the script reference; whether it avoids this partner's AI stall needs in-game confirmation. This is a test build.
+Nine Lua modules parse in LuaJIT. Eleven redscripts pass the local compiler with zero warnings/errors against source-derived API contracts, **not the actual game cache**. Authored support logic, the actual voice wrapper and CET modules execute against mocked native boundaries. Checks cover rejected healing, single retry, truthful low readback, no ongoing healing loop, repeated same-actor revive, voice scoping and argument/call/return preservation, logging bounds/rearming, lifecycle guards and prior regressions. In-game healing/audio still need confirmation.
 
 ### Rollback
 
-[Download v0.6c](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6c_Revive_Gate_Probe_TEST.zip). Exit the game, remove **r6/tweaks/NCPDPatrol_PartnerDown.yaml** and reinstall the complete v0.6c ZIP.
+**[Download confirmed v0.6d](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.6d_Recoverable_Partner_TEST.zip)**. Exit the game, remove **r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds**, then reinstall the complete v0.6d ZIP. Keep its PartnerDown YAML.
 
 ### API references
 
-- [Recoverable status apply/remove callbacks](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/puppet/NPCPuppet.swift)
-- [Ordinary versus recoverable defeated handling](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/puppet/scriptedPuppet.swift)
-- [Status records and infinite-duration base](https://github.com/CDPR-Modding-Documentation/Cyberpunk-Tweaks/blob/0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d/tweaks/base/gameplay/static_data/database/status_effect/misc.tweak)
-- [Controller command queries](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/AICAgent.lua)
-- [Canonical follower role and companion target](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/components/aiComponent.swift)
+- [Health pool percentage and setting APIs](https://github.com/In-Question/MOD_Development_Reference/blob/main/Definitions/Game_Definitions/classes/gameStatPoolsSystem.lua)
+- [Script voice request entry point](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/core/entity/gameObject.swift)
+- [Hit-reaction voice contexts](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/Tasks/ReactionTasks/aiHitReactionTasks.swift)
+- [Wounded status type](https://github.com/In-Question/MOD_Development_Reference/blob/main/DecompiledGameScripts/cyberpunk/ai/Conditions/aiStatusEffectCondition.swift)
 
-Archive SHA-256: `74719e2914681c75dde7ffbcf5d70570e484c904273e5ff6f63e93cc6f993bbd`
+Archive SHA-256: `1efe824bda7a9488eb306a275dd89bd0fbfcca39445f074167285d1af6c9d291`

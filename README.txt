@@ -1,81 +1,74 @@
-NCPD PATROL v0.6d - RECOVERABLE PARTNER TEST
-==========================================
-The v0.6c gameplay log confirmed zero horizontal displacement after revive.
-The tracked command object's state stayed Enqueued; the native controller's
-command state had not yet been queried. This build tests a different down cycle.
+NCPD PATROL v0.6e - REVIVE HEALTH / VOICE TEST
+============================================
+v0.6d is confirmed in-game by the user: downing, revive, following, combat and
+boarding work. The remaining report is repeated 'shot/injured' dialogue that
+starts after revive. Low health has not yet been measured in that game session.
 
-CHANGE
-The partner now receives a private NCPDPatrolPartnerDown status derived from
-vanilla DefeatedWithRecover, with BaseStats.InfiniteDuration and savable=false.
-Only this mod's registered, spawned partner receives the effect. Vanilla status
-records and ambient officers are not modified. The partner remains down until
-manual revive; the ordinary timed follower defeat is not used as the timer.
+CHANGES
+Revive still uses the same private, infinite DefeatedWithRecover status and the
+same actor, interaction and canonical follower-role restoration as v0.6d.
 
-Revive restores health and removes the private effect, allowing the game's
-recoverable-status removal callback to return the actor to a conscious state.
-The old ordinary Defeated / ResurrectEvent cycle and manual downed-signal,
-senses, bump and high-level repairs have been removed. Canonical follower-role
-rebinding and follower-target confirmation remain. The actor is not respawned.
-The scoped Immortal protection, extra protection while down, 3-second treatment
-within 2.5 m, interruptions and world interaction remain.
+The 100-percent healing request now follows removal of the private down effect
+and FollowerDefeated effects. During the existing protected recovery interval,
+health is read from the native pool after at least one second. If below 99%,
+full health is requested once more and read back on the next eligible tick.
+There is at most one extra request per revive. Normal following/combat never
+repeatedly heals the partner. The existing recovery/follower gates remain;
+a failed heal is reported as the actual lower value, not a fabricated 100%.
 
-Registration checks that the new record exists, is DefeatedWithRecover and uses
-InfiniteDuration. A missing/wrong record is rejected with an install error.
-Native recovery readiness still requires the effect to be gone, the actor to
-be active/conscious and no FollowerDefeated effect. A residual downed signal
-remains diagnostic; it is not forcibly removed or a mod-only readiness veto.
-No new V treatment animation is added. Down/get-up behaviour is the game's.
+New automatic line after follower restoration:
+Partner health after revive | health=...% | wounded=... | combat=... |
+aid state=... | revives=... | heal before=...% | heal after=...% |
+heal measured=... | heal retried=...
+health is the current native percentage. heal after is the recovery readback;
+a value may change later through combat. Before any completed revive,
+heal measured=false means those before/after fields are not a completed test.
 
-AUTOMATIC OBSERVATION
-After revive and follower-target confirmation, the observer waits until both
-actors are on foot, outside combat/menus and at least 5 m apart. For three
-seconds it records the same follow command and horizontal displacement. The
-periodic follow refresh is held for that window so the command remains stable.
+The new NCPDPatrolPartnerVoice.reds observes GameObject.PlayVoiceOver script
+requests for this mod's registered partner while on duty. It stores the voice
+context, script source and a health/Wounded/combat snapshot at request time.
+The original call, arguments, delay and return value are always preserved.
+No audio is muted, replayed or cancelled. This cannot observe every possible
+native audio route and a request is not proof of audible playback.
 
-Revive probe: command ID, OBJECT state, elapsed time, displacement and native
-partner flags. Revive controller: the controller's GetCommandState result for
-that command, whether a follow command executes, the selected follow command's
-ID and AI update tick count. These are separate lines to fit the console better.
-The selected follow ID can differ from the tracked ID; neither state alone
-proves movement. Optional controller calls fail independently as unavailable.
-The observer is read-only, pauses/restarts around menus/combat/vehicles and
-stops after one result. It never sends/cancels commands or changes native flags.
-The existing Log partner AI diagnostics button still reports probe progress.
+CET prints Partner VO request lines automatically, at most once per two seconds
+and 30 lines per partner/revive. Each line reports the most recent request;
+several requests between samples are combined, not an exhaustive voice history.
+The existing Log partner AI diagnostics button also prints current health.
+A 100% health snapshot during a complaint rules out low health at that request;
+Wounded=true alone does not prove which effect caused that spoken line.
+The observer does not remove wounds/statuses or alter AI to guess the cause.
 
 INSTALL AND TEST
-1. Exit the game completely. Extract the ENTIRE ZIP into the game directory
-   containing bin and r6, overwriting the existing NCPD Patrol files. Include
-   the NEW r6/tweaks/NCPDPatrol_PartnerDown.yaml. Restart; CET announces v0.6d
-   and both native interfaces use version 14.
-2. Start a new shift to create a fresh partner. An actor already defeated by an
-   older version is not a valid test of the new down cycle.
-3. Down/revive the new partner once. The existing CET Test: down partner button
-   can trigger this without combat; normal low-health downing also uses it.
-   Approach and use Revive Partner, staying within 2.5 m for 3 seconds.
-4. Resume normal play. Check follow and boarding. Observation arms automatically;
-   no manual active-state setting, log arming button or new binding is needed.
-   If still stuck, send the Revive probe AND Revive controller result lines.
-   If waiting, the probe explains the distance/menu/combat/vehicle condition.
+1. Exit the game completely and extract the ENTIRE ZIP into the game directory
+   containing bin and r6, replacing all NCPD Patrol files. Include the NEW
+   r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds and the existing
+   r6/tweaks/NCPDPatrol_PartnerDown.yaml. Restart; CET announces v0.6e and both
+   native interfaces use version 15.
+2. Start a fresh shift/partner, then down/revive normally. The existing Test:
+   down partner button is also available. No new hotkey or log arming is needed.
+3. If he keeps complaining, send Partner health after revive and Partner VO
+   request lines. If no VO request is captured, send the health line anyway.
+   The existing Log partner AI diagnostics button can read current health while
+   the complaint is happening. No manual active-state setting is required.
 
-SCOPE / REQUIREMENTS
-Backup is byte-for-byte v0.6c/v0.6b. Duty, scanner bonuses and receipts, dispatch,
-boarding, wanted termination, vehicle chatter and radio behaviour are retained.
-Requirements: Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4, RED4ext 1.31.0+,
-TweakXL and compatible redscript. No added dependency or required key binding.
+VALIDATION / LIMITS
+Nine Lua modules parse in LuaJIT. Eleven redscripts pass the local compiler with
+zero warnings/errors against source-derived contracts, not an actual game cache.
+Authored support logic, the actual VO wrapper and CET modules execute with native
+boundaries mocked. Checks cover a rejected first heal, bounded retry, a rejected
+retry with truthful low readback, no healing loop after recovery, repeated same-
+actor down/revive, scoped voice snapshots, argument/call/return preservation,
+logging bounds, rearming, world/duty/wanted guards and prior regressions.
+Actual healing, audio and post-revive dialogue still need an in-game test.
 
-VALIDATION AND LIMITS
-Nine Lua modules parse in LuaJIT. All ten redscripts pass the local checker with
-zero warnings/errors against source-derived API contracts, not a game cache.
-The authored support class and real CET modules execute with simulated native
-boundaries. Checks cover repeated same-actor cycles, indefinite manual downing,
-missing/wrong config, delayed effect removal, unsuccessful native recovery,
-role-target confirmation, interruptions, menu/vehicle/wanted/load guards,
-controller/object state disagreement, measured/no displacement, unavailable
-native APIs, bounded logging and previous bonus/dispatch/backup regressions.
-These checks do not simulate real AI, animations, navigation or game physics.
-The vanilla recoverable callback is documented in the game-script reference;
-whether this avoids the user's actual AI stall must be tested in the game.
+Backup, boarding, follower helper, revive interaction, private down record and
+movement/controller probe are unchanged from v0.6d. Scanner rewards, dispatch,
+radio and chatter logic are retained; interface guards advance to version 15.
+Requirements remain Cyberpunk 2077 2.5, matching CET, Codeware 1.21.4,
+RED4ext 1.31.0+, TweakXL and compatible redscript. No new dependency or binding.
 
 ROLLBACK
-Exit the game. Remove r6/tweaks/NCPDPatrol_PartnerDown.yaml and reinstall the
-complete v0.6c ZIP. Earlier archives remain on GitHub.
+Exit the game, remove r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds and
+reinstall the complete v0.6d ZIP. Keep its PartnerDown YAML. The known-working
+v0.6d archive remains on GitHub.

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6d: one owned partner with native defeat/revive and boarding.
+-- NCPD Patrol v0.6e: one owned partner with native defeat/revive and boarding.
 -- Uses the same officer record and follower setup tested in v0.3a.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
@@ -21,6 +21,7 @@ local vehicleFailed = false
 local supportState = 0
 local supportFailure = false
 local rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
+local voiceTime, voiceRevision, voiceLines = 0, 0, 0
 
 local function support()
     return Game.GetScriptableSystemsContainer():Get("NCPDPatrolSupportSystem")
@@ -38,6 +39,27 @@ end
 function M.diagnostics()
     local ok, info = pcall(function() return support():GetPartnerDiagnostics() end)
     return (ok and tostring(info) or ("Partner AI diagnostics unavailable: " .. tostring(info))) .. " | probe=" .. Probe.state()
+end
+
+function M.healthDiagnostics()
+    local ok, info = pcall(function() return support():GetPartnerHealthDiagnostics() end)
+    return ok and tostring(info) or ("Health diagnostics unavailable: " .. tostring(info))
+end
+
+local function observeVoice(delta)
+    if delta <= 0 or delta > 0.5 or voiceLines >= 30 then return end
+    voiceTime = voiceTime + delta
+    if voiceTime < 2 then return end
+    voiceTime = 0
+    -- Optional diagnostics must never interrupt following, combat or boarding.
+    pcall(function()
+        local system = support()
+        local revision = system:GetPartnerVoiceRevision()
+        if revision ~= voiceRevision then
+            voiceRevision, voiceLines = revision, voiceLines + 1
+            print("[NCPD Patrol] Partner VO request | " .. tostring(system:GetPartnerVoiceDiagnostics()))
+        end
+    end)
 end
 
 local function restoreRole()
@@ -136,6 +158,7 @@ end
 
 function M.dismiss(status)
     Probe.reset()
+    voiceTime, voiceRevision, voiceLines = 0, 0, 0
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     pcall(function()
         local system = support()
@@ -176,6 +199,7 @@ end
 -- Forget stale IDs without issuing a deletion into the newly loaded world.
 function M.reset()
     Probe.reset()
+    voiceTime, voiceRevision, voiceLines = 0, 0, 0
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     spawnId, officer, spawnWaiting, followCommand = nil, nil, false, nil
     timeout, pollTime, followTime = 0, 0, 0
@@ -207,7 +231,7 @@ function M.update(delta, onDuty, status)
         spawnWaiting = false
         local attached, err = pcall(function()
             local system = support()
-            if not system or system:Version() ~= 14 or not system:RegisterPartner(officer) then
+            if not system or system:Version() ~= 15 or not system:RegisterPartner(officer) then
                 error("Native revive protection could not register our partner")
             end
             supportState = system:GetPartnerState()
@@ -225,6 +249,7 @@ function M.update(delta, onDuty, status)
         return
     end
     if officer then
+        observeVoice(delta)
         local aidOK, ready = pcall(function()
             local system = support()
             local patrol = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem")
@@ -241,6 +266,7 @@ function M.update(delta, onDuty, status)
             end
             if previous ~= 1 then
                 Boarding.reset()
+                voiceTime, voiceRevision, voiceLines = 0, 0, 0
                 rolePending, roleElapsed, roleAttempts, roleFailed = true, 0, 0, false
                 restoreRole()
                 stateLabel = "Revived; restoring follower AI"
@@ -257,6 +283,7 @@ function M.update(delta, onDuty, status)
                     followTime = 0
                     stateLabel = "Revived; follower target restored"
                     status("Partner AI restored | " .. M.diagnostics())
+                    print("[NCPD Patrol] Partner health after revive | " .. M.healthDiagnostics())
                 else
                     if roleElapsed >= 1.5 and roleAttempts < 2 then restoreRole() end
                     if roleElapsed >= 4 then

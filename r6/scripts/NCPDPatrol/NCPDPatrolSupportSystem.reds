@@ -7,6 +7,13 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
     private let m_recoveryTime: Float;
     private let m_recoveryNoticePending: Bool;
     private let m_partnerRevision: Int32;
+    private let m_healBefore: Float;
+    private let m_healAfter: Float;
+    private let m_healMeasured: Bool;
+    private let m_healRetried: Bool;
+    private let m_revives: Int32;
+    private let m_partnerVoiceRevision: Int32;
+    private let m_partnerVoiceText: String;
     private let m_backupRequested: Bool;
     private let m_backupActive: Bool;
     private let m_backupStatus: String;
@@ -19,7 +26,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
-    public func Version() -> Int32 { return 14; }
+    public func Version() -> Int32 { return 15; }
 
     private func ForgetWorld() -> Void {
         // Never issue cleanup operations using references from a loaded-away world.
@@ -29,6 +36,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         this.m_treatmentTime = 0.0;
         this.m_recoveryTime = 0.0;
         this.m_partnerRevision += 1;
+        this.ResetPartnerMeasurements();
         this.m_backupRequested = false;
         this.m_backupActive = false;
         this.m_backupVehicle = null;
@@ -53,6 +61,47 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
             && Equals(effect.Duration().GetID(), t"BaseStats.InfiniteDuration");
     }
 
+    private func ResetPartnerMeasurements() -> Void {
+        this.m_healBefore = 0.0;
+        this.m_healAfter = 0.0;
+        this.m_healMeasured = false;
+        this.m_healRetried = false;
+        this.m_revives = 0;
+        this.m_partnerVoiceRevision = 0;
+        this.m_partnerVoiceText = "No script voice request observed for this partner";
+    }
+
+    public func GetPartnerHealthPercent() -> Float {
+        if !IsDefined(this.m_partner) || !this.m_partner.IsAttached() { return -1.0; };
+        return GameInstance.GetStatPoolsSystem(this.GetGameInstance()).GetStatPoolValue(Cast<StatsObjectID>(this.m_partner.GetEntityID()), gamedataStatPoolType.Health, true);
+    }
+
+    public func GetPartnerHealthDiagnostics() -> String {
+        let health: Float;
+        let wounded: Bool;
+        let combat: Bool;
+        if !IsDefined(this.m_partner) || !this.m_partner.IsAttached() { return "No registered partner"; };
+        health = this.GetPartnerHealthPercent();
+        wounded = StatusEffectSystem.ObjectHasStatusEffectOfType(this.m_partner, gamedataStatusEffectType.Wounded);
+        combat = Equals(this.m_partner.GetHighLevelStateFromBlackboard(), gamedataNPCHighLevelState.Combat);
+        return s"health=\(health)% | wounded=\(wounded) | combat=\(combat) | aid state=\(this.m_partnerState) | revives=\(this.m_revives) | heal before=\(this.m_healBefore)% | heal after=\(this.m_healAfter)% | heal measured=\(this.m_healMeasured) | heal retried=\(this.m_healRetried)";
+    }
+
+    public func RecordPartnerVoice(source: ref<GameObject>, voice: CName, context: CName) -> Void {
+        let voiceText: String;
+        let contextText: String;
+        let healthText: String;
+        if !this.IsDutyEligible() || !this.IsPartner(source) { return; };
+        voiceText = NameToString(voice);
+        contextText = NameToString(context);
+        healthText = this.GetPartnerHealthDiagnostics();
+        this.m_partnerVoiceRevision += 1;
+        this.m_partnerVoiceText = s"request=\(voiceText) | source=\(contextText) | \(healthText)";
+    }
+
+    public func GetPartnerVoiceRevision() -> Int32 { return this.m_partnerVoiceRevision; }
+    public func GetPartnerVoiceDiagnostics() -> String { return this.m_partnerVoiceText; }
+
     public func RegisterPartner(npc: ref<NPCPuppet>) -> Bool {
         let god: ref<GodModeSystem> = GameInstance.GetGodModeSystem(this.GetGameInstance());
         if !this.IsDutyEligible() || !this.IsPartnerDownConfigured() || !IsDefined(npc) || !npc.IsAttached() || npc.IsDead() || !IsDefined(god) { return false; };
@@ -60,6 +109,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         if IsDefined(this.m_partner) { return this.m_partner == npc; };
         if !god.AddGodMode(npc.GetEntityID(), gameGodModeType.Immortal, n"NCPDPatrolPartner") { return false; };
         this.m_partner = npc;
+        this.ResetPartnerMeasurements();
         this.m_partnerState = 1;
         this.m_partnerRevision += 1;
         // Our immortal health floor and manual defeat state own this actor's cycle.
@@ -69,6 +119,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     public func UnregisterPartner() -> Void {
         this.m_recoveryNoticePending = false;
+        this.ResetPartnerMeasurements();
         let god: ref<GodModeSystem> = GameInstance.GetGodModeSystem(this.GetGameInstance());
         if IsDefined(this.m_partner) && this.m_partner.IsAttached() && IsDefined(god) {
             god.RemoveGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown");
@@ -151,6 +202,8 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         if VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), this.m_partner) { return false; };
         this.m_partnerState = 2;
         this.m_recoveryNoticePending = false;
+        this.m_healMeasured = false;
+        this.m_healRetried = false;
         this.m_treatmentTime = 0.0;
         this.m_partnerRevision += 1;
         god.AddGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown");
@@ -196,17 +249,33 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
             this.m_recoveryTime = 0.0;
             this.m_partnerRevision += 1;
             this.m_partner.NCPDPatrolRefreshAidInteraction();
-            GameInstance.GetStatPoolsSystem(this.GetGameInstance()).RequestSettingStatPoolValue(Cast<StatsObjectID>(this.m_partner.GetEntityID()), gamedataStatPoolType.Health, 100.0, null, true);
+            this.m_healBefore = this.GetPartnerHealthPercent();
+            this.m_healAfter = 0.0;
+            this.m_healMeasured = false;
+            this.m_healRetried = false;
+            this.m_revives += 1;
             StatusEffectHelper.RemoveStatusEffect(this.m_partner, t"BaseStatusEffect.NCPDPatrolPartnerDown");
             // Hit reactions have a separate, difficulty-dependent companion
             // defeat effect. The vanilla role-clearing path removes this tag.
             StatusEffectHelper.RemoveStatusEffectsWithTag(this.m_partner, n"FollowerDefeated");
+            // Request full health after releasing the recoverable effects.
+            // Native application is asynchronous; read the pool back below.
+            GameInstance.GetStatPoolsSystem(this.GetGameInstance()).RequestSettingStatPoolValue(Cast<StatsObjectID>(this.m_partner.GetEntityID()), gamedataStatPoolType.Health, 100.0, null, true);
             return;
         };
         if this.m_partnerState == 4 {
             this.m_recoveryTime += delta;
             if this.m_recoveryTime < 1.0 { return; };
             if this.IsPartnerRecoveryReady() {
+                this.m_healAfter = this.GetPartnerHealthPercent();
+                this.m_healMeasured = true;
+                if this.m_healAfter < 99.0 && !this.m_healRetried {
+                    // One retry during protected recovery, never a healing loop
+                    // after the partner returns to combat or normal following.
+                    this.m_healRetried = true;
+                    GameInstance.GetStatPoolsSystem(this.GetGameInstance()).RequestSettingStatPoolValue(Cast<StatsObjectID>(this.m_partner.GetEntityID()), gamedataStatPoolType.Health, 100.0, null, true);
+                    return;
+                };
                 god = GameInstance.GetGodModeSystem(this.GetGameInstance());
                 if IsDefined(god) { god.RemoveGodMode(this.m_partner.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolPartnerDown"); };
                 this.m_partnerState = 1;

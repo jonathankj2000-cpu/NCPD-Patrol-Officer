@@ -1,4 +1,4 @@
--- NCPD Patrol v0.6d | partner aid and one backup patrol via native interactions
+-- NCPD Patrol v0.6e | partner aid and one backup patrol via native interactions
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -50,7 +50,7 @@ end
 local function requestBackup()
     local support = getSupportSystem()
     local ok, accepted = pcall(function()
-        return support and support:Version() == 14 and support:RequestBackup()
+        return support and support:Version() == 15 and support:RequestBackup()
     end)
     if not ok or not accepted then
         status("Backup request unavailable. Start a shift; only one patrol may be assigned.")
@@ -210,9 +210,9 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 14 then error("Install all v0.6d support files and restart the game") end
+        if not support or support:Version() ~= 15 then error("Install all v0.6e support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 14 then error("Lua/redscript version mismatch; install all v0.6d files and restart the game") end
+        if patrol:Version() ~= 15 then error("Lua/redscript version mismatch; install all v0.6e files and restart the game") end
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -276,7 +276,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.6d loaded. Partner uses a recoverable down effect. Revive removes that effect; object/controller state and displacement are logged automatically.")
+    status("v0.6e loaded. Recoverable revive retained; healing is read back after recovery. Partner health and script voice requests are logged for the post-revive complaint.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -300,7 +300,7 @@ registerForEvent("onUpdate", function(delta)
         local ok, err = pcall(function()
             local patrol = getPatrolSystem()
             if not patrol then return end
-            if patrol:Version() ~= 14 then return end
+            if patrol:Version() ~= 15 then return end
             patrol:EnforceDutyRules()
             if onDuty and not patrol:IsOnDuty() then
                 onDuty = false
@@ -356,7 +356,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.6d")
+    local visible = ImGui.Begin("NCPD Patrol - v0.6e")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -394,7 +394,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.6d files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.6e files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -445,7 +445,10 @@ registerForEvent("onDraw", function()
         ImGui.TextWrapped("Current state: " .. Partner.state())
         ImGui.TextWrapped("Vehicle: " .. Partner.vehicleState())
         ImGui.TextWrapped("Revive: " .. Partner.aidState())
-        if ImGui.Button("Log partner AI diagnostics") then status("Partner AI | " .. Partner.diagnostics()) end
+        if ImGui.Button("Log partner AI diagnostics") then
+            status("Partner AI | " .. Partner.diagnostics())
+            print("[NCPD Patrol] Partner health | " .. Partner.healthDiagnostics())
+        end
         ImGui.TextWrapped("When your partner is down, approach and use Revive Partner. Stay within 2.5 m for 3 seconds.")
         if ImGui.Button("Test: down partner") then
             local support = getSupportSystem()
@@ -469,7 +472,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 14 then return "Version mismatch: install all v0.6d files and restart the game." end
+                if patrol:Version() ~= 15 then return "Version mismatch: install all v0.6e files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
