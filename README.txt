@@ -1,4 +1,4 @@
-NCPD PATROL v0.15e - SHIFT START FIX
+NCPD PATROL v0.16a - M2038 NCPD BEAN BAGGER
 ========================================================
 Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
@@ -25,9 +25,50 @@ fast-travel requests and the optional hotkey. Current interfaces start normally;
 missing/old interfaces refuse before beginning a shift or spawning a partner.
 Install this complete package and restart. All v0.15d fixes are included.
 
+V0.16A BEAN BAGGER FOR V
+M2038 NCPD Bean Bagger is an extra fixed Tier 2 reward at 20 completed incidents.
+Its stable item ID is Items.NCPDBeanBagger_M2038. Existing receipts stay intact:
+if you already collected the old 20-incident bundle, Claim next milestone reward
+issues just this missing part. Partner equipment and assignments are unchanged.
+The separate CET > NCPD CAREER > TEST: Give Bean Bagger (Tier 2) button needs no
+unlock override. It gives one test copy per session without consuming a career
+receipt. The normal tiered test button includes it too and shares test receipts.
+
+Weapon name/description use the existing Codeware localization provider. The
+weapon keeps the normal Tactician model, pump animation, sound and muzzle VFX.
+Blue grips and custom flash/smoke are not included in this prototype. Its own
+0.90 DamagePerHit multiplier remains; perks/mods/normal game scaling still apply.
+The handoff's full Pax hook is replaced: that package also adds a damage bonus.
+A native hit wrapper applies Nonlethal only to V's ranged hits using this exact
+weapon on human NPCs, and removes explicit kill/dismember overrides on that hit.
+Living downed/unconscious/pending-defeat targets take zero further Bean Bagger
+hit damage, including follow-up pellets. Other guns, NPC firing, bashes,
+explosions, quickhacks and mechanical targets retain their normal behavior.
+This follows the game's defeat mechanism. Scripted/boss defeat restrictions and
+other damage sources are not overridden. No automatic arrest, payment or revive.
+
+BEAN BAGGER GAME TEST
+1. Restart after installing all files. Use TEST: Give Bean Bagger (Tier 2), then
+   confirm its inventory name and Tier 2 quality and equip it on V.
+2. While on duty, shoot an ordinary human enemy. Test torso/headshot, close range
+   and a follow-up shot on a downed target. Look for living defeat, not death.
+3. CET > Log Bean Bagger diagnostics reports actual last-target dead/defeated/
+   unconscious state, native defeat availability and matched pellet hit counts.
+4. Approach an eligible living downed enemy and use the existing Arrest suspect
+   interaction. It should pay the existing EUR$250 once after securing.
+5. Switch to a normal gun; its damage/lethality must remain normal. If comparing
+   damage, match Tier 2, attachments and perks; native damage has random variation.
+6. Check the career claim, save/load and duplicate claim/test-button behavior.
+All logic/source/API checks are offline. Actual game outcomes must be tested.
+
+The integrated YAML deliberately uses the handoff's original file path,
+r6/tweaks/NCPDBeanBagger/NCPDBeanBagger.yaml, replacing its old experimental
+record on a normal full-package install. The standalone CET utility is not
+needed or bundled. No extra framework dependency is added.
+
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.15e.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.16a.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

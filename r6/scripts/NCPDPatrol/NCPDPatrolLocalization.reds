@@ -13,6 +13,8 @@ public class NCPDPatrolLocalizationProvider extends ModLocalizationProvider {
 
 public class NCPDPatrolEnglishText extends ModLocalizationPackage {
     protected func DefineTexts() -> Void {
+        this.Text("NCPD_BeanBagger_WeaponName", "M2038 NCPD Bean Bagger");
+        this.Text("NCPD_BeanBagger_Description", "NCPD-issued less-lethal 12-gauge beanbag shotgun. Tier 2. Intended for non-lethal takedowns of human suspects.");
         this.Text("NCPDPatrol-StartShift", "Start NCPD Shift");
         this.Text("NCPDPatrol-EndShift", "End NCPD Shift");
         this.Text("NCPDPatrol-Backup", "Request NCPD Backup");

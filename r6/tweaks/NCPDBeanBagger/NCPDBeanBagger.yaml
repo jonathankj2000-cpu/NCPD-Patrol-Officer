@@ -1,0 +1,16 @@
+# Same path/ID as the standalone handoff: installing the full package replaces
+# its experimental Pax hook rather than loading a second definition of the gun.
+# Vanilla handling, appearance, pump action and effects remain inherited.
+Items.NCPDBeanBagger_M2038:
+  $base: Items.Preset_Tactician_Default
+  quality: Quality.Uncommon
+  displayName: LocKey#NCPD_BeanBagger_WeaponName
+  localizedDescription: LocKey#NCPD_BeanBagger_Description
+  statModifiers:
+    - !append
+      $type: ConstantStatModifier
+      statType: BaseStats.DamagePerHit
+      modifierType: Multiplier
+      value: 0.90
+# Non-lethal flags are scoped to this exact item in NCPDPatrolBeanBaggerSystem.
+# Do not append GenericMod1_Base_inline3: it also adds Pax's damage bonus.

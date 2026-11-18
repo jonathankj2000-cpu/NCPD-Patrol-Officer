@@ -1,6 +1,19 @@
 # NCPD Patrol
 
 
+## v0.16a: M2038 NCPD Bean Bagger
+
+[Download the complete v0.16a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16a_Bean_Bagger_TEST.zip)
+
+Adds **M2038 NCPD Bean Bagger**, a fixed **Tier 2** Tactician variant for V, as an extra **20-incident reward**. Existing reward receipts are preserved: previous claims reopen only for the missing new weapon. **CET > NCPD CAREER > TEST: Give Bean Bagger (Tier 2)** grants one separate test copy per session without a milestone override or career receipt. The tiered test button also includes it. Partner equipment is unchanged.
+
+Uses the handoff's stable `Items.NCPDBeanBagger_M2038` ID and **0.90 DamagePerHit multiplier**, with a registered custom name/description through the existing required Codeware provider. The original Pax package also contains a damage bonus, so it is replaced by an exact-weapon native hit policy. V's ranged Bean Bagger hits on human NPCs receive the game's **Nonlethal** flag; explicit kill/dismember overrides are removed from that hit. Further Bean Bagger pellets/hits on living downed, unconscious or pending-defeat targets receive zero damage. Native defeat restrictions remain in effect. The existing arrest interaction and EUR$250 payment need no special weapon hook.
+
+**Stock Tactician appearance, audio, pump action and muzzle effects** are retained. Blue grips and altered flash/smoke were only specifications in the handoff; they are not claimed as built. Other guns, NPC firing, mechanical targets, quickhacks and explosions keep normal behavior. No global Pax record, vanilla weapon, NPC life state or partner assignment is modified.
+
+Install the **entire ZIP** and restart. Includes the v0.15d compilation and v0.15e shift-entry fixes. The YAML deliberately replaces the handoff's original path so a normal install does not load a second definition. No new dependency or archive is needed. [Checks and native API evidence](tests/beanbagger/README.md) cover scoped hit handling, migration, reward/test receipts and actual CET handlers; native non-lethal outcomes, timing and rendered localization still require in-game validation. Use **Log Bean Bagger diagnostics** after firing to inspect the actual last target's death/defeat state.
+
+
 ## v0.15e: shift start compatibility fix
 
 [Download the complete v0.15e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15e_Shift_Start_Fix_TEST.zip)
@@ -136,7 +149,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15e**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16a**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

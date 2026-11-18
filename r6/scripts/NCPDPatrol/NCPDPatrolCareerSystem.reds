@@ -47,7 +47,7 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     }
     public func RewardPartCount(index: Int32) -> Int32 {
         if index < 0 || index >= this.MilestoneCount() { return 0; };
-        if index == 2 { return 3; };
+        if index == 2 { return 4; };
         if index == 3 || index == 6 { return 4; };
         if index == 4 { return 2; };
         return 1;
@@ -60,7 +60,8 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
         if index == 2 {
             if part == 0 { return "Items.Vest_03_basic_01"; };
             if part == 1 { return "Items.Preset_Lexington_Military"; };
-            return "Vehicle.v_standard25_thorton_merrimac_police";
+            if part == 2 { return "Vehicle.v_standard25_thorton_merrimac_police"; };
+            return "Items.NCPDBeanBagger_M2038";
         };
         if index == 3 {
             if part == 0 { return "Items.Cop_01_Set_Jacket"; };
@@ -84,7 +85,7 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     public func RewardLabel(index: Int32) -> String {
         if index == 0 { return "NCPD anti-shrapnel helmet"; };
         if index == 1 { return "Villefort Cortes NCPD Overlord"; };
-        if index == 2 { return "NCPD vest + Lexington Military (Tier 2) + Merrimac Police"; };
+        if index == 2 { return "NCPD vest + Lexington Military (Tier 2) + Merrimac Police + Bean Bagger T2"; };
         if index == 3 { return "Full NCPD Badge Set (4 pieces)"; };
         if index == 4 { return "Masamune Military (Tier 3) + Emperor NCPD Ironclad"; };
         if index == 5 { return "Militech Hellhound Man o' War"; };
@@ -101,6 +102,7 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     }
     public func RewardWeaponTier(index: Int32, part: Int32) -> Int32 {
         let name: String = this.RewardRecord(index, part);
+        if Equals(name, "Items.NCPDBeanBagger_M2038") { return 2; };
         if Equals(name, "Items.Preset_Lexington_Military") || Equals(name, "Items.Preset_Masamune_Military")
             || Equals(name, "Items.Preset_Defender_Military") {
             return this.WeaponTierAtMilestone(index);
@@ -111,6 +113,8 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     // item delivered changes; old claims must not silently become claimable again.
     public func RewardGrantRecord(index: Int32, part: Int32) -> String {
         let name: String = this.RewardRecord(index, part);
+        // The handoff's stable public ID is already a fixed Tier 2 record.
+        if Equals(name, "Items.NCPDBeanBagger_M2038") { return name; };
         let tier: Int32 = this.RewardWeaponTier(index, part);
         if tier > 0 { return s"\(name)_NCPDPatrol_Tier\(tier)"; };
         return name;
@@ -225,7 +229,28 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
             this.m_lastStatus = "Tiered test weapons already issued this session. Load a save to start a fresh test.";
             return false;
         };
-        this.m_lastStatus = "TEST WEAPONS ISSUED: Lexington Tier 2, Masamune Tier 3, Defender Tier 5. Career claims unchanged.";
+        this.m_lastStatus = "TEST WEAPONS ISSUED: Bean Bagger Tier 2, Lexington Tier 2, Masamune Tier 3, Defender Tier 5. Career claims unchanged.";
+        return true;
+    }
+
+    public func TestGiveBeanBagger() -> Bool {
+        let transaction: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let record: TweakDBID = t"Items.NCPDBeanBagger_M2038";
+        if !this.CanClaim() || !IsDefined(transaction) {
+            this.m_lastStatus = "Bean Bagger test requires a loaded game, outside combat and without wanted status.";
+            return false;
+        };
+        if ArrayContains(this.m_testWeaponsIssued, record) {
+            this.m_lastStatus = "Bean Bagger test copy already issued this session. Career claims unchanged.";
+            return false;
+        };
+        if !transaction.GiveItem(player, ItemID.FromTDBID(record), 1) {
+            this.m_lastStatus = "Bean Bagger unavailable. Install the complete package, including its TweakXL file, and restart.";
+            return false;
+        };
+        ArrayPush(this.m_testWeaponsIssued, record);
+        this.m_lastStatus = "TEST BEAN BAGGER ISSUED: Tier 2. Career claims unchanged. Check actual living/downed targets before arrest.";
         return true;
     }
     public func GetRecordedActivities() -> Int32 {

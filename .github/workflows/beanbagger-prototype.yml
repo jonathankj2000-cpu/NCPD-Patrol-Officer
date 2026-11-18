@@ -1,0 +1,33 @@
+name: NCPD Bean Bagger integration prototype
+on:
+  push:
+    branches: [prototype/ncpd-beanbagger-v016a]
+    paths-ignore: ['releases/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ncpd-beanbagger-v016a
+  cancel-in-progress: true
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Install test runtime
+        run: |
+          python3 -m venv .ci-python
+          .ci-python/bin/pip install 'lupa==2.6'
+      - name: Verify Bean Bagger, career migration, shift entry and gameplay; build full ZIP
+        run: .ci-python/bin/python tools/build_beanbagger_release.py
+      - name: Commit verified prototype package
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/NCPD_Patrol_v0.16a_Bean_Bagger_TEST.zip releases/NCPD_Patrol_v0.16a_verification.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Build verified v0.16a Bean Bagger integration test package"
+          git push origin HEAD:prototype/ncpd-beanbagger-v016a

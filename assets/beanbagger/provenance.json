@@ -1,0 +1,20 @@
+{
+  "item": "Items.NCPDBeanBagger_M2038",
+  "base": "Items.Preset_Tactician_Default",
+  "quality": "Quality.Uncommon",
+  "damage_per_hit_multiplier": 0.9,
+  "handoff": "NCPD_M2038_Bean_Bagger_v0.2_Handoff.zip",
+  "tweak_reference_repository": "CDPR-Modding-Documentation/Cyberpunk-Tweaks",
+  "tweak_reference_commit": "0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d",
+  "base_preset_source": "tweaks/base/gameplay/static_data/database/items/weapons/ranged/shotguns/tactician/preset_base_tactician.tweak",
+  "base_preset_blob": "76984fd1e9064b967094d3f2330a0b8f0c699409",
+  "pax_source": "tweaks/base/gameplay/static_data/database/items/weapons/parts/mods.tweak",
+  "pax_source_blob": "2965a1afb6952ae88fb7553999d15df3680649b8",
+  "pax_package_reused": false,
+  "reason": "The Pax OnAttach package also includes a 1.2x damage modifier. Prototype uses exact-weapon native hit flags instead.",
+  "localization": "existing required Codeware localization provider; no new archive required",
+  "appearance_and_vfx": "stock Tactician; no blue grips or custom flash/smoke assets in this prototype",
+  "milestone": 20,
+  "partner_assignment_changed": false,
+  "actual_game_validation": false
+}

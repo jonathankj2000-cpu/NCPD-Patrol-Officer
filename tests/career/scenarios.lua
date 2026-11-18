@@ -11,7 +11,7 @@ for _,v in ipairs(ranks) do
 end
 local expected={
  {'Items.Helmet_02_basic_01'}, {'Vehicle.v_standard2_villefort_cortes_police'},
- {'Items.Vest_03_basic_01','Items.Preset_Lexington_Military','Vehicle.v_standard25_thorton_merrimac_police'},
+ {'Items.Vest_03_basic_01','Items.Preset_Lexington_Military','Vehicle.v_standard25_thorton_merrimac_police','Items.NCPDBeanBagger_M2038'},
  {'Items.Cop_01_Set_Jacket','Items.Cop_01_Set_Pants','Items.Cop_01_Set_Boots','Items.Cop_01_Set_Glasses'},
  {'Items.Preset_Masamune_Military','Vehicle.v_standard3_chevalier_emperor_police'},
  {'Vehicle.v_standard3_militech_hellhound_police'},
@@ -32,9 +32,9 @@ for i,records in ipairs(expected) do
  end
  assert(Career:MilestoneStatus(i-1)=='CLAIMED')
 end
-assert(#f.itemCalls==12 and #f.vehicleCalls==4 and #f.notices==7 and wallet==0)
+assert(#f.itemCalls==13 and #f.vehicleCalls==4 and #f.notices==7 and wallet==0)
 assert(not Career:ClaimNextReward() and Career:GetAvailableRewards()==0)
-Career:OnRestored(1,1);assert(not Career:ClaimNextReward() and #f.itemCalls==12 and #f.vehicleCalls==4)
+Career:OnRestored(1,1);assert(not Career:ClaimNextReward() and #f.itemCalls==13 and #f.vehicleCalls==4)
 assert(Core:GetRecordedScannerCount()==100 and Career:GetRecordedDispatches()==4 and Career:GetRecordedArrests()==7)
 assert(f.notices[3].text:find('20 incidents',1,true) and f.notices[3].duration==8)
 -- Reward cars must work with trunk/chatter, while ambient/stolen cars cannot.
@@ -59,7 +59,7 @@ assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==2)
 f.vehiclePresent=true;f.enableAccepted=false;assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==2)
 f.enableAccepted=true;f.unlockConfirmed=false
 assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==2,'unconfirmed garage unlock was recorded')
-f.unlockConfirmed=true;assert(Career:ClaimNextReward() and Career:GetIssuedParts(2)==3)
+f.unlockConfirmed=true;assert(Career:ClaimNextReward() and Career:GetIssuedParts(2)==4)
 assert(f.inventory['Items.Vest_03_basic_01']==1 and f.inventory['Items.Preset_Lexington_Military_NCPDPatrol_Tier2']==1)
 assert(not Career:ClaimNextReward() and #f.notices==3)
 f:Reset(10);transactionPresent=false;assert(not Career:ClaimNextReward() and Career:GetClaimedRewards()==0)
