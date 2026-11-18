@@ -11,6 +11,23 @@ function JournalFixture:ChangeEntryState(path,kind,state,notify)
  return true
 end
 AbsF=function(x) return math.abs(x) end;MaxF=function(a,b) return math.max(a,b) end
+SqrtF=math.sqrt;TanF=math.tan;Deg2Rad=function(degrees) return degrees*math.pi/180 end
+Vector4.new=function(x,y,z,w) return {x=x,y=y,z=z,w=w,X=x,Y=y,Z=z,W=w} end
+local function vec(x,y,z) return Vector4.new(x,y,z,0) end
+Transform={GetPosition=function(_,t) return t.position end,GetForward=function(_,t) return t.forward end,
+ GetRight=function(_,t) return t.right end,GetUp=function(_,t) return t.up end}
+local camera={}
+function camera:GetActiveCameraWorldTransform(t)
+ if not v.cameraTransformOK then return false end
+ t.position=v.cameraPosition or vec(v.car.pos.x-6,v.car.pos.y,v.car.pos.z+2)
+ local yaw=v.cameraYaw or 0
+ t.forward=vec(math.cos(yaw),math.sin(yaw),0)
+ t.right=vec(-math.sin(yaw),math.cos(yaw),0);t.up=vec(0,0,1)
+ return true
+end
+function camera:GetActiveCameraFOV() return v.cameraFOV end
+function camera:GetAspectRatio() return v.cameraAspect end
+GameInstance.GetCameraSystem=function() if v.cameraPresent then return camera end end
 ScriptedPuppet.IsDefeated=function(a,b) return (b or a).defeated end
 ScriptedPuppet.IsUnconscious=function(a,b) return (b or a).unconscious end
 function VIPNative:GetGameInstance() return {} end
@@ -43,9 +60,13 @@ v.entities={}
 function v.entities:IsReady() return f.entityReady end
 function v.entities:IsManaged(id) return f.managed[id.hash]==true end
 function v.entities:CreateEntity(spec)
- assert(spec.persistState==false and spec.persistSpawn==false and spec.alwaysSpawned==false and spec.active and spec.spawnInView)
+ assert(spec.persistState==false and spec.persistSpawn==false and spec.alwaysSpawned==false and spec.active)
+ assert(spec.spawnInView==(spec.recordID=='Character.NCPDPatrol_VIP'),'native spawn-in-view gate not respected')
  assert(spec.recordID=='Character.NCPDPatrol_VIP' or spec.recordID=='Character.NCPDPatrol_VIPAttacker' or spec.recordID=='Vehicle.NCPDPatrol_VIPAmbush')
  f.creates[#f.creates+1]=spec
+ if spec.recordID=='Vehicle.NCPDPatrol_VIPAmbush' then
+  v.lastAmbushSpawnDistance=math.sqrt((spec.position.x-v.car.pos.x)^2+(spec.position.y-v.car.pos.y)^2)
+ end
  if not f.createOK then return {hash=0} end
  local id={hash=1000+#f.creates};f.managed[id.hash]=true
  local a=spec.recordID:sub(1,7)=='Vehicle' and v:Car(id) or v:Actor(spec.recordID,id)
@@ -113,6 +134,8 @@ VehicleComponent={HasSlot=function(car,seat) return car.slots[seat]==true end,
 function v:Reset()
  f:Reset();self.player.mounted=nil;self.player.seat=nil
  self.car=self:Car();self.ambushCar=nil;self.autoCrewMount=true;self.autoCrewUnmount=false
+ self.cameraPresent=true;self.cameraTransformOK=true;self.cameraYaw=0;self.cameraFOV=75;self.cameraAspect=16/9;self.cameraPosition=nil
+ self.lastAmbushSpawnDistance=nil
  f.places={f:Place(800),f:Place(1800)}
  for _,spec in ipairs({{'','gameJournalQuest'},{'/main','gameJournalQuestPhase'},{'/main/pickup','gameJournalQuestObjective'},
   {'/main/pickup/briefing','gameJournalQuestDescription'},{'/main/deliver','gameJournalQuestObjective'},{'/main/deliver/briefing','gameJournalQuestDescription'}}) do

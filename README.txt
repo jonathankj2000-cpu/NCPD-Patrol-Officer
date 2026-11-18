@@ -1,4 +1,4 @@
-NCPD PATROL v0.14a - VIP TRANSPORT AND TYRE REPAIR PROTOTYPE
+NCPD PATROL v0.14b - CLOSE VIP AMBUSH AND SCENE RETENTION
 ========================================================
 Full installation package. Adds a two-objective protected-witness transport
 and one optional attacker-car encounter per trip. Includes the working v0.13b
@@ -7,7 +7,7 @@ Generated incidents do not issue money or career credit in this prototype.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.14a.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.14b.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
@@ -35,15 +35,23 @@ VIP TRANSPORT TEST (MANUAL FIRST VERSION)
    15 gameplay minutes. Menus pause the mission timer.
 5. One hostile car with two gang members may pursue you after driving 250-400 m.
    TEST: Trigger VIP ambush arms it sooner; it still waits for a road position
-   your car actually drove through, 120-220 m behind you. Keep driving on a clear
+   your car actually drove through, 35-65 m behind you and outside the active
+   camera view. Looking backwards delays the spawn until the scene bounds are
+   off camera. Keep driving on a clear
    road until a suitable trail exists. It will not spawn during the last 180 m
    to delivery. No new hotkey is required. The car starts at a recorded position;
    traffic/lane clearance and native chase AI still require live testing.
 6. If you stop for three seconds while the pursuers are within 45 m, they brake,
    wait until their car is stationary, get out and attack. You can escape instead:
    staying over 350 m away for ten gameplay seconds closes the ambush. One ambush
-   per trip. The encounter has a 150-second test limit; shooting from the moving
-   attacker car is not implemented in this first version.
+   per trip. Active pursuit has a 150-second test limit. Native combat behavior
+   is retained; user tests observed shooting from vehicles. The warning now
+   appears after the actual car and crew attach and the chase is requested.
+   Defeated/dead attackers and their car remain for 90 gameplay seconds, or until
+   you stay more than 150 m from BOTH the car and all bodies for three seconds.
+   This also applies when both attackers go down while seated. Delivering the
+   VIP does not immediately remove a retained scene. Explicit cancel/shift end
+   still closes the encounter. Another assignment waits for scene cleanup.
 7. Stop within 30 m of delivery. The witness must ACTUALLY EXIT alive near the
    destination before the journal succeeds. You need not kill the pursuers.
    The delivered witness stays briefly, then is removed after 20 gameplay seconds
@@ -210,7 +218,7 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.14a. Open all three career pages. Check that the content fills
+1. Confirm v0.14b. Open all three career pages. Check that the content fills
    the browser, text stays readable and the sidebar/hover/click targets work.
 2. Note your actual incident count and rank. Enable test unlocks and refresh;
    access changes while those real values remain unchanged. Check the seven
@@ -239,6 +247,9 @@ Offline font/layout previews are not in-game screenshots or hit-testing.
 All 24 redscript files pass source-derived API checks with BEF installed and
 absent; 15 Lua modules parse. The full 56-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
+Camera/retention tests cover FOV/aspect, looking back, scene-volume edges,
+missing camera data, delayed notification, last seated kill/down, timer pauses,
+all-body distance checks, post-delivery retention and explicit-cancel retries.
 Existing arrest/trunk/dispatch tests pass. Archives and payment code remain
 unchanged from v0.11b. Core recognizes the four additional owned police cars; support
 registration accepts the four partner records. Down/revive recovery is retained.

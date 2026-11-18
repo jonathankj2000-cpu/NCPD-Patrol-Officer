@@ -8,9 +8,10 @@ local phase,label="idle","No VIP transport"
 local id,actor,token,pickup,destination,car,command=nil,nil,nil,nil,nil,nil,nil
 local elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
 local boardingSeat,finalReason,lastStage=nil,nil,0
+local keepResolvedScene=false
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
-    if not system or system:Version()~=1 then error("Install the complete v0.14a VIP package and restart") end
+    if not system or system:Version()~=2 then error("Install the complete v0.14b VIP package and restart") end
     return system
 end
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
@@ -34,6 +35,7 @@ function M.reset()
     id,actor,token,pickup,destination,car,command=nil,nil,nil,nil,nil,nil,nil
     elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
     boardingSeat,finalReason,lastStage=nil,nil,0
+    keepResolvedScene=false
     Ambush.reset()
 end
 function M.diagnostics()
@@ -46,7 +48,7 @@ local function stopCommand()
     command=nil
 end
 local function cleanup(status)
-    local ambushGone=Ambush.finish(status)
+    local ambushGone=Ambush.finish(status,keepResolvedScene)
     local gone=id==nil
     if id then
         local ok,result=pcall(function()
@@ -63,6 +65,7 @@ local function cleanup(status)
     report(finalReason or "VIP transport cleared",status);return true
 end
 function M.finish(patrol,status,reason,failed)
+    keepResolvedScene=false
     finalReason=reason or "VIP assignment cancelled"
     if token then
         pcall(function()
@@ -177,7 +180,7 @@ function M.request(patrol,status,sound,voice)
         local pair=chooseLocations(player);pickup,destination=pair.pickup,pair.drop
         token=backend:BeginDispatch(pickup,destination)
         if not token or token==0 then error("VIP journal request rejected: "..tostring(backend:GetReason())) end
-        phase,elapsed,poll,lastStage="responding",0,0,1;finalReason=nil;searchAge=0
+        phase,elapsed,poll,lastStage="responding",0,0,1;finalReason=nil;searchAge=0;keepResolvedScene=false
         if not Ambush.begin() then error("Previous ambush cleanup still active") end
         waypoint(patrol,pickup)
         patrol:NotifyDispatch("NCPD DISPATCH: Protected witness transport. Collect the VIP at the marked location. Use an owned police car with a free passenger seat.",10,sound,voice)
@@ -251,6 +254,7 @@ local function physical(delta,backend,patrol,status)
 end
 function M.update(delta,onDuty,patrol,status,HUD)
     if phase=="cleanup" then
+        Ambush.update(delta,nil,false,true,patrol,status)
         retry=retry+delta
         if retry>=2 then retry=0;cleanup(status) end
         return true
@@ -271,12 +275,14 @@ function M.update(delta,onDuty,patrol,status,HUD)
             if phase~="resolved" then
                 finalReason=backend:GetReason();patrol:ClearDispatchWaypoints();HUD.set("",false)
                 report((stage==3 and "COMPLETED | " or "CLOSED | ")..finalReason,status)
-                notify(patrol,finalReason);Ambush.finish(status)
+                keepResolvedScene=stage==3
+                notify(patrol,finalReason);Ambush.finish(status,keepResolvedScene)
                 if stage~=3 then phase="cleanup";cleanup(status);return end
                 command=nil
                 if actor and actor:IsAttached() then command=Crew.hold(actor) end
                 phase,resolvedTime="resolved",0
             end
+            Ambush.update(delta,nil,false,true,patrol,status)
             if not patrol:IsDispatchMenuOpen() and delta>0 and delta<=0.5 then resolvedTime=resolvedTime+delta end
             if resolvedTime>=20 or (actor and distance(Game.GetPlayer():GetWorldPosition(),actor:GetWorldPosition())>80) then cleanup(status) end
             return

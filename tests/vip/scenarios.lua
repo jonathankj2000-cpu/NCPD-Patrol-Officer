@@ -116,7 +116,7 @@ assert(n:GetRemainingSeconds()==seconds and v.hud=='');f.paused=false
 reset();actor=enter();assert(VIP.requestAmbush(log));step(1);assert(#f.creates==1)
 v.car.speed=16
 for _=1,40 do v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;step(.25) end
-assert(#f.creates==4 and v.ambushCar and v.ambushCar.pos.x < v.car.pos.x-100,table.concat(f.logs,'\n'))
+assert(#f.creates==4 and v.ambushCar and v.lastAmbushSpawnDistance>=35 and v.lastAmbushSpawnDistance<=65,table.concat(f.logs,'\n'))
 step(1)
 local enemy=v.ambushCar
 assert(enemy.initCmd and enemy.initCmd.kind=='chase' and enemy.initCmd.target==v.player)
@@ -163,3 +163,84 @@ f.deleteOK=false;Dispatch.shutdown(f.patrol);assert(Dispatch.isActive())
 f.deleteOK=true
 for _=1,12 do Dispatch.update(.25,false,log,function() return f.patrol end) end
 assert(not Dispatch.isActive())
+-- Active camera, not vehicle facing: full padded scene bounds must be hidden.
+v:Reset();token,actor=boarded()
+local function point(x,y,z) return Vector4.new(x,y or 0,z or 0,1) end
+for _,fov in ipairs({45,75,110}) do
+ for _,aspect in ipairs({4/3,21/9,32/9}) do
+  v.cameraFOV=fov;v.cameraAspect=aspect;v.cameraYaw=0
+  assert(n:CanSpawnAmbushAt(point(755)))
+  assert(not n:CanSpawnAmbushAt(point(845)))
+  v.cameraYaw=math.pi
+  assert(not n:CanSpawnAmbushAt(point(755)),'looking backwards allowed visible spawning')
+ end
+end
+v.cameraYaw=0;v.cameraFOV=60;v.cameraAspect=16/9
+assert(not n:CanSpawnAmbushAt(point(839,55)),'visible edge of crew/car bounds ignored')
+assert(n:CanSpawnAmbushAt(point(839,85)),'fully off-screen scene was blocked')
+v.cameraPresent=false;assert(not n:CanSpawnAmbushAt(point(755)));v.cameraPresent=true
+v.cameraTransformOK=false;assert(not n:CanSpawnAmbushAt(point(755)));v.cameraTransformOK=true
+for _,fov in ipairs({0,180,0/0}) do v.cameraFOV=fov;assert(not n:CanSpawnAmbushAt(point(755))) end
+v.cameraFOV=75;v.cameraAspect=0/0;assert(not n:CanSpawnAmbushAt(point(755)))
+v.cameraAspect=16/9;assert(not n:CanSpawnAmbushAt(point(0/0)))
+f.wanted=true;assert(not n:CanSpawnAmbushAt(point(755)));f.wanted=false
+n:Cancel(token,'test');assert(not n:CanSpawnAmbushAt(point(755)))
+local function driveTrail()
+ v.car.speed=16
+ for _=1,40 do v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;step(.25) end
+end
+local function spawnAmbush()
+ reset();local witness=enter();assert(VIP.requestAmbush(log));driveTrail();step(1)
+ assert(v.ambushCar and #f.creates==4)
+ return witness,v.ambushCar,f.actors[1003],f.actors[1004]
+end
+-- Waiting while looking back does not consume the single ambush reservation.
+reset();actor=enter();assert(VIP.requestAmbush(log));v.cameraYaw=math.pi;driveTrail()
+assert(#f.creates==1 and not Ambush.isActive())
+v.cameraPresent=false;v.cameraYaw=0;step(1);assert(#f.creates==1)
+v.cameraPresent=true;v.cameraTransformOK=false;step(1);assert(#f.creates==1)
+v.cameraTransformOK=true;v.autoCrewMount=false
+local function notices()
+ local count=0
+ for _,notice in ipairs(f.notices) do if notice.text:find('Possible hostile vehicle',1,true) then count=count+1 end end
+ return count
+end
+step(1);assert(#f.creates==4 and notices()==0,'warning preceded actual attached/seated attackers')
+local enemy=v.ambushCar;local a,b=f.actors[1003],f.actors[1004]
+v:Mount(a,enemy,'seat_front_left');v:Mount(b,enemy,'seat_front_right');step(.25)
+assert(enemy.initCmd and notices()==1 and v.lastAmbushSpawnDistance<=65)
+VIP.cancel(f.patrol,log)
+-- Last kill/down while STILL SEATED retains car/bodies for 90 gameplay seconds.
+for _,state in ipairs({'dead','defeated'}) do
+ local witness,enemy,a,b=spawnAmbush();v.car.speed=0;enemy.pos.x=v.car.pos.x-30
+ a[state]=true;step(.25);assert(Ambush.isActive() and f.managed[1003])
+ b[state]=true;step(.25)
+ assert(Ambush.state():find('scene retained',1,true) and f.managed[1002] and f.managed[1003] and f.managed[1004])
+ assert(not VIP.requestAmbush(log) and #f.creates==4)
+ step(89.75);assert(Ambush.isActive() and f.managed[1003])
+ f.paused=true;step(60);assert(Ambush.isActive());f.paused=false
+ step(.25);assert(not Ambush.isActive() and not f.managed[1002] and n:GetStage()==2)
+ VIP.cancel(f.patrol,log)
+end
+-- Distance cleanup checks ALL bodies as well as the car, with three-second grace.
+actor,enemy,a,b=spawnAmbush();v.car.speed=0;enemy.pos.x=v.car.pos.x-30
+for _,unit in ipairs({a,b}) do unit.mounted=nil;unit.pos=point(enemy.pos.x);unit.defeated=true end
+step(.25)
+-- Player may be far from the car while standing beside a body.
+enemy.pos.x=v.car.pos.x-250;step(4);assert(Ambush.isActive())
+for _,unit in ipairs({a,b}) do unit.pos=point(enemy.pos.x) end
+step(2.75);assert(Ambush.isActive());step(.25);assert(not Ambush.isActive())
+VIP.cancel(f.patrol,log)
+-- Successful delivery and the VIP's own cleanup must not erase retained bodies.
+actor,enemy,a,b=spawnAmbush();v.car.speed=0;v.car.pos.x=1800;f.playerPosition.x=1800;enemy.pos.x=1780
+for _,unit in ipairs({a,b}) do unit.mounted=nil;unit.pos=point(1780);unit.dead=true end
+step(.25);assert(Ambush.isActive())
+step(.25);actor.mounted=nil;actor.pos=point(1800);step(.25)
+assert(n:GetStage()==3 and Ambush.isActive() and f.managed[1003])
+step(21);assert(VIP.isActive() and Ambush.isActive() and f.managed[1003] and not f.managed[1001])
+f.playerPosition.x=2000;step(5)
+assert(not VIP.isActive() and not Ambush.isActive() and f.managed[990]=='ambient')
+-- Explicit cancel/shift end still tears down immediately, with retry reservation.
+actor,enemy,a,b=spawnAmbush();a.dead=true;b.dead=true;step(.25)
+f.deleteOK=false;assert(not VIP.cancel(f.patrol,log) and VIP.isActive())
+f.deleteOK=true;step(2);assert(not VIP.isActive() and not Ambush.isActive())

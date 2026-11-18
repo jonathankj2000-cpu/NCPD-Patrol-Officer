@@ -30,7 +30,7 @@ function M.begin()
 end
 function M.request(status)
     if used then report("This trip has already used its one ambush",status);return false end
-    requested=true;report("Test armed; drive until there is a safe recorded point 120-220 m behind you",status)
+    requested=true;report("Test armed; waiting for an off-camera road point 35-65 m behind you",status)
     return true
 end
 local function stopChase()
@@ -56,7 +56,8 @@ local function cleanup(status)
     units={};carID,car=nil,nil;phase="idle"
     report("Ambush closed",status);return true
 end
-function M.finish(status)
+function M.finish(status,keepResolvedScene)
+    if keepResolvedScene and phase=="resolved" then return false end
     if phase=="idle" and #ids==0 then used,requested=true,false;trail={};return true end
     requested=false;trail={};used=true;phase="cleanup";retry=0
     return cleanup(status)
@@ -66,7 +67,7 @@ local function create(system,record,point,orientation)
     local spec=DynamicEntitySpec.new()
     spec.recordID=TweakDBID.new(record);spec.position=point;spec.orientation=orientation
     spec.persistState,spec.persistSpawn,spec.alwaysSpawned=false,false,false
-    spec.spawnInView,spec.active=true,true
+    spec.spawnInView,spec.active=false,true
     local id=system:CreateEntity(spec)
     if not id or not EntityID.IsDefined(id) then error("Ambush entity creation rejected") end
     ids[#ids+1]=id;return id
@@ -100,8 +101,14 @@ local function roadPoint(vehicle)
         local point=trail[i]
         local metres=distance(point.position,pos)
         local behind=(point.position.x-pos.x)*forward.x+(point.position.y-pos.y)*forward.y
-        if metres>=120 and metres<=220 and behind < -60 and clock-point.time>=4 and clock-point.time<=45
-            and math.abs(point.position.z-pos.z)<=15 then return point end
+        if metres>=35 and metres<=65 and behind < -25 and clock-point.time>=1 and clock-point.time<=45
+            and math.abs(point.position.z-pos.z)<=15 then
+            local ok,hidden=pcall(function()
+                local native=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
+                return native and native:Version()==2 and native:CanSpawnAmbushAt(point.position)
+            end)
+            if ok and hidden==true then return point end
+        end
     end
 end
 local function record(delta,vehicle)
@@ -130,11 +137,34 @@ local function spawn(point,patrol,status)
         units[#units+1]={id=id,seat=seat}
     end
     report("Attacker car created at a recorded road position",status)
-    notify(patrol,"Possible hostile vehicle behind your transport. Keep the witness safe.")
 end
 local function alive(actor)
     return actor and actor:IsAttached() and not actor:IsDead() and not actor:IsDeadNoStatPool()
         and not ScriptedPuppet.IsDefeated(actor) and not ScriptedPuppet.IsUnconscious(actor)
+end
+local function crewNeutralized()
+    if #units~=2 then return false end
+    for _,unit in ipairs(units) do
+        -- Missing/streamed-out actors are not proof of neutralization.
+        if not unit.actor or not unit.actor:IsAttached() or alive(unit.actor) then return false end
+    end
+    return true
+end
+local function resolve(status)
+    stopChase();car:ForceBrakesUntilStoppedOrFor(8)
+    phase,elapsed,escaped="resolved",0,0
+    report("Attackers neutralized; scene retained for 90 seconds or until you leave 150 m",status)
+end
+local function updateResolved(delta,status)
+    elapsed=elapsed+delta
+    local pos=Game.GetPlayer():GetWorldPosition()
+    local away=true
+    if car and car:IsAttached() and distance(pos,car:GetWorldPosition())<150 then away=false end
+    for _,unit in ipairs(units) do
+        if unit.actor and unit.actor:IsAttached() and distance(pos,unit.actor:GetWorldPosition())<150 then away=false end
+    end
+    if away then escaped=escaped+delta else escaped=0 end
+    if elapsed>=90 or escaped>=3 then cleanup(status) end
 end
 local function active(delta,vehicle,patrol,status)
     elapsed=elapsed+delta;age=age+delta
@@ -150,6 +180,7 @@ local function active(delta,vehicle,patrol,status)
         return
     end
     if not car or not car:IsAttached() then error("Ambush vehicle unavailable") end
+    if crewNeutralized() then resolve(status);return end
     if phase=="seating" then
         local ready=true
         for _,unit in ipairs(units) do ready=ready and same(Game.GetMountedVehicle(unit.actor),car) end
@@ -163,6 +194,7 @@ local function active(delta,vehicle,patrol,status)
             car:SetPoliceStrategyDestination(Game.GetPlayer():GetWorldPosition())
             car:QueueEvent(event);car:GetAIComponent():SetInitCmd(chase)
             phase,elapsed="chasing",0;report("Hostile car pursuing the transport",status)
+            notify(patrol,"Possible hostile vehicle behind your transport. Keep the witness safe.")
         elseif elapsed>=12 then error("Ambush crew failed to board") end
         return
     end
@@ -194,10 +226,6 @@ local function active(delta,vehicle,patrol,status)
             for _,unit in ipairs(units) do if alive(unit.actor) then unit.command=nil;hostile(unit.actor,true) end end
             phase,elapsed="combat",0;report("Attackers on foot; escape or return fire",status)
         elseif elapsed>=15 then error("Attackers could not exit") end
-    elseif phase=="combat" then
-        local survivors=false
-        for _,unit in ipairs(units) do survivors=survivors or alive(unit.actor) end
-        if not survivors then report("Attackers neutralized",status);cleanup(status) end
     end
 end
 function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
@@ -206,15 +234,19 @@ function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
         if retry>=2 then retry=0;cleanup(status) end
         return
     end
-    if not transporting then return end
     if not patrol or patrol:IsDispatchMenuOpen() or delta<=0 or delta>0.5 then return end
     local ok,err=pcall(function()
+        if phase=="resolved" then updateResolved(delta,status);return end
+        if not transporting then return end
         if vehicle then record(delta,vehicle) end
         if phase~="idle" then active(delta,vehicle,patrol,status);return end
         if used or nearDestination or not vehicle then return end
         if requested or travelled>=triggerAt then
             local point=roadPoint(vehicle)
-            if point then spawn(point,patrol,status) end
+            if point then spawn(point,patrol,status)
+            elseif label~="Waiting for an off-camera road point 35-65 m behind you" then
+                report("Waiting for an off-camera road point 35-65 m behind you",status)
+            end
         end
     end)
     if not ok then report("Ambush test stopped: "..tostring(err),status);M.finish(status) end

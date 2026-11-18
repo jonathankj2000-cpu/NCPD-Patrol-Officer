@@ -22,7 +22,54 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolVIPSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolVIPSystem") as NCPDPatrolVIPSystem;
     }
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
+    // A conservative sphere encloses the Hella and the temporary crew spawn
+    // positions. Reject any overlap with the active camera's padded frustum.
+    // Native script owns the camera transform's output parameter.
+    public func CanSpawnAmbushAt(position: Vector4) -> Bool {
+        let camera: ref<CameraSystem>;
+        let transform: Transform;
+        let origin: Vector4;
+        let forward: Vector4;
+        let right: Vector4;
+        let up: Vector4;
+        let x: Float;
+        let y: Float;
+        let z: Float;
+        let depth: Float;
+        let horizontal: Float;
+        let vertical: Float;
+        let fov: Float;
+        let aspect: Float;
+        let tangent: Float;
+        let horizontalTangent: Float;
+        let radius: Float = 12.0;
+        if this.m_stage != 2 || !this.Eligible() { return false; };
+        if position.X != position.X || position.Y != position.Y || position.Z != position.Z
+            || AbsF(position.X) > 100000.0 || AbsF(position.Y) > 100000.0 || AbsF(position.Z) > 100000.0 { return false; };
+        camera = GameInstance.GetCameraSystem(this.GetGameInstance());
+        if !IsDefined(camera) || !camera.GetActiveCameraWorldTransform(transform) { return false; };
+        origin = Transform.GetPosition(transform);
+        forward = Transform.GetForward(transform);
+        right = Transform.GetRight(transform);
+        up = Transform.GetUp(transform);
+        fov = camera.GetActiveCameraFOV(); aspect = camera.GetAspectRatio();
+        if fov != fov || aspect != aspect || fov <= 1.0 || fov >= 175.0 || aspect < 0.25 || aspect > 8.0 { return false; };
+        // Treat FOV as vertical and never shrink for portrait aspect. This is
+        // deliberately wider if a camera reports horizontal FOV instead.
+        tangent = TanF(Deg2Rad(fov * 0.50 + 2.0));
+        horizontalTangent = tangent * MaxF(1.0, aspect);
+        x = position.X - origin.X; y = position.Y - origin.Y; z = position.Z + 1.0 - origin.Z;
+        depth = x * forward.X + y * forward.Y + z * forward.Z;
+        horizontal = x * right.X + y * right.Y + z * right.Z;
+        vertical = x * up.X + y * up.Y + z * up.Z;
+        // Invalid camera output never becomes permission to spawn.
+        if depth != depth || horizontal != horizontal || vertical != vertical { return false; };
+        if depth < -radius { return true; };
+        if AbsF(horizontal) - depth * horizontalTangent > radius * SqrtF(1.0 + horizontalTangent * horizontalTangent) { return true; };
+        if AbsF(vertical) - depth * tangent > radius * SqrtF(1.0 + tangent * tangent) { return true; };
+        return false;
+    }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {

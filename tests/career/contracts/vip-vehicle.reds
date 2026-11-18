@@ -3,6 +3,22 @@
 public native func GetMountedVehicle(object: ref<GameObject>) -> wref<VehicleObject>;
 public native func AbsF(value: Float) -> Float;
 public native func MaxF(a: Float, b: Float) -> Float;
+public native func SqrtF(value: Float) -> Float;
+public native func TanF(value: Float) -> Float;
+public native func Deg2Rad(value: Float) -> Float;
+public native struct Transform {
+ public static native func GetPosition(transform: Transform) -> Vector4;
+ public static native func GetForward(transform: Transform) -> Vector4;
+ public static native func GetRight(transform: Transform) -> Vector4;
+ public static native func GetUp(transform: Transform) -> Vector4;
+}
+public native class CameraSystem extends IScriptable {
+ public native func GetActiveCameraWorldTransform(transform: Transform) -> Bool;
+ public native func GetActiveCameraFOV() -> Float;
+ public native func GetAspectRatio() -> Float;
+}
+@addMethod(GameInstance)
+public static native func GetCameraSystem(game: GameInstance) -> ref<CameraSystem>;
 public native class Event extends IScriptable {}
 public native struct MountingSlotId { public native let id: CName; }
 public native struct MountingInfo { public native let slotId: MountingSlotId; }

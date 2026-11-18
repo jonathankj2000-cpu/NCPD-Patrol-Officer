@@ -66,3 +66,28 @@ animated mount/unmount pattern. No API name was inferred from the UI wording.
 Live car access at anchors, traffic collisions, vehicle chase/pathfinding,
 body/wheel visual persistence, animations and journal rendering require an
 in-game test. The offline checks do not simulate these engine systems.
+
+## v0.14b camera and aftermath regression cases
+
+The production native camera helper reads the active camera transform, FOV and
+aspect, testing a 12 m radius scene sphere against padded view planes. The bound
+includes both car and temporary crew locations; missing/invalid camera data does
+not allow spawning. Cases include looking forwards/backwards, several FOVs and
+aspect ratios, scene-volume edge overlap, absent camera/transform, invalid FOV,
+aspect and positions, duty/stage gates, deferred spawn reservation and actual
+35–65 m distance at creation. A warning waits for attached/seated car and crew.
+The native transform output parameter is exercised through a typed-struct fixture;
+its use follows `weapon.swift` and `SmasherTasks.swift` in the game reference.
+
+Last kill and nonlethal down are tested while attackers are still seated, with
+90-second paused-gameplay retention, three-second/150 m checks against ALL bodies
+and car, delivery preserving the defeated scene, the VIP's separate cleanup,
+explicit cancellation and refused deletion retry. Existing native chase, hostile
+attitudes, braking/exit and vehicle combat commands are unchanged.
+
+Codeware 1.21.4 commit `6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad` declares
+`DynamicEntitySpec.spawnInView` and forwards it into `PopulationEntityRegisterRequest`
+in `src/App/World/DynamicEntitySystem.cpp`. The private attacker specs now pass
+`false`; no other spawned characters are changed. The camera's pre-creation check
+uses the game-native transform directly in redscript, without inferring view from
+the transport's heading. The offline tests do not render actual camera views.

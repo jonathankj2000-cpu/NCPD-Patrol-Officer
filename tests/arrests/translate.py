@@ -80,7 +80,7 @@ def translate(path):
                 name,typ,value=m.groups()
                 if typ=='String': string_locals.add(name)
                 if value is None:
-                    value='{n=0}' if typ.startswith('array') else ('{}' if typ in ('SimpleScreenMessage','OpenWorldActivityState','MappinData','NewMappinID') else 'nil')
+                    value='{n=0}' if typ.startswith('array') else ('{}' if typ in ('SimpleScreenMessage','OpenWorldActivityState','MappinData','NewMappinID','Transform') else 'nil')
                 line=f'local {name} = {value}'
                 if 'GetPointOfInterestMappinSavedState' in line:
                     assert line=='local found = system:GetPointOfInterestMappinSavedState(hash, phase, variant, active)',line
