@@ -2,17 +2,20 @@
 
 Run `python tests/officer_readiness/check_ready.py` with Python 3 and lupa.
 
-The actual `officer_ready.lua`, partner, shared officer AI and backup modules
-execute. Native creation, equipment acknowledgements, drive/mount animation and
-revive-state boundaries are mocked. Cases cover prompt primary draw, stable
+The actual `NCPDPatrolOfficerEquipment.reds`, `officer_ready.lua`, partner, shared
+officer AI and backup modules execute. Native inventory/slot operations, creation,
+drive/mount animation and revive-state boundaries are mocked. Cases cover prompt primary draw, stable
 calm holster, empty-hand fists, already-correct weapons without repeated orders,
 pending holster cancellation when an officer enters native alert/combat,
 player combat, post-combat delay, pause, vehicle/boarding/down/revive guards,
 bounded refused-command retries, isolated API failure, actual partner recovery
 and backup drive/brake/exit before mirroring. Ambient actors are not touched.
 Only the helper's own equipment commands are stopped; native combat and existing
-follow/move/hold commands are preserved. This cannot prove live weapon poses or
-whether a particular NPC's behavior tree accepts the request.
+follow/move/hold commands are preserved by readiness. The accepted-but-stalled
+command case never auto-equips: the actual native fallback must filter existing
+inventory, invoke equip/unequip, and observe a changed hand slot before success.
+Both hands, fists, missing context, invalid equipment, refusal, inventory retention
+and tagged dynamic ownership are covered. This cannot prove live weapon poses.
 
 Primary API evidence in
 [MOD_Development_Reference](https://github.com/In-Question/MOD_Development_Reference):
@@ -25,10 +28,22 @@ Primary API evidence in
   right/left weapon slots and reads `GetHighLevelStateFromBlackboard`.
 - `cyberpunk/items/weapon.swift` implements `WeaponObject.IsFists`.
 - Game high-level-state definitions distinguish Relaxed, Alerted and Combat.
+- `core/systems/transactionSystem.swift`: `GetEquipment` returns owned primary
+  inventory; `GetItemsBodySlot` resolves an existing weapon's holster slot.
+- `core/ai/actions/tweakAISubActions.swift`: public `Equip`/`Unequip` routines
+  move actual slots; `Unequip(..., false, ...)` does not drop inventory.
+- Codeware v1.21.4 (`6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad`) declares
+  DynamicEntitySpec tags and DynamicEntitySystem IsManaged/IsTagged.
 
 The helper never writes a high-level state, combat target, attitude, invulnerability
 or follower role. Only the partner and this mod's own two backup officers call it,
 and only after normal actor setup. The unarmed VIP does not use this helper.
+
+## v0.15c active backup
+
+Normal deployment now asserts actual follow requests toward V with no scene
+hold commands. Native mounting/vehicle use takes priority. Only released backup
+gets a hold command. Existing stand-down/cleanup cases below still execute.
 
 ## v0.15b stand-down
 

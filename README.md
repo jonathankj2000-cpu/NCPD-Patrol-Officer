@@ -1,5 +1,18 @@
 # NCPD Patrol
 
+
+## v0.15c: numeric trunk menu and officer AI fixes
+
+[Download the complete v0.15c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15c_Numeric_Trunk_Officer_AI_TEST.zip)
+
+At your police car's trunk, **hold R** for a native game popup with **four options per row, two rows**. Use **1** Available/Busy, **2** Repair, **3** New partner, **4** Cancel dispatch, **5** New dispatch, **6** Cop Stats, **7** 10-4 release backup, and **9** Close. Numpad digits and mouse selection also work. The native popup blocks gameplay quickslots. The original tap R backup and stash interactions return when it closes. Each choice routes to exactly one action; 10-4 is disabled without an assigned patrol. The existing required Codeware supplies this popup; no new dependency is added.
+
+Active backup now receives follow commands toward V. The old on-scene code assigned a follower role but then permanently held both officers at the request location. Hold-position is now reserved for released backup. Vehicle use and native boarding receive priority; 10-4 still clears follower roles, requests actual stationary-vehicle exits, and retains the patrol until existing distance cleanup.
+
+Officer readiness now checks actual held weapons. If a native primary-weapon command remains queued without equipping after one second, a native helper uses that officer's **existing inventory** through the game's equip/unequip routines and verifies the hand slots. Only this mod's tagged dynamic officers qualify. Alerted officers can draw with V but cannot be forced to holster; native combat, boarding and revive retain priority. **Log officer readiness (partner + backup)** in CET reports actual weapon state, command state and fallback outcomes.
+
+Install the **entire ZIP** and restart. Trunk interface **4**, officer equipment interface **1**; 17 Lua modules and 26 redscript files are included. The 17 cyberpsycho variants, VIP ambush/aftermath, tyre repair, progression, payments and all binary assets are retained. Portable regression suites and offline source/API checks verify authored logic with engine boundaries mocked. Actual popup input, weapon poses and backup following require an in-game test.
+
 ## v0.15b: 10-4 backup stand-down
 
 [Download the complete v0.15b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15b_Backup_10-4_Stand_Down_TEST.zip)
@@ -103,7 +116,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15b**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15c**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

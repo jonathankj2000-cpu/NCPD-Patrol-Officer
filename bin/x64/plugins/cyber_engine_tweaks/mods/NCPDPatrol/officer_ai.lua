@@ -51,6 +51,19 @@ function M.moveToScene(target, position)
     return command
 end
 
+function M.follow(target, desiredDistance)
+    local player = Game.GetPlayer()
+    local command = AIFollowTargetCommand.new()
+    command.target, command.lookAtTarget = player, player
+    command.desiredDistance, command.tolerance = desiredDistance, 1.0
+    command.movementType, command.matchSpeed = moveMovementType.Run, true
+    command.teleport, command.stopWhenDestinationReached = false, false
+    command.ignoreInCombat, command.removeAfterCombat = false, false
+    command.alwaysUseStealth = false
+    target:GetAIControllerComponent():SendCommand(command)
+    return command
+end
+
 function M.hold(target)
     local command = AIHoldPositionCommand.new()
     command.duration = -1

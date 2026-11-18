@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.15b loaded. Hold R at the trunk > 10-4 - Release backup. Officers leave follower duty, disembark when stationary, and remain on scene until distance cleanup. New patrols wait for confirmed cleanup. Includes v0.15a readiness and all 17 cyberpsycho variants. Install the complete package and restart.")
+    status("v0.15c loaded. Hold R at the trunk for a two-row patrol menu: 1-7 select, 9 closes. Backup follows V until 10-4. Officer readiness verifies held weapons and uses native inventory equipment if a queued request stalls. Includes all 17 cyberpsycho variants. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -562,6 +562,10 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log partner AI diagnostics") then
             status("Partner AI | " .. Partner.diagnostics())
             print("[NCPD Patrol] Partner health | " .. Partner.healthDiagnostics())
+        end
+        if ImGui.Button("Log officer readiness (partner + backup)") then
+            status("Partner readiness | " .. Partner.readinessDiagnostics())
+            print("[NCPD Patrol] " .. Backup.diagnostics())
         end
         ImGui.TextWrapped("When your partner is down, approach and use Revive Partner. Stay within 2.5 m for 3 seconds.")
         if ImGui.Button("Test: down partner") then

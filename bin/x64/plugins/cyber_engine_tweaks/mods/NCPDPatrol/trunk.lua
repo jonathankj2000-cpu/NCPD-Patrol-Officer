@@ -8,7 +8,7 @@ local reported = false
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-    if not system or system:Version() ~= 3 then error("Install all v0.15b files and restart the game") end
+    if not system or system:Version() ~= 4 then error("Install all v0.15c files and restart the game") end
     return system
 end
 

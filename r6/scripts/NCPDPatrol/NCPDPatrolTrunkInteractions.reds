@@ -94,24 +94,10 @@ public class NCPDPatrolTrunkMenuAction extends ActionBool {
 @addMethod(VehicleComponentPS)
 private func NCPDPatrolAddTrunkMenu(actions: script_ref<[ref<DeviceAction>]>) -> Bool {
     let trunk: ref<NCPDPatrolTrunkSystem> = NCPDPatrolTrunkSystem.Get(this.GetGameInstance());
-    let action: ref<NCPDPatrolTrunkMenuAction>;
-    let command: Int32 = 1;
     if !IsDefined(trunk) || !trunk.IsOpenFor(this.GetOwnerEntity()) { return false; };
-    // The native interaction list provides scrolling and the player's F binding.
-    // Closing restores the original stash and backup actions immediately.
+    // The dedicated two-row popup owns selection while it is open. Do not add
+    // horizontal F choices underneath it. Closing restores stash/tap/hold.
     ArrayClear(Deref(actions));
-    while command <= 8 {
-        if command != 7 || trunk.CanReleaseBackup() {
-            action = new NCPDPatrolTrunkMenuAction();
-            action.clearanceLevel = 2;
-            action.SetUp(this);
-            if command == 8 { action.Initialize(0, trunk.IsBusy()); }
-            else { action.Initialize(command, trunk.IsBusy()); };
-            action.AddDeviceName(this.GetDeviceName());
-            ArrayPush(Deref(actions), action);
-        };
-        command += 1;
-    };
     return true;
 }
 

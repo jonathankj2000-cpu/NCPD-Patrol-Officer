@@ -1,6 +1,10 @@
+import Codeware.UI.CustomPopupManager
+
 // Independent, transient bridge. No changes to scanner or arrest payments.
 public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     private let m_menuVehicle: wref<VehicleObject>;
+    private let m_popup: ref<NCPDPatrolTrunkPopup>;
+    private let m_popupWait: Float;
     private let m_busy: Bool;
     private let m_command: Int32;
     private let m_repairVehicle: wref<VehicleObject>;
@@ -10,7 +14,7 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolTrunkSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolTrunkSystem") as NCPDPatrolTrunkSystem;
     }
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func OnDetach() -> Void { this.FinishSession(); }
@@ -18,6 +22,8 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     private func ForgetWorld() -> Void {
         // Loading invalidated the previous world's objects; never refresh them here.
         this.m_menuVehicle = null;
+        this.m_popup = null;
+        this.m_popupWait = 0.0;
         this.m_busy = false;
         this.m_command = 0;
         this.m_repairVehicle = null;
@@ -75,15 +81,30 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     }
     public func CloseMenu() -> Void {
         let vehicle: ref<VehicleObject> = this.m_menuVehicle;
+        let popup: ref<NCPDPatrolTrunkPopup> = this.m_popup;
         this.m_menuVehicle = null;
+        this.m_popup = null;
+        if IsDefined(popup) { popup.Close(); };
         this.Refresh(vehicle);
+    }
+    public func ClosePopup(popup: ref<NCPDPatrolTrunkPopup>) -> Void {
+        if this.m_popup == popup { this.CloseMenu(); };
     }
     // Native interaction records select release versus hold. Choice2 only
     // delivers BUTTON_RELEASED; Choice2_Hold delivers BUTTON_HOLD_COMPLETE.
     // No raw key listener, press event or local hold timer is required.
     public func OpenMenu(vehicle: ref<VehicleObject>) -> Bool {
+        let manager: ref<CustomPopupManager> = CustomPopupManager.GetInstance();
         if !this.CanUseTrunk(vehicle) || IsDefined(this.m_menuVehicle) { return false; };
+        if !IsDefined(manager) || !manager.IsInitialized() {
+            this.Notice("NCPD: Patrol menu is not ready. See CET patrol controls.");
+            return false;
+        };
         this.m_menuVehicle = vehicle;
+        this.m_popup = new NCPDPatrolTrunkPopup();
+        this.m_popupWait = 0.0;
+        this.m_popup.Configure(this, vehicle);
+        manager.ShowPopup(this.m_popup);
         this.Refresh(vehicle);
         return true;
     }
@@ -175,6 +196,13 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
             return;
         };
         if IsDefined(this.m_menuVehicle) && !this.CanUseTrunk(this.m_menuVehicle) { this.CloseMenu(); };
+        if IsDefined(this.m_popup) && !this.m_popup.IsPresented() && delta > 0.0 && delta <= 0.50 {
+            this.m_popupWait += delta;
+            if this.m_popupWait >= 2.0 {
+                this.CloseMenu();
+                this.Notice("NCPD: Patrol menu could not open. Close other popups and try again.");
+            };
+        };
         // A paused game never advances the ten-second service timer.
         if delta > 0.0 && delta <= 0.50 { this.TickRepair(delta); };
     }

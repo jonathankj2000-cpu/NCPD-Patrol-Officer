@@ -13,7 +13,15 @@ logs=[]
 lua.globals().print=lambda *args: logs.append(' '.join(str(a) for a in args))
 lua.globals().MOD_DIR=str(MOD)
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
-lua.globals().Trunk=lua.execute(translate(NATIVE/'NCPDPatrolTrunkSystem.reds'))
+with tempfile.TemporaryDirectory(prefix='ncpd-trunk-native-') as d:
+ p=Path(d)/'trunk.reds'
+ p.write_text((NATIVE/'NCPDPatrolTrunkSystem.reds').read_text().replace('new NCPDPatrolTrunkPopup()', 'NativePopup()'))
+ lua.globals().Trunk=lua.execute(translate(p))
+ popup=(NATIVE/'NCPDPatrolTrunkPopup.reds').read_text().replace('protected func','public func')
+ for kind in ['inkCanvas','inkRectangle','inkText']:
+  popup=popup.replace('new '+kind+'()', 'NativeWidget("'+kind+'")')
+ popup=popup.replace('let color: HDRColor;', 'let color: HDRColor = NativeColor();')
+ p.write_text(popup);lua.globals().Popup=lua.execute(translate(p))
 lua.globals().Ledger=lua.execute(translate(NATIVE/'NCPDPatrolSystem.reds'))
 lua.globals().CareerNative=lua.execute(translate(NATIVE/'NCPDPatrolCareerSystem.reds'))
 
@@ -68,6 +76,7 @@ lua.globals().AcceptedBackupEvent=next(iter(accepted[backup_action]))
 lua.globals().AcceptedHoldEvent=next(iter(accepted[hold_action]))
 
 lua.execute((HERE/'native-scenarios.lua').read_text())
+lua.execute((HERE/'popup-scenarios.lua').read_text())
 lua.globals().DispatchJournalNative=lua.execute(translate(NATIVE/'NCPDPatrolDispatchJournalSystem.reds'))
 lua.execute((HERE.parent/'dispatch_journal/native-mocks.lua').read_text())
 lua.execute((HERE/'cet-scenarios.lua').read_text())
@@ -82,4 +91,4 @@ assert support.count('this.NCPDPatrolAddTrunkMenu(actions)')==2
 assert support.count('this.NCPDPatrolAddTrunkMenuOpener(actions)')==2
 native=(NATIVE/'NCPDPatrolTrunkSystem.reds').read_text()
 assert all(token not in native for token in ['RegisterInputListener','BeginGesture','m_keyDown','Trunk input not received','TweakDBInterface.GetCName'])
-print('PASS: release-only backup and native hold entry callbacks, actual trunk PS wrappers/choice records, stash/menu restoration, guards and existing repair/stats/dispatch/partner logic (native boundaries mocked)')
+print('PASS: native R tap/hold; actual two-row numeric popup, distinct 1-7/9 routing, scoped press/release, modifier/focus/duplicate/stale guards, popup lifecycle and stash restoration; existing repair/stats/dispatch/partner logic (native boundaries mocked)')

@@ -6,13 +6,66 @@ function NotEquals(a,b) return a~=b end
 function Cast(x) return x end
 function CeilF(x) return math.ceil(x) end
 function StringToName(x) return x end
+function ToString(x) return tostring(x) end
 function ArraySize(x) return x.n end
+function ArrayPush(a,v) a[a.n]=v; a.n=a.n+1 end
+function ArrayClear(a) for i=0,a.n-1 do a[i]=nil end; a.n=0 end
 function ArrayContains(a,v) for i=0,a.n-1 do if a[i]==v then return true end end;return false end
 TDBID={Create=function(_,name) return name end}
 function GetLocalizedTextByKey(key) return key end
 function GetPlayer() return player end
 EngineTime={ToFloat=function(_,value) return value end}
 GameInstance={GetEngineTime=function() return clock end}
+-- Native Codeware presentation/input boundaries. The authored popup layout,
+-- routing and cleanup methods themselves execute below.
+local root={kind='root',children={}}
+local activePopup=nil
+local managerReady=true
+local deferPopup=false
+super={OnAttach=function() end,OnDetach=function() end,Close=function() end}
+function NativeColor() return {} end
+function NativeWidget(kind)
+ local w={kind=kind,children={},interactive=false,callbacks={}}
+ function w:SetName(v) self.name=v end
+ function w:SetText(v) self.text=v end
+ function w:SetFontFamily(v) self.font=v end
+ function w:SetFontStyle(v) self.style=v end
+ function w:SetFontSize(v) self.fontSize=v end
+ function w:SetAnchor(v) self.anchor=v end
+ function w:SetAnchorPoint(x,y) self.anchorX=x;self.anchorY=y end
+ function w:SetSize(x,y) self.width=x;self.height=y end
+ function w:SetMargin(x,y) self.x=x;self.y=y end
+ function w:SetWrappingAtPosition(v) self.wrap=v end
+ function w:SetTintColor(v) self.color=v end
+ function w:SetInteractive(v) self.interactive=v end
+ function w:IsInteractive() return self.interactive end
+ function w:Reparent(parent) self.parent=parent;parent.children[#parent.children+1]=self end
+ function w:RegisterToCallback(event,target,method) self.callbacks[event]={target=target,method=method} end
+ return w
+end
+function NativePopup()
+ return setmetatable({m_buttons={n=0},m_commands={n=0},m_closing=false,m_attached=false,m_armedKey=0},{__index=Popup})
+end
+inkEAnchor={Centered='center'}
+EInputAction={IACT_Press=1,IACT_Release=2,IACT_Axis=3}
+EInputKey={IK_None=0,IK_F=70,IK_R=82,IK_8=56}
+for i=1,9 do EInputKey['IK_'..i]=48+i;EInputKey['IK_NumPad'..i]=96+i end
+function Popup:GetRootCompoundWidget() return root end
+function Popup:SetContainerWidget(widget) self.container=widget end
+function Popup:IsTopPopup() return self==activePopup and not self.covered end
+local inputAdds,inputRemoves=0,0
+local callbacks={RegisterCallback=function(_,event,p,method)
+ assert(event=='Input/Key' and method=='OnNumericKey');inputAdds=inputAdds+1;p.listening=true
+end,UnregisterCallback=function(_,event,p,method)
+ assert(event=='Input/Key' and method=='OnNumericKey');if p.listening then inputRemoves=inputRemoves+1 end;p.listening=false
+end}
+GameInstance.GetCallbackSystem=function() return callbacks end
+local manager={IsInitialized=function() return managerReady end,ShowPopup=function(_,p)
+ activePopup=p
+ if not deferPopup then p:CreateContainer();p:OnAttach() end
+end}
+CustomPopupManager={GetInstance=function() return manager end}
+function super:Close() if activePopup then activePopup:OnDetach();activePopup=nil end end
 TweakDBInterface={GetCName=function() error('Interaction.action is a String, not CName') end}
 ListenerAction={
  GetName=function(_,a) return a.name end,
@@ -182,14 +235,13 @@ assert(actions[1]:GetTweakDBChoiceRecord()=='NCPDPatrolBackup')
 assert(actions[2]:GetTweakDBChoiceRecord()=='NCPDPatrolOpenTrunkMenu')
 TrunkPS:NCPDPatrolAddBackupAction(actions); TrunkPS:NCPDPatrolAddTrunkMenuOpener(actions); assert(actions.n==3)
 hold(); actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
-assert(actions.n==7 and actions[0].kind=='menu' and actions[6]:GetCommand()==0)
-for i=0,actions.n-1 do assert(actions[i].kind=='menu') end
-TrunkPS:OnNCPDPatrolTrunkMenuAction(actions[6]); actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==0, 'horizontal menu choices still present under numeric popup')
+Trunk:CloseMenu(); actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
 assert(actions.n==3 and actions[0].kind=='stash')
 actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
 assert(actions.n==3 and actions[1].kind=='backup' and actions[2].kind=='open')
 hold(); actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
-assert(actions.n==7 and actions[6].kind=='menu')
+assert(actions.n==0)
 Trunk:CloseMenu(); vehicle.owned=false; actions={n=0}; TrunkPS:GetPlayerTrunkActions(actions,{})
 assert(actions.n==1 and actions[0].kind=='stash')
 reset(); onDuty=false; actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
@@ -198,12 +250,21 @@ reset()
 
 -- 10-4 is conditional, uses its own caption/choice record, and queues once.
 backupAssigned=true;hold();actions={n=0};TrunkPS:GetTrunkActions(actions,{})
-assert(actions.n==8 and actions[6]:GetCommand()==7 and actions[7]:GetCommand()==0)
-assert(actions[6]:GetTweakDBChoiceRecord()=='NCPDPatrolReleaseBackup')
-TrunkPS:OnNCPDPatrolTrunkMenuAction(actions[6])
+assert(actions.n==0 and activePopup and activePopup.m_commands[6]==7)
+Trunk:Select(7,vehicle)
 assert(Trunk:TakeCommand()==7 and Trunk:TakeCommand()==0 and not Trunk:IsOpenFor(vehicle))
 hold();backupAssigned=false;Trunk:Select(7,vehicle);assert(Trunk:TakeCommand()==0)
 reset()
+
+-- Shared helpers for numeric popup scenarios, without exposing production state.
+function CurrentPopup() return activePopup end
+function HoldTrunkMenu() hold();return activePopup end
+function ResetTrunkFixture() reset() end
+function SetBackupAssigned(value) backupAssigned=value end
+function PopupRoot() return root end
+function SetPopupManagerReady(value) managerReady=value end
+function DeferPopupAttach(value) deferPopup=value end
+function PopupListenerCounts() return inputAdds,inputRemoves end
 
 -- Execute repair and the actual delayed/mount/damage handlers. Wheel physics
 -- here forgets a parked-car reset on activation, matching the reported symptom.

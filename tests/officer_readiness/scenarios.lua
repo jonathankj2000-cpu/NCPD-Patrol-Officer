@@ -19,12 +19,15 @@ gamedataNPCHighLevelState={Relaxed=5,Alerted=0,Combat=2,Dead=3}
 worldNavigationRequestStatus={OK=1}
 AINavigationSystem={HasPathFromAtoB=function() return true end}
 TweakDB={GetRecord=function() return {} end}
-ScriptedPuppet={IsDefeated=function(a) return a.defeated end,IsUnconscious=function(a) return a.unconscious end,
- GetActiveWeapon=function(a) return a.weapon end}
-WeaponObject={IsFists=function(id) return id=='fists' end}
+ScriptedPuppet={IsDefeated=function(a,b) return (b or a).defeated end,IsUnconscious=function(a,b) return (b or a).unconscious end,
+ IsActive=function(a,b) local v=b or a;return not v.dead and not v.defeated and not v.unconscious end,
+ GetActiveWeapon=function(a,b) return (b or a).weapon or (b or a).leftWeapon end}
+WeaponObject={IsFists=function(a,b) return (b or a)=='fists' end,
+ GetWeaponType=function(a,b) return (b or a)=='grenade' and 0 or 1 end}
 local function weapon(kind) return {GetItemID=function() return kind or 'gun' end} end
 local function actor(id,record)
- local a={id=id or {hash=990},record=record,pos=vec(0,0,0),high=5,attached=true,commands={},stops={},autoEquip=true}
+ local a={id=id or {hash=990},record=record,pos=vec(0,0,0),high=5,attached=true,commands={},stops={},autoEquip=true,
+  tags={'NCPDPatrolOfficer'},inventory={gun=1}}
  function a:GetEntityID() return self.id end
  function a:GetRecordID() return self.record end
  function a:GetWorldPosition() return self.mounted and self.mounted.pos or self.pos end
@@ -40,6 +43,8 @@ local function actor(id,record)
  function ai:GetAIRole() return a.role end
  function ai:SetAIRole(role) a.role=role end
  function ai:OnAttach() end
+ function ai:IsCommandExecuting(name) return a.nativeBoarding==name end
+ function ai:GetCommandState(cmd) return cmd.kind=='gear' and 'Enqueued' or 'Executing' end
  function ai:SendCommand(cmd)
   a.commands[#a.commands+1]=cmd
   if cmd.kind=='gear' and a.autoEquip then a.weapon=not cmd.unEquip and weapon() or nil end
@@ -51,6 +56,7 @@ local function actor(id,record)
  return a
 end
 local player=actor({hash=1});local ambient=actor({hash=990});f.managed[990]=true;f.actors[990]=ambient
+ambient.tags={};player.tags={}
 local patrol={Version=function() return 17 end,IsDispatchMenuOpen=function() return f.paused end,IsOnDuty=function() return not f.offDuty end,
  HasWantedLevel=function() return f.wanted==true end,
  NotifyDispatch=function() end}
@@ -67,9 +73,14 @@ local support={Version=function() return 17 end,
 local career={Version=function() return 3 end,GetSelectedPartnerRecord=function() return 'Character.cvi_ncpd_police_ranged2_copperhead_ma' end,
  GetSelectedPartnerName=function() return 'Standard' end}
 local entities={IsReady=function() return true end,IsManaged=function(_,id) return f.managed[id.hash] or false end}
+function entities:IsTagged(id,tag)
+ local a=f.actors[id.hash];if id.hash==990 and not a then return true end
+ if a then for _,v in ipairs(a.tags or {}) do if v==tag then return true end end end
+ return false
+end
 function entities:CreateEntity(spec)
  local id={hash=100+#f.created};f.created[#f.created+1]=spec;f.managed[id.hash]=true
- local a=actor(id,spec.recordID);a.pos=spec.position
+ local a=actor(id,spec.recordID);a.pos=spec.position;a.tags=spec.tags or {}
  if spec.recordID:sub(1,8)=='Vehicle.' then
   a.speed=0
   function a:GetCurrentSpeed() return self.speed end
@@ -94,7 +105,69 @@ Game={GetPlayer=function() return player end,GetMountedVehicle=function(a) retur
   if name=='NCPDPatrolSupportSystem' then return support end
   if name=='NCPDPatrolSystem' then return patrol end
   if name=='NCPDPatrolCareerSystem' then return career end
+  if name=='NCPDPatrolOfficerEquipment' then return EquipmentNative end
  end} end}
+-- Run the actual redscript equipment controller, mocking only game hardware.
+function IsDefined(v) return v~=nil and v~=0 end
+function Equals(a,b) return a==b end
+function NotEquals(a,b) return a~=b end
+function ToString(v) return tostring(v) end
+function ArraySize(v) return v.n end
+function Deref(v) return v end
+function ArrayPush(v,item) v[v.n]=item;v.n=v.n+1 end
+function NativeContext() return {} end
+function NativeEquipItem() return {} end
+function NativeBodySlot(a,id) return 'body_'..id end
+function GetPlayer() return player end
+function GetMountedVehicle(a) return a.mounted end
+gamedataItemType={Invalid=0}
+NCPDPatrolSystem={Get=function() return patrol end}
+function EquipmentNative:GetGameInstance() return {} end
+-- Fixture actors are explicitly enrolled as our own, never ambient.
+local originalActor=actor
+actor=function(id,record)
+ if not id then f.fixtureID=(f.fixtureID or 1000)+1;id={hash=f.fixtureID} end
+ local a=originalActor(id,record);f.actors[id.hash]=a;f.managed[id.hash]=true;return a
+end
+AIHumanComponent={GetScriptContext=function(_,a,context)
+ if a.noContext then return false end;context.actor=a;return true
+end}
+local transaction={}
+function transaction:GetItemInSlot(a,slot)
+ if slot=='AttachmentSlots.WeaponLeft' then return a.leftWeapon end
+ return a.weapon
+end
+function transaction:HasItemInSlot(a,slot,id)
+ local w=self:GetItemInSlot(a,slot);return w and w:GetItemID()==id or false
+end
+GameInstance={GetDynamicEntitySystem=function() return entities end,GetTransactionSystem=function() return transaction end}
+AIActionTransactionSystem={GetEquipment=function(_,ctx,primary,list)
+ local a=ctx.actor
+ for _,item in ipairs(a.equipment or {{itemID='gun',slotID='AttachmentSlots.WeaponRight',bodySlotID='body_gun'}}) do
+  if a.inventory[item.itemID] then ArrayPush(list,item) end
+ end
+ return list.n>0
+end}
+AISubActionEquipOnSlot_Record_Implementation={Equip=function(_,ctx,items)
+ local a=ctx.actor;a.fallbackCalls=(a.fallbackCalls or 0)+1
+ if a.refuseFallback then return false end
+ for i=0,items.n-1 do
+  local item=items[i];assert(a.inventory[item.itemID],'created a weapon outside inventory')
+  if item.slotID=='AttachmentSlots.WeaponLeft' then a.leftWeapon=weapon(item.itemID) else a.weapon=weapon(item.itemID) end
+ end
+ return true
+end}
+AISubActionUnequipOnSlot_Record_Implementation={Unequip=function(_,ctx,drop,items)
+ assert(not drop,'inventory weapon was dropped')
+ local a=ctx.actor;a.fallbackCalls=(a.fallbackCalls or 0)+1
+ if a.refuseFallback then return false end
+ for i=0,items.n-1 do
+  if items[i].slotID=='AttachmentSlots.WeaponLeft' then a.leftWeapon=nil else a.weapon=nil end
+ end
+ return true
+end}
+NPCPuppet={SetAnimWrapperBasedOnEquippedItem=function(_,a,slot,id,weight) a.wrapper=weight end}
+AIActionHelper={ClearItemsUnequipped=function() end}
 local boardingBusy=false
 package.loaded.boarding={reset=function() boardingBusy=false end,cancel=function() boardingBusy=false end,
  busy=function() return boardingBusy end,update=function() end,state=function() return 'boundary' end}
@@ -110,7 +183,7 @@ local function gears(a)
 end
 -- Native boundary acknowledgements update actual held-weapon state.
 local a=actor();local s={};player.weapon=weapon();advance(s,a,.25)
-assert(#gears(a)==1 and a.weapon and not gears(a)[1].unEquip)
+assert(#gears(a)==1 and a.weapon and not gears(a)[1].unEquip,table.concat(f.logs,'\n'))
 advance(s,a,10);assert(#gears(a)==1,'duplicate draw commands')
 player.weapon=nil;advance(s,a,.75);assert(#gears(a)==1);advance(s,a,.25)
 assert(#gears(a)==2 and gears(a)[2].unEquip and not a.weapon)
@@ -136,9 +209,31 @@ player.mounted={};advance(s,a,1);assert(#gears(a)==0);player.mounted=nil
 for _,flag in ipairs({'dead','deadNoPool','defeated','unconscious'}) do a[flag]=true;advance(s,a,1);assert(#gears(a)==0);a[flag]=false end
 advance(s,a,.25);assert(#gears(a)==1)
 -- A refusing engine gets bounded retries; unsupported API failure is isolated.
-a=actor();a.autoEquip=false;s={};advance(s,a,20);assert(#gears(a)==3)
+a=actor();a.autoEquip=false;a.refuseFallback=true;s={};advance(s,a,20);assert(#gears(a)==3 and a.fallbackCalls==3 and s.warned)
 a=actor();a.badAPI=true;s={};local logs=#f.logs;advance(s,a,2);assert(s.failed and #f.logs==logs+1)
+-- The reported live failure: accepted gear command stays Enqueued forever.
+-- Verify the actual native fallback, then actual holster with inventory intact.
+a=actor();a.autoEquip=false;s={};player.weapon=weapon();advance(s,a,1)
+assert(not a.weapon and not a.fallbackCalls,'fallback ran before native grace period')
+advance(s,a,.25);assert(a.weapon and a.fallbackCalls==1 and a.wrapper==1)
+assert(a.inventory.gun==1 and Ready.diagnostics(s,a):find('officer weapon=true',1,true))
+player.weapon=nil;advance(s,a,2);assert(not a.weapon and a.fallbackCalls==2 and a.inventory.gun==1 and a.wrapper==0)
+-- Alerted draw is allowed; alerted holster, native combat, ambient actors,
+-- unavailable context, non-weapon and non-hand equipment are not overwritten.
+a=actor();a.autoEquip=false;a.high=0;s={};player.weapon=weapon();advance(s,a,1.25);assert(a.weapon)
+player.weapon=nil;advance(s,a,4);assert(a.weapon and a.fallbackCalls==1)
+a.high=2;assert(EquipmentNative:Apply(a,false)==0 and a.weapon)
+assert(EquipmentNative:Apply(ambient,true)==0 and not ambient.weapon)
+a=actor();a.autoEquip=false;a.noContext=true;assert(EquipmentNative:Apply(a,true)==0) -- V currently holstered
+player.weapon=weapon();assert(EquipmentNative:Apply(a,true)==-1 and not a.weapon)
+a.noContext=false;a.equipment={{itemID='grenade',slotID='AttachmentSlots.WeaponRight'},{itemID='gun',slotID='AttachmentSlots.Consumable'}}
+a.inventory.grenade=1;assert(EquipmentNative:Apply(a,true)==-1 and not a.fallbackCalls)
+-- Check both actual hand slots, including a right-hand fist plus left-hand gun.
+a=actor();a.weapon=weapon('fists');a.leftWeapon=weapon();assert(EquipmentNative:IsReady(a))
+player.weapon=nil;assert(EquipmentNative:Apply(a,false)==1 and not a.leftWeapon and a.inventory.gun==1)
+assert(not EquipmentNative:IsReady(a) and a.weapon:GetItemID()=='fists')
 -- Actual partner lifecycle calls readiness without changing follow/role recovery.
+player.weapon=weapon()
 local Partner=require('partner');Partner.spawn(true,status);Partner.update(.5,true,status)
 local p=f.partner;assert(p and p.role)
 Partner.update(.25,true,status);assert(#gears(p)==1 and p.weapon)
@@ -159,7 +254,15 @@ assert(Backup.state():find('on scene',1,true),table.concat(f.logs,'\n'))
 local officers={}
 for _,unit in pairs(f.actors) do if unit~=ambient and unit~=player and unit.record and unit.record:sub(1,10)=='Character.' then officers[#officers+1]=unit end end
 assert(#officers==2)
-for _,unit in ipairs(officers) do assert(unit.role and #gears(unit)==1 and unit.weapon) end
+for _,unit in ipairs(officers) do
+ assert(unit.role and #gears(unit)==1 and unit.weapon)
+ local follows,holds=0,0
+ for _,cmd in ipairs(unit.commands) do
+  if cmd.kind=='follow' then assert(cmd.target==player and cmd.teleport==false and not cmd.ignoreInCombat);follows=follows+1 end
+  if cmd.kind=='hold' then holds=holds+1 end
+ end
+ assert(follows>=1 and holds==0,'active backup was held at the request location')
+end
 player.weapon=nil;officers[1].high=0
 for _=1,8 do Backup.update(.25,true,support,patrol,status) end
 assert(officers[1].weapon and #gears(officers[1])==1)

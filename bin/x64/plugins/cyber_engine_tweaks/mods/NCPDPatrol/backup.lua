@@ -100,6 +100,7 @@ local function create(system, record, position, orientation)
     spec.recordID, spec.position, spec.orientation = TweakDBID.new(record), position, orientation
     spec.persistState, spec.persistSpawn, spec.alwaysSpawned = false, false, false
     spec.spawnInView, spec.active = true, true
+    if record:sub(1,10) == "Character." then spec.tags = {"NCPDPatrolOfficer"} end
     local id = system:CreateEntity(spec)
     if not id or not EntityID.IsDefined(id) then error("Backup entity creation failed") end
     ids[#ids+1] = id
@@ -348,22 +349,38 @@ local function updateActive(delta, support, patrol, status)
     elseif phase == "exiting" or phase == "onscene" then
         local ready = true
         for index, unit in ipairs(units) do
-            if unit.actor:IsDead() then
+            if unit.actor:IsDead() or unit.actor:IsDeadNoStatPool()
+                or ScriptedPuppet.IsDefeated(unit.actor) or ScriptedPuppet.IsUnconscious(unit.actor) then
+                if unit.readiness then Ready.release(unit.readiness, unit.actor) end
+                stopUnit(unit)
                 unit.command, unit.onFoot = nil, true
             elseif not Game.GetMountedVehicle(unit.actor) then
                 if not unit.onFoot then
                     unit.readiness = {}
                     unit.command = nil
                     Crew.follower(unit.actor)
-                    local point = Vector4.new(anchor.x + (index == 1 and 3 or -3), anchor.y, anchor.z, 1)
-                    unit.command = Crew.moveToScene(unit.actor, point)
-                    unit.onFoot, unit.holding = true, false
+                    unit.onFoot, unit.followElapsed = true, 5
                 end
-                if not unit.holding and distance(unit.actor:GetWorldPosition(), anchor) <= 7 then
-                    stopUnit(unit); unit.command = Crew.hold(unit.actor); unit.holding = true
+                local ai = unit.actor:GetAIControllerComponent()
+                local boarding = Game.GetMountedVehicle(player) ~= nil
+                    or ai:IsCommandExecuting("AIMountCommand", false)
+                    or ai:IsCommandExecuting("AIUnmountCommand", false)
+                unit.followElapsed = (unit.followElapsed or 5) + delta
+                if boarding then
+                    -- Let the native follower use seats, without an on-foot
+                    -- movement command holding it at the request location.
+                    stopUnit(unit)
+                elseif unit.followElapsed >= 5 then
+                    stopUnit(unit)
+                    unit.command = Crew.follow(unit.actor, index == 1 and 3.0 or 4.0)
+                    unit.followElapsed = 0
                 end
-                Ready.update(unit.readiness, delta, unit.actor, patrol, false, status)
-            else ready = false end
+                Ready.update(unit.readiness, delta, unit.actor, patrol, boarding, status)
+            else
+                if unit.readiness then Ready.release(unit.readiness, unit.actor) end
+                stopUnit(unit)
+                ready = false
+            end
         end
         if ready and not notified then
             notified, phase = true, "onscene"
@@ -411,6 +428,14 @@ function M.update(delta, onDuty, support, patrol, status)
         notice(patrol, "Backup could not complete its response. Unit standing down.")
         cleanup(support, nil)
     end
+end
+
+function M.diagnostics()
+    local lines = {"Backup phase=" .. phase}
+    for index, unit in ipairs(units) do
+        lines[#lines+1] = "Officer " .. index .. " | " .. Ready.diagnostics(unit.readiness or {}, unit.actor)
+    end
+    return table.concat(lines, "\n[NCPD Patrol] ")
 end
 
 return M

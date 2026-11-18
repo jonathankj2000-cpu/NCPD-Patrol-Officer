@@ -47,6 +47,8 @@ function M.healthDiagnostics()
     return ok and tostring(info) or ("Health diagnostics unavailable: " .. tostring(info))
 end
 
+function M.readinessDiagnostics() return Ready.diagnostics(readiness, officer) end
+
 local function observeVoice(delta)
     if delta <= 0 or delta > 0.5 or voiceLines >= 30 then return end
     voiceTime = voiceTime + delta
@@ -140,6 +142,7 @@ function M.spawn(onDuty, status)
         local pos = player:GetWorldPosition()
         local spec = DynamicEntitySpec.new()
         spec.recordID = recordID
+        spec.tags = {"NCPDPatrolOfficer"}
         spec.position = Vector4.new(pos.x + 1.8, pos.y + 1.8, pos.z, pos.w)
         spec.orientation = player:GetWorldOrientation()
         spec.persistState = false

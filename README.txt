@@ -1,13 +1,14 @@
-NCPD PATROL v0.15b - 10-4 BACKUP STAND-DOWN
+NCPD PATROL v0.15c - NUMERIC TRUNK MENU AND OFFICER AI
 ========================================================
-Full installation package. Adds partner/backup weapon-readiness mirroring
-and 17 verified private cyberpsycho variants. Includes all v0.14b VIP ambush,
-aftermath, tyre repair, career, partner revive, backup and arrest behavior.
-Generated incidents do not issue money or career credit in this prototype.
+Full installation package. Fixes active backup holding at the request location,
+adds verified-equipment fallback for partner/backup readiness, and replaces the
+horizontal trunk choices with a two-row numeric game popup. Includes all 17
+cyberpsycho variants, existing VIP ambush/aftermath, tyre repair, career, partner
+revive, backup and arrests. Generated incidents still grant no money/career credit.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.15b.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.15c.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
@@ -21,9 +22,41 @@ For the computer page, the main Browser Extension Framework 0.9.7 is optional:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Without BEF, use CET's career/reward/partner controls. The rest of the mod works.
 
+PATROL MENU: HOLD R, THEN USE NUMBERS
+At your owned police car's trunk, tap R for backup as before. HOLD R opens the
+blocking game popup, with FOUR options on each of TWO rows. No CET overlay or
+additional hotkeys are needed. Normal weapon quickslots are blocked by the popup.
+  1: Available / Busy       2: Vehicle repair (10 s)
+  3: New partner            4: Cancel dispatch
+  5: New dispatch           6: Cop Stats
+  7: 10-4 - Release backup  9: Close menu
+8 is spare. Top-row and numpad digits work; mouse selection is also supported.
+Esc/C closes through the game's popup cancel action. Hold R remains the native
+hold interaction. Busy retains the current assignment but pauses automatic calls.
+7 is disabled without a patrol; selecting other options never queues 10-4.
+Walking away, losing duty eligibility, loading or opening a full-screen menu
+invalidates the trunk session. Closing restores vanilla stash/tap/hold choices.
+A blocked popup queue times out and restores the trunk instead of trapping it.
+
+ACTIVE BACKUP AND EQUIPMENT TEST
+1. Request backup; let the car stop and officers get out. Walk 15-30 m away.
+   Both officers should follow V rather than hold at the original request point.
+   Native boarding gets priority while V is mounted or a mount/exit runs.
+2. Draw/holster on foot with the partner and backup present. An accepted AI
+   equipment request is NOT proof of a drawn gun. If no held-slot change occurs
+   within one second, the new native helper uses that officer's existing primary
+   inventory and the game's equip/unequip routines, then verifies the held slot.
+   It does not give, delete or drop guns or change combat/high-level states.
+3. Holstering waits for calm. Alerted officers may mirror V drawing, but are never
+   forced to holster. Combat, downing/revive and vehicle/boarding take priority.
+4. If it still fails, CET > NCPD PARTNER > Log officer readiness (partner + backup)
+   reports actual V/officer weapons, ownership, native state and fallback results.
+5. Hold R > 7 to release backup, wait for any actual vehicle exits, then drive away.
+   The primary partner remains assigned. Check normal revive and VIP transport.
+
 10-4 BACKUP STAND-DOWN
 At an owned police car's trunk, HOLD R to open Patrol Menu. While a patrol is
-assigned, select 10-4 - Release backup with the normal menu selection binding.
+assigned, press 7 for 10-4 - Release backup.
 This ends BACKUP follower duty. Officers stop following V and trying to join
 V's vehicle. They remain at the scene; there is NO immediate despawn.
 If already seated, they request an animated exit from their ACTUAL vehicle/seat
@@ -39,15 +72,15 @@ A pending request with no deployed entities is cancelled without creating one.
 CET > NCPD BACKUP > 10-4: Release backup provides a fallback test button.
 End Shift still performs the normal cleanup. Save/load forgets old-world IDs.
 Install all updated Lua, redscript, interaction tweaks and localization together;
-the native trunk API is now 3. Real role clearing/animated exits need a game test.
+the native trunk API is now 4; officer equipment API is 1. New behavior needs a game test.
 
 OFFICER READINESS TEST
 1. Start a shift with your partner on foot. Draw your weapon: the partner should
    draw their own primary weapon. Holster it: in a calm state, the partner should
    holster after a short delay. Fists/empty hands do not count as a drawn weapon.
 2. Approach a scanner with V's gun drawn. The partner should have their own gun
-   ready before combat starts. Once alerted or in combat, native AI takes over;
-   holstering V's weapon must not holster a fighting officer's weapon.
+   ready before combat starts. Native combat takes over; alerted officers never
+   holster just because V does. Holstering V must not holster a fighting officer.
 3. Call backup, let them park and get out, then repeat. Each officer has separate
    readiness state. No synchronization is forced while either V or that officer
    is mounted. Existing vehicle combat remains native.
