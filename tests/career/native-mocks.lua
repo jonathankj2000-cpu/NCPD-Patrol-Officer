@@ -45,6 +45,7 @@ function CareerFixture:Reset(n)
  Arrests.m_paidSuspects={n=7}
  FrameworkSystem.m_listeners={n=0};FrameworkSystem.m_blockedAddress={n=0}
  BrowserState:OnAttach();self.befEnabled=true;self.befBypass=false
+ self.viewportWidth=3840;self.viewportHeight=2160
 end
 local rewardTransaction={GiveItem=function(_,target,record,amount)
  assert(target==player and amount==1 and record~='Items.money')
@@ -63,6 +64,10 @@ local rewardGarage={EnablePlayerVehicle=function(_,record,enable,despawn)
 end,IsVehiclePlayerUnlocked=function(_,record) return CareerFixture.unlockedVehicles[record]==true end}
 GameInstance.GetVehicleSystem=function() if CareerFixture.vehiclePresent then return rewardGarage end end
 function NativeColor() return {Red=0,Green=0,Blue=0,Alpha=0} end
+function NativeVector() return {X=0,Y=0} end
+function MinF(a,b) return math.min(a,b) end
+inkWidgetRef={Get=function(_,reference) return reference and reference.widget end,
+ GetController=function(_,reference) return reference and reference.controller end}
 inkEAnchor={Fill='fill',Centered='center'}
 textHorizontalAlignment={Center='center'}
 function NativeWidget(kind)
@@ -72,9 +77,15 @@ function NativeWidget(kind)
  function w:SetFontStyle(v) self.style=v end
  function w:SetFontSize(v) self.fontSize=v end
  function w:SetSize(x,y) self.width=x;self.height=y end
+ function w:GetSize() return {X=self.width or 0,Y=self.height or 0} end
+ function w:SetScale(value) self.scale={X=value.X,Y=value.Y} end
+ function w:SetRenderTransformPivot(x,y) self.pivot={X=x,Y=y} end
+ function w:SetRotation(value) self.rotation=value end
+ function w:SetWrappingAtPosition(value) self.wrap=value end
  function w:SetTintColor(v) self.color=v end
  function w:SetText(v) self.text=v end
  function w:SetInteractive(v) self.interactive=v end
+ function w:IsInteractive() return self.interactive==true end
  function w:SetFitToContent(v) self.fit=v end
  function w:SetAnchor(v) self.anchor=v end
  function w:SetAnchorPoint(x,y) self.anchorX=x;self.anchorY=y end
@@ -98,11 +109,18 @@ function NativeBrowserUninit(listener)
  CareerFixture.registration[listener]=nil
 end
 setmetatable(ListenerPrototype,{__index=FrameworkBase})
-function NativeListener() return setmetatable({}, {__index=ListenerPrototype}) end
+function NativeListener()
+ local listener={}
+ for key,value in pairs(ListenerPrototype) do if type(value)=='table' and value.n then listener[key]={n=0} end end
+ return setmetatable(listener, {__index=ListenerPrototype})
+end
 function wrappedMethod() CareerFixture.hostCalls=CareerFixture.hostCalls+1;return true end
 function CareerFixture:Host()
  local device={attached=true,GetGame=function() return {} end,IsAttached=function(self) return self.attached end}
  local host={device=device,GetPlayerControlledObject=function() return player end,GetOwnerEntity=function() return device end}
+ host.viewport=NativeWidget('inkCanvas');host.viewport:SetSize(self.viewportWidth,self.viewportHeight)
+ host.logic=setmetatable({m_gameController=host,m_pageContentRoot={widget=host.viewport}},{__index=PageSpawnPrototype})
+ host.m_logicControllerRef={controller=host.logic}
  function host:GetCustomSites() return FrameworkSystem:GetSitesData(self.device) end
  function host:LoadPageByAddress(address)
   CareerFixture.loads[#CareerFixture.loads+1]=address
@@ -135,6 +153,6 @@ end
 function CareerFixture:Click(widget,action)
  local cb=widget.callbacks.OnRelease
  if not cb then return false end
- local event={IsAction=function(_,name) return name==(action or 'click') end}
+ local event={IsAction=function(_,name) return name==(action or 'click') end,GetCurrentTarget=function() return widget end}
  return cb.listener[cb.method](cb.listener,event)
 end

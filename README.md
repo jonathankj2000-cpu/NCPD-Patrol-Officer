@@ -1,14 +1,24 @@
 # NCPD Patrol
 
-## v0.11b: fixed milestone weapon tiers
+## v0.12a: NCPD personnel portal
 
-[Download the complete v0.11b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.11b_Milestone_Weapon_Tiers_TEST.zip)
+[Download the complete v0.12a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.12a_Career_Portal_UI_TEST.zip)
+
+The career computer page is now a departmental personnel portal. It reads the computer browser's content viewport and scales its layout to fill the available area, including wider displays. A permanent sidebar provides three sections:
+
+- **Service Record:** current rank and service grade, promotion progress, the next reward, incident/dispatch/arrest totals, issued rewards, a seven-step milestone track and your selected partner.
+- **Rewards & Equipment:** all seven reward allocations as cards, with **LOCKED**, **AVAILABLE**, **PARTIAL - RETRY** or **CLAIMED** status, weapon tiers, partner access and a collection desk.
+- **Partner Assignment:** four profile cards with role, equipment, service requirement, access progress and assignment controls.
+
+The portal uses navy panels, cyan accents, gold action buttons, hover feedback and a persistent latest-update panel. **Refresh record** updates the snapshot after progress or CET test settings change. Rendering a page never issues rewards. The career model, saved receipts, partner behavior and fixed weapon tiers are unchanged from v0.11b.
+
+### Rewards and partners
 
 Weapon rewards now have a fixed tier based on their milestone: **Tier 2 through 20 incidents, Tier 3 through 50, Tier 4 through 75, Tier 5 above 75**. The current catalog therefore gives Lexington Military **Tier 2**, Masamune Military **Tier 3** and Defender Military **Tier 5**. The 75-incident milestone still awards the Hellhound; it has no weapon reward. Reward-only records inherit the Military presets and use the game's fixed Uncommon/Rare/Legendary qualities, including their disabled random +/- tier rolls. Normal world/vendor weapons and already-owned items are not changed.
 
 Already claimed v0.11a rewards stay claimed. To retest tiers, enable **TEST: Unlock all milestones (session)**, then press **TEST: Give tiered reward weapons**. This delivers one new copy of each reward gun per session, without changing incident totals, rewards already claimed, money or vehicles. Test copies remain in inventory if you save. A partial delivery can be retried without repeating the successful test copies.
 
-NCPD Career now offers equipment and police vehicle rewards. Its computer page has **Service Record** and **Partner Assignment** tabs. Choose an unlocked partner for your next shift or **Request new partner** from your owned police car's trunk menu. Selection does not immediately replace a partner who is already on duty.
+Choose an unlocked partner for your next shift or **Request new partner** from your owned police car's trunk menu. Selection does not immediately replace a partner who is already on duty.
 
 | Incidents resolved | Equipment / vehicle reward | Partner access |
 | --- | --- | --- |
@@ -29,8 +39,8 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.11b**. The new `r6/tweaks/NCPDPatrol_CareerWeapons.yaml` is required for weapon tiers; retain the bundled career vehicle tweak too.
-2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.12a**. Include both bundled career tweak files.
+2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.
 5. Open **Partner Assignment**, select a profile, then start a shift or use **Request new partner** at the trunk. A CET replacement button and a **Partner assignment (CET fallback)** section are also available. Test follow, combat, passenger boarding, downing and revive for each new profile.
@@ -40,10 +50,10 @@ Browser Extension remains **optional**. Without it, progression, rewards and par
 
 ### Validation and limits
 
-[Automated checks](tests/career/README.md) execute authored reward/progression code, partner spawning/replacement, the real CET test-button handlers and the computer tabs/callbacks. Tests cover legacy cash receipt migration, partial native failures, garage unlock confirmation, existing vehicle ownership, saved selection and simulated restore, temporary test access, duplicate clicks and cleanup. They use the actual pinned BEF base/registry with native game/widget boundaries mocked. Existing arrest/trunk/dispatch regressions also pass.
+[Automated checks](tests/career/README.md) execute authored reward/progression code, partner spawning/replacement, the real CET test-button handlers and all three computer pages. Portal checks exercise the native viewport lookup helpers, layout bounds at five viewport sizes, routes, hover feedback, callback cleanup, stale pages, missing viewports and detached devices. They use the actual pinned BEF base/registry with native game/widget boundaries mocked. Existing reward/save/partner/arrest/trunk/dispatch regressions also pass.
 
-All 22 production redscript files pass source-derived API checks with and without BEF. All 12 Lua modules parse. The complete 45-file install ZIP is verified byte-for-byte. Tests cover the fixed-quality clone configuration, tiered delivery, original receipt compatibility, missing tier records and the actual CET weapon-test button. Actual item tier/appearance/tooltips still need a game test.
+All 22 production redscript files pass source-derived API checks with and without BEF. All 12 Lua modules parse. The complete 45-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
 
-Arrest/dispatch archives, core/support logic, computer rendering, vehicle rewards and partner behavior are unchanged from v0.11a. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, journal **2** and browser diagnostics **1** remain unchanged.
+Arrest/dispatch archives, core/support logic, career progression/reward logic, vehicle and weapon tweaks, and partner behavior are byte-for-byte unchanged from v0.11b. Browser diagnostics now include viewport dimensions, UI scale and whether fallback dimensions were used. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, journal **2** and browser diagnostics **1** remain unchanged.
 
-[Full instructions](README.txt) · [Previous v0.11a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.11a_Career_Rewards_Partners_TEST.zip) · [Earlier packages](releases)
+[Full instructions](README.txt) · [Previous v0.11b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.11b_Milestone_Weapon_Tiers_TEST.zip) · [Earlier packages](releases)

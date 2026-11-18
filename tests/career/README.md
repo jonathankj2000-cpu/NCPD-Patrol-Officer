@@ -36,10 +36,13 @@ and loading resets transient test-delivery state. Tier 4 is configured for the
 
 The real browser listener, renderer, tab/claim/assignment release callbacks and
 initialization/uninitialization hooks execute through the shared syntax adapter.
-Native widgets/game/context/config are mocked. Tests check page strings, route
-selection, model guards, callback cleanup and stale/detached context behavior.
-Declared panel/text heights are checked for normal pages and the test banner;
-this is not a substitute for real font layout, scaling, hit testing or rendering.
+Native widgets/game/context/config are mocked. All three portal pages execute
+at 1920x1080, 3840x2160, 3440x1440, 1280x720 and 3840x1800. Tests exercise both
+production viewport helpers, verify exact viewport coverage and child bounds,
+and check page strings, routes, hover feedback, model guards and every release/
+enter/leave callback cleanup. Stale pages, detached devices, zero-sized viewport
+fallback and later refresh/resize are covered. This is not a substitute for
+real font layout, scaling, hit testing or rendering.
 
 bef_reference.py fetches three pinned public BEF source files from
 GreenManNK/Cyberpunk-2077-mod at e2012d2d7778e5101526f9e7115708d2159e6c35 and
@@ -50,7 +53,11 @@ GetSitesData, GetWebPage and IsAddressBlocked. Only array iteration is lowered;
 the routing predicates execute unchanged. Registration remains idempotent and
 per-computer, and other sites survive closing the NCPD page.
 
-contracts/natives.reds contains source-derived UI signatures. rewards.reds adds
+contracts/natives.reds contains source-derived UI signatures, including native
+inkWidgetRef.Get/GetController, widget size/scale/pivot/rotation, inkText wrapping,
+inkEvent.GetCurrentTarget and the protected browser content/controller fields.
+These match decompiled game UI/internet/browserController.swift and core ink
+declarations. rewards.reds adds
 TDBID.Create, StrBeginsWith and the actual VehicleSystem signatures, from
 orphans.swift and core/systems/vehicleSystem.swift in MOD_Development_Reference.
 The shared offline GameInstance declaration includes its native GetVehicleSystem.
@@ -59,7 +66,8 @@ including its actual pinned base class. The real game cache is not available.
 
 tools/build_career_release.py runs this suite and the arrest, trunk and dispatch
 regressions, parses all 12 CET modules, verifies protected production files
-against v0.11a, including unchanged core/support/browser/vehicle code, and builds
+against v0.11b, including unchanged career model, core/support, partner module,
+vehicle/weapon tweaks and all archives, and builds
 the deterministic 45-file install ZIP with a byte/hash manifest. The four
 vehicle eligibility records are checked; no bulk vehicle unlock API is used.
 

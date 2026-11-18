@@ -1,16 +1,17 @@
-NCPD PATROL v0.11b - FIXED MILESTONE WEAPON TIERS TEST
+NCPD PATROL v0.12a - CAREER PERSONNEL PORTAL UI TEST
 =================================================
-Full installation package. Retains career rewards/partners and assigns fixed
-weapon tiers: T2 through 20 incidents, T3 through 50, T4 through 75, T5 above 75.
-Lexington Military = Tier 2; Masamune Military = Tier 3; Defender Military = T5.
-The 75-incident reward remains the Hellhound; no new gun is added there.
+Full installation package. The career computer now has a larger adaptive
+personnel portal with Service Record, Rewards & Equipment and Partner
+Assignment pages. Reads the browser content viewport and scales to its area.
+Career progression, rewards, saved receipts, weapon tiers and partner behavior
+are retained from v0.11b.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.11b.
-Include the new r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
+contains bin, r6 and archive. Replace files and restart; CET announces v0.12a.
+Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
 Military variants with fixed game qualities. It does not edit the vanilla guns.
-The new r6/tweaks/NCPDPatrol_CareerVehicles.yaml registers the four reward cars
+r6/tweaks/NCPDPatrol_CareerVehicles.yaml registers the four reward cars
 for the garage. Registration alone does not unlock a car; claim its reward.
 
 Keep the existing compatible Cyberpunk 2077 2.5 dependencies: CET, RED4ext,
@@ -21,15 +22,28 @@ Without BEF, use CET's career/reward/partner controls. The rest of the mod works
 
 COMPUTER
 At a browser-capable computer, open Net and select NCPD Career. Its address is
-NETdir://ncpd.career. Service Record shows rank, real incident totals, progress,
-upcoming rewards and claim status. Partner Assignment shows the four profiles,
-their equipment, required incident count and current selection.
+NETdir://ncpd.career. A permanent sidebar provides three pages:
+
+SERVICE RECORD: rank, service grade and promotion progress, next milestone,
+incident/dispatch/arrest totals, issued rewards, a seven-step milestone track,
+selected partner and quick claim/assignment controls.
+REWARDS & EQUIPMENT: seven reward cards with LOCKED, AVAILABLE,
+PARTIAL - RETRY or CLAIMED states, weapon tiers, partner access and collection.
+PARTNER ASSIGNMENT: four profiles with role, equipment, access requirements,
+progress and assignment controls. Locked and selected profiles are explicit.
+
+Navy/cyan/gold panels, button hover feedback and a latest-service-update strip
+provide a consistent layout. Width and height adapt to the browser content
+viewport rather than using the old fixed-width body. Wider screens expand the
+layout; smaller viewports scale the same design. No new asset dependency.
 
 The page is a snapshot. Refresh record after using a CET test control or when
 your incident total has changed. Claims, selections and tab clicks refresh it.
 If the entry is absent, keep that Net browser open and use CET's Log career
 browser diagnostics or Open NCPD Career (computer browser). These do not alter
-BEF settings or bypass its restrictions.
+BEF settings or bypass its restrictions. Diagnostics now include viewport
+dimensions, UI scale and fallback=true/false. If the native viewport is not yet
+measured, the page uses a 1920x1080 fallback; Refresh record measures it again.
 
 MILESTONES
     5  NCPD anti-shrapnel helmet
@@ -108,9 +122,13 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.11b, open the career page and note your real incident count.
-2. Enable test unlocks, refresh, and claim the seven reward bundles.
-3. Check all 12 equipment pieces/weapons and all four garage vehicles. Try
+1. Confirm v0.12a. Open all three career pages. Check that the content fills
+   the browser, text stays readable and the sidebar/hover/click targets work.
+2. Note your actual incident count and rank. Enable test unlocks and refresh;
+   access changes while those real values remain unchanged. Check the seven
+   reward cards and four partner cards. Claim available bundles if desired.
+3. Retain your v0.11b weapon test: Lexington T2, Masamune T3, Defender T5.
+   Check all 12 equipment pieces/weapons and all four garage vehicles. Try
    repeat claims, save/load, and verify the receipts remain collected.
 4. Enable test unlocks again if needed. Select each new partner and request a
    replacement while on duty. Check follow, combat, car boarding and revive.
@@ -125,13 +143,16 @@ partial failure/retry across simulated load, garage acceptance/confirmation,
 already-owned vehicles, safe context guards, partner gates/selection, test-mode
 expiry and no synthetic scanner records. Computer tests use pinned BEF base
 Init/Uninit and registry methods with per-device matching and callback cleanup.
-Authored page flow stays within its declared body height in widget fixtures.
+All three authored pages fit native-widget fixtures at 1920x1080, 3840x2160,
+3440x1440, 1280x720 and 3840x1800. Tests exercise the actual viewport helpers,
+hover and all callback cleanup, including stale pages and detached devices.
+Offline font/layout previews are not in-game screenshots or hit-testing.
 
 All 22 redscript files pass source-derived API checks with BEF installed and
 absent; 12 Lua modules parse. The full 45-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
 Existing arrest/trunk/dispatch tests pass. Archives and payment code remain
-unchanged. Core recognizes the four additional owned police cars; support
+unchanged from v0.11b. Core recognizes the four additional owned police cars; support
 registration accepts the four partner records. Down/revive recovery is retained.
 
 Weapon tests cover the fixed quality definitions, delivery records, unchanged
@@ -139,6 +160,10 @@ legacy receipt identities, missing definitions, partial test-delivery retries,
 and the actual CET button. Real weapon tooltips still need an in-game test.
 
 Interfaces: main/support 17, arrest 5, trunk 2, journal 2, career 3, browser 1.
+
+ROLLBACK TO v0.11b
+Exit the game and reinstall the entire v0.11b ZIP. This update only changes the
+career page and its transient layout diagnostics; saved career data is retained.
 
 ROLLBACK TO v0.11a
 Exit the game, remove r6/tweaks/NCPDPatrol_CareerWeapons.yaml and reinstall the

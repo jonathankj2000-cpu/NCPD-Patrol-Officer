@@ -5,8 +5,8 @@ No game archives are rebuilt: confirmed arrest and dispatch assets are preserved
 from pathlib import Path
 import hashlib,json,os,re,subprocess,sys,zipfile
 ROOT=Path(__file__).resolve().parents[1]
-BASE='f38cbf1dd903e0261e62085cae5922ffd368aead'
-NAME='NCPD_Patrol_v0.11b_Milestone_Weapon_Tiers_TEST.zip'
+BASE='5f4be33e803c4efc650db3632f79a82ea8123b0e'
+NAME='NCPD_Patrol_v0.12a_Career_Portal_UI_TEST.zip'
 def run(*args):subprocess.run([*map(str,args)],cwd=ROOT,check=True)
 def baseline(path):return subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT,text=True)
 def blob(data):return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -18,9 +18,9 @@ def main():
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  tests=['tests/arrests/check_arrest.py','tests/arrests/check_arrest_interactions.py','tests/trunk_menu/check_trunk.py','tests/dispatch_journal/check_journal.py','tests/career/check_career.py']
  for test in tests:run(sys.executable,ROOT/test)
- changed={'r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds',
-  'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua',
-  'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/partner.lua'}
+ changed={'r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds',
+  'r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds',
+  'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua'}
  original=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  keep=[path for path in original if path not in changed]
  run('git','diff','--exit-code',BASE,'--',*keep)
@@ -41,7 +41,7 @@ def main():
   assert z.testzip() is None and set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  data=release.read_bytes()
- report={'version':'v0.11b','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
+ report={'version':'v0.12a','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
  'install_files':len(paths),'lua_modules_parsed':len(modules),'portable_tests':tests,
  'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(data),'zip_sha256':hashlib.sha256(data).hexdigest(),
  'zip_git_blob':blob(data),'career_milestones':[5,10,20,35,50,75,100],'partner_milestones':[0,20,50,100],
@@ -51,9 +51,13 @@ def main():
  'weapon_delivery':'fixed-quality reward-only clones; original receipt keys preserved',
  'test_weapons':'separate copies, once per session; requires TEST unlocks; normal claims unchanged',
  'reward_receipts':'save-local, per record; legacy cash claims retained separately',
+ 'career_portal_pages':['Service Record','Rewards & Equipment','Partner Assignment'],
+ 'portal_viewport':'native BrowserController.m_pageContentRoot; uniform scaling, expanded layout on wide/tall displays',
+ 'portal_design_minimum':[1920,1080],'portal_fixture_sizes':[[1920,1080],[3840,2160],[3440,1440],[1280,720],[3840,1800]],
+ 'career_rewards_partners_code_unchanged':True,
  'browser_extension':'optional, page requires 0.9.7','bef_reference_commit':'e2012d2d7778e5101526f9e7115708d2159e6c35','actual_game_validation':False,
  'arrest_dispatch_archives_unchanged':True,'scanner_dispatch_payment_code_unchanged':True,
  'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
- (ROOT/'releases/NCPD_Patrol_v0.11b_verification.json').write_text(json.dumps(report,indent=2)+'\n')
+ (ROOT/'releases/NCPD_Patrol_v0.12a_verification.json').write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
 if __name__=='__main__':main()

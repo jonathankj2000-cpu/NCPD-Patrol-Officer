@@ -14,6 +14,10 @@ public class NCPDPatrolCareerBrowserState extends ScriptableSystem {
     private let m_found: Bool;
     private let m_requests: Int32;
     private let m_lastAddress: String;
+    private let m_viewportWidth: Float;
+    private let m_viewportHeight: Float;
+    private let m_layoutScale: Float;
+    private let m_layoutFallback: Bool;
     public static func Get(game: GameInstance) -> ref<NCPDPatrolCareerBrowserState> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrol.Career.NCPDPatrolCareerBrowserState") as NCPDPatrolCareerBrowserState;
     }
@@ -28,6 +32,10 @@ public class NCPDPatrolCareerBrowserState extends ScriptableSystem {
         this.m_found = false;
         this.m_requests = 0;
         this.m_lastAddress = "none";
+        this.m_viewportWidth = 0.0;
+        this.m_viewportHeight = 0.0;
+        this.m_layoutScale = 0.0;
+        this.m_layoutFallback = false;
     }
     public func ReportBrowser(browser: ref<BrowserGameController>) -> Void {
         this.m_browser = browser;
@@ -42,6 +50,12 @@ public class NCPDPatrolCareerBrowserState extends ScriptableSystem {
     public func ReportPage(address: String) -> Void {
         this.m_requests += 1;
         this.m_lastAddress = address;
+    }
+    public func ReportLayout(width: Float, height: Float, scale: Float, fallback: Bool) -> Void {
+        this.m_viewportWidth = width;
+        this.m_viewportHeight = height;
+        this.m_layoutScale = scale;
+        this.m_layoutFallback = fallback;
     }
     @if(ModuleExists("BrowserExtension.System"))
     private func CheckRegistry() -> Void {
@@ -81,7 +95,7 @@ public class NCPDPatrolCareerBrowserState extends ScriptableSystem {
     public func GetDiagnostics() -> String {
         let framework: String = this.FrameworkStatus();
         this.CheckRegistry();
-        return s"\(framework) | browser open=\(this.m_open) | init hooks=\(this.m_hooks) | last registry sites=\(this.m_sites) | career registered=\(this.m_found) | page requests=\(this.m_requests) | last=\(this.m_lastAddress)";
+        return s"\(framework) | browser open=\(this.m_open) | init hooks=\(this.m_hooks) | last registry sites=\(this.m_sites) | career registered=\(this.m_found) | page requests=\(this.m_requests) | viewport=\(this.m_viewportWidth)x\(this.m_viewportHeight) | UI scale=\(this.m_layoutScale) | fallback=\(this.m_layoutFallback) | last=\(this.m_lastAddress)";
     }
     @if(ModuleExists("BrowserExtension.System"))
     public func OpenCareer() -> Bool {

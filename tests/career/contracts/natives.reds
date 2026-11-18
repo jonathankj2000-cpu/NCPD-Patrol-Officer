@@ -5,7 +5,19 @@ public native func OperatorSubtract(a: Int32, b: Int32) -> Int32;
 public native func OperatorMultiply(a: Int32, b: Int32) -> Int32;
 public native func OperatorDivide(a: Int32, b: Int32) -> Int32;
 public native func OperatorMultiply(a: Float, b: Float) -> Float;
+public native func OperatorAdd(a: Float, b: Float) -> Float;
+public native func OperatorDivide(a: Float, b: Float) -> Float;
+public native func MinF(a: Float, b: Float) -> Float;
 public native func Cast(a: Int32) -> Float;
+public native struct Vector2 {
+ public native let X: Float;
+ public native let Y: Float;
+}
+public native struct inkWidgetRef {
+ public static native func Get(reference: inkWidgetRef) -> ref<inkWidget>;
+ public static native func GetController(reference: inkWidgetRef) -> wref<inkLogicController>;
+}
+public native class inkLogicController extends IScriptable {}
 
 public native struct HDRColor {
  public native let Red: Float;
@@ -24,6 +36,11 @@ public abstract native class inkWidget extends IScriptable {
  public final native func SetTintColor(color: HDRColor) -> Void;
  public final native func SetInteractive(value: Bool) -> Void;
  public final native func SetFitToContent(value: Bool) -> Void;
+ public final native func IsInteractive() -> Bool;
+ public final native func GetSize() -> Vector2;
+ public final native func SetScale(scale: Vector2) -> Void;
+ public final func SetRenderTransformPivot(x: Float, y: Float) -> Void {}
+ public final native func SetRotation(angleInDegrees: Float) -> Void;
  public final native func Reparent(parent: wref<inkCompoundWidget>, opt index: Int32) -> Void;
  public final native func RegisterToCallback(name: CName, object: ref<IScriptable>, method: CName) -> Void;
  public final native func UnregisterFromCallback(name: CName, object: ref<IScriptable>, method: CName) -> Void;
@@ -39,19 +56,23 @@ public native class inkText extends inkWidget {
  public final native func SetFontStyle(style: CName) -> Void;
  public final native func SetFontSize(size: Int32) -> Void;
  public final native func SetHorizontalAlignment(alignment: textHorizontalAlignment) -> Void;
+ public final native func SetWrappingAtPosition(position: Float) -> Void;
 }
 public native class inkPointerEvent extends IScriptable {
  public final native const func IsAction(action: CName) -> Bool;
+ public final native const func GetCurrentTarget() -> wref<inkWidget>;
 }
 public native class inkGameController extends IScriptable {
  public final native func GetOwnerEntity() -> ref<Entity>;
  public final native func GetPlayerControlledObject() -> ref<GameObject>;
 }
 public class BrowserGameController extends inkGameController {
+ public let m_logicControllerRef: inkWidgetRef;
  protected cb func OnInitialize() -> Bool { return true; }
  protected cb func OnUninitialize() -> Bool { return true; }
 }
-public class BrowserController extends IScriptable {
+public class BrowserController extends inkLogicController {
  private let m_gameController: wref<BrowserGameController>;
+ protected let m_pageContentRoot: inkWidgetRef;
  public final func SetWebsiteData() -> Void {}
 }
