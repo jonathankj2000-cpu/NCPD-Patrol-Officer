@@ -8,8 +8,13 @@ local reported = false
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-    if not system or system:Version() ~= 4 then error("Install all v0.15d files and restart the game") end
+    if not system or system:Version() ~= 4 then error("Install all v0.15e files and restart the game") end
     return system
+end
+
+-- Shift entry and the menu share this single native interface check.
+function M.prepareShift()
+    native():FinishSession()
 end
 
 function M.reset()

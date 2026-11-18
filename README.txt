@@ -1,4 +1,4 @@
-NCPD PATROL v0.15d - REDSCRIPT COMPILATION FIX
+NCPD PATROL v0.15e - SHIFT START FIX
 ========================================================
 Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
@@ -16,9 +16,18 @@ The offline source checker had accepted constructs rejected by the game compiler
 CI now also checks those observed incompatibilities. This is not a game-cache
 compilation guarantee; confirm that the updated scripts compile in your game.
 
+V0.15E SHIFT START FIX
+The v0.15d scripts compile in the user's game, but shift entry still expected
+trunk API 3 while the new popup exposes API 4. Shift entry now uses the same
+canonical compatibility check as the trunk bridge. No native scripts changed.
+Tests execute the shipped init.lua and trunk.lua through CET Start/End Shift,
+fast-travel requests and the optional hotkey. Current interfaces start normally;
+missing/old interfaces refuse before beginning a shift or spawning a partner.
+Install this complete package and restart. All v0.15d fixes are included.
+
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.15d.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.15e.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

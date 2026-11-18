@@ -1,6 +1,15 @@
 # NCPD Patrol
 
 
+## v0.15e: shift start compatibility fix
+
+[Download the complete v0.15e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15e_Shift_Start_Fix_TEST.zip)
+
+Fixes `Cannot start shift: Install the v0.15b trunk module`: shift entry still expected trunk interface 3 although the popup uses interface 4. It now delegates to the trunk bridge's single compatibility check. **Install the whole package and restart.** The v0.15d redscript files, which now compile in the user's game, are unchanged.
+
+The new regression executes the actual `init.lua` and `trunk.lua` through CET Start/End Shift, native fast-travel requests and the optional hotkey. It verifies current interfaces start once, old/missing modules fail before duty/partner creation, and a failed check does not block a later successful start. Ten portable checks pass. All native scripts, tweaks, assets, existing gameplay and progression are preserved; in-game shift start still needs confirmation.
+
+
 ## v0.15d: redscript compilation hotfix
 
 [Download the complete v0.15d test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15d_Redscript_Compile_Fix_TEST.zip)
@@ -127,7 +136,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15d**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15e**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

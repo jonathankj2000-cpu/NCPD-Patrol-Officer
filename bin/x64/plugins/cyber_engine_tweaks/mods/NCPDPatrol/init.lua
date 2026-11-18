@@ -1,4 +1,4 @@
--- NCPD Patrol v0.15b | 10-4 backup stand-down without immediate despawn
+-- NCPD Patrol v0.15e | shared trunk interface validation at shift entry
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -52,7 +52,7 @@ end
 local function careerAction(method, value)
     local ok, result = pcall(function()
         local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-        if not career or career:Version() ~= 3 then error("Install the complete v0.15b package and restart") end
+        if not career or career:Version() ~= 3 then error("Install the complete v0.15e package and restart") end
         if method == "test" then
             if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
         elseif method == "claim" then
@@ -230,12 +230,10 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.15b support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.15e support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.15b files and restart the game") end
-        local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 3 then error("Install the v0.15b trunk module and restart the game") end
-        trunk:FinishSession()
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.15e files and restart the game") end
+        Trunk.prepareShift()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
     end)
@@ -303,7 +301,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.15d loaded. Fixes the v0.15c redscript compilation errors in officer equipment and the trunk popup import. Hold R at the trunk for the two-row patrol menu: 1-7 select, 9 closes. Install the complete package and restart.")
+    status("v0.15e loaded. Fixes the stale trunk version check blocking shift start. Hold R at the trunk for the two-row patrol menu: 1-7 select, 9 closes. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -395,13 +393,13 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.15b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.15e")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
         ImGui.Text(onDuty and "ON DUTY" or "OFF DUTY")
         ImGui.TextWrapped("Use a Fast Travel terminal for Start Shift / End Shift. These controls remain available for diagnostics.")
-        ImGui.TextWrapped("At your owned police car's trunk: tap R for backup; hold until the native indicator completes for Patrol Menu (uses your secondary interaction binding). Scroll and select with F; R closes.")
+        ImGui.TextWrapped("At your owned police car's trunk: tap R for backup; hold until the native indicator completes for Patrol Menu (uses your secondary interaction binding). Choose 1-7 in the two-row menu; 9 closes.")
         if ImGui.Button(onDuty and "End Shift" or "Start Shift") then
             toggleDuty()
         end
@@ -418,7 +416,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15e package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -426,7 +424,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15e package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
@@ -495,7 +493,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.15b files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.15e files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -596,7 +594,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.15b files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.15e files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
