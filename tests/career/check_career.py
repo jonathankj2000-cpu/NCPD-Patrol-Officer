@@ -61,7 +61,17 @@ with tempfile.TemporaryDirectory(prefix='ncpd-career-page-') as scratch:
  p.write_text('public class PageSpawnFixture extends IScriptable {\n'+extract(source,r'public final func SetWebsiteData\(')+'\n}')
  lua.globals().PageSpawnPrototype=lua.execute(translate(p))
 lua.execute((HERE/'native-mocks.lua').read_text())
+weapon_tweaks=(ROOT/'r6/tweaks/NCPDPatrol_CareerWeapons.yaml').read_text()
+weapon_records={}
+for match in re.finditer(r'^(Items\.[\w]+):\n  \$base: (Items\.[\w]+)\n  quality: (Quality\.\w+)\s*',weapon_tweaks,re.M):
+ weapon_records[match[1]]=(match[2],match[3])
+assert weapon_records=={
+ 'Items.Preset_Lexington_Military_NCPDPatrol_Tier2':('Items.Preset_Lexington_Military','Quality.Uncommon'),
+ 'Items.Preset_Masamune_Military_NCPDPatrol_Tier3':('Items.Preset_Masamune_Military','Quality.Rare'),
+ 'Items.Preset_Defender_Military_NCPDPatrol_Tier5':('Items.Preset_Defender_Military','Quality.Legendary')}
+lua.globals().TieredRewardRecords=lua.table_from({key:lua.table_from({'base':value[0],'quality':value[1]}) for key,value in weapon_records.items()})
 lua.execute((HERE/'scenarios.lua').read_text())
+lua.execute((HERE/'weapon-scenarios.lua').read_text())
 lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'partner-scenarios.lua').read_text())
@@ -71,4 +81,4 @@ assert 'this.LoadPageByAddress(' not in source
 assert 'this.m_deviceLogicController.LoadPageByAddress(' in source
 assert 'GetWebPage(address: String)' in source and 'ClaimNextReward()' in source
 assert 'CreateScriptedQuest' not in source
-print('PASS: real career/reward/partner/page/CET logic; legacy cash migration, partial retry/save receipts, garage confirmation, 0/20/50/100 selection, session-only test buttons, model spawning/cleanup, actual pinned BEF registration/navigation and callback cleanup (native boundaries mocked)')
+print('PASS: fixed T2/T3/T5 Military reward records and original receipts, weapon test copies/partial retries; career/partner/page/CET logic, garage confirmation, save restore, actual pinned BEF registration/navigation and callback cleanup (native boundaries mocked)')

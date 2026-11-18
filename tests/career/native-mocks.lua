@@ -39,7 +39,7 @@ function CareerFixture:Reset(n)
  wallet=0;paymentOK=true;transactionPresent=true
  Core.m_onDuty=false
  Career.m_claimedMilestones={n=0};Career.m_issuedRewards={n=0};Career.m_selectedPartner=0;Career:OnAttach()
- self.inventory={};self.itemCalls={};self.vehicleCalls={};self.unlockedVehicles={};self.failItems={}
+ self.inventory={};self.itemCalls={};self.vehicleCalls={};self.unlockedVehicles={};self.failItems={};self.missingRecords={}
  self.vehiclePresent=true;self.enableAccepted=true;self.unlockConfirmed=true
  Dispatch.m_paidDispatches={n=3};Dispatch.m_pendingDispatchRewards={n=1}
  Arrests.m_paidSuspects={n=7}
@@ -49,7 +49,7 @@ end
 local rewardTransaction={GiveItem=function(_,target,record,amount)
  assert(target==player and amount==1 and record~='Items.money')
  CareerFixture.itemCalls[#CareerFixture.itemCalls+1]=record
- if not paymentOK or CareerFixture.failItems[record] then return false end
+ if not paymentOK or CareerFixture.failItems[record] or CareerFixture.missingRecords[record] then return false end
  CareerFixture.inventory[record]=(CareerFixture.inventory[record] or 0)+amount
  return true
 end}

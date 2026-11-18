@@ -22,8 +22,17 @@ actors. Original follow/boarding/revive code paths are retained. Native entity
 creation and character AI are boundaries; no gameplay success is inferred.
 
 The actual init.lua onDraw handler runs against ImGui boundaries. Tests click
-the shipped test-unlock, clear, claim and partner-assignment buttons. Test mode
+the shipped test-unlock, clear, claim, weapon-test and partner-assignment buttons. Test mode
 changes eligibility only, expires on restore and preserves genuine receipts.
+
+Weapon-tier tests inspect the actual TweakXL reward records and their Military
+parents/fixed Uncommon, Rare and Legendary qualities. The authored career code
+must deliver those records at T2/T3/T5 while retaining original preset IDs as
+receipt keys. Already claimed v0.11a rewards stay consumed. Missing definitions
+cannot fall back to random-tier weapons. Test copies do not change claims or
+progress, retries preserve successful copies, double clicks do not duplicate,
+and loading resets transient test-delivery state. Tier 4 is configured for the
+75-incident rule; there is currently no weapon reward at that milestone.
 
 The real browser listener, renderer, tab/claim/assignment release callbacks and
 initialization/uninitialization hooks execute through the shared syntax adapter.
@@ -50,9 +59,8 @@ including its actual pinned base class. The real game cache is not available.
 
 tools/build_career_release.py runs this suite and the arrest, trunk and dispatch
 regressions, parses all 12 CET modules, verifies protected production files
-against v0.10b, checks core preservation outside IsOwnedPoliceVehicle and
-support preservation outside RegisterPartner, and builds
-the deterministic 44-file install ZIP with a byte/hash manifest. The four new
+against v0.11a, including unchanged core/support/browser/vehicle code, and builds
+the deterministic 45-file install ZIP with a byte/hash manifest. The four
 vehicle eligibility records are checked; no bulk vehicle unlock API is used.
 
 In-game testing still needs to cover true save serialization, item delivery,

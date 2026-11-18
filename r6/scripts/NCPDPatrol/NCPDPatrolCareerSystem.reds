@@ -7,18 +7,21 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     private persistent let m_issuedRewards: array<TweakDBID>;
     private persistent let m_selectedPartner: Int32;
     private let m_testUnlocks: Bool;
+    private let m_testWeaponsIssued: array<TweakDBID>;
     private let m_lastStatus: String;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolCareerSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolCareerSystem") as NCPDPatrolCareerSystem;
     }
-    public func Version() -> Int32 { return 2; }
+    public func Version() -> Int32 { return 3; }
     private func OnAttach() -> Void {
         this.m_testUnlocks = false;
+        ArrayClear(this.m_testWeaponsIssued);
         this.m_lastStatus = "Service record ready";
     }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_testUnlocks = false;
+        ArrayClear(this.m_testWeaponsIssued);
         this.m_lastStatus = "Service record restored";
     }
     public func MilestoneCount() -> Int32 { return 7; }
@@ -81,12 +84,36 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     public func RewardLabel(index: Int32) -> String {
         if index == 0 { return "NCPD anti-shrapnel helmet"; };
         if index == 1 { return "Villefort Cortes NCPD Overlord"; };
-        if index == 2 { return "NCPD vest + Lexington Military + Merrimac Police"; };
+        if index == 2 { return "NCPD vest + Lexington Military (Tier 2) + Merrimac Police"; };
         if index == 3 { return "Full NCPD Badge Set (4 pieces)"; };
-        if index == 4 { return "Masamune Military + Emperor NCPD Ironclad"; };
+        if index == 4 { return "Masamune Military (Tier 3) + Emperor NCPD Ironclad"; };
         if index == 5 { return "Militech Hellhound Man o' War"; };
-        if index == 6 { return "MaxTac gear (3 pieces) + Defender Military"; };
+        if index == 6 { return "MaxTac gear (3 pieces) + Defender Military (Tier 5)"; };
         return "No further reward scheduled";
+    }
+    public func WeaponTierAtMilestone(index: Int32) -> Int32 {
+        let incidents: Int32 = this.MilestoneThreshold(index);
+        if incidents <= 0 { return 0; };
+        if incidents <= 20 { return 2; };
+        if incidents <= 50 { return 3; };
+        if incidents <= 75 { return 4; };
+        return 5;
+    }
+    public func RewardWeaponTier(index: Int32, part: Int32) -> Int32 {
+        let name: String = this.RewardRecord(index, part);
+        if Equals(name, "Items.Preset_Lexington_Military") || Equals(name, "Items.Preset_Masamune_Military")
+            || Equals(name, "Items.Preset_Defender_Military") {
+            return this.WeaponTierAtMilestone(index);
+        };
+        return 0;
+    }
+    // Preserve the original RewardRecord as the durable receipt key. Only the
+    // item delivered changes; old claims must not silently become claimable again.
+    public func RewardGrantRecord(index: Int32, part: Int32) -> String {
+        let name: String = this.RewardRecord(index, part);
+        let tier: Int32 = this.RewardWeaponTier(index, part);
+        if tier > 0 { return s"\(name)_NCPDPatrol_Tier\(tier)"; };
+        return name;
     }
     public func PartnerCount() -> Int32 { return 4; }
     public func PartnerThreshold(index: Int32) -> Int32 {
@@ -161,6 +188,44 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
         } else {
             this.m_lastStatus = "Test unlocks cleared. Normal incident requirements apply.";
         };
+        return true;
+    }
+    public func TestGiveTieredWeapons() -> Bool {
+        let transaction: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let index: Int32 = 0;
+        let part: Int32;
+        let issued: Int32 = 0;
+        let receipt: TweakDBID;
+        let grant: TweakDBID;
+        if !this.m_testUnlocks || !this.CanClaim() || !IsDefined(transaction) {
+            this.m_lastStatus = "Enable TEST unlocks first; weapon testing requires a loaded, safe game.";
+            return false;
+        };
+        while index < this.MilestoneCount() {
+            part = 0;
+            while part < this.RewardPartCount(index) {
+                if this.RewardWeaponTier(index, part) > 0 {
+                    receipt = TDBID.Create(this.RewardRecord(index, part));
+                    if !ArrayContains(this.m_testWeaponsIssued, receipt) {
+                        grant = TDBID.Create(this.RewardGrantRecord(index, part));
+                        if !transaction.GiveItem(player, ItemID.FromTDBID(grant), 1) {
+                            this.m_lastStatus = "Test weapon delivery incomplete; retry issues remaining test weapons only.";
+                            return false;
+                        };
+                        ArrayPush(this.m_testWeaponsIssued, receipt);
+                        issued += 1;
+                    };
+                };
+                part += 1;
+            };
+            index += 1;
+        };
+        if issued == 0 {
+            this.m_lastStatus = "Tiered test weapons already issued this session. Load a save to start a fresh test.";
+            return false;
+        };
+        this.m_lastStatus = "TEST WEAPONS ISSUED: Lexington Tier 2, Masamune Tier 3, Defender Tier 5. Career claims unchanged.";
         return true;
     }
     public func GetRecordedActivities() -> Int32 {
@@ -282,7 +347,7 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
                 if !vehicles.IsVehiclePlayerUnlocked(record) { return false; };
             };
         } else {
-            if !IsDefined(transaction) || !transaction.GiveItem(player, ItemID.FromTDBID(record), 1) { return false; };
+            if !IsDefined(transaction) || !transaction.GiveItem(player, ItemID.FromTDBID(TDBID.Create(this.RewardGrantRecord(index, part))), 1) { return false; };
         };
         ArrayPush(this.m_issuedRewards, record);
         return true;

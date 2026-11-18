@@ -27,7 +27,8 @@ for i,records in ipairs(expected) do
  assert(Career:ClaimNextReward() and Career:GetClaimedRewards()==i)
  for p,record in ipairs(records) do
   assert(Career:RewardRecord(i-1,p-1)==record)
-  if record:find('Vehicle.',1,true)==1 then assert(f.unlockedVehicles[record]) else assert(f.inventory[record]==1) end
+  if record:find('Vehicle.',1,true)==1 then assert(f.unlockedVehicles[record])
+  else assert(f.inventory[Career:RewardGrantRecord(i-1,p-1)]==1) end
  end
  assert(Career:MilestoneStatus(i-1)=='CLAIMED')
 end
@@ -51,7 +52,7 @@ assert(Core:IsOwnedPoliceVehicle(car('Vehicle.external_police',true,'modded_poli
 
 -- Composite reward failures retain successful parts, including across load.
 f:Reset(20);assert(Career:ClaimNextReward());assert(Career:ClaimNextReward())
-f.failItems['Items.Preset_Lexington_Military']=true
+f.failItems['Items.Preset_Lexington_Military_NCPDPatrol_Tier2']=true
 assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==1 and Career:MilestoneStatus(2)=='PARTIAL - RETRY')
 Career:OnRestored(1,1);f.failItems={};f.vehiclePresent=false
 assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==2)
@@ -59,7 +60,7 @@ f.vehiclePresent=true;f.enableAccepted=false;assert(not Career:ClaimNextReward()
 f.enableAccepted=true;f.unlockConfirmed=false
 assert(not Career:ClaimNextReward() and Career:GetIssuedParts(2)==2,'unconfirmed garage unlock was recorded')
 f.unlockConfirmed=true;assert(Career:ClaimNextReward() and Career:GetIssuedParts(2)==3)
-assert(f.inventory['Items.Vest_03_basic_01']==1 and f.inventory['Items.Preset_Lexington_Military']==1)
+assert(f.inventory['Items.Vest_03_basic_01']==1 and f.inventory['Items.Preset_Lexington_Military_NCPDPatrol_Tier2']==1)
 assert(not Career:ClaimNextReward() and #f.notices==3)
 f:Reset(10);transactionPresent=false;assert(not Career:ClaimNextReward() and Career:GetClaimedRewards()==0)
 transactionPresent=true;paymentOK=false;assert(not Career:ClaimNextReward())

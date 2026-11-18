@@ -1,4 +1,4 @@
--- NCPD Patrol v0.11a | career rewards and partner assignments
+-- NCPD Patrol v0.11b | fixed milestone weapon tiers
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -52,13 +52,15 @@ end
 local function careerAction(method, value)
     local ok, result = pcall(function()
         local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-        if not career or career:Version() ~= 2 then error("Install the complete v0.11a package and restart") end
+        if not career or career:Version() ~= 3 then error("Install the complete v0.11b package and restart") end
         if method == "test" then
             if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
         elseif method == "claim" then
             career:ClaimNextReward()
         elseif method == "partner" then
             career:SelectPartner(value)
+        elseif method == "weapons" then
+            career:TestGiveTieredWeapons()
         end
         return career:GetLastStatus()
     end)
@@ -228,11 +230,11 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.11a support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.11b support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.11a files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.11b files and restart the game") end
         local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 2 then error("Install the v0.11a trunk module and restart the game") end
+        if not trunk or trunk:Version() ~= 2 then error("Install the v0.11b trunk module and restart the game") end
         trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -301,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.11a loaded. Career equipment/vehicle rewards at 5/10/20/35/50/75/100 incidents; partner assignments at 0/20/50/100. CET includes session-only TEST unlocks. Install all files, including the career vehicle tweak, and restart.")
+    status("v0.11b loaded. Career weapon rewards use fixed Military variants: Lexington Tier 2, Masamune Tier 3, Defender Tier 5. CET includes tiered test weapons and session-only milestone unlocks. Install the complete package, including CareerWeapons.yaml, and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -393,7 +395,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.11a")
+    local visible = ImGui.Begin("NCPD Patrol - v0.11b")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -416,7 +418,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11b package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -424,7 +426,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11b package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
@@ -433,10 +435,12 @@ registerForEvent("onDraw", function()
         if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
         if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
         ImGui.TextWrapped("Test unlocks make all career rewards and partners available until cleared or a save is loaded. Your incident count stays unchanged. Claimed equipment and vehicles are saved normally.")
+        if ImGui.Button("TEST: Give tiered reward weapons") then careerAction("weapons") end
+        ImGui.TextWrapped("With TEST unlocks enabled: gives one new Lexington T2, Masamune T3 and Defender T5 per session, including if rewards were already claimed. Existing items and milestone receipts stay as they are. Test copies remain in your inventory if you save.")
         if ImGui.Button("Claim next milestone reward") then careerAction("claim") end
         if ImGui.CollapsingHeader("Partner assignment (CET fallback)") then
             local ok, career = pcall(function() return Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem") end)
-            if ok and career and career:Version() == 2 then
+            if ok and career and career:Version() == 3 then
                 ImGui.TextWrapped("Selected: " .. tostring(career:GetSelectedPartnerName()))
                 for index = 0, career:PartnerCount() - 1 do
                     local name = tostring(career:PartnerName(index))
@@ -476,7 +480,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.11a files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.11b files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -572,7 +576,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.11a files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.11b files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

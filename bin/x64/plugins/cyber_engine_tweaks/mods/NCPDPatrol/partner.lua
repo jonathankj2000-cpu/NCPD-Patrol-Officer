@@ -1,4 +1,4 @@
--- NCPD Patrol v0.11a: career-selected partner; existing revive/boarding retained.
+-- NCPD Patrol v0.11b: career-selected partner; existing revive/boarding retained.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
 -- No nearby NPC is ever modified.
@@ -80,7 +80,7 @@ end
 
 local function selectedProfile()
     local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-    if not career or career:Version() ~= 2 then error("Install the complete v0.11a career module and restart") end
+    if not career or career:Version() ~= 3 then error("Install the complete v0.11b career module and restart") end
     local record, name = tostring(career:GetSelectedPartnerRecord()), tostring(career:GetSelectedPartnerName())
     local id = TweakDBID.new(record)
     if not TweakDB:GetRecord(id) then error("Selected partner record missing: " .. record) end

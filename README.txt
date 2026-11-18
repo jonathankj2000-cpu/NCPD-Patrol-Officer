@@ -1,11 +1,15 @@
-NCPD PATROL v0.11a - CAREER REWARDS AND PARTNERS TEST
+NCPD PATROL v0.11b - FIXED MILESTONE WEAPON TIERS TEST
 =================================================
-Full installation package. Replaces prototype career cash rewards with the
-chosen equipment/vehicle catalog and adds saved partner selection.
+Full installation package. Retains career rewards/partners and assigns fixed
+weapon tiers: T2 through 20 incidents, T3 through 50, T4 through 75, T5 above 75.
+Lexington Military = Tier 2; Masamune Military = Tier 3; Defender Military = T5.
+The 75-incident reward remains the Hellhound; no new gun is added there.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.11a.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.11b.
+Include the new r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
+Military variants with fixed game qualities. It does not edit the vanilla guns.
 The new r6/tweaks/NCPDPatrol_CareerVehicles.yaml registers the four reward cars
 for the garage. Registration alone does not unlock a car; claim its reward.
 
@@ -30,11 +34,11 @@ BEF settings or bypass its restrictions.
 MILESTONES
     5  NCPD anti-shrapnel helmet
    10  Villefort Cortes NCPD Overlord
-   20  NCPD reinforced ballistic vest + Lexington Military + Merrimac Police
+   20  NCPD reinforced ballistic vest + Lexington Military (T2) + Merrimac Police
    35  Full NCPD Badge Set: coat, pants, boots and goggles
-   50  Masamune Military + Chevillon Emperor NCPD Ironclad
+   50  Masamune Military (T3) + Chevillon Emperor NCPD Ironclad
    75  Militech Hellhound Man o' War
-  100  MaxTac helmet, jacket and pants + Defender Military
+  100  MaxTac helmet, jacket and pants + Defender Military (T5)
 
 Claim reward issues the oldest available bundle, one per click. Items go into
 inventory; vehicles are enabled in the game's garage. A distinct REWARD ISSUED
@@ -92,8 +96,19 @@ selected profile was accessible only through test mode and is still locked,
 future spawns use Standard until it becomes available again or you select one.
 No extra reward is issued by clearing or re-enabling the override.
 
+WEAPON TIER RETEST
+Already claimed weapons remain claimed; existing inventory items are not
+modified or removed. To get fresh examples after updating, enable TEST unlocks,
+then use CET > NCPD CAREER > TEST: Give tiered reward weapons.
+This gives one new Lexington T2, Masamune T3 and Defender T5 per session.
+No incident counts, normal claim receipts, money or vehicles are changed.
+Repeated clicks do not repeat successful test deliveries. If a delivery fails,
+retry to get the remaining guns. Loading a save resets the test-delivery list.
+Test copies remain in inventory if you save. Inspect tier, appearance, damage
+and mod slots in game; the fixed-tier records use native quality generation.
+
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.11a, open the career page and note your real incident count.
+1. Confirm v0.11b, open the career page and note your real incident count.
 2. Enable test unlocks, refresh, and claim the seven reward bundles.
 3. Check all 12 equipment pieces/weapons and all four garage vehicles. Try
    repeat claims, save/load, and verify the receipts remain collected.
@@ -113,13 +128,21 @@ Init/Uninit and registry methods with per-device matching and callback cleanup.
 Authored page flow stays within its declared body height in widget fixtures.
 
 All 22 redscript files pass source-derived API checks with BEF installed and
-absent; 12 Lua modules parse. The full 44-file ZIP is checked byte-for-byte.
+absent; 12 Lua modules parse. The full 45-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
 Existing arrest/trunk/dispatch tests pass. Archives and payment code remain
 unchanged. Core recognizes the four additional owned police cars; support
 registration accepts the four partner records. Down/revive recovery is retained.
 
-Interfaces: main/support 17, arrest 5, trunk 2, journal 2, career 2, browser 1.
+Weapon tests cover the fixed quality definitions, delivery records, unchanged
+legacy receipt identities, missing definitions, partial test-delivery retries,
+and the actual CET button. Real weapon tooltips still need an in-game test.
+
+Interfaces: main/support 17, arrest 5, trunk 2, journal 2, career 3, browser 1.
+
+ROLLBACK TO v0.11a
+Exit the game, remove r6/tweaks/NCPDPatrol_CareerWeapons.yaml and reinstall the
+entire v0.11a ZIP. Use a pre-test save to remove already issued test copies.
 
 ROLLBACK TO v0.10b
 Exit the game. Remove r6/tweaks/NCPDPatrol_CareerVehicles.yaml and reinstall the

@@ -1,0 +1,14 @@
+# Reward-only records. Military appearance/equipment data is inherited intact.
+# These fixed vanilla qualities disable random quality and +/- tier rolls.
+# Stable career receipts continue to use the original preset IDs.
+Items.Preset_Lexington_Military_NCPDPatrol_Tier2:
+  $base: Items.Preset_Lexington_Military
+  quality: Quality.Uncommon
+
+Items.Preset_Masamune_Military_NCPDPatrol_Tier3:
+  $base: Items.Preset_Masamune_Military
+  quality: Quality.Rare
+
+Items.Preset_Defender_Military_NCPDPatrol_Tier5:
+  $base: Items.Preset_Defender_Military
+  quality: Quality.Legendary
