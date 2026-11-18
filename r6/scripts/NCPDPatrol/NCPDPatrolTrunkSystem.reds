@@ -10,7 +10,7 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolTrunkSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolTrunkSystem") as NCPDPatrolTrunkSystem;
     }
-    public func Version() -> Int32 { return 2; }
+    public func Version() -> Int32 { return 3; }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func OnDetach() -> Void { this.FinishSession(); }
@@ -49,6 +49,10 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
         return IsDefined(this.m_menuVehicle) && this.m_menuVehicle == vehicle && this.CanUseTrunk(vehicle);
     }
     public func IsBusy() -> Bool { return this.m_busy; }
+    public func CanReleaseBackup() -> Bool {
+        let support: ref<NCPDPatrolSupportSystem> = NCPDPatrolSupportSystem.Get(this.GetGameInstance());
+        return this.IsEligible() && IsDefined(support) && support.HasBackupUnit();
+    }
     public func SetBusy(value: Bool) -> Void {
         if !this.IsEligible() { return; };
         this.m_busy = value;
@@ -96,8 +100,12 @@ public class NCPDPatrolTrunkSystem extends ScriptableSystem {
             this.CloseMenu();
             return;
         };
-        if command < 1 || command > 6 { return; };
+        if command < 1 || command > 7 { return; };
         this.CloseMenu();
+        if command == 7 && !this.CanReleaseBackup() {
+            this.Notice("NCPD: No backup patrol is assigned.");
+            return;
+        };
         if command == 1 { this.SetBusy(!this.m_busy); return; };
         if command == 2 { this.RequestRepair(vehicle); return; };
         if command == 6 { this.ShowStats(); return; };

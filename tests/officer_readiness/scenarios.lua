@@ -10,6 +10,7 @@ EntityID={IsDefined=function(v) return v and v.hash end};DynamicEntitySpec=const
 AISwitchToPrimaryWeaponCommand=constructor('gear');AIFollowTargetCommand=constructor('follow');AIHoldPositionCommand=constructor('hold')
 AIMoveToCommand=constructor('move');MountEventData=constructor('mountData');AIMountCommand=constructor('mount');AIUnmountCommand=constructor('unmount')
 AIVehicleDriveToPointAutonomousCommand=constructor('drive');AIFollowerRole={new=function() return {OnRoleCleared=function() end} end}
+AINoRole={new=function() return {kind='none',OnRoleCleared=function() end} end}
 WorldPosition={new=function() return {} end,SetVector4=function(v,p) v.position=p end}
 AIPositionSpec={new=function() return {} end,SetWorldPosition=function(v,p) v.position=p.position end}
 function NewObject() return {} end
@@ -42,15 +43,16 @@ local function actor(id,record)
  function ai:SendCommand(cmd)
   a.commands[#a.commands+1]=cmd
   if cmd.kind=='gear' and a.autoEquip then a.weapon=not cmd.unEquip and weapon() or nil end
-  if cmd.kind=='mount' then a.mounted=f.actors[cmd.mountData.mountParentEntityId.hash] end
-  if cmd.kind=='unmount' then a.mounted=nil;a.pos=vec(0,0,0) end
+  if cmd.kind=='mount' then a.mounted=f.actors[cmd.mountData.mountParentEntityId.hash];a.seat=cmd.mountData.slotName end
+  if cmd.kind=='unmount' and not a.deferUnmount then a.mounted=nil;a.pos=vec(0,0,0) end
  end
  function ai:StopExecutingCommand(cmd) a.stops[#a.stops+1]=cmd end
  function a:GetAIControllerComponent() return ai end
  return a
 end
 local player=actor({hash=1});local ambient=actor({hash=990});f.managed[990]=true;f.actors[990]=ambient
-local patrol={Version=function() return 17 end,IsDispatchMenuOpen=function() return f.paused end,IsOnDuty=function() return true end,
+local patrol={Version=function() return 17 end,IsDispatchMenuOpen=function() return f.paused end,IsOnDuty=function() return not f.offDuty end,
+ HasWantedLevel=function() return f.wanted==true end,
  NotifyDispatch=function() end}
 local support={Version=function() return 17 end,
  RegisterPartner=function(_,a) f.partner=a;f.partnerState=1;return true end,
@@ -58,8 +60,10 @@ local support={Version=function() return 17 end,
  RestorePartnerFollowerRole=function() return true end,IsPartnerFollowerReady=function() return true end,
  ConfirmPartnerFollowerRestored=function() end,GetPartnerVoiceRevision=function() return 0 end,
  GetPartnerDiagnostics=function() return 'native' end,GetPartnerHealthDiagnostics=function() return 'health' end,
- GetBackupVehicle=function() return nil end,SetBackupStatus=function() end,ReleaseBackup=function() end,
- TakeBackupRequest=function() local value=f.backupRequest;f.backupRequest=false;return value end}
+ GetBackupVehicle=function() return nil end,SetBackupStatus=function(_,text) f.backupStatus=text end,
+ HasBackupUnit=function() return f.backupRequest or f.reserved end,
+ ReleaseBackup=function() f.reserved=false;f.backupRequest=false end,
+ TakeBackupRequest=function() local value=f.backupRequest;f.backupRequest=false;if value then f.reserved=true end;return value end}
 local career={Version=function() return 3 end,GetSelectedPartnerRecord=function() return 'Character.cvi_ncpd_police_ranged2_copperhead_ma' end,
  GetSelectedPartnerName=function() return 'Standard' end}
 local entities={IsReady=function() return true end,IsManaged=function(_,id) return f.managed[id.hash] or false end}
@@ -76,8 +80,14 @@ function entities:CreateEntity(spec)
  f.actors[id.hash]=a;return id
 end
 function entities:GetEntity(id) return f.actors[id.hash] end
-function entities:DeleteEntity(id) assert(id.hash~=990,'ambient deletion');f.managed[id.hash]=nil;f.actors[id.hash]=nil;return true end
+function entities:DeleteEntity(id)
+ assert(id.hash~=990,'ambient deletion');f.deletes=(f.deletes or 0)+1
+ if f.refuseDelete then return false end
+ if not f.deferDelete then f.managed[id.hash]=nil;f.actors[id.hash]=nil end
+ return true
+end
 Game={GetPlayer=function() return player end,GetMountedVehicle=function(a) return a.mounted end,
+ GetMountingFacility=function() return {GetMountingInfoSingleWithObjects=function(_,a) return {slotId={id=a.seat}} end} end,
  GetDynamicEntitySystem=function() return entities end,CreateEntityReference=function() return {} end,
  GetAINavigationSystem=function() return {FindPointInSphereForCharacter=function(_,p) return {status=1,point=p} end} end,
  GetScriptableSystemsContainer=function() return {Get=function(_,name)
@@ -155,3 +165,77 @@ for _=1,8 do Backup.update(.25,true,support,patrol,status) end
 assert(officers[1].weapon and #gears(officers[1])==1)
 assert(not officers[2].weapon and #gears(officers[2])==2)
 Backup.finish(support,status);assert(f.managed[990] and not Backup.isActive())
+-- 10-4 is stand-down, not despawn. Pending requests can be cancelled with no actors.
+assert(not Backup.release(support,patrol,status))
+f.backupRequest=true;local before=#f.created;assert(Backup.release(support,patrol,status))
+Backup.update(.25,true,support,patrol,status);assert(#f.created==before and not f.reserved)
+local function deploy()
+ f.backupRequest=true
+ for _=1,24 do Backup.update(.25,true,support,patrol,status) end
+ local list={}
+ for _,unit in pairs(f.actors) do if unit.record and unit.record:sub(1,10)=='Character.' then list[#list+1]=unit end end
+ return list
+end
+local units=deploy();assert(#units==2 and f.reserved)
+local carID;for id,obj in pairs(f.actors) do if obj.record and obj.record:sub(1,8)=='Vehicle.' then carID=id end end
+-- Original ability to ride with V is still present before stand-down.
+local vcar=actor({hash=900},'Vehicle.ownedPolice');vcar.speed=5
+function vcar:GetCurrentSpeed() return self.speed end
+function vcar:ForceBrakesUntilStoppedOrFor() error('10-4 must not brake the player vehicle') end
+units[1].mounted=vcar;units[1].seat='seat_back_left';units[1].deferUnmount=true
+local deleteCount=f.deletes or 0;before=#f.created
+local nativeCombat={kind='nativeCombat'};units[2]:GetAIControllerComponent():SendCommand(nativeCombat)
+assert(Backup.release(support,patrol,status) and Backup.isActive() and f.reserved)
+assert((f.deletes or 0)==deleteCount,'10-4 despawned actors')
+for _,unit in ipairs(units) do
+ assert(unit.role.kind=='none' and not unit.role.followerRef)
+ for _,stopped in ipairs(unit.stops) do assert(stopped~=nativeCombat) end
+end
+local role=units[1].role
+assert(Backup.release(support,patrol,status) and units[1].role==role,'duplicate stand-down reattached role')
+-- Wait for the actual vehicle to stop; use actual parent and seat, animated exit.
+local function countKind(a,kind)
+ local count=0;for _,cmd in ipairs(a.commands) do if cmd.kind==kind then count=count+1 end end;return count
+end
+local unmounts=countKind(units[1],'unmount')
+for _=1,8 do Backup.update(.25,true,support,patrol,status) end
+assert(countKind(units[1],'unmount')==unmounts and units[1].mounted==vcar)
+vcar.speed=0;Backup.update(.25,true,support,patrol,status)
+local cmd=units[1].commands[#units[1].commands]
+assert(cmd.kind=='unmount' and cmd.mountData.mountParentEntityId.hash==900 and cmd.mountData.slotName=='seat_back_left')
+assert(not cmd.mountData.isInstant and not cmd.mountData.ignoreHLS and not cmd.mountData.allowFailsafeTeleport)
+assert(not f.backupStatus:find('remaining on scene',1,true),'unconfirmed exit reported as complete')
+-- Refused exit retries are bounded, without deleting or teleporting the officer.
+for _=1,160 do Backup.update(.25,true,support,patrol,status) end
+assert(countKind(units[1],'unmount')==unmounts+3 and (f.deletes or 0)==deleteCount)
+units[1].mounted=nil;units[1].pos=vec(0,0,0)
+Backup.update(.25,true,support,patrol,status)
+assert(f.backupStatus:find('remaining on scene',1,true) and f.reserved and Backup.isActive())
+-- No readiness mirroring/follower reattachment or replacement patrol after 10-4.
+for _,unit in ipairs(units) do unit.weapon=nil end
+player.weapon=weapon();for _=1,12 do Backup.update(.25,true,support,patrol,status) end
+for _,unit in ipairs(units) do assert(not unit.weapon and unit.role.kind=='none') end
+assert(#f.created==before and (f.deletes or 0)==deleteCount)
+-- An old native mount finishing after stand-down cannot trap our hold command
+-- above the exit request or restore a follower role.
+local held=units[2].commands[#units[2].commands]
+units[2].mounted=vcar;units[2].seat='seat_back_right'
+Backup.update(.25,true,support,patrol,status)
+assert(not units[2].mounted and units[2].stops[#units[2].stops]==held)
+Backup.update(.25,true,support,patrol,status);assert(units[2].role.kind=='none')
+-- Leaving 150 m for three seconds invokes existing cleanup. Deferred deletion
+-- keeps the reservation even if DeleteEntity returned true.
+player.pos=vec(200,0,0);f.deferDelete=true
+for _=1,11 do Backup.update(.25,true,support,patrol,status) end
+assert((f.deletes or 0)==deleteCount)
+Backup.update(.25,true,support,patrol,status)
+assert((f.deletes or 0)>deleteCount and f.reserved and Backup.isActive())
+f.deferDelete=false
+for _=1,16 do Backup.update(.25,true,support,patrol,status) end
+assert(not f.reserved and not Backup.isActive() and f.managed[990])
+-- Stand-down does not alter the primary partner or keep stale world reservations.
+player.pos=vec(0,0,0);Partner.spawn(true,status);Partner.update(.5,true,status)
+p=f.partner;local partnerRole=p.role;units=deploy()
+assert(Backup.release(support,patrol,status) and p.role==partnerRole and f.managed[p.id.hash])
+local deleted=f.deletes;Backup.reset();assert(f.deletes==deleted,'world reset deleted stale IDs')
+Partner.dismiss(status)

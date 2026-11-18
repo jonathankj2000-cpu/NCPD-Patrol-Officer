@@ -23,6 +23,16 @@ function M.follower(target)
     target.isPlayerCompanionCachedTimeStamp = 0
 end
 
+function M.stopFollowing(target)
+    local ai = target:GetAIControllerComponent()
+    if not ai or not target:IsAttached() then error("Officer AI is not attached") end
+    local existing = ai:GetAIRole()
+    if existing then existing:OnRoleCleared(target) end
+    ai:SetAIRole(AINoRole.new())
+    ai:OnAttach()
+    target.isPlayerCompanionCachedTimeStamp = 0
+end
+
 function M.moveToScene(target, position)
     local command = AIMoveToCommand.new()
     local point = WorldPosition.new()

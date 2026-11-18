@@ -1,4 +1,4 @@
-NCPD PATROL v0.15a - OFFICER READINESS AND CYBERPSYCHO VARIANTS
+NCPD PATROL v0.15b - 10-4 BACKUP STAND-DOWN
 ========================================================
 Full installation package. Adds partner/backup weapon-readiness mirroring
 and 17 verified private cyberpsycho variants. Includes all v0.14b VIP ambush,
@@ -7,7 +7,7 @@ Generated incidents do not issue money or career credit in this prototype.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.15a.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.15b.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
@@ -20,6 +20,26 @@ Codeware, redscript, TweakXL and ArchiveXL. Frameworks are not bundled.
 For the computer page, the main Browser Extension Framework 0.9.7 is optional:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Without BEF, use CET's career/reward/partner controls. The rest of the mod works.
+
+10-4 BACKUP STAND-DOWN
+At an owned police car's trunk, HOLD R to open Patrol Menu. While a patrol is
+assigned, select 10-4 - Release backup with the normal menu selection binding.
+This ends BACKUP follower duty. Officers stop following V and trying to join
+V's vehicle. They remain at the scene; there is NO immediate despawn.
+If already seated, they request an animated exit from their ACTUAL vehicle/seat
+when it is stationary. Wait for them to exit before you drive away. A blocked
+exit gets bounded retries; no teleport or braking of V's vehicle is forced.
+The primary partner remains your partner and keeps existing boarding behavior.
+Without 10-4, backup follow/boarding behavior stays available.
+
+Existing distance cleanup removes the patrol after you are 150 m from the
+release point, car AND officers for three seconds. Another patrol remains
+blocked until its entities are actually removed, including deferred deletion.
+A pending request with no deployed entities is cancelled without creating one.
+CET > NCPD BACKUP > 10-4: Release backup provides a fallback test button.
+End Shift still performs the normal cleanup. Save/load forgets old-world IDs.
+Install all updated Lua, redscript, interaction tweaks and localization together;
+the native trunk API is now 3. Real role clearing/animated exits need a game test.
 
 OFFICER READINESS TEST
 1. Start a shift with your partner on foot. Draw your weapon: the partner should
@@ -250,7 +270,7 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.15a. Open all three career pages. Check that the content fills
+1. Confirm v0.15b. Open all three career pages. Check that the content fills
    the browser, text stays readable and the sidebar/hover/click targets work.
 2. Note your actual incident count and rank. Enable test unlocks and refresh;
    access changes while those real values remain unchanged. Check the seven

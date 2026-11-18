@@ -314,7 +314,7 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
         if !this.IsDutyEligible() || !IsDefined(player) || player.IsDead() { return false; };
         if this.m_backupRequested || this.m_backupActive {
             if !this.m_backupRepeatNoticeShown {
-                this.Notice("NCPD: One backup patrol is already assigned. Leave the scene to release it.");
+                this.Notice("NCPD: One patrol still occupies this scene. Leave the area before requesting another.");
                 this.m_backupRepeatNoticeShown = true;
             };
             return false;

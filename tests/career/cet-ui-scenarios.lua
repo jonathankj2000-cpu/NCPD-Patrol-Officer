@@ -7,6 +7,7 @@ local function display() return 'fixture' end
 local function no() return false end
 local function zero() return 0 end
 local vipRequests,ambushRequests=0,0
+local backupReleases=0
 package.loaded.partner={state=display,activeProfile=display,vehicleState=display,aidState=display,spawn=function() spawned=spawned+1 end}
 package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabled=no,isActive=no,
  cyberpsychoState=display,cyberpsychoDiagnostics=display,
@@ -17,7 +18,7 @@ package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabl
  navigationState=display,state=display,lastOutcome=display,journalDiagnostics=display,hudState=display,
  completed=zero,failedCount=zero,seconds=zero}
 package.loaded.vehicle_radio={isEnabled=no,state=display}
-package.loaded.backup={state=display};package.loaded.arrest={state=display}
+package.loaded.backup={state=display,release=function() backupReleases=backupReleases+1 end};package.loaded.arrest={state=display}
 package.loaded.trunk={repairSeconds=zero}
 function registerForEvent(name,callback) callbacks[name]=callback end
 function registerHotkey() end
@@ -31,6 +32,7 @@ dofile(MOD_DIR..'/init.lua');callbacks.onOverlayOpen()
 local function click(label) pressed=label;callbacks.onDraw();assert(labels[label],'CET button missing: '..label);pressed=nil end
 click('TEST: Request VIP transport');click('TEST: Trigger VIP ambush');click('Log VIP diagnostics')
 assert(vipRequests==1 and ambushRequests==1)
+click('10-4: Release backup');assert(backupReleases==1)
 click('TEST: Unlock all milestones (session)')
 assert(Career:IsTestUnlockActive() and Career:GetAvailableRewards()==7 and Core:GetRecordedScannerCount()==0)
 assert(#f.itemCalls==0 and #f.vehicleCalls==0)

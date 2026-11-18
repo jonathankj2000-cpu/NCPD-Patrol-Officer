@@ -63,6 +63,7 @@ public class NCPDPatrolTrunkMenuAction extends ActionBool {
         if this.m_command == 4 { return n"NCPDPatrol-CancelDispatch"; };
         if this.m_command == 5 { return n"NCPDPatrol-NewDispatch"; };
         if this.m_command == 6 { return n"NCPDPatrol-CopStats"; };
+        if this.m_command == 7 { return n"NCPDPatrol-ReleaseBackup"; };
         return n"NCPDPatrol-CloseMenu";
     }
     public func SetProperties() -> Void {
@@ -85,6 +86,7 @@ public class NCPDPatrolTrunkMenuAction extends ActionBool {
         if this.m_command == 4 { return "NCPDPatrolCancelDispatch"; };
         if this.m_command == 5 { return "NCPDPatrolNewDispatch"; };
         if this.m_command == 6 { return "NCPDPatrolCopStats"; };
+        if this.m_command == 7 { return "NCPDPatrolReleaseBackup"; };
         return "NCPDPatrolCloseMenu";
     }
 }
@@ -98,14 +100,16 @@ private func NCPDPatrolAddTrunkMenu(actions: script_ref<[ref<DeviceAction>]>) ->
     // The native interaction list provides scrolling and the player's F binding.
     // Closing restores the original stash and backup actions immediately.
     ArrayClear(Deref(actions));
-    while command <= 7 {
-        action = new NCPDPatrolTrunkMenuAction();
-        action.clearanceLevel = 2;
-        action.SetUp(this);
-        if command == 7 { action.Initialize(0, trunk.IsBusy()); }
-        else { action.Initialize(command, trunk.IsBusy()); };
-        action.AddDeviceName(this.GetDeviceName());
-        ArrayPush(Deref(actions), action);
+    while command <= 8 {
+        if command != 7 || trunk.CanReleaseBackup() {
+            action = new NCPDPatrolTrunkMenuAction();
+            action.clearanceLevel = 2;
+            action.SetUp(this);
+            if command == 8 { action.Initialize(0, trunk.IsBusy()); }
+            else { action.Initialize(command, trunk.IsBusy()); };
+            action.AddDeviceName(this.GetDeviceName());
+            ArrayPush(Deref(actions), action);
+        };
         command += 1;
     };
     return true;

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.15a | officer readiness and 17 cyberpsycho variants
+-- NCPD Patrol v0.15b | 10-4 backup stand-down without immediate despawn
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -52,7 +52,7 @@ end
 local function careerAction(method, value)
     local ok, result = pcall(function()
         local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-        if not career or career:Version() ~= 3 then error("Install the complete v0.15a package and restart") end
+        if not career or career:Version() ~= 3 then error("Install the complete v0.15b package and restart") end
         if method == "test" then
             if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
         elseif method == "claim" then
@@ -230,11 +230,11 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.15a support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.15b support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.15a files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.15b files and restart the game") end
         local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 2 then error("Install the v0.15a trunk module and restart the game") end
+        if not trunk or trunk:Version() ~= 3 then error("Install the v0.15b trunk module and restart the game") end
         trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.15a loaded. Partner and on-foot backup mirror drawn/holstered weapons outside combat; native alert/combat takes priority. Cyberpsycho pool: 17 verified private variants, with random no-repeat and CET test selection. Install the complete Lua/redscript/tweak package and restart.")
+    status("v0.15b loaded. Hold R at the trunk > 10-4 - Release backup. Officers leave follower duty, disembark when stationary, and remain on scene until distance cleanup. New patrols wait for confirmed cleanup. Includes v0.15a readiness and all 17 cyberpsycho variants. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -395,7 +395,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.15a")
+    local visible = ImGui.Begin("NCPD Patrol - v0.15b")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -418,7 +418,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15b package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -426,7 +426,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15b package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
@@ -495,7 +495,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.15a files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.15b files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -583,15 +583,16 @@ registerForEvent("onDraw", function()
         ImGui.Text("NCPD BACKUP")
         ImGui.TextWrapped("On duty, use Request NCPD Backup at your owned police car's trunk, beside stash. One car with two officers responds. Optional key: CET Bindings > NCPD Patrol - Request backup.")
         if ImGui.Button("Request backup patrol") then requestBackup() end
+        if ImGui.Button("10-4: Release backup") then Backup.release(getSupportSystem(), getPatrolSystem(), status) end
         ImGui.TextWrapped(Backup.state())
-        ImGui.TextWrapped("One patrol per scene. Move 150 m away from the scene, officers and car for 3 seconds to release it. Use a clear roadside location for this first driving test.")
+        ImGui.TextWrapped("Hold R at your owned police car's trunk > 10-4 - Release backup to end their follower duty. They stay on scene; allow seated officers to exit before driving away. A new patrol is available after the previous car and officers are removed beyond 150 m. Without 10-4, normal follow and vehicle boarding remain available.")
         ImGui.Separator()
         ImGui.Text("SCANNER BONUS")
         ImGui.TextWrapped("EUR$1000 for each eligible NCPD combat activity completed on duty. Reported Crime follow-ups are not included in this build.")
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.15a files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.15b files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

@@ -47,6 +47,8 @@ function patrol:IsOwnedPoliceVehicle(v) return v and v.owned end
 function patrol:NotifyDispatch(text,seconds) notices[#notices+1]={text=text,seconds=seconds} end
 function patrol:GetRecordedScannerCount() return Ledger:GetRecordedScannerCount() end
 local support={}
+local backupAssigned=false
+function support:HasBackupUnit() return backupAssigned end
 function support:CanUseTrunk(v) return onDuty and not wanted and v and v.owned and not v.destroyed and not player.mounted end
 function support:RequestBackupAtTrunk(v) assert(v==vehicle); backupCalls=backupCalls+1; return true end
 NCPDPatrolSystem={Get=function() return patrol end}
@@ -59,6 +61,7 @@ local function reset()
  player.position={x=0,y=0,z=0}; player.mounted=false; player.dead=false; player.attached=true
  vehicle.attached=true; vehicle.owned=true; vehicle.destroyed=false; vehicle.noTrunk=false
  clock=clock+2; notices={}; backupCalls=0; Trunk:Tick(0.01)
+ backupAssigned=false
 end
 local function advance(seconds,step)
  step=step or 0.25
@@ -191,6 +194,15 @@ Trunk:CloseMenu(); vehicle.owned=false; actions={n=0}; TrunkPS:GetPlayerTrunkAct
 assert(actions.n==1 and actions[0].kind=='stash')
 reset(); onDuty=false; actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
 assert(actions.n==1 and actions[0].kind=='stash')
+reset()
+
+-- 10-4 is conditional, uses its own caption/choice record, and queues once.
+backupAssigned=true;hold();actions={n=0};TrunkPS:GetTrunkActions(actions,{})
+assert(actions.n==8 and actions[6]:GetCommand()==7 and actions[7]:GetCommand()==0)
+assert(actions[6]:GetTweakDBChoiceRecord()=='NCPDPatrolReleaseBackup')
+TrunkPS:OnNCPDPatrolTrunkMenuAction(actions[6])
+assert(Trunk:TakeCommand()==7 and Trunk:TakeCommand()==0 and not Trunk:IsOpenFor(vehicle))
+hold();backupAssigned=false;Trunk:Select(7,vehicle);assert(Trunk:TakeCommand()==0)
 reset()
 
 -- Execute repair and the actual delayed/mount/damage handlers. Wheel physics

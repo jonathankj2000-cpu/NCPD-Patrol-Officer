@@ -24,6 +24,7 @@ public class NCPDPatrolEnglishText extends ModLocalizationPackage {
         this.Text("NCPDPatrol-CancelDispatch", "Cancel dispatch");
         this.Text("NCPDPatrol-NewDispatch", "Request new dispatch");
         this.Text("NCPDPatrol-CopStats", "Cop Stats");
+        this.Text("NCPDPatrol-ReleaseBackup", "10-4 - Release backup");
         this.Text("NCPDPatrol-CloseMenu", "Close Patrol Menu");
         this.Text("NCPDPatrol-Revive", "Revive Partner");
         this.Text("NCPDPatrol-Reviving", "Reviving Partner - stay close (3 s)");

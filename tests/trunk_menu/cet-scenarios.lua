@@ -85,7 +85,7 @@ managed[2]=nil; assert(Partner.replace(true,status)); assert(createCount==3 and 
 
 -- Actual CET bridge consumes queued actions once and synchronizes BUSY before polling.
 local queue=0; local reports={}; local takeCount=0; local tickCount=0
-local nativeTrunk={Version=function() return 2 end,Tick=function() tickCount=tickCount+1 end,
+local nativeTrunk={Version=function() return 3 end,Tick=function() tickCount=tickCount+1 end,
  IsBusy=function() return true end,TakeCommand=function() takeCount=takeCount+1; local c=queue; queue=0; return c end,
  ReportCommand=function(_,text) reports[#reports+1]=text end,FinishSession=function() end}
 Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
@@ -105,3 +105,18 @@ assert(createCount==created+1 and reports[#reports]:find('New partner requested'
 TrunkCET.update(0.1,true,dispatchPatrol,status); assert(createCount==created+1)
 queue=5; local taken=takeCount; TrunkCET.update(0.1,false,dispatchPatrol,status); assert(takeCount==taken)
 TrunkCET.reset(); assert(not Dispatch.isBusy())
+-- The actual trunk router consumes 10-4 exactly once and passes native support.
+local Backup=require('backup');local originalRelease=Backup.release
+local releaseCalls=0;local nativeSupport={}
+local getSystems=Game.GetScriptableSystemsContainer
+Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
+ if name=='NCPDPatrolSupportSystem' then return nativeSupport end
+ return getSystems():Get(name)
+end} end
+Backup.release=function(support,patrol,callback)
+ assert(support==nativeSupport and patrol==dispatchPatrol and callback==status)
+ releaseCalls=releaseCalls+1;return true
+end
+queue=7;TrunkCET.update(.1,true,dispatchPatrol,status);assert(releaseCalls==1)
+TrunkCET.update(.1,true,dispatchPatrol,status);assert(releaseCalls==1)
+Backup.release=originalRelease

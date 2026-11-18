@@ -1,5 +1,15 @@
 # NCPD Patrol
 
+## v0.15b: 10-4 backup stand-down
+
+[Download the complete v0.15b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15b_Backup_10-4_Stand_Down_TEST.zip)
+
+At your owned police car's trunk, **hold R > 10-4 - Release backup** while a patrol is assigned. This removes the two backup officers' follower roles and their automatic attempts to join V's car. They remain on scene. Seated officers receive an animated exit request when their actual vehicle is stationary; **wait for them to get out before driving away**. The primary partner is unaffected.
+
+This does **not despawn** the patrol at 10-4. Existing cleanup removes it only after you leave more than 150 m from the release area, car and officers for three seconds. The reservation stays occupied until deletion is confirmed, including asynchronous/failed deletion. Pending requests with no deployed actors are simply cancelled. Normal backup still follows and can board if you do not use 10-4. A CET **10-4: Release backup** button is available for testing.
+
+Install the **entire ZIP** and restart, including updated redscript and interaction tweaks. Trunk interface is now **3**. All v0.15a readiness, 17 cyberpsycho variants, VIP/ambush, aftermath and tyre repair are included. Eight portable suites and offline API checks pass; actual role clearing and animated exits need a game test.
+
 ## v0.15a: officer readiness and 17 cyberpsycho variants
 
 [Download the complete v0.15a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15a_Officer_Readiness_Cyberpsycho_Variants_TEST.zip)
@@ -93,7 +103,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15a**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15b**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.
@@ -108,6 +118,6 @@ Browser Extension remains **optional**. Without it, progression, rewards and par
 
 All 24 production redscript files pass source-derived API checks with and without BEF. All 17 Lua modules parse. The complete 58-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
 
-Existing archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, VIP/ambush and tyre repair are preserved from v0.14b. Partner/backup add readiness equipment requests; cyberpsycho dispatch adds the verified catalog and exact selected-record admission. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **3**; VIP is **2**.
+Existing archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, VIP/ambush and tyre repair are preserved from v0.14b. Partner/backup add readiness equipment requests; cyberpsycho dispatch adds the verified catalog and exact selected-record admission. Career interface is **3**; main/support **17**, arrest **5**, trunk **3**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **3**; VIP is **2**.
 
 [Full instructions](README.txt) · [Previous v0.13a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip) · [Earlier packages](releases)

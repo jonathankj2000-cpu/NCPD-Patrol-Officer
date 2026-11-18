@@ -81,6 +81,12 @@ Interactions.NCPDPatrolCloseMenu:
   name: NCPDPatrolCloseMenu
   caption: NCPDPatrol-CloseMenu
 
+Interactions.NCPDPatrolReleaseBackup:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolReleaseBackup
+  caption: NCPDPatrol-ReleaseBackup
+
 Interactions.NCPDPatrolReviving:
   $base: Interactions.SellectDestination
   name: NCPDPatrolReviving

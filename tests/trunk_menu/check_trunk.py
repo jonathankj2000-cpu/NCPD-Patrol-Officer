@@ -72,7 +72,7 @@ lua.globals().DispatchJournalNative=lua.execute(translate(NATIVE/'NCPDPatrolDisp
 lua.execute((HERE.parent/'dispatch_journal/native-mocks.lua').read_text())
 lua.execute((HERE/'cet-scenarios.lua').read_text())
 loc=(NATIVE/'NCPDPatrolLocalization.reds').read_text()
-for key in ['Available','Busy','Repair','NewPartner','CancelDispatch','NewDispatch','CopStats','CloseMenu']:
+for key in ['Available','Busy','Repair','NewPartner','CancelDispatch','NewDispatch','CopStats','ReleaseBackup','CloseMenu']:
  assert 'Interactions.NCPDPatrol'+key+':' in yaml
  assert 'NCPDPatrol-'+key in loc
 assert 'NCPDPatrol-PatrolMenu' in loc

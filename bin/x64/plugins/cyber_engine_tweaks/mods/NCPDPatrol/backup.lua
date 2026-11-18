@@ -10,6 +10,7 @@ local carID = nil
 local phase, label = "idle", "Available on duty"
 local elapsed, poll, away, retry = 0, 0, 0, 0
 local notified, failed = false, false
+local releaseNotice, releaseBraked = false, false
 
 local function distance(a, b)
     local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
@@ -49,12 +50,14 @@ local function cleanup(support, status)
     if not hasSystem then system = nil end
     for index = #ids, 1, -1 do
         local id = ids[index]
-        local ok, result = pcall(function() return system and system:DeleteEntity(id) end)
-        -- Retain failed IDs and the reservation; never permit duplicate patrols.
-        if not ok or result ~= true then
-            local checked, managed = pcall(function() return system and system:IsManaged(id) end)
-            if not checked or managed ~= false then remaining[#remaining+1] = id end
-        end
+        local ok, gone = pcall(function()
+            if not system then return false end
+            if system:IsManaged(id) == false then return true end
+            return system:DeleteEntity(id) == true and system:IsManaged(id) == false
+        end)
+        -- Even an accepted asynchronous delete retains the reservation until
+        -- removal is confirmed. Failed IDs can never become a second patrol.
+        if not ok or not gone then remaining[#remaining+1] = id end
     end
     ids = remaining
     if #ids > 0 then
@@ -65,6 +68,7 @@ local function cleanup(support, status)
     units, car, anchor, target = {}, nil, nil, nil
     carID = nil
     phase, away = "idle", 0
+    releaseNotice, releaseBraked = false, false
     if support then support:ReleaseBackup() end
     report("Available on duty", support, status)
     return true
@@ -111,6 +115,7 @@ function M.reset()
     carID = nil
     phase, label = "idle", "Available on duty"
     elapsed, poll, away, retry, notified, failed = 0, 0, 0, 0, false, false
+    releaseNotice, releaseBraked = false, false
 end
 
 function M.finish(support, status)
@@ -157,6 +162,115 @@ local function mount(unit, unmount)
     unit.command = command
 end
 
+local function stopDrive()
+    if car and drive then car:GetAIComponent():StopExecutingCommand(drive, false) end
+    drive = nil
+end
+
+local function leaveActualVehicle(unit, mounted)
+    local info = Game.GetMountingFacility():GetMountingInfoSingleWithObjects(unit.actor)
+    local seat = info and info.slotId and info.slotId.id
+    if not seat then error("Released officer's actual seat is unavailable") end
+    local data = MountEventData.new()
+    data.mountParentEntityId, data.slotName = mounted:GetEntityID(), seat
+    data.isInstant, data.ignoreHLS, data.allowFailsafeTeleport = false, false, false
+    data.setEntityVisibleWhenMountFinish = true
+    local options = NewObject("handle:gameMountEventOptions")
+    options.silentUnmount, options.entityID, options.alive = false, mounted:GetEntityID(), true
+    data.mountEventOptions = options
+    local command = AIUnmountCommand.new()
+    command.mountData = data
+    command = command:Copy()
+    unit.actor:GetAIControllerComponent():SendCommand(command)
+    unit.releaseUnmount, unit.releaseWait = command, 0
+    unit.releaseAttempts = (unit.releaseAttempts or 0) + 1
+end
+
+local function updateReleased(delta, support, patrol, status)
+    local system = Game.GetDynamicEntitySystem()
+    if not car then car = system:GetEntity(carID) end
+    if car and car:IsAttached() and not releaseBraked then
+        stopDrive()
+        if not sameVehicle(Game.GetMountedVehicle(Game.GetPlayer()), car) then
+            car:ForceBrakesUntilStoppedOrFor(8.0)
+        end
+        releaseBraked = true
+    end
+    local ready = true
+    for _, unit in ipairs(units) do
+        if not unit.actor then unit.actor = system:GetEntity(unit.id) end
+        local actor = unit.actor
+        if actor and actor:IsAttached() then
+            if not unit.releaseRole then
+                if unit.readiness then Ready.release(unit.readiness, actor) end
+                stopUnit(unit)
+                Crew.stopFollowing(actor)
+                unit.releaseRole = true
+            end
+            if not actor:IsDead() and not actor:IsDeadNoStatPool()
+                and not ScriptedPuppet.IsDefeated(actor) and not ScriptedPuppet.IsUnconscious(actor) then
+                local mounted = Game.GetMountedVehicle(actor)
+                if mounted then
+                    -- A mount already in flight at 10-4 may finish afterwards.
+                    -- Release our on-foot hold before requesting its exit.
+                    stopUnit(unit)
+                    ready = false; unit.releaseHolding = false
+                    unit.releaseWait = (unit.releaseWait or 0) + delta
+                    -- Never brake or teleport the player's vehicle. Wait for a
+                    -- stationary actual parent before requesting an animated exit.
+                    if math.abs(mounted:GetCurrentSpeed()) < 0.7 then
+                        if unit.releaseUnmount and unit.releaseWait >= 12 and (unit.releaseAttempts or 0) < 3 then
+                            actor:GetAIControllerComponent():StopExecutingCommand(unit.releaseUnmount, false)
+                            unit.releaseUnmount = nil
+                        end
+                        if not unit.releaseUnmount then leaveActualVehicle(unit, mounted) end
+                    end
+                elseif not unit.releaseHolding then
+                    unit.releaseUnmount = nil
+                    unit.command = Crew.hold(actor)
+                    unit.releaseHolding = true
+                end
+            end
+        else ready = false end
+    end
+    if ready and not releaseNotice then
+        releaseNotice = true
+        report("10-4: Backup released; remaining on scene until you leave 150 m", support, status)
+        notice(patrol, "10-4. Backup released. Unit remaining on scene.")
+    end
+end
+
+function M.release(support, patrol, status)
+    if not support or not patrol or not Game.GetPlayer() or not patrol:IsOnDuty() or patrol:HasWantedLevel() then return false end
+    if phase == "cleanup" then
+        notice(patrol, "10-4. Previous patrol cleanup is still pending.")
+        return false
+    end
+    if phase == "idle" and #ids == 0 then
+        if support:HasBackupUnit() then
+            support:ReleaseBackup()
+            report("10-4: Pending backup request cancelled before deployment", support, status)
+            notice(patrol, "10-4. Pending backup request cancelled.")
+            return true
+        end
+        notice(patrol, "No backup patrol is assigned.")
+        return false
+    end
+    if phase == "released" then
+        notice(patrol, "10-4 already requested. Allow seated officers to exit; the patrol remains on scene.")
+        return true
+    end
+    phase, elapsed, away, failed, releaseNotice, releaseBraked = "released", 0, 0, false, false, false
+    anchor = Game.GetPlayer():GetWorldPosition()
+    report("10-4: Standing down; releasing officers from follower duty", support, status)
+    local ok, err = pcall(updateReleased, 0, support, patrol, status)
+    if not ok then report("10-4 pending: " .. tostring(err), support, status) end
+    if not releaseNotice then notice(patrol, "10-4 received. Allow backup officers to exit before driving away.") end
+    -- No DeleteEntity or ReleaseBackup here: retain the patrol and reservation
+    -- until the existing distance-based cleanup confirms deletion.
+    return true
+end
+
 local function driveToScene(support, status)
     local command = AIVehicleDriveToPointAutonomousCommand.new()
     -- This is the request location, independent of dispatch and later movement.
@@ -189,6 +303,7 @@ local function updateActive(delta, support, patrol, status)
         if cleanup(support, status) then notice(patrol, "Backup released after leaving the scene. A new patrol is available.") end
         return
     end
+    if phase == "released" then updateReleased(delta, support, patrol, status); return end
     if phase == "spawning" then
         local system = Game.GetDynamicEntitySystem()
         car = system:GetEntity(carID)
@@ -285,6 +400,11 @@ function M.update(delta, onDuty, support, patrol, status)
     local step = poll
     poll = 0
     local ok, err = pcall(updateActive, step, support, patrol, status)
+    if not ok and phase == "released" then
+        if not failed then report("10-4 pending: " .. tostring(err), support, status) end
+        failed = true
+        return
+    end
     if not ok and not failed then
         failed = true
         report("Patrol failed: " .. tostring(err), support, status)

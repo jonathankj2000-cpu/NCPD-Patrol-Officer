@@ -2,12 +2,13 @@
 -- perform partner and dispatch operations. A command is consumed exactly once.
 local Dispatch = require("dispatch")
 local Partner = require("partner")
+local Backup = require("backup")
 local M = {}
 local reported = false
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-    if not system or system:Version() ~= 2 then error("Install all v0.10b files and restart the game") end
+    if not system or system:Version() ~= 3 then error("Install all v0.15b files and restart the game") end
     return system
 end
 
@@ -62,6 +63,9 @@ function M.update(delta, onDuty, patrol, status)
             if not Dispatch.replace(patrol, status) then
                 system:ReportCommand("NCPD: No new dispatch assigned. " .. Dispatch.state())
             end
+        elseif command == 7 then
+            local support = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSupportSystem")
+            Backup.release(support, patrol, status)
         end
     end)
     if not ok and not reported then
