@@ -1,0 +1,151 @@
+{
+  "input_zip_sha256": "fcef953082b088f383ba1337781cf7cb9ba75a7763a642431d6f1b4bd7fa3e87",
+  "color_srgb": "#28567D",
+  "color_linear": [
+    0.021219010376003555,
+    0.09305896284668745,
+    0.20507873639031693
+  ],
+  "parts": {
+    "pump": {
+      "layer": 9,
+      "original_layers": 20,
+      "original_setup_sha256": "903e7d7c3e1ef8cc35197e72ec4d5a7a834f64d00b788d1ed33f3d534579b545",
+      "geometry_selection": "foreend bone > 0.95 AND existing polymer layer 6",
+      "masks": {
+        "fpp": {
+          "size": 512,
+          "selected_pixels": 20176,
+          "other_layers_byte_identical_after_decode": true,
+          "coating_pixels_sha256": "03334720eb291f242a2cdddde330b83158edb47148eaa1351f10c084e93dbd56"
+        },
+        "tpp": {
+          "size": 256,
+          "selected_pixels": 8895,
+          "other_layers_byte_identical_after_decode": true,
+          "coating_pixels_sha256": "70646300c8cfcfc4bef75149adb1d03b502b556c577b9277cd2d931544e18379"
+        }
+      }
+    },
+    "grip": {
+      "layer": 8,
+      "original_layers": 19,
+      "original_setup_sha256": "ebeb491310e9f61c741c32e45962c9517ada33f3766bc8cd4bd751f96eb60fcf",
+      "geometry_selection": "pistol grip below Y=-0.022m and Z<=0.047m; stock panel and butt pad excluded",
+      "masks": {
+        "fpp": {
+          "size": 256,
+          "selected_pixels": 5101,
+          "other_layers_byte_identical_after_decode": true,
+          "coating_pixels_sha256": "0a3d952f14d9b5bbbae38d1174292121860f208e30392e01d880deb50ccad6f9"
+        },
+        "tpp": {
+          "size": 256,
+          "selected_pixels": 6001,
+          "other_layers_byte_identical_after_decode": true,
+          "coating_pixels_sha256": "fec33763ce00f4b62f7763340764d30b15af774d78e5d0933f8d9c8c2fedaa2c"
+        }
+      }
+    }
+  },
+  "original_resources": {
+    "pump": {
+      "render_blob_sha256": "b06431e4681f98eb35645fea383a53d9216e10bb2a1134141eabd371d03bbf46",
+      "bones": [
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "barrel"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "trigger"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "safe_lock"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "action_release"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "lifter"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "foreend"
+        },
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "ejection_port"
+        }
+      ],
+      "source": "base\\weapons\\firearms\\shotgun\\constitutional_tactician\\entities\\meshes\\w_shotgun__constitutional_tactician__base1_01.mesh"
+    },
+    "grip": {
+      "render_blob_sha256": "79f7a003822358f23224679ec76c639105eddaed2bb1cc80de1f77ad52789bc9",
+      "bones": [
+        {
+          "$type": "CName",
+          "$storage": "string",
+          "$value": "base"
+        }
+      ],
+      "source": "base\\weapons\\firearms\\shotgun\\constitutional_tactician\\entities\\meshes\\w_shotgun__constitutional_tactician__rcv1_01.mesh"
+    }
+  },
+  "files": {
+    "beanbagger.app.json": {
+      "sha256": "c52bea914069b9f325c83eeeb6a47b56625b9eed055b666b887e49b23e2d6fbc",
+      "bytes": 92546
+    },
+    "factory.csv.json": {
+      "sha256": "ab11651a7869f01426298868bc8aea15a964931f8f222c2a210559c01b875b8d",
+      "bytes": 475
+    },
+    "grip.mesh.json": {
+      "sha256": "6771b3e8eb5698e4bb4a36bad5165b4e8b262ebf25a546162d2b520557d0820a",
+      "bytes": 814682
+    },
+    "grip.mlsetup.json": {
+      "sha256": "85330a34991e6ac481042c1a8190426f5368ee672909a88d6235ac383f4cc020",
+      "bytes": 19816
+    },
+    "grip_fpp.mlmask.json": {
+      "sha256": "342ae1eccc7b16f98e1328807a1a1ee8629466da94ee7cfc06497712489aec51",
+      "bytes": 277916
+    },
+    "grip_tpp.mlmask.json": {
+      "sha256": "0844af674a9af4aeba695f6402d98c2a0b6ee2457e97319709ebe5f6f0423781",
+      "bytes": 189241
+    },
+    "ncpd_grip.mltemplate.json": {
+      "sha256": "7acc247e17c49d9c04f2578e5b0a9809a8555558c1f178255b659a5efa6c7604",
+      "bytes": 5507
+    },
+    "pump.mesh.json": {
+      "sha256": "54ad3b49e2d72fd9a31a7f9492aae53dbd6a9a8e4bf834a02054cffd99ad33a7",
+      "bytes": 1620946
+    },
+    "pump.mlsetup.json": {
+      "sha256": "885e2c0ce0ec8f29acd3d4d8384c8579ab98e373e5394221993424cc74f5ef23",
+      "bytes": 21003
+    },
+    "pump_fpp.mlmask.json": {
+      "sha256": "9c4db1d42a24aca45987e3748e8f3a06f400e0f65cffe9a73d82db5e61896cf3",
+      "bytes": 836766
+    },
+    "pump_tpp.mlmask.json": {
+      "sha256": "802607e3b53e5c5c726ea3219e0867f6698ada0bbcc5190a5d7a3d5f856a639d",
+      "bytes": 177002
+    }
+  }
+}

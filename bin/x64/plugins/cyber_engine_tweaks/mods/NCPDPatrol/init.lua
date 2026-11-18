@@ -1,4 +1,4 @@
--- NCPD Patrol v0.16a | shared trunk interface validation at shift entry
+-- NCPD Patrol v0.16b | shared trunk interface validation at shift entry
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -52,7 +52,7 @@ end
 local function careerAction(method, value)
     local ok, result = pcall(function()
         local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-        if not career or career:Version() ~= 3 then error("Install the complete v0.16a package and restart") end
+        if not career or career:Version() ~= 3 then error("Install the complete v0.16b package and restart") end
         if method == "test" then
             if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
         elseif method == "claim" then
@@ -232,9 +232,9 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.16a support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.16b support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.16a files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.16b files and restart the game") end
         Trunk.prepareShift()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.16a loaded. Bean Bagger for V: Tier 2 at 20 incidents. CET has TEST: Give Bean Bagger (Tier 2) and observed-target diagnostics. Includes the v0.15e shift-start fix. Install the complete package and restart.")
+    status("v0.16b loaded. Bean Bagger blue grip and pump appearance. Tier 2 for V at 20 incidents. CET has TEST: Give Bean Bagger (Tier 2) and observed-target diagnostics. Includes the v0.15e shift-start fix. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -395,7 +395,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.16a")
+    local visible = ImGui.Begin("NCPD Patrol - v0.16b")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -418,7 +418,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.16a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.16b package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -426,7 +426,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.16a package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.16b package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
@@ -440,7 +440,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log Bean Bagger diagnostics") then
             local ok, info = pcall(function()
                 local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolBeanBaggerSystem")
-                if not system or system:Version() ~= 1 then error("Install all v0.16a files and restart") end
+                if not system or system:Version() ~= 1 then error("Install all v0.16b files and restart") end
                 return system:GetDiagnostics()
             end)
             status("Bean Bagger | " .. tostring(info))
@@ -504,7 +504,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.16a files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.16b files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -605,7 +605,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.16a files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.16b files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

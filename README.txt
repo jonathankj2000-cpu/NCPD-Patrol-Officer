@@ -1,4 +1,4 @@
-NCPD PATROL v0.16a - M2038 NCPD BEAN BAGGER
+NCPD PATROL v0.16b - BEAN BAGGER BLUE GRIPS
 ========================================================
 Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
@@ -35,8 +35,10 @@ unlock override. It gives one test copy per session without consuming a career
 receipt. The normal tiered test button includes it too and shares test receipts.
 
 Weapon name/description use the existing Codeware localization provider. The
-weapon keeps the normal Tactician model, pump animation, sound and muzzle VFX.
-Blue grips and custom flash/smoke are not included in this prototype. Its own
+weapon keeps the normal Tactician geometry, pump animation, sound and muzzle VFX.
+A private ArchiveXL appearance adds matte blue to the pistol grip and pump only.
+The stock panel, butt pad, receiver, barrel and other parts keep original materials.
+Its own
 0.90 DamagePerHit multiplier remains; perks/mods/normal game scaling still apply.
 The handoff's full Pax hook is replaced: that package also adds a damage bonus.
 A native hit wrapper applies Nonlethal only to V's ranged hits using this exact
@@ -49,7 +51,9 @@ other damage sources are not overridden. No automatic arrest, payment or revive.
 
 BEAN BAGGER GAME TEST
 1. Restart after installing all files. Use TEST: Give Bean Bagger (Tier 2), then
-   confirm its inventory name and Tier 2 quality and equip it on V.
+   confirm its inventory name and Tier 2 quality and equip it on V. Check the blue
+   pistol grip and pump, aim, fire/reload, and compare a normal Tactician.
+   Include NCPDPatrol_BeanBagger.archive and .archive.xl from the ZIP.
 2. While on duty, shoot an ordinary human enemy. Test torso/headshot, close range
    and a follow-up shot on a downed target. Look for living defeat, not death.
 3. CET > Log Bean Bagger diagnostics reports actual last-target dead/defeated/
@@ -68,7 +72,7 @@ needed or bundled. No extra framework dependency is added.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.16a.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.16b.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

@@ -1,6 +1,16 @@
 # NCPD Patrol
 
 
+## v0.16b: Bean Bagger blue grips
+
+[Download the complete v0.16b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16b_Bean_Bagger_Blue_Grips_TEST.zip)
+
+The Bean Bagger now has a muted matte blue pistol grip and pump fore-end, in a private ArchiveXL factory/appearance. Four authored masks cover first-person and third-person geometry. The stock panel, butt pad, receiver, barrel, sights and magazine cap retain their original materials. Vanilla Tactician files are not overridden. Original skinned geometry, rig, component bindings, pump animation, sounds and muzzle effects are retained.
+
+Install the **entire ZIP** and restart, including `NCPDPatrol_BeanBagger.archive` and its `.archive.xl`. Test with **CET > NCPD CAREER > TEST: Give Bean Bagger (Tier 2)**, then equip it, aim, fire/reload and inspect it in inventory/photo mode. Compare against a vanilla Tactician. Appearance/tone and animation need an actual game test; local checks compile and round-trip all eleven resources, verify private paths and unchanged geometry/animations, and extract the packed archive to compare resource bytes.
+
+Tier 2, the 20-incident reward, existing item/reward IDs, receipts, scoped non-lethal policy and all native gameplay scripts remain unchanged from v0.16a. ArchiveXL is already required by NCPD Patrol. The previous stock-appearance package remains linked below.
+
 ## v0.16a: M2038 NCPD Bean Bagger
 
 [Download the complete v0.16a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16a_Bean_Bagger_TEST.zip)
@@ -149,7 +159,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16a**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16b**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

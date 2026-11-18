@@ -28,16 +28,24 @@ These checks do not execute native health pools, hit reactions, localization
 loading or game rendering. In-game non-lethal outcomes, multi-pellet timing,
 headshots/perks, real damage scaling and compatibility still need validation.
 
-## Blue grip resource requirement
+## v0.16b blue grip resources
 
-The handoff contains no original Tactician `.app`, `.ent`, `.mesh`, `.mlsetup`
-or `.mlmask` files. The workspace and connected repository also contain none.
-The exact grip/pump material-layer mapping therefore remains unavailable. The
-current package intentionally preserves the stock appearance; no recolor archive
-is advertised or fabricated. To build the requested isolated blue grips, supply
-those Tactician resources with their original depot paths (for example in a ZIP).
+The user supplied the original game resources in `Beanbagger (2).zip`. Authored
+private resources are in `assets/beanbagger/visuals`; the archive is rebuilt with
+`tools/build_beanbagger_assets.py --wk-cli <WolvenKit.CLI>` (9.1.1/.NET 10).
+`compiled.json` records the exact packed bytes and round-trip checks.
 
-[Official material editing guide](https://github.com/CDPR-Modding-Documentation/Cyberpunk-Modding-Docs/blob/main/modding-guides/items-equipment/editing-existing-items/changing-materials-colors-and-textures/README.md)
-and [ArchiveXL appearance patching](https://github.com/CDPR-Modding-Documentation/Cyberpunk-Modding-Docs/blob/main/for-mod-creators-theory/core-mods-explained/archivexl/archivexl-resource-patching/archivexl-patching-appearances.md)
-describe the source-resource/material workflow. A future patch should target
-only the Bean Bagger appearance, leaving normal Tacticians intact.
+The fore-end mask selects the moving foreend bone and its original polymer mask,
+excluding the magazine cap and metal pump fittings. The rear mask selects only
+the lower pistol grip; the stock panel and butt pad remain original. Separate
+first/third-person masks follow each LOD's UVs. Previously empty layers 9 (pump)
+and 8 (grip) are reused within the engine's 20-layer limit. All other layers decode
+identically to the originals, retaining their wear/dirt. The private plastic
+template defines sRGB #28567D in linear color and matte roughness .68-.82.
+
+The entire appearance uses a new factory name and private depot paths; vanilla
+weapon resources and item records are not replaced. Mesh render buffers, bones,
+rig matrices and component animation/binding data are retained. The portable
+visual check validates registration, references, masks/geometry manifests and
+source/archive integrity. Rendering and pumping under actual game lighting are
+manual checks; do not treat resource round-trips as game validation.

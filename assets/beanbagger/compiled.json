@@ -1,0 +1,21 @@
+{
+  "tool": "WolvenKit CLI 9.1.1",
+  "resource_count": 11,
+  "archive_sha256": "30f5e6ac997f96bda63a1d5c5a1ea2a36ec5d796abfe0d4485cc4bba1ed3690e",
+  "resources": {
+    "base/ncpd_patrol/beanbagger/beanbagger.app": "97c72c6cc2aff3cd3def0d74166031ba84321756947d184a5a82999e3365a367",
+    "base/ncpd_patrol/beanbagger/factory.csv": "6fe47ff98c6246c723759daccc46d33e8af975b857db746e87f093c9f45ab418",
+    "base/ncpd_patrol/beanbagger/grip.mesh": "5b397bf02855b9f09dbf140d20220f716be91f198664a95494fe591b6d967c51",
+    "base/ncpd_patrol/beanbagger/grip.mlsetup": "12634dade87ebef2829d074fadb168e1224ae18c0adff442f20c439e85c32cae",
+    "base/ncpd_patrol/beanbagger/grip_fpp.mlmask": "b454cb653dded10e15a2edc8bf44ccc78229439ce238623e0b881bc2c1d5d402",
+    "base/ncpd_patrol/beanbagger/grip_tpp.mlmask": "9f1b3f7ee58e5aa6dfba12fc0d591450c06ea23273fef5e81c8afa0eb1cbee1b",
+    "base/ncpd_patrol/beanbagger/ncpd_grip.mltemplate": "30ab4259757cbe84af0a15132b378f3cf938263e6e2ce786effc331030558373",
+    "base/ncpd_patrol/beanbagger/pump.mesh": "43941fbade45b32eb0b899671ebe819a54b6311dd04813529c1f1bafc7278532",
+    "base/ncpd_patrol/beanbagger/pump.mlsetup": "72d4ab46f67b7e40c588b5956aa3a278ebd887a4840a611410a3a3241aadef1a",
+    "base/ncpd_patrol/beanbagger/pump_fpp.mlmask": "8adff210db1020f24a321b80a1106d3b7408ce615d26f2dafe4a6bbbb92990bf",
+    "base/ncpd_patrol/beanbagger/pump_tpp.mlmask": "826dd46645aa3c7d75e36f213d7e430a8cecea15a541a2dee0c537701162a784"
+  },
+  "roundtrip_preserves_geometry_rig_materials_masks_and_animations": true,
+  "archive_extract_matches_compiled_resources": true,
+  "game_rendering_tested": false
+}

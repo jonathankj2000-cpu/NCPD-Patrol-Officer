@@ -1,9 +1,11 @@
 # Same path/ID as the standalone handoff: installing the full package replaces
 # its experimental Pax hook rather than loading a second definition of the gun.
-# Vanilla handling, appearance, pump action and effects remain inherited.
+# Vanilla handling, pump action and effects remain inherited.
+# The isolated factory supplies private blue grip/pump meshes and materials.
 Items.NCPDBeanBagger_M2038:
   $base: Items.Preset_Tactician_Default
   quality: Quality.Uncommon
+  appearanceResourceName: NCPDPatrol_BeanBagger
   displayName: LocKey#NCPD_BeanBagger_WeaponName
   localizedDescription: LocKey#NCPD_BeanBagger_Description
   statModifiers:

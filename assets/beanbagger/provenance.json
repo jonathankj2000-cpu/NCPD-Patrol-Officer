@@ -13,8 +13,10 @@
   "pax_package_reused": false,
   "reason": "The Pax OnAttach package also includes a 1.2x damage modifier. Prototype uses exact-weapon native hit flags instead.",
   "localization": "existing required Codeware localization provider; no new archive required",
-  "appearance_and_vfx": "stock Tactician; no blue grips or custom flash/smoke assets in this prototype",
+  "appearance_and_vfx": "v0.16b private blue pistol-grip and pump coating masks; original geometry, animations, audio and muzzle VFX",
   "milestone": 20,
   "partner_assignment_changed": false,
-  "actual_game_validation": false
+  "actual_game_validation": false,
+  "appearance_source": "Beanbagger (2).zip supplied by the user; assets/beanbagger/visuals/authoring.json",
+  "appearance_factory": "NCPDPatrol_BeanBagger"
 }
