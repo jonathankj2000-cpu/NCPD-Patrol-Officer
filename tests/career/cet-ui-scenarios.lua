@@ -1,0 +1,33 @@
+-- Execute the shipped init.lua and click the actual CET controls. Other module
+-- display calls and ImGui are boundaries; careerAction is production code.
+local f=CareerFixture;f:Reset(0)
+local callbacks={};local pressed;local labels={};local spawned=0
+local function noop() end
+local function display() return 'fixture' end
+local function no() return false end
+local function zero() return 0 end
+package.loaded.partner={state=display,activeProfile=display,vehicleState=display,aidState=display,spawn=function() spawned=spawned+1 end}
+package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabled=no,isActive=no,
+ navigationState=display,state=display,lastOutcome=display,journalDiagnostics=display,hudState=display,
+ completed=zero,failedCount=zero,seconds=zero}
+package.loaded.vehicle_radio={isEnabled=no,state=display}
+package.loaded.backup={state=display};package.loaded.arrest={state=display}
+package.loaded.trunk={repairSeconds=zero}
+function registerForEvent(name,callback) callbacks[name]=callback end
+function registerHotkey() end
+ImGui={Begin=function() return true end,End=noop,Text=noop,TextWrapped=noop,Separator=noop,
+ CollapsingHeader=function() return true end,
+ Button=function(label) labels[label]=true;return label==pressed end}
+Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
+ if name=='NCPDPatrolCareerSystem' then return Career end
+end} end
+dofile(MOD_DIR..'/init.lua');callbacks.onOverlayOpen()
+local function click(label) pressed=label;callbacks.onDraw();assert(labels[label],'CET button missing: '..label);pressed=nil end
+click('TEST: Unlock all milestones (session)')
+assert(Career:IsTestUnlockActive() and Career:GetAvailableRewards()==7 and Core:GetRecordedScannerCount()==0)
+assert(#f.itemCalls==0 and #f.vehicleCalls==0)
+click('Claim next milestone reward');assert(f.inventory['Items.Helmet_02_basic_01']==1)
+click('Assign MaxTac Netrunner');assert(Career:GetSelectedPartnerIndex()==3 and spawned==0)
+click('Clear test unlocks')
+assert(not Career:IsTestUnlockActive() and Career:GetSelectedPartnerIndex()==0 and Career:GetAvailableRewards()==0)
+click('LOCKED: MaxTac Netrunner');assert(Career:GetSelectedPartnerIndex()==0 and spawned==0)

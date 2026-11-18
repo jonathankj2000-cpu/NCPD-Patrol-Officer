@@ -13,7 +13,7 @@ from bef_reference import sources
 NATIVE=ROOT/'r6/scripts/NCPDPatrol'
 lua=LuaRuntime(unpack_returned_tuples=True)
 lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
-for file,name in [('NCPDPatrolSystem.reds','Core'),('NCPDPatrolDispatchJournalSystem.reds','Dispatch'),('NCPDPatrolArrestSystem.reds','Arrests'),('NCPDPatrolCareerSystem.reds','Career')]:
+for file,name in [('NCPDPatrolSystem.reds','Core'),('NCPDPatrolDispatchJournalSystem.reds','Dispatch'),('NCPDPatrolArrestSystem.reds','Arrests'),('NCPDPatrolCareerSystem.reds','Career'),('NCPDPatrolSupportSystem.reds','Support')]:
  lua.globals()[name]=lua.execute(translate(NATIVE/file))
 
 def extract(source,pattern):
@@ -62,9 +62,13 @@ with tempfile.TemporaryDirectory(prefix='ncpd-career-page-') as scratch:
  lua.globals().PageSpawnPrototype=lua.execute(translate(p))
 lua.execute((HERE/'native-mocks.lua').read_text())
 lua.execute((HERE/'scenarios.lua').read_text())
+lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
+lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
+lua.execute((HERE/'partner-scenarios.lua').read_text())
+lua.execute((HERE/'cet-ui-scenarios.lua').read_text())
 assert source.count('@if(ModuleExists("BrowserExtension.System"))')==9
 assert 'this.LoadPageByAddress(' not in source
 assert 'this.m_deviceLogicController.LoadPageByAddress(' in source
 assert 'GetWebPage(address: String)' in source and 'ClaimNextReward()' in source
 assert 'CreateScriptedQuest' not in source
-print('PASS: career/page logic with actual pinned BEF base Init/Uninit, Register/Unregister, per-device GetSitesData/GetWebPage; controller navigation, pre-homepage registration, diagnostics, callbacks and once-only rewards (native boundaries mocked)')
+print('PASS: real career/reward/partner/page/CET logic; legacy cash migration, partial retry/save receipts, garage confirmation, 0/20/50/100 selection, session-only test buttons, model spawning/cleanup, actual pinned BEF registration/navigation and callback cleanup (native boundaries mocked)')

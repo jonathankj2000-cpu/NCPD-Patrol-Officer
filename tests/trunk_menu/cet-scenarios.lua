@@ -15,6 +15,7 @@ end
 local dispatchPatrol={}
 function dispatchPatrol:Version() return 17 end
 function dispatchPatrol:HasWantedLevel() return false end
+function dispatchPatrol:GetRecordedScannerCount() return 0 end
 function dispatchPatrol:IsOnDuty() return nativeDuty end
 function dispatchPatrol:IsDispatchMenuOpen() return pausedUI end
 function dispatchPatrol:ClearDispatchWaypoints() if failClear then error('cleanup rejected') end; clears=clears+1 end
@@ -64,6 +65,7 @@ Game.GetDynamicEntitySystem=function() return system end
 Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
  if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end
  if name=='NCPDPatrolSupportSystem' then return nativeSupport end
+ if name=='NCPDPatrolCareerSystem' then return CareerNative end
 end} end
 TweakDB={GetRecord=function() return {} end}
 TweakDBID={new=function(id) return id end}
@@ -90,6 +92,7 @@ Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
  if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end
  if name=='NCPDPatrolTrunkSystem' then return nativeTrunk end
  if name=='NCPDPatrolSupportSystem' then return nativeSupport end
+ if name=='NCPDPatrolCareerSystem' then return CareerNative end
 end} end
 local TrunkCET=require('trunk')
 Dispatch.start(dispatchPatrol)

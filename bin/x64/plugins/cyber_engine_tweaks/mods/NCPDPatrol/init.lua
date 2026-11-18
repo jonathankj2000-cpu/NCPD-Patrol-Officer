@@ -1,4 +1,4 @@
--- NCPD Patrol v0.10b | tap/hold trunk patrol menu
+-- NCPD Patrol v0.11a | career rewards and partner assignments
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -47,6 +47,22 @@ local function getSupportSystem()
     end)
     if ok and system then return system end
     return nil
+end
+
+local function careerAction(method, value)
+    local ok, result = pcall(function()
+        local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
+        if not career or career:Version() ~= 2 then error("Install the complete v0.11a package and restart") end
+        if method == "test" then
+            if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
+        elseif method == "claim" then
+            career:ClaimNextReward()
+        elseif method == "partner" then
+            career:SelectPartner(value)
+        end
+        return career:GetLastStatus()
+    end)
+    status("Career | " .. tostring(result))
 end
 
 local function requestBackup()
@@ -212,11 +228,11 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.10b support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.11a support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.10b files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.11a files and restart the game") end
         local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 2 then error("Install the v0.10b trunk module and restart the game") end
+        if not trunk or trunk:Version() ~= 2 then error("Install the v0.11a trunk module and restart the game") end
         trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -285,7 +301,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.10b loaded. NCPD Career: controller navigation fix, pre-homepage registration and browser diagnostics; six dispatch briefings and EUR$500 dispatch supplements; ArchiveXL and the new dispatch archive/.xl are required. Native trunk controls and arrests retained.")
+    status("v0.11a loaded. Career equipment/vehicle rewards at 5/10/20/35/50/75/100 incidents; partner assignments at 0/20/50/100. CET includes session-only TEST unlocks. Install all files, including the career vehicle tweak, and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -377,7 +393,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.10b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.11a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -394,11 +410,13 @@ registerForEvent("onDraw", function()
         if ImGui.Button(Dispatch.isBusy() and "Set AVAILABLE" or "Set BUSY") then
             Trunk.setBusy(not Dispatch.isBusy(), status)
         end
+        ImGui.Separator()
+        ImGui.Text("NCPD CAREER")
         if ImGui.Button("Cop Stats") then Trunk.showStats(status) end
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.10b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11a package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -406,12 +424,30 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.10b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.11a package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
             status("Career browser | " .. tostring(result))
         end
+        if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
+        if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
+        ImGui.TextWrapped("Test unlocks make all career rewards and partners available until cleared or a save is loaded. Your incident count stays unchanged. Claimed equipment and vehicles are saved normally.")
+        if ImGui.Button("Claim next milestone reward") then careerAction("claim") end
+        if ImGui.CollapsingHeader("Partner assignment (CET fallback)") then
+            local ok, career = pcall(function() return Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem") end)
+            if ok and career and career:Version() == 2 then
+                ImGui.TextWrapped("Selected: " .. tostring(career:GetSelectedPartnerName()))
+                for index = 0, career:PartnerCount() - 1 do
+                    local name = tostring(career:PartnerName(index))
+                    local label = career:IsPartnerUnlocked(index) and ("Assign " .. name) or ("LOCKED: " .. name)
+                    if ImGui.Button(label) then careerAction("partner", index) end
+                end
+                ImGui.TextWrapped("Selection applies at shift start or Request new partner; it does not replace your current partner immediately.")
+            end
+        end
+        ImGui.Separator()
+        ImGui.Text("DISPATCH CONTROLS")
         local repairSeconds = Trunk.repairSeconds()
         if repairSeconds > 0 then ImGui.Text("Vehicle repair: " .. tostring(repairSeconds) .. " s remaining") end
         ImGui.TextWrapped("Dispatch searches within 1 km, then 1.5 km and 2 km. Empty searches retry after 30 seconds. Request a call now to skip the automatic wait.")
@@ -440,7 +476,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.10b files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.11a files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -491,6 +527,9 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Spawn partner") then
             Partner.spawn(onDuty, status)
         end
+        if ImGui.Button("Request new partner") then
+            Partner.replace(onDuty, status)
+        end
         if ImGui.Button("Dismiss partner") then
             Partner.dismiss(status)
         end
@@ -498,6 +537,7 @@ registerForEvent("onDraw", function()
             status(Partner.state())
         end
         ImGui.TextWrapped("Current state: " .. Partner.state())
+        ImGui.TextWrapped("Active profile: " .. Partner.activeProfile())
         ImGui.TextWrapped("Vehicle: " .. Partner.vehicleState())
         ImGui.TextWrapped("Revive: " .. Partner.aidState())
         if ImGui.Button("Log partner AI diagnostics") then
@@ -532,7 +572,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.10b files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.11a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)

@@ -1,57 +1,60 @@
-# Career and optional browser checks
+# Career rewards and partner checks
 
 Run with Python 3 and lupa:
 
     python tests/career/check_career.py
 
-The actual career controller reads the actual core scanner ledger getter. Rank
-boundaries, next milestones, progress, independent dispatch/arrest records,
-late installation with existing progress, six once-only EUR$1000 claims,
-failed transactions, restore persistence and eligibility guards are exercised.
-Neither opening nor refreshing a page grants money.
+The authored career model reads the existing scanner ledger. Tests cover the
+seven rank/reward thresholds, independent dispatch/arrest totals, all 16 reward
+records, legacy cash claim migration, native failure/retry, partial bundles
+across simulated restore, once-only item receipts, existing vehicle ownership
+and confirmation after EnablePlayerVehicle. Rewards never add activity credits.
+The actual core guard recognizes all four reward cars only when player-owned.
 
-The authored browser listener, page renderer, release handlers and browser
-initialization/uninitialization wrappers execute through the shared syntax
-adapter. Native widget constructors, game calls and framework configuration
-are mocked; the base listener and registry logic use pinned BEF sources. Tests inspect actual page strings and registration/callback cleanup,
-including stale pages and a detached player. Other sites remain registered.
+Partner tests exercise 0/20/50/100 eligibility and saved selection, invalid or
+temporarily locked choices, and the actual CET partner.lua spawn/replacement
+module consuming that selection, then its real native RegisterPartner call and
+follower initialization. All four models must receive the existing immortal /
+manual-defeat protection; unknown models and unsafe contexts are rejected.
+Missing models, unavailable career modules,
+rejected deletion and load cleanup do not create duplicates or touch ambient
+actors. Original follow/boarding/revive code paths are retained. Native entity
+creation and character AI are boundaries; no gameplay success is inferred.
 
-The runtime adapter preserves URL literals while stripping source comments.
-Existing arrest/trunk/dispatch regressions run in the full package builder.
+The actual init.lua onDraw handler runs against ImGui boundaries. Tests click
+the shipped test-unlock, clear, claim and partner-assignment buttons. Test mode
+changes eligibility only, expires on restore and preserves genuine receipts.
 
-`contracts/natives.reds` contains UI signatures read from
-In-Question/MOD_Development_Reference (core/ui/baseWidgets and orphans.swift).
-The browser contracts now use the actual CustomInternetSite type and the
-actual listener/controller API ownership in the pinned BEF source snapshot.
-The v0.10a inferred navigation API was incorrect and is not retained.
+The real browser listener, renderer, tab/claim/assignment release callbacks and
+initialization/uninitialization hooks execute through the shared syntax adapter.
+Native widgets/game/context/config are mocked. Tests check page strings, route
+selection, model guards, callback cleanup and stale/detached context behavior.
+Declared panel/text heights are checked for normal pages and the test banner;
+this is not a substitute for real font layout, scaling, hit testing or rendering.
 
-All 22 production redscript files were checked locally against source-derived
-API declarations, with and without the optional browser module. These checks
-and widget mocks do not establish compatibility with the real script cache,
-BEF routing, rendered monitor layout, hit testing or actual save serialization.
-The in-game test must cover opening the homepage entry, navigating and closing
-the site, reward receipts, a second claim attempt and save/load.
-
-
-## v0.10b registration regression
-
-The original navigation shape was wrong: BEF adds LoadPageByAddress to the
-browser controller, not the listener. The corrected controller contract and
-actual pinned base class reject that original call. The listener data is the
-actual CustomInternetSite value type, with the real device/controller fields.
-
-bef_reference.py fetches three pinned public source files from
+bef_reference.py fetches three pinned public BEF source files from
 GreenManNK/Cyberpunk-2077-mod at e2012d2d7778e5101526f9e7115708d2159e6c35 and
-verifies each Git blob hash. Set NCPD_BEF_SOURCE to a local reference directory
-for offline tests. These reference sources are not bundled with the install.
+verifies Git blob hashes. Set NCPD_BEF_SOURCE to their local directory for
+offline tests. These references are test-only and never installed by the ZIP.
+Tests execute the actual base Init/Uninit and registry Register, Unregister,
+GetSitesData, GetWebPage and IsAddressBlocked. Only array iteration is lowered;
+the routing predicates execute unchanged. Registration remains idempotent and
+per-computer, and other sites survive closing the NCPD page.
 
-Tests execute the actual framework base Init/Uninit and the actual registry
-methods Register, Unregister, GetSitesData, GetWebPage and IsAddressBlocked.
-The source adapter lowers only the registry's array iteration; its predicates
-and routing execute unchanged. Native widgets/context/config are boundaries.
+contracts/natives.reds contains source-derived UI signatures. rewards.reds adds
+TDBID.Create, StrBeginsWith and the actual VehicleSystem signatures, from
+orphans.swift and core/systems/vehicleSystem.swift in MOD_Development_Reference.
+The shared offline GameInstance declaration includes its native GetVehicleSystem.
+All 22 production scripts pass local API checks with and without optional BEF,
+including its actual pinned base class. The real game cache is not available.
 
-The production controller initialization and pre-SetWebsiteData registration
-hooks are idempotent. Diagnostics read the actual per-computer registry and
-framework flags. Correct-device routing, wrong-device rejection, blocked or
-disabled navigation, detached-world guards and callback cleanup are checked.
-The new browser state is transient; no career/payment ledgers are modified.
+tools/build_career_release.py runs this suite and the arrest, trunk and dispatch
+regressions, parses all 12 CET modules, verifies protected production files
+against v0.10b, checks core preservation outside IsOwnedPoliceVehicle and
+support preservation outside RegisterPartner, and builds
+the deterministic 44-file install ZIP with a byte/hash manifest. The four new
+vehicle eligibility records are checked; no bulk vehicle unlock API is used.
+
+In-game testing still needs to cover true save serialization, item delivery,
+garage/summon behavior, the three new archetypes' follow/combat/boarding/revive,
+friendly netrunner quickhacks, and the actual monitor UI/input.

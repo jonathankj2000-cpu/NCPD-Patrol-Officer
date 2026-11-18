@@ -1,5 +1,4 @@
--- NCPD Patrol v0.7b: one owned partner with native defeat/revive and boarding.
--- Uses the same officer record and follower setup tested in v0.3a.
+-- NCPD Patrol v0.11a: career-selected partner; existing revive/boarding retained.
 -- Codeware DynamicEntitySystem is used only to create/delete an entity owned by this mod.
 -- Native game AIFollowerRole handles following; all riskier operations are guarded.
 -- No nearby NPC is ever modified.
@@ -8,7 +7,7 @@ local M = {}
 local Boarding = require("boarding")
 local OfficerAI = require("officer_ai")
 local Probe = require("revive_probe")
-local PARTNER_RECORD = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
+local activeProfile = "None"
 local spawnId = nil
 local officer = nil
 local spawnWaiting = false
@@ -79,7 +78,17 @@ local function getSystem()
     return Game.GetDynamicEntitySystem()
 end
 
+local function selectedProfile()
+    local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
+    if not career or career:Version() ~= 2 then error("Install the complete v0.11a career module and restart") end
+    local record, name = tostring(career:GetSelectedPartnerRecord()), tostring(career:GetSelectedPartnerName())
+    local id = TweakDBID.new(record)
+    if not TweakDB:GetRecord(id) then error("Selected partner record missing: " .. record) end
+    return id, name
+end
+
 function M.state() return stateLabel end
+function M.activeProfile() return activeProfile end
 function M.vehicleState() return vehicleFailed and "Vehicle control failed; see diagnostics" or Boarding.state() end
 
 local function stopFollow()
@@ -118,12 +127,13 @@ function M.spawn(onDuty, status)
     if not onDuty then status("Go On Duty before spawning a partner."); return end
     if not loaded() then status("Load a save first."); return end
     if spawnId or spawnWaiting then status("A partner is already active or pending. Dismiss it first."); return end
+    local profileName
     local ok, result = pcall(function()
         local system = getSystem()
         if not system then error("Codeware DynamicEntitySystem not found. Check Codeware installation.") end
         if not system:IsReady() then error("Codeware entity system not ready") end
-        local recordID = TweakDBID.new(PARTNER_RECORD)
-        if not TweakDB:GetRecord(recordID) then error("NCPD partner character record missing: " .. PARTNER_RECORD) end
+        local recordID
+        recordID, profileName = selectedProfile()
         local player = Game.GetPlayer()
         local pos = player:GetWorldPosition()
         local spec = DynamicEntitySpec.new()
@@ -143,6 +153,7 @@ function M.spawn(onDuty, status)
         return
     end
     spawnId = result
+    activeProfile = profileName
     spawnWaiting = true
     Boarding.reset()
     followCommand = nil
@@ -153,7 +164,7 @@ function M.spawn(onDuty, status)
     pollTime = 0
     followTime = 0
     stateLabel = "Spawn requested; waiting for actor"
-    status("NCPD partner called; waiting for arrival.")
+    status("NCPD partner called: " .. activeProfile .. "; waiting for arrival.")
 end
 
 function M.dismiss(status)
@@ -166,6 +177,7 @@ function M.dismiss(status)
     end)
     supportState, supportFailure = 0, false
     if not spawnId then
+        activeProfile = "None"
         officer = nil
         spawnWaiting = false
         Boarding.reset()
@@ -178,6 +190,7 @@ function M.dismiss(status)
     pcall(function() Boarding.cancel(officer); stopFollow() end)
     -- Clear local references first; on failure do not retry indefinitely.
     spawnId = nil
+    activeProfile = "None"
     officer = nil
     spawnWaiting = false
     Boarding.reset()
@@ -205,6 +218,8 @@ function M.replace(onDuty, status)
     local ok, err = pcall(function()
         local system = getSystem()
         if not system or not system:IsReady() then error("DynamicEntitySystem not ready") end
+        -- Resolve the next model before removing a working partner.
+        selectedProfile()
         if spawnId and system:IsManaged(spawnId) then
             pcall(function() Boarding.cancel(officer); stopFollow() end)
             if not system:DeleteEntity(spawnId) then error("Old partner deletion was not accepted; no replacement spawned") end
@@ -230,6 +245,7 @@ function M.reset()
     voiceTime, voiceRevision, voiceLines = 0, 0, 0
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
     spawnId, officer, spawnWaiting, followCommand = nil, nil, false, nil
+    activeProfile = "None"
     timeout, pollTime, followTime = 0, 0, 0
     stateLabel = "Not spawned"
     Boarding.reset()

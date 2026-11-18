@@ -8,6 +8,7 @@ function CeilF(x) return math.ceil(x) end
 function StringToName(x) return x end
 function ArraySize(x) return x.n end
 function ArrayContains(a,v) for i=0,a.n-1 do if a[i]==v then return true end end;return false end
+TDBID={Create=function(_,name) return name end}
 function GetLocalizedTextByKey(key) return key end
 function GetPlayer() return player end
 EngineTime={ToFloat=function(_,value) return value end}
@@ -127,7 +128,7 @@ assert(not Trunk:IsRepairPending() and not Trunk:IsBusy() and Trunk:TakeCommand(
 
 -- Stats read the existing scanner ledger without money/ledger writes.
 reset()
-for _,case in ipairs({{0,10},{9,10},{10,20},{19,20},{20,40},{39,40},{40,60},{80,100},{100,0},{120,0}}) do
+for _,case in ipairs({{0,5},{4,5},{5,10},{9,10},{10,20},{19,20},{20,35},{34,35},{35,50},{50,75},{75,100},{100,0},{120,0}}) do
  Ledger.m_paidActivities={n=case[1]}; Trunk:ShowStats()
  local text=notices[#notices].text
  if case[2]>0 then assert(text:find('Activities: '..case[1]..'/'..case[2]..' |',1,true))

@@ -30,6 +30,7 @@ function NewPatrolNotice() return {} end
 gamedataMappinPhase={CompletedPhase=0,DefaultPhase=1,DiscoveredPhase=2,UndiscoveredPhase=3,Invalid=5}
 gamedataMappinVariant={GangWatchVariant='assault',OutpostVariant='organized',Other='gig',CustomPositionVariant='custom'}
 ItemID={FromTDBID=function(self,id) return id end}
+TDBID={Create=function(self,name) return name end}
 local system={GetAllMappins=function()
     local copy={n=pins.n}; for i=0,pins.n-1 do
         if not pins[i].GetScriptData then pins[i].GetScriptData=function() return nil end end

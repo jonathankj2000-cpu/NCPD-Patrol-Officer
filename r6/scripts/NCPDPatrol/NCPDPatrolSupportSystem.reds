@@ -104,8 +104,9 @@ public class NCPDPatrolSupportSystem extends ScriptableSystem {
 
     public func RegisterPartner(npc: ref<NPCPuppet>) -> Bool {
         let god: ref<GodModeSystem> = GameInstance.GetGodModeSystem(this.GetGameInstance());
+        let career: ref<NCPDPatrolCareerSystem> = NCPDPatrolCareerSystem.Get(this.GetGameInstance());
         if !this.IsDutyEligible() || !this.IsPartnerDownConfigured() || !IsDefined(npc) || !npc.IsAttached() || npc.IsDead() || !IsDefined(god) { return false; };
-        if NotEquals(npc.GetRecordID(), t"Character.cvi_ncpd_police_ranged2_copperhead_ma") { return false; };
+        if !IsDefined(career) || !career.IsSupportedPartnerRecord(npc.GetRecordID()) { return false; };
         if IsDefined(this.m_partner) { return this.m_partner == npc; };
         if !god.AddGodMode(npc.GetEntityID(), gameGodModeType.Immortal, n"NCPDPatrolPartner") { return false; };
         this.m_partner = npc;

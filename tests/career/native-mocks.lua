@@ -10,9 +10,11 @@ function Core:GetGameInstance() return {} end
 function Dispatch:GetGameInstance() return {} end
 function Arrests:GetGameInstance() return {} end
 function Career:GetGameInstance() return {} end
+function Support:GetGameInstance() return {} end
 function BrowserState:GetGameInstance() return {} end
 NCPDPatrolCareerBrowserState={Get=function() return BrowserState end}
 function Core:NotifyCareerReward(amount,threshold) CareerFixture.notices[#CareerFixture.notices+1]={amount=amount,threshold=threshold} end
+function Core:NotifyDispatch(text,duration) CareerFixture.notices[#CareerFixture.notices+1]={text=text,duration=duration} end
 NCPDPatrolSystem={Get=function() return Core end}
 NCPDPatrolDispatchJournalSystem={Get=function() return Dispatch end}
 NCPDPatrolArrestSystem={Get=function() return Arrests end}
@@ -36,12 +38,30 @@ function CareerFixture:Reset(n)
  player.attached=true;player.dead=false;player.combat=false
  wallet=0;paymentOK=true;transactionPresent=true
  Core.m_onDuty=false
- Career.m_claimedMilestones={n=0};Career:OnAttach()
+ Career.m_claimedMilestones={n=0};Career.m_issuedRewards={n=0};Career.m_selectedPartner=0;Career:OnAttach()
+ self.inventory={};self.itemCalls={};self.vehicleCalls={};self.unlockedVehicles={};self.failItems={}
+ self.vehiclePresent=true;self.enableAccepted=true;self.unlockConfirmed=true
  Dispatch.m_paidDispatches={n=3};Dispatch.m_pendingDispatchRewards={n=1}
  Arrests.m_paidSuspects={n=7}
  FrameworkSystem.m_listeners={n=0};FrameworkSystem.m_blockedAddress={n=0}
  BrowserState:OnAttach();self.befEnabled=true;self.befBypass=false
 end
+local rewardTransaction={GiveItem=function(_,target,record,amount)
+ assert(target==player and amount==1 and record~='Items.money')
+ CareerFixture.itemCalls[#CareerFixture.itemCalls+1]=record
+ if not paymentOK or CareerFixture.failItems[record] then return false end
+ CareerFixture.inventory[record]=(CareerFixture.inventory[record] or 0)+amount
+ return true
+end}
+GameInstance.GetTransactionSystem=function() if transactionPresent then return rewardTransaction end end
+local rewardGarage={EnablePlayerVehicle=function(_,record,enable,despawn)
+ assert(enable==true and despawn==false and record:find('Vehicle.',1,true)==1)
+ CareerFixture.vehicleCalls[#CareerFixture.vehicleCalls+1]=record
+ if not CareerFixture.enableAccepted then return false end
+ if CareerFixture.unlockConfirmed then CareerFixture.unlockedVehicles[record]=true end
+ return true
+end,IsVehiclePlayerUnlocked=function(_,record) return CareerFixture.unlockedVehicles[record]==true end}
+GameInstance.GetVehicleSystem=function() if CareerFixture.vehiclePresent then return rewardGarage end end
 function NativeColor() return {Red=0,Green=0,Blue=0,Alpha=0} end
 inkEAnchor={Fill='fill',Centered='center'}
 textHorizontalAlignment={Center='center'}
@@ -96,6 +116,21 @@ function CareerFixture:Text(root)
   for _,child in ipairs(w.children) do walk(child) end
  end
  walk(root);return table.concat(text,'\n')
+end
+function CareerFixture:PageContentHeight(root)
+ local function height(w)
+  local h=w.height or 0
+  if w.fit then
+   h=0
+   for _,child in ipairs(w.children) do
+    if w.kind=='inkHorizontalPanel' then h=math.max(h,height(child)) else h=h+height(child) end
+   end
+  end
+  return h+(w.margin and (w.margin[2]+w.margin[4]) or 0)
+ end
+ local body=root.children[2];local total=0
+ for _,child in ipairs(body.children) do total=total+height(child) end
+ return total
 end
 function CareerFixture:Click(widget,action)
  local cb=widget.callbacks.OnRelease

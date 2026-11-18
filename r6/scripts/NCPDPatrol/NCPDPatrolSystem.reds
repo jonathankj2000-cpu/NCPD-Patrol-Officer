@@ -435,6 +435,10 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         record = vehicle.GetRecord();
         if !IsDefined(record) { return false; };
         return Equals(vehicle.GetRecordID(), t"Vehicle.v_standard2_archer_hella_police")
+            || Equals(vehicle.GetRecordID(), t"Vehicle.v_standard2_villefort_cortes_police")
+            || Equals(vehicle.GetRecordID(), t"Vehicle.v_standard25_thorton_merrimac_police")
+            || Equals(vehicle.GetRecordID(), t"Vehicle.v_standard3_chevalier_emperor_police")
+            || Equals(vehicle.GetRecordID(), t"Vehicle.v_standard3_militech_hellhound_police")
             || StrContains(ToString(record.Player_audio_resource()), "police");
     }
 
