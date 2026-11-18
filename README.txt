@@ -1,4 +1,4 @@
-NCPD PATROL v0.15c - NUMERIC TRUNK MENU AND OFFICER AI
+NCPD PATROL v0.15d - REDSCRIPT COMPILATION FIX
 ========================================================
 Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
@@ -6,9 +6,19 @@ horizontal trunk choices with a two-row numeric game popup. Includes all 17
 cyberpsycho variants, existing VIP ambush/aftermath, tyre repair, career, partner
 revive, backup and arrests. Generated incidents still grant no money/career credit.
 
+V0.15D HOTFIX
+Fixes the two compilation errors reported in the v0.15c game log:
+- Bool comparisons in officer equipment use Equals/NotEquals intrinsics.
+- The trunk popup caller imports the complete Codeware.UI namespace, including
+  the CustomPopup type required by CustomPopupManager.ShowPopup.
+No gameplay or reward changes. Includes the complete v0.15c installation.
+The offline source checker had accepted constructs rejected by the game compiler.
+CI now also checks those observed incompatibilities. This is not a game-cache
+compilation guarantee; confirm that the updated scripts compile in your game.
+
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.15c.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.15d.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

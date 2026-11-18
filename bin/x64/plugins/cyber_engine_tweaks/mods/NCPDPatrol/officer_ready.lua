@@ -4,7 +4,7 @@
 local M = {}
 local function bridge()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolOfficerEquipment")
-    if not system or system:Version()~=1 then error("Install all v0.15c files and restart the game") end
+    if not system or system:Version()~=1 then error("Install all v0.15d files and restart the game") end
     return system
 end
 local function stopOurs(state,actor)

@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.15c loaded. Hold R at the trunk for a two-row patrol menu: 1-7 select, 9 closes. Backup follows V until 10-4. Officer readiness verifies held weapons and uses native inventory equipment if a queued request stalls. Includes all 17 cyberpsycho variants. Install the complete package and restart.")
+    status("v0.15d loaded. Fixes the v0.15c redscript compilation errors in officer equipment and the trunk popup import. Hold R at the trunk for the two-row patrol menu: 1-7 select, 9 closes. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

@@ -1,4 +1,4 @@
-import Codeware.UI.CustomPopupManager
+import Codeware.UI.*
 
 // Independent, transient bridge. No changes to scanner or arrest payments.
 public class NCPDPatrolTrunkSystem extends ScriptableSystem {

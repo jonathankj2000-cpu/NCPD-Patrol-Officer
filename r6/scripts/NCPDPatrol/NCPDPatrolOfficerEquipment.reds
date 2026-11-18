@@ -57,8 +57,8 @@ public class NCPDPatrolOfficerEquipment extends ScriptableSystem {
         let items: array<NPCItemToEquip>;
         let i: Int32 = 0;
         let transaction: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
-        if mode == 0 || (!wanted && mode != 2) || wanted != this.WantsReady() { return 0; };
-        if this.IsReady(actor) == wanted { return 1; };
+        if mode == 0 || (!wanted && mode != 2) || NotEquals(wanted, this.WantsReady()) { return 0; };
+        if Equals(this.IsReady(actor), wanted) { return 1; };
         if !AIHumanComponent.GetScriptContext(actor, context) { return -1; };
         if wanted {
             // GetEquipment only returns items the officer already owns.
@@ -93,7 +93,7 @@ public class NCPDPatrolOfficerEquipment extends ScriptableSystem {
             };
             AIActionHelper.ClearItemsUnequipped(actor);
         };
-        if this.IsReady(actor) == wanted { return 1; };
+        if Equals(this.IsReady(actor), wanted) { return 1; };
         return -1;
     }
     public func GetDiagnostics(actor: ref<NPCPuppet>) -> String {
