@@ -23,4 +23,4 @@ assert '$base: Character.ma_wat_lch_06_cyberpsycho' in tweaks
 assert tweaks.count('Character.NCPDPatrol_Cyberpsycho:')==1
 assert 'lootDrop: LootTables.Empty' in tweaks and 'quest: NPCQuestAffiliation.General' in tweaks
 assert 'SetFact' not in (ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds').read_text()
-print('PASS: exact created cyberpsycho target, lethal/non-lethal confirmation, disappearance never succeeds, journal/tracking/load and cancellation guards; real CET spawn/hostility/nav/cleanup and scanner exclusion; no scanner/career/payments written (native boundaries mocked)')
+print('PASS: distant 500-1000/1500/2000 m dispatch, no spawn/nav query before arrival, travel-to-neutralize journal transition, deadline/car request/site filtering; exact target lethal/non-lethal confirmation, disappearance/cancel/load/cleanup and scanner exclusion; no payment/progress writes (native boundaries mocked)')

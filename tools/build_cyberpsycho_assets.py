@@ -2,7 +2,7 @@
 from pathlib import Path
 import argparse,hashlib,json,shutil,subprocess,tempfile
 ROOT=Path(__file__).resolve().parents[1]
-KEYS={f'NCPDPatrol_Cyberpsycho_{field}' for field in ['Title','Objective','Description','Name']}
+KEYS={f'NCPDPatrol_Cyberpsycho_{field}' for field in ['Title','Objective','Description','Name','ResponseObjective','ResponseDescription']}
 
 def validate(journal,texts):
  root=journal['Data']['RootChunk'];assert root['$type']=='gameJournalResource'
@@ -15,16 +15,23 @@ def validate(journal,texts):
  assert quest['$type']=='gameJournalQuest' and quest['id']=='ncpd_patrol_cyberpsycho' and quest['type']=='MinorQuest'
  assert len(quest['entries'])==1
  phase_handle=quest['entries'][0];phase=data(phase_handle)
- assert phase['$type']=='gameJournalQuestPhase' and phase['id']=='main' and len(phase['entries'])==1
- objective_handle=phase['entries'][0];objective=data(objective_handle)
- assert objective['$type']=='gameJournalQuestObjective' and objective['id']=='neutralize' and not objective['optional']
- assert len(objective['entries'])==1
- description_handle=objective['entries'][0];description=data(description_handle)
- assert description['$type']=='gameJournalQuestDescription' and description['id']=='briefing'
- assert len({v['HandleId'] for v in [root['entry'],entry['entries'][0],handle,phase_handle,objective_handle,description_handle]})==6
- assert {quest['title']['value'],objective['description']['value'],description['description']['value']}==KEYS-{'NCPDPatrol_Cyberpsycho_Name'}
+ assert phase['$type']=='gameJournalQuestPhase' and phase['id']=='main' and len(phase['entries'])==2
+ handles={v['HandleId'] for v in [root['entry'],entry['entries'][0],handle,phase_handle]}
+ keys={quest['title']['value']}
+ for objective_handle,identifier,suffix in zip(phase['entries'],['respond','neutralize'],['Response','']):
+  objective=data(objective_handle)
+  assert objective['$type']=='gameJournalQuestObjective' and objective['id']==identifier and not objective['optional']
+  assert len(objective['entries'])==1
+  description_handle=objective['entries'][0];description=data(description_handle)
+  assert description['$type']=='gameJournalQuestDescription' and description['id']=='briefing'
+  for h in [objective_handle,description_handle]:
+   assert h['HandleId'] not in handles;handles.add(h['HandleId'])
+  assert objective['description']['value']=='NCPDPatrol_Cyberpsycho_'+suffix+'Objective'
+  assert description['description']['value']=='NCPDPatrol_Cyberpsycho_'+suffix+'Description'
+  keys.update([objective['description']['value'],description['description']['value']])
+ assert len(handles)==8 and keys==KEYS-{'NCPDPatrol_Cyberpsycho_Name'}
  tr=texts['Data']['RootChunk'];assert tr['$type']=='JsonResource' and tr['cookingPlatform']=='PLATFORM_PC'
- rows=data(tr['root'])['entries'];assert len(rows)==4 and {r['secondaryKey'] for r in rows}==KEYS
+ rows=data(tr['root'])['entries'];assert len(rows)==6 and {r['secondaryKey'] for r in rows}==KEYS
  assert all(r['femaleVariant'] and int(r['primaryKey'])==0 for r in rows)
  assert 'gameJournalQuestMapPin' not in json.dumps(root)
 

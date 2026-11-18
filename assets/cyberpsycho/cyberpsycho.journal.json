@@ -40,6 +40,34 @@
                             "journalEntryOverrideDataList": [],
                             "entries": [
                               {
+                                "HandleId": "6",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "respond",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "7",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_Cyberpsycho_ResponseDescription"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_Cyberpsycho_ResponseObjective"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              },
+                              {
                                 "HandleId": "4",
                                 "Data": {
                                   "$type": "gameJournalQuestObjective",

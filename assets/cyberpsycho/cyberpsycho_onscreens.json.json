@@ -34,7 +34,7 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_Cyberpsycho_Description",
-              "femaleVariant": "A suspected cyberpsycho has been located in the marked area. Neutralize the threat. Lethal and non-lethal takedowns are accepted. Request police backup if needed.\n\nThe incident closes if you leave the area or end your shift.",
+              "femaleVariant": "The reported cyberpsycho has been located. Neutralize the threat. Lethal and non-lethal takedowns are accepted. Request police backup if needed.\n\nThe incident closes if you leave the area or end your shift.",
               "maleVariant": ""
             },
             {
@@ -42,6 +42,20 @@
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_Cyberpsycho_Name",
               "femaleVariant": "Cyberpsycho",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseObjective",
+              "femaleVariant": "Respond to the reported cyberpsycho incident.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseDescription",
+              "femaleVariant": "Dispatch has received a report of a cyberpsycho in the marked area. Proceed to the scene and locate the threat. Backup remains available.\n\nRespond within 3 minutes. The deadline clears when you reach the incident area.",
               "maleVariant": ""
             }
           ]

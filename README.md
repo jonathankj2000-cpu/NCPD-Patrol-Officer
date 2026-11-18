@@ -1,22 +1,24 @@
 # NCPD Patrol
 
-## v0.13a: cyberpsycho dispatch prototype
+## v0.13b: distant cyberpsycho dispatch
 
-[Download the complete v0.13a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip)
+[Download the complete v0.13b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13b_Distant_Cyberpsycho_Dispatch_TEST.zip)
 
-The first generated encounter test creates **one cyberpsycho**, assigns its own journal objective and resolves that objective when the exact target is **dead, defeated or unconscious**. It uses a private copy of the game's Little China HMG/strong-arms cyberpsycho record and the native hostile-attitude/threat command setup. Backup remains available during the encounter.
+Cyberpsycho dispatch now sends you to a location **500-1000 m away**, expanding to **1.5 km and 2 km** if necessary. The scene marker, notification and journal response objective appear immediately. **No enemy is created beside the player or while travelling.** The target is created near the assigned scene only when you approach within **140 m** and its local placement is validated.
 
-1. Exit the game, extract the **entire ZIP** into the game directory and restart. Include `NCPDPatrol_Cyberpsycho.yaml`, the new Cyberpsycho archive and its `.archive.xl`.
-2. Start a shift. Cancel any existing dispatch, then stand on foot in an open outdoor area outside combat.
-3. In CET > **DISPATCH CONTROLS**, press **TEST: Request cyberpsycho dispatch**. The test looks for a nearby reachable point, normally around 65–85 m ahead or behind you. It refuses the request if no suitable point is found.
-4. Check the scene marker, **Cyberpsycho Response** journal entry and HUD target distance. Fight the target or request your existing backup patrol. Check lethal and non-lethal completion in separate runs.
-5. **Cancel active dispatch** (CET or trunk) clears the encounter. After success the target stays briefly for inspection, then clears when you leave 150 m from the scene or after 120 gameplay seconds. A new incident waits until target cleanup completes.
+The journal has two successive objectives: **respond to the incident**, then **neutralize the cyberpsycho**. The latter activates only after the exact mod-created target is attached and registered. Both death and non-lethal defeat/unconsciousness resolve it. Existing backup remains available. The private HMG/strong-arms cyberpsycho record and combat setup are retained from v0.13a.
 
-This version is a **manual encounter/objective test**. Generated-incident payments and career credit will need a separate integration; this test does not issue either. Existing scanner/dispatch/arrest rewards and career data retain their established behavior. The scene marker is fixed at the spawn location; HUD distance follows the actual target. GPS retains its existing map-open limitation.
+1. Exit the game, extract the **entire ZIP** into the game directory and restart. The updated Cyberpsycho archive is required for the response objective; its native interface is now **2**.
+2. Start a shift and cancel any existing dispatch. Outside combat, press CET > **DISPATCH CONTROLS > TEST: Request cyberpsycho dispatch**. Requesting from your vehicle is supported.
+3. Check that the marker and journal response objective are hundreds of metres away. Drive to the scene. The **three-minute response deadline pauses in menus** and clears on arrival.
+4. On approach, the target spawns near the marked scene and the objective changes to **Neutralize the cyberpsycho**. Test lethal and non-lethal resolution in separate runs, and try your backup patrol.
+5. **Cancel active dispatch** (CET or trunk) also cancels the journey. After success the target remains for inspection until you leave 150 m from the scene or 120 gameplay seconds pass. Another incident waits for target cleanup.
 
-An attached target must remain dead/defeated/unconscious for 0.75 gameplay seconds to resolve the quest. Disappearance never means success. The quest fails after eight gameplay seconds without the target, or five seconds spent more than 350 m from the scene. Ending a shift cancels the encounter; wanted termination fails its journal objective. Loading closes an old active journal entry and forgets previous-world entity IDs. Only the entity created by this controller is deleted.
+Destinations use existing fast-travel world-marker positions as location anchors, with NCART and anchors within 100 m of an unfinished scanner excluded. This does not initiate fast travel. The local spawn search stays within 50 m of the assigned anchor and checks navigation once the area is loaded. If no distant site or suitable local spawn point exists, the request is refused or the assignment fails; it does not fall back to spawning near V. These anchors are a prototype location pool, not a manually validated encounter catalogue.
 
-The prototype adds no crowd-directed rampage logic. Live appearance, equipment, combat AI, backup response and rendered journal behavior require an in-game test. **Log cyberpsycho diagnostics** reports native journal/target state. All 23 production scripts pass source-derived API checks with and without optional BEF; 13 Lua modules parse. The new archive is compiled, round-tripped and extracted with WolvenKit 9.1.1. [Encounter checks](tests/cyberpsycho/README.md) execute the authored controller and actual CET encounter/dispatch/button handlers with native boundaries mocked.
+This remains a manual encounter test. Generated-incident payment and career credit are not yet included. The scene marker stays at the destination; HUD distance follows the target once registered. GPS retains its existing map-open limitation. Leaving the scene or losing the registered target is handled as failure, never successful neutralization. Shift end cancels, wanted termination fails, and loading closes old active journal state without deleting previous-world IDs.
+
+All 23 scripts pass source-derived API checks with and without optional BEF; 13 Lua modules parse. [Encounter checks](tests/cyberpsycho/README.md) execute the actual controller, site selection, deferred spawning, journal transitions, dispatcher and CET controls with native boundaries mocked. WolvenKit 9.1.1 compiles, round-trips and extracts both resources. Live destination coverage, local placement, journal transition and combat still need an in-game test.
 
 ### NCPD personnel portal
 
@@ -55,7 +57,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.13a**. Include the bundled career and Cyberpsycho tweak files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.13b**. Include the bundled career and Cyberpsycho tweak files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.
@@ -70,6 +72,6 @@ Browser Extension remains **optional**. Without it, progression, rewards and par
 
 All 23 production redscript files pass source-derived API checks with and without BEF. All 13 Lua modules parse. The complete 50-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
 
-Existing archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, and partner/backup/arrest behavior are byte-for-byte unchanged from v0.12a. The dispatcher adds mutual exclusion and cancellation routing for the new test incident. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the new cyberpsycho interface is **1**.
+Existing scanner/arrest archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, and partner/backup/arrest behavior are byte-for-byte unchanged from v0.13a. The dispatcher adds mutual exclusion and cancellation routing for the new test incident. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **2**.
 
-[Full instructions](README.txt) · [Previous v0.12a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.12a_Career_Portal_UI_TEST.zip) · [Earlier packages](releases)
+[Full instructions](README.txt) · [Previous v0.13a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip) · [Earlier packages](releases)

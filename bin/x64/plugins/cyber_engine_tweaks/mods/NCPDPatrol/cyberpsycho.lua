@@ -5,10 +5,11 @@ local phase, label = "idle", "No cyberpsycho incident"
 local id, actor, token, origin, command = nil, nil, nil, nil, nil
 local elapsed, poll, resolvedTime, cleanupPoll = 0, 0, 0, 0
 local finalReason, errorReported = nil, false
+local prepareElapsed, searchRadius, assignedDistance = 0, 0, 0
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCyberpsychoSystem")
-    if not system or system:Version() ~= 1 then error("Install all v0.13a Cyberpsycho files and restart") end
+    if not system or system:Version() ~= 2 then error("Install all v0.13b Cyberpsycho files and restart") end
     return system
 end
 local function distance(a,b)
@@ -31,14 +32,20 @@ function M.reset()
     id,actor,token,origin,command=nil,nil,nil,nil,nil
     elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
     finalReason,errorReported=nil,false
+    prepareElapsed,searchRadius,assignedDistance=0,0,0
 end
 function M.diagnostics()
     local ok,result=pcall(function() return native():GetDiagnostics() end)
-    return "phase="..phase.." | entity="..tostring(id and id.hash or "none").." | "
+    return "phase="..phase.." | assigned distance="..tostring(math.floor(assignedDistance)).." m | search radius="..tostring(searchRadius)
+        .." m | entity="..tostring(id and id.hash or "none").." | "
         ..(ok and tostring(result) or tostring(result))
 end
 local function cleanup(status)
-    if not id then phase="idle";actor,command=nil,nil;return true end
+    if not id then
+        phase="idle";actor,command,token,origin=nil,nil,nil,nil
+        report(finalReason or "Cyberpsycho dispatch cleared",status)
+        return true
+    end
     local ok,gone=pcall(function()
         local system=Game.GetDynamicEntitySystem()
         if not system then return false end
@@ -60,9 +67,12 @@ local function cleanup(status)
     report(finalReason or "Test incident cleared",status)
     return true
 end
-function M.finish(patrol,status,reason)
+function M.finish(patrol,status,reason,failed)
     if token then
-        local ok,err=pcall(function() native():Cancel(token,reason or "Assignment cancelled") end)
+        local ok,err=pcall(function()
+            if failed then native():Fail(token,reason or "Incident setup failed")
+            else native():Cancel(token,reason or "Assignment cancelled") end
+        end)
         if not ok and status then status("Cyberpsycho journal | "..tostring(err)) end
     end
     if patrol then pcall(function() patrol:ClearDispatchWaypoints() end) end
@@ -73,24 +83,76 @@ function M.cancel(patrol,status)
     if not M.isActive() then return false end
     return M.finish(patrol,status,"Cyberpsycho test cancelled/cleared")
 end
-local function spawnPoint(player)
+local function chooseDestination(player)
+    local system=Game.GetMappinSystem()
+    if not system then error("Map locations unavailable") end
+    local pins=system:GetAllMappins()
+    local occupied,sites,seen={},{},{}
+    local start=player:GetWorldPosition()
+    -- Native fast-travel markers supply existing world positions, not guessed
+    -- distant navmesh queries. NCART uses a different variant and is excluded.
+    for _,pin in ipairs(pins) do
+        local ok,variant,active,phase,point=pcall(function()
+            return pin:GetVariant(),pin:IsActive(),pin:GetPhase(),pin:GetWorldPosition()
+        end)
+        if ok and finite(point) and (point.x~=0 or point.y~=0 or point.z~=0) then
+            if variant==gamedataMappinVariant.FastTravelVariant then
+                local metres=distance(point,start)
+                if active and metres>=500 and metres<=2000 then
+                    local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
+                    if not seen[key] then
+                        seen[key]=true
+                        sites[#sites+1]={position=Vector4.new(point.x,point.y,point.z,1),distance=metres}
+                    end
+                end
+            elseif (variant==gamedataMappinVariant.GangWatchVariant or variant==gamedataMappinVariant.OutpostVariant)
+                and phase~=gamedataMappinPhase.CompletedPhase then occupied[#occupied+1]=point end
+        end
+    end
+    for _,radius in ipairs({1000,1500,2000}) do
+        local candidates={}
+        for _,site in ipairs(sites) do
+            if site.distance<=radius then
+                local clear=true
+                for _,point in ipairs(occupied) do if distance(site.position,point)<100 then clear=false;break end end
+                if clear then candidates[#candidates+1]=site end
+            end
+        end
+        if #candidates>0 then return candidates[math.random(1,#candidates)],radius end
+    end
+    error("No suitable dispatch location 500-2000 m away. Travel to another area and try again.")
+end
+local function spawnPoint(player,scene)
     local nav=Game.GetAINavigationSystem()
     if not nav then error("Navigation system unavailable") end
-    local start,forward=player:GetWorldPosition(),player:GetWorldForward()
-    if not finite(start) or not finite(forward) then error("Invalid player position/heading") end
-    for _,metres in ipairs({65,85,-65,-85}) do
-        local probe=Vector4.new(start.x+forward.x*metres,start.y+forward.y*metres,start.z,1)
+    local start=player:GetWorldPosition()
+    if not finite(start) or not finite(scene) then error("Invalid incident position") end
+    for _,offset in ipairs({{32,0},{-32,0},{0,32},{0,-32},{28,28},{-28,-28},{28,-28},{-28,28}}) do
+        local probe=Vector4.new(scene.x+offset[1],scene.y+offset[2],scene.z,1)
         local result=nav:FindPointInSphereForCharacter(probe,4,player)
         if result and result.status==worldNavigationRequestStatus.OK and finite(result.point) then
             local point=result.point
-            local range=distance(point,start)
-            if math.abs(point.z-start.z)<=2.5 and range>=35 and range<=100
+            if math.abs(point.z-scene.z)<=2.5 and distance(point,scene)<=50 and distance(point,start)>=25
                 and AINavigationSystem.HasPathFromAtoB(player,start,point) then
                 return Vector4.new(point.x,point.y,point.z+0.2,1)
             end
         end
     end
-    error("No reachable nearby spawn point. Try an open outdoor area on foot.")
+    error("No reachable spawn point in the assigned incident area")
+end
+local function spawnEntity(player,scene)
+    local system=Game.GetDynamicEntitySystem()
+    if not system or not system:IsReady() then error("Codeware DynamicEntitySystem not ready") end
+    if not TweakDB:GetRecord(TweakDBID.new(RECORD)) then error("Cyberpsycho record unavailable") end
+    local point=spawnPoint(player,scene)
+    local spec=DynamicEntitySpec.new()
+    spec.recordID=TweakDBID.new(RECORD)
+    spec.position=point;spec.orientation=player:GetWorldOrientation()
+    spec.persistState=false;spec.persistSpawn=false;spec.alwaysSpawned=false
+    spec.spawnInView=true;spec.active=true
+    local created=system:CreateEntity(spec)
+    if not created or not EntityID.IsDefined(created) then error("Cyberpsycho entity creation was not accepted") end
+    return created
 end
 local function hostile(target)
     local player=Game.GetPlayer()
@@ -115,28 +177,27 @@ function M.request(patrol,status,sound,voice)
         if not player or not player:IsAttached() or player:IsDead() then error("Load a save first") end
         if not patrol or not patrol:IsOnDuty() or patrol:HasWantedLevel() then error("An active, non-wanted shift is required") end
         if patrol:IsDispatchMenuOpen() or player:IsInCombat() then error("Leave game menus and combat before testing") end
-        if Game.GetMountedVehicle(player) then error("Request this encounter on foot in an open outdoor area") end
         local journal=native()
         if not journal:IsReady() then error("Cyberpsycho journal resources missing; install the full package and restart") end
         local system=Game.GetDynamicEntitySystem()
         if not system or not system:IsReady() then error("Codeware DynamicEntitySystem not ready") end
         if not TweakDB:GetRecord(TweakDBID.new(RECORD)) then error("Cyberpsycho record missing; check NCPDPatrol_Cyberpsycho.yaml") end
-        local point=spawnPoint(player)
-        local spec=DynamicEntitySpec.new()
-        spec.recordID=TweakDBID.new(RECORD)
-        spec.position=point;spec.orientation=player:GetWorldOrientation()
-        spec.persistState=false;spec.persistSpawn=false;spec.alwaysSpawned=false
-        spec.spawnInView=true;spec.active=true
-        local created=system:CreateEntity(spec)
-        if not created or not EntityID.IsDefined(created) then error("Cyberpsycho entity creation was not accepted") end
-        id=created;origin=point;phase="spawning"
+        local site,radius=chooseDestination(player)
+        local request=journal:BeginDispatch(site.position)
+        if not request or request==0 then error(journal:GetReason()) end
+        token=request;origin=site.position;phase="responding"
+        id,actor,command,finalReason,errorReported=nil,nil,nil,nil,false
+        prepareElapsed,searchRadius,assignedDistance=0,radius,site.distance
         elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
-        token,actor,command,finalReason,errorReported=nil,nil,nil,nil,false
         M.sound,M.voice=sound==true,voice==true
-        report("Target requested; waiting for the spawned cyberpsycho",status)
+        patrol:ClearDispatchWaypoints()
+        local marker=patrol:PlaceDispatchWaypoint(origin)
+        if not marker or not marker.value or marker.value==0 then error("Scene waypoint creation failed") end
+        patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho reported. Respond to the marked area within 3 minutes. Backup may be requested.",8,M.sound,M.voice)
+        report("Assigned: cyberpsycho response | distance="..tostring(math.floor(site.distance)).." m | search radius="..tostring(radius).." m",status)
     end)
     if not ok then
-        if id then M.finish(patrol,status,"Cyberpsycho setup failed") end
+        if token then M.finish(patrol,status,"Cyberpsycho dispatch setup failed",true) end
         report("Request failed: "..tostring(err),status)
     end
     return ok
@@ -169,7 +230,32 @@ local function update(delta,onDuty,patrol,status,HUD)
     if inMenu then HUD.set("",false);return true end
     if delta<=0 or delta>0.5 then return true end
     elapsed=elapsed+delta;poll=poll+delta
-    if phase=="spawning" then
+    local nativeStage=journal:GetStage()
+    if phase~="resolved" and (journal:GetToken()~=token
+        or (nativeStage~=1 and nativeStage~=2 and not (nativeStage==3 and phase=="active"))) then
+        local reason=journal:GetToken()~=token and "Cyberpsycho session superseded" or journal:GetReason()
+        patrol:NotifyDispatch("NCPD DISPATCH CLOSED: "..tostring(reason),8)
+        M.finish(patrol,status,tostring(reason))
+        HUD.set("",false);return M.isActive()
+    end
+    if phase=="responding" then
+        if journal:CanSpawn(token) then
+            phase="preparing";elapsed,poll=0,0
+            report("On scene; locating cyberpsycho",status)
+        end
+    elseif phase=="preparing" then
+        if poll>=0.5 and journal:CanSpawn(token) then
+            poll=0;prepareElapsed=prepareElapsed+0.5
+            local ok,created=pcall(spawnEntity,Game.GetPlayer(),origin)
+            if ok then
+                id=created;phase="spawning";elapsed,poll=0,0
+                report("On scene; target spawn requested",status)
+            elseif prepareElapsed>=8 then
+                report("Scene setup failed: "..tostring(created),status)
+                M.finish(patrol,status,"No suitable cyberpsycho spawn point at the assigned scene",true)
+            end
+        end
+    elseif phase=="spawning" then
         if poll<0.25 then return true end
         poll=0
         local ok,err=pcall(function()
@@ -181,21 +267,17 @@ local function update(delta,onDuty,patrol,status,HUD)
                 if not journal:IsTargetReady(entity) then return end
                 if not hostile(entity) then return end
                 actor=entity
-                token=journal:BeginTarget(actor)
-                if not token or token==0 then error(journal:GetReason()) end
-                patrol:ClearDispatchWaypoints()
-                local marker=patrol:PlaceDispatchWaypoint(origin)
-                if not marker or not marker.value or marker.value==0 then error("Scene waypoint creation failed") end
+                if not journal:BindTarget(token,actor) then error(journal:GetReason()) end
                 phase="active"
-                patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho reported nearby. Neutralize the threat. Backup may be requested.",8,M.sound,M.voice)
+                patrol:NotifyDispatch("NCPD DISPATCH: On scene. Neutralize the cyberpsycho. Lethal or non-lethal takedowns accepted.",4)
                 report("Assigned: neutralize cyberpsycho | entity="..tostring(id.hash),status)
             end
         end)
         if not ok then
             report("Setup failed: "..tostring(err),status)
-            M.finish(patrol,status,"Cyberpsycho setup failed")
+            M.finish(patrol,status,"Cyberpsycho scene setup failed",true)
         elseif elapsed>=12 and phase=="spawning" then
-            M.finish(patrol,status,"Cyberpsycho spawn/AI attachment timed out")
+            M.finish(patrol,status,"Cyberpsycho spawn/AI attachment timed out",true)
         end
     elseif phase=="active" then
         local stage=journal:GetStage()
@@ -218,7 +300,14 @@ local function update(delta,onDuty,patrol,status,HUD)
             M.finish(patrol,status,"Cyberpsycho scene cleared; ready for another test")
         end
     end
-    if phase=="active" then
+    if phase=="responding" then
+        local metres=distance(Game.GetPlayer():GetWorldPosition(),origin)
+        local seconds=journal:GetRemainingSeconds()
+        HUD.set("NCPD DISPATCH\nCyberpsycho response\nRespond to the incident - "..tostring(math.floor(metres+0.5)).." m"
+            ..string.format("\nResponse deadline: %02d:%02d",math.floor(seconds/60),seconds%60),true)
+    elseif phase=="preparing" or phase=="spawning" then
+        HUD.set("NCPD DISPATCH\nCyberpsycho response\nOn scene - locate the threat",true)
+    elseif phase=="active" then
         local metres=distance(Game.GetPlayer():GetWorldPosition(),journal:GetTargetPosition())
         HUD.set("NCPD DISPATCH\nCyberpsycho response\nNeutralize the cyberpsycho - "..tostring(math.floor(metres+0.5)).." m\nLethal or non-lethal",true)
     elseif phase=="resolved" then

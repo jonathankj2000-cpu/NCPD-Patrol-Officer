@@ -2,8 +2,8 @@
 from pathlib import Path
 import argparse,hashlib,io,json,os,subprocess,sys,tempfile,urllib.request,zipfile
 ROOT=Path(__file__).resolve().parents[1]
-BASE='abdf2d64e3b4fbb72e65c59e14b0720d10f08856'
-NAME='NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip'
+BASE='506b9f785f238d5c31cfbcb189ffba9698f4afb6'
+NAME='NCPD_Patrol_v0.13b_Distant_Cyberpsycho_Dispatch_TEST.zip'
 def run(*args):subprocess.run([*map(str,args)],cwd=ROOT,check=True)
 def blob(data):return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
 def main():
@@ -16,7 +16,9 @@ def main():
   'tests/dispatch_journal/check_journal.py','tests/career/check_career.py','tests/cyberpsycho/check_cyberpsycho.py']
  for test in tests:run(sys.executable,ROOT/test)
  changed={'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua',
-  'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch.lua'}
+  'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho.lua',
+  'r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds',
+  'archive/pc/mod/NCPDPatrol_Cyberpsycho.archive'}
  original=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  keep=[path for path in original if path not in changed]
  run('git','diff','--exit-code',BASE,'--',*keep)
@@ -50,21 +52,24 @@ def main():
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for path in paths:assert z.read(path.relative_to(ROOT).as_posix())==path.read_bytes()
  data=release.read_bytes()
- report={'version':'v0.13a','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
+ report={'version':'v0.13b','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':23,'portable_tests':tests,
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(data),'zip_sha256':hashlib.sha256(data).hexdigest(),'zip_git_blob':blob(data),
-  'encounter':'manual CET cyberpsycho test; one private target at a reachable nearby point',
+  'encounter':'distant manual dispatch; travel before scene-local spawning at arrival',
   'target_record':'Character.NCPDPatrol_Cyberpsycho','base_record':'Character.ma_wat_lch_06_cyberpsycho',
   'record_reference_commit':'0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d',
   'completion':'attached exact target dead, defeated or unconscious for 0.75 gameplay seconds; missing target never succeeds',
   'quest':'quests/minor_quest/ncpd_patrol_cyberpsycho/main/neutralize',
+  'quest_objectives':['respond','neutralize'],'minimum_dispatch_distance_m':500,'search_tiers_m':[1000,1500,2000],
+  'spawn_trigger_distance_m':140,'response_deadline_s':180,'native_cyberpsycho_interface':2,
+  'locations':'native fast-travel world markers, excluding NCART and unfinished scanners within 100 m; navmesh checked after arrival',
   'cleanup':'one reservation until owned entity is no longer managed; distance/time after success or manual clear; no old-world deletion',
   'rewards_and_career':'unchanged; encounter prototype does not issue payment or career credit',
   'cyberpsycho_resources_roundtrip_and_exact_extraction':True,
   'cyberpsycho_resource_sha256':resource_hashes,
-  'existing_scanner_career_partner_backup_arrest_code_unchanged':True,'existing_archives_unchanged':True,
+  'existing_scanner_career_partner_backup_arrest_code_unchanged':True,'existing_scanner_arrest_archives_unchanged':True,
   'actual_game_validation':False,
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
- (ROOT/'releases/NCPD_Patrol_v0.13a_verification.json').write_text(json.dumps(report,indent=2)+'\n')
+ (ROOT/'releases/NCPD_Patrol_v0.13b_verification.json').write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
 if __name__=='__main__':main()

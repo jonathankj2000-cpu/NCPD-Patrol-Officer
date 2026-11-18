@@ -55,7 +55,7 @@ ScriptedPuppet={IsActive=function(_,npc) return npc.active end,
  IsDefeated=function(_,npc) return npc.defeated end,IsUnconscious=function(_,npc) return npc.unconscious end}
 function f:Actor(record,id)
  local a={record=record or 'Character.NCPDPatrol_Cyberpsycho',id=id,attached=true,active=true,
-  dead=false,deadNoPool=false,defeated=false,unconscious=false,pos={x=65,y=0,z=0,w=1},commands={},attitudes={}}
+  dead=false,deadNoPool=false,defeated=false,unconscious=false,pos={x=832,y=0,z=0,w=1},commands={},attitudes={}}
  function a:GetRecordID() return self.record end
  function a:GetEntityID() return self.id end
  function a:GetWorldPosition() return {x=self.pos.x,y=self.pos.y,z=self.pos.z,w=1} end
@@ -103,6 +103,7 @@ local nav={FindPointInSphereForCharacter=function(_,point,radius,target)
 end}
 AINavigationSystem={HasPathFromAtoB=function(target) assert(target==player);return f.pathOK end}
 Game={GetPlayer=GetPlayer,GetDynamicEntitySystem=function() return entities end,
+ GetMappinSystem=function() if f.mapPresent then return {GetAllMappins=function() return f.places end} end end,
  GetMountedVehicle=function() if f.mounted then return {} end end,
  GetAINavigationSystem=function() return nav end,
  FindEntityByID=function(id) if f.actorVisible then return f.actors[id.hash] end end,
@@ -113,6 +114,12 @@ Game={GetPlayer=GetPlayer,GetDynamicEntitySystem=function() return entities end,
   if name=='NCPDPatrolSystem' then return patrol end
  end} end}
 TweakDB={GetRecord=function(_,id) if f.recordOK then return {} end end}
+gamedataMappinVariant.FastTravelVariant='fasttravel';gamedataMappinVariant.GangWatchVariant='assault'
+gamedataMappinVariant.OutpostVariant='organized'
+function f:Place(x,y,z,variant,active,phase)
+ return {GetVariant=function() return variant or 'fasttravel' end,IsActive=function() return active~=false end,
+  GetPhase=function() return phase or 2 end,GetWorldPosition=function() return {x=x,y=y or 0,z=z or 0,w=1} end}
+end
 f.hud={text='',visible=false}
 package.loaded.dispatch_hud={init=function() end,shutdown=function() end,state=function() return 'fixture' end,
  set=function(text,visible) f.hud.text=text;f.hud.visible=visible end}
@@ -123,15 +130,20 @@ function f:Reset()
  self.playerPosition={x=0,y=0,z=0,w=1};self.navOK=true;self.pathOK=true;self.navOverride=nil
  self.markerOK=true;self.createOK=true;self.deleteOK=true;self.deleteDeferred=false
  self.recordOK=true;self.actorVisible=true;self.aiMissing=false
+ self.mapPresent=true
  self.creates={};self.deletes={};self.managed={[990]='ambient'};self.actors={};self.probes={}
  self.notices={};self.markers={};self.logs={};self.scanners={}
+ self.places={self:Place(800)}
  JournalFixture:ResetRuntime(DispatchJournalNative);DispatchRewardFixture:Reset()
  for _,v in ipairs({{root,'gameJournalQuest'},{root..'/main','gameJournalQuestPhase'},
-  {root..'/main/neutralize','gameJournalQuestObjective'},{root..'/main/neutralize/briefing','gameJournalQuestDescription'}}) do
+  {root..'/main/neutralize','gameJournalQuestObjective'},{root..'/main/neutralize/briefing','gameJournalQuestDescription'},
+  {root..'/main/respond','gameJournalQuestObjective'},{root..'/main/respond/briefing','gameJournalQuestDescription'}}) do
   JournalFixture.entries[v[1]]={path=v[1],className=v[2],state=1}
  end
  CyberNative:OnAttach()
 end
 function f:State() return JournalFixture.entries[root].state end
+function f:ResponseState() return JournalFixture.entries[root..'/main/respond'].state end
+function f:ObjectiveState() return JournalFixture.entries[root..'/main/neutralize'].state end
 function f:Advance(seconds) for _=1,math.floor(seconds*4+0.0001) do CyberNative:Tick(0.25) end end
 f:Reset()

@@ -1,7 +1,8 @@
 # Cyberpsycho encounter prototype assets
 
-The archive contains only a private MinorQuest with one objective and four
-localized strings (title, objective, briefing, NPC name). ArchiveXL merges the
+The archive contains a private MinorQuest with response and neutralization
+objectives, each with a briefing, plus title and NPC name (six strings).
+ArchiveXL merges the
 quest under `quests/minor_quest`; the existing scanner archive is retained.
 
 Build with WolvenKit Console 9.1.1 / .NET 10:
@@ -9,7 +10,7 @@ Build with WolvenKit Console 9.1.1 / .NET 10:
     python tools/build_cyberpsycho_assets.py --wk-cli /path/to/WolvenKit.CLI
 
 The builder compiles both CR2W resources, serializes them again, validates the
-quest topology and keys, then packs/extracts the archive and compares exact
+two-objective topology and keys, then packs/extracts the archive and compares exact
 resource bytes. No whole vanilla journal or map-pin asset is bundled.
 The release report records the two extracted resource hashes. WolvenKit 9.1.1
 uses `DateTime.Now` for archive entry timestamps (ArchiveWriter.cs), so archive
