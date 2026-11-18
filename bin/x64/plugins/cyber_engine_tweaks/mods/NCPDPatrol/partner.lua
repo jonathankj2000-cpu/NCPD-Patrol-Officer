@@ -6,6 +6,8 @@
 local M = {}
 local Boarding = require("boarding")
 local OfficerAI = require("officer_ai")
+local Ready = require("officer_ready")
+local readiness = {}
 local Probe = require("revive_probe")
 local activeProfile = "None"
 local spawnId = nil
@@ -153,6 +155,7 @@ function M.spawn(onDuty, status)
         return
     end
     spawnId = result
+    readiness = {}
     activeProfile = profileName
     spawnWaiting = true
     Boarding.reset()
@@ -168,6 +171,8 @@ function M.spawn(onDuty, status)
 end
 
 function M.dismiss(status)
+    Ready.release(readiness, officer)
+    readiness = {}
     Probe.reset()
     voiceTime, voiceRevision, voiceLines = 0, 0, 0
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
@@ -241,6 +246,7 @@ end
 -- A loaded save has already removed non-persistent actors from the old world.
 -- Forget stale IDs without issuing a deletion into the newly loaded world.
 function M.reset()
+    readiness = {}
     Probe.reset()
     voiceTime, voiceRevision, voiceLines = 0, 0, 0
     rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
@@ -302,6 +308,7 @@ function M.update(delta, onDuty, status)
             local previous = supportState
             supportState = system:GetPartnerState()
             if supportState ~= 1 then
+                Ready.release(readiness, officer)
                 Probe.reset()
                 rolePending, roleElapsed, roleAttempts, roleFailed = false, 0, 0, false
                 if previous == 1 then Boarding.cancel(officer); stopFollow() end
@@ -362,6 +369,8 @@ function M.update(delta, onDuty, status)
         if wasBusy and not Boarding.busy() then followTime = 5 end
         local paused = true
         pcall(function() paused = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem"):IsDispatchMenuOpen() end)
+        local patrol = Game.GetScriptableSystemsContainer():Get("NCPDPatrolSystem")
+        Ready.update(readiness, delta, officer, patrol, Boarding.busy() or rolePending, status)
         Probe.update(delta, officer, followCommand, status, function() return support():GetPartnerDiagnostics() end, paused)
         followTime = followTime + delta
         -- Keep the sampled command stable for this one bounded observation.

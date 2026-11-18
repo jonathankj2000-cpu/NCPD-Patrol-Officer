@@ -66,6 +66,9 @@ function M.vipDiagnostics() return VIP.diagnostics() end
 function M.vipAmbushState() return VIP.ambushState() end
 function M.cyberpsychoState() return Cyberpsycho.state() end
 function M.cyberpsychoDiagnostics() return Cyberpsycho.diagnostics() end
+function M.cyberpsychoVariantState() return Cyberpsycho.variantState() end
+function M.cycleCyberpsychoVariant(status) return Cyberpsycho.cycleVariant(status) end
+function M.randomCyberpsychoVariants(status) return Cyberpsycho.randomVariants(status) end
 function M.hudState() return HUD.state() end
 function M.isAutomatic() return automatic end
 function M.isBusy() return busy end

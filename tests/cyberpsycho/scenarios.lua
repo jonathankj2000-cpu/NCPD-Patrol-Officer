@@ -192,3 +192,48 @@ pressed='TEST: Request cyberpsycho dispatch';callbacks.onDraw()
 assert(labels[pressed] and Dispatch.isActive() and #f.creates==0 and c:GetStage()==1)
 pressed='Cancel active dispatch';callbacks.onDraw()
 assert(labels[pressed] and not Dispatch.isActive() and f:State()==1)
+
+-- Shipped manual controls select the next dispatch, without replacing a target.
+local Catalog=require('cyberpsycho_variants')
+pressed='TEST: Next cyberpsycho variant';callbacks.onDraw()
+assert(labels[pressed] and Cyber.variantState()==Catalog.label(1))
+pressed='Use random cyberpsycho variants';callbacks.onDraw()
+assert(labels[pressed] and Cyber.variantState():find('Random',1,true))
+-- Every admitted private clone uses only the selected actor for resolution.
+local entries=Catalog.all();assert(#entries==17)
+for index,entry in ipairs(entries) do
+ for _,outcome in ipairs({'dead','defeated','unconscious'}) do
+  fresh();local t=c:BeginVariant(site,entry.record);assert(t>0 and c:IsKnownVariant(entry.record))
+  assert(not c:IsKnownVariant(entry.base),'original quest NPC admitted as private clone')
+  f.playerPosition.x=700;c:Tick(.25)
+  local other=entries[index%#entries+1]
+  assert(not c:BindTarget(t,f:Actor(other.record)),'wrong catalog variant admitted')
+  local npc=f:Actor(entry.record)
+  assert(c:BindTarget(t,npc))
+  assert(c:BeginVariant(site,other.record)==0 and c:IsTargetRecord(npc),'failed request changed active identity')
+  npc[outcome]=true;f:Advance(.75);assert(c:GetStage()==3 and f:State()==3)
+  assert(f.managed[990]=='ambient' and DispatchRewardFixture.wallet==0)
+ end
+ -- Cycle the actual CET preference and verify deferred creation uses that clone.
+ fresh();for _=1,index do Cyber.cycleVariant(status) end
+ assert(Cyber.variantState()==entry.label)
+ request();assert(c.m_record==entry.record and #f.creates==0)
+ -- Changing NEXT preference while travelling cannot swap this assignment.
+ Cyber.cycleVariant(status);arrive()
+ assert(f.creates[1].recordID==entry.record and f.actors[1001].record==entry.record)
+ Cyber.cancel(f.patrol,status)
+end
+fresh();assert(c:BeginVariant(site,'Character.unrelated')==0 and f:State()==1)
+-- Random mode skips missing base/private definitions and avoids adjacent repeats.
+fresh();local previous
+for _=1,40 do
+ request();assert(c.m_record~=previous,'random pool repeated previous variant')
+ previous=c.m_record;assert(Cyber.cancel(f.patrol,status))
+end
+fresh();f.unavailable[entries[2].record]=true
+for _=1,40 do assert(Catalog.choose(nil,nil).record~=entries[2].record) end
+f.unavailable[entries[2].record]=nil;f.unavailable[entries[2].base]=true
+assert(not pcall(Catalog.choose,2,nil),'missing original base was accepted')
+for i=2,#entries do f.unavailable[entries[i].record]=true end
+assert(Catalog.choose(nil,entries[1].record).record==entries[1].record,'singleton fallback failed')
+f.unavailable[entries[1].record]=true;assert(not pcall(Catalog.choose,nil,nil))

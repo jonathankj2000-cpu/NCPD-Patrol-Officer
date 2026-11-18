@@ -1,6 +1,7 @@
 -- One non-persistent patrol car and two officers per scene.
 -- All entity IDs below originate in this module's own CreateEntity calls.
 local Crew = require("officer_ai")
+local Ready = require("officer_ready")
 local M = {}
 local CAR = "Vehicle.v_standard2_archer_hella_police"
 local OFFICER = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
@@ -39,7 +40,10 @@ end
 local function cleanup(support, status)
     if car and drive then pcall(function() car:GetAIComponent():StopExecutingCommand(drive, false) end) end
     drive = nil
-    for _, unit in ipairs(units) do pcall(stopUnit, unit) end
+    for _, unit in ipairs(units) do
+        if unit.readiness then Ready.release(unit.readiness, unit.actor) end
+        pcall(stopUnit, unit)
+    end
     local remaining = {}
     local hasSystem, system = pcall(function() return Game.GetDynamicEntitySystem() end)
     if not hasSystem then system = nil end
@@ -233,6 +237,7 @@ local function updateActive(delta, support, patrol, status)
                 unit.command, unit.onFoot = nil, true
             elseif not Game.GetMountedVehicle(unit.actor) then
                 if not unit.onFoot then
+                    unit.readiness = {}
                     unit.command = nil
                     Crew.follower(unit.actor)
                     local point = Vector4.new(anchor.x + (index == 1 and 3 or -3), anchor.y, anchor.z, 1)
@@ -242,6 +247,7 @@ local function updateActive(delta, support, patrol, status)
                 if not unit.holding and distance(unit.actor:GetWorldPosition(), anchor) <= 7 then
                     stopUnit(unit); unit.command = Crew.hold(unit.actor); unit.holding = true
                 end
+                Ready.update(unit.readiness, delta, unit.actor, patrol, false, status)
             else ready = false end
         end
         if ready and not notified then

@@ -1,5 +1,17 @@
 # NCPD Patrol
 
+## v0.15a: officer readiness and 17 cyberpsycho variants
+
+[Download the complete v0.15a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.15a_Officer_Readiness_Cyberpsycho_Variants_TEST.zip)
+
+Your on-foot partner and on-foot backup mirror V's drawn weapon outside combat. They use native primary-weapon equip/holster commands. Holstering waits briefly for a calm state; native alerted/combat behavior takes priority when V holsters. Readiness waits during boarding, vehicle use, downing and revive recovery. It does not change follower roles, movement orders, targets or combat states. [Readiness checks and references](tests/officer_readiness/README.md).
+
+Cyberpsycho dispatch chooses among **17 verified source records from the base game's Cyberpsycho Sightings**, including both armored exos, netrunners, snipers, melee/mantis and ranged variants. Each is a private clone; original quest actors and records are untouched. Random mode avoids adjacent repeats when more than one variant is available. In CET, use **TEST: Next cyberpsycho variant**, then **TEST: Request cyberpsycho dispatch** to force a particular test. **Use random cyberpsycho variants** restores random mode. Selection changes the next assignment only. The native journal admits only that assignment's exact private record.
+
+[Variant IDs and source provenance](assets/cyberpsycho/variants.json) record all 17 originals and source blobs. This covers the Sighting targets, not unrelated story bosses such as Adam Smasher. The Bloody Ritual clone receives normal aggressive reactions instead of its original no-reaction intro. All clones use unaffiliated hostile reactions, retaining inherited templates, equipment, stats and abilities. Exo pathfinding, independent boss initialization, appearance and combat variety require live tests; use open areas for the large variants.
+
+Install the **entire ZIP** and restart, including **NCPDPatrol_Cyberpsycho.yaml** and updated redscript. Cyberpsycho interface is now **3**, VIP remains **2**. The v0.14b ambush/aftermath and confirmed tyre repair are preserved byte-for-byte, as are existing progression and payments. Eight portable suites pass, all 17 Lua modules parse, and all 24 scripts pass the offline source/API checks with/without optional BEF. This is not a game-cache or gameplay validation.
+
 ## v0.14b: closer ambush and retained aftermath
 
 [Download the complete v0.14b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.14b_Close_VIP_Ambush_TEST.zip)
@@ -81,7 +93,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.14b**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.15a**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.
@@ -94,8 +106,8 @@ Browser Extension remains **optional**. Without it, progression, rewards and par
 
 [Automated checks](tests/career/README.md) execute authored reward/progression code, partner spawning/replacement, the real CET test-button handlers and all three computer pages. Portal checks exercise the native viewport lookup helpers, layout bounds at five viewport sizes, routes, hover feedback, callback cleanup, stale pages, missing viewports and detached devices. They use the actual pinned BEF base/registry with native game/widget boundaries mocked. Existing reward/save/partner/arrest/trunk/dispatch regressions also pass.
 
-All 24 production redscript files pass source-derived API checks with and without BEF. All 15 Lua modules parse. The complete 56-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
+All 24 production redscript files pass source-derived API checks with and without BEF. All 17 Lua modules parse. The complete 58-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
 
-Existing scanner/arrest archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, and partner/backup/arrest behavior are byte-for-byte unchanged from v0.13b. The dispatcher adds mutual exclusion and cancellation routing for VIP transport; vehicle repair adds tyre rechecks. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **2**; VIP is **2**.
+Existing archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, VIP/ambush and tyre repair are preserved from v0.14b. Partner/backup add readiness equipment requests; cyberpsycho dispatch adds the verified catalog and exact selected-record admission. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **3**; VIP is **2**.
 
 [Full instructions](README.txt) · [Previous v0.13a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip) · [Earlier packages](releases)

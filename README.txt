@@ -1,13 +1,13 @@
-NCPD PATROL v0.14b - CLOSE VIP AMBUSH AND SCENE RETENTION
+NCPD PATROL v0.15a - OFFICER READINESS AND CYBERPSYCHO VARIANTS
 ========================================================
-Full installation package. Adds a two-objective protected-witness transport
-and one optional attacker-car encounter per trip. Includes the working v0.13b
-cyberpsycho dispatch and all existing career, partner, backup and arrest features.
+Full installation package. Adds partner/backup weapon-readiness mirroring
+and 17 verified private cyberpsycho variants. Includes all v0.14b VIP ambush,
+aftermath, tyre repair, career, partner revive, backup and arrest behavior.
 Generated incidents do not issue money or career credit in this prototype.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.14b.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.15a.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
@@ -20,6 +20,38 @@ Codeware, redscript, TweakXL and ArchiveXL. Frameworks are not bundled.
 For the computer page, the main Browser Extension Framework 0.9.7 is optional:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Without BEF, use CET's career/reward/partner controls. The rest of the mod works.
+
+OFFICER READINESS TEST
+1. Start a shift with your partner on foot. Draw your weapon: the partner should
+   draw their own primary weapon. Holster it: in a calm state, the partner should
+   holster after a short delay. Fists/empty hands do not count as a drawn weapon.
+2. Approach a scanner with V's gun drawn. The partner should have their own gun
+   ready before combat starts. Once alerted or in combat, native AI takes over;
+   holstering V's weapon must not holster a fighting officer's weapon.
+3. Call backup, let them park and get out, then repeat. Each officer has separate
+   readiness state. No synchronization is forced while either V or that officer
+   is mounted. Existing vehicle combat remains native.
+4. Check boarding and partner down/revive: readiness yields to those actions and
+   resumes after follower recovery. Movement/follow/hold orders are preserved.
+   Unsupported gear API calls disable readiness for that actor and log once;
+   following/boarding/combat remain available. A replacement gets fresh state.
+
+CYBERPSYCHO VARIANT TEST
+Random mode uses 17 verified original Sighting records, as PRIVATE clones.
+It avoids the previous variant where multiple records are available. The pool
+includes two armored exos, netrunners, snipers, melee/mantis and ranged fighters.
+In CET > DISPATCH CONTROLS, TEST: Next cyberpsycho variant cycles the next choice.
+Then use TEST: Request cyberpsycho dispatch. Use random cyberpsycho variants
+restores random mode. Changing the next preference never swaps an active target.
+Travel and completion are unchanged: actual death, defeat or unconsciousness of
+the exact spawned/selected actor resolves the assignment. Original quest NPCs,
+ambient deaths and other variants cannot complete it. The Bloody Ritual copy
+uses aggressive reactions without requiring its original intro. Private clones
+use unaffiliated hostile reactions; inherited equipment/stats/abilities remain.
+Large exo placement/pathfinding and all appearances/abilities need in-game tests.
+Use open locations for exos. Story bosses such as Smasher are not in this pool.
+Update ALL Lua, native scripts AND NCPDPatrol_Cyberpsycho.yaml; native CP API is 3.
+No new archive/dependency is needed beyond the files already bundled in the ZIP.
 
 VIP TRANSPORT TEST (MANUAL FIRST VERSION)
 1. Start a shift, clear any active dispatch, and use CET > DISPATCH CONTROLS >
@@ -218,7 +250,7 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.14b. Open all three career pages. Check that the content fills
+1. Confirm v0.15a. Open all three career pages. Check that the content fills
    the browser, text stays readable and the sidebar/hover/click targets work.
 2. Note your actual incident count and rank. Enable test unlocks and refresh;
    access changes while those real values remain unchanged. Check the seven
@@ -245,7 +277,7 @@ hover and all callback cleanup, including stale pages and detached devices.
 Offline font/layout previews are not in-game screenshots or hit-testing.
 
 All 24 redscript files pass source-derived API checks with BEF installed and
-absent; 15 Lua modules parse. The full 56-file ZIP is checked byte-for-byte.
+absent; 17 Lua modules parse. The full 58-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
 Camera/retention tests cover FOV/aspect, looking back, scene-volume edges,
 missing camera data, delayed notification, last seated kill/down, timer pauses,

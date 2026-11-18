@@ -1,10 +1,206 @@
-# Own record only; inherits the verified Little China HMG/strong-arms psycho.
-# No original quest facts, spawn points or original character records are edited.
+# Private cyberpsycho clones; original quests, actors and records are untouched.
+# Verified source IDs: assets/cyberpsycho/variants.json
+
 Character.NCPDPatrol_Cyberpsycho:
   $base: Character.ma_wat_lch_06_cyberpsycho
   quest: NPCQuestAffiliation.General
   priority: SpawnableObjectPriority.Regular
+  savable: false
   baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_bls_ina_se1_07_cyberpsycho_1:
+  $base: Character.ma_bls_ina_se1_07_cyberpsycho_1
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_bls_ina_se1_08_cyberpsycho:
+  $base: Character.ma_bls_ina_se1_08_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_bls_ina_se1_22_psycho:
+  $base: Character.ma_bls_ina_se1_22_psycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_cct_dtn_03_cyberpsycho:
+  $base: Character.ma_cct_dtn_03_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_cct_dtn_07_cyberpsycho:
+  $base: Character.ma_cct_dtn_07_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_hey_spr_04_cyberpsycho:
+  $base: Character.ma_hey_spr_04_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_hey_spr_06_cyberpsycho:
+  $base: Character.ma_hey_spr_06_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_pac_cvi_08_psycho:
+  $base: Character.ma_pac_cvi_08_psycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_pac_cvi_15_cyberpsycho:
+  $base: Character.ma_pac_cvi_15_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_std_arr_06_cyberpsycho:
+  $base: Character.ma_std_arr_06_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_std_rcr_11_cyberpsycho:
+  $base: Character.ma_std_rcr_11_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_wat_kab_02_cyberpsycho:
+  $base: Character.ma_wat_kab_02_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_wat_kab_08_cyberpsycho:
+  $base: Character.ma_wat_kab_08_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_wat_nid_03_shard_psycho:
+  $base: Character.ma_wat_nid_03_shard_psycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_wat_nid_15_psycho:
+  $base: Character.ma_wat_nid_15_psycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_CP_ma_wat_nid_22_monk:
+  $base: Character.ma_wat_nid_22_monk
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  savable: false
+  baseAttitudeGroup: hostile
+  reactionPreset: ReactionPresets.Ganger_Aggressive
+  affiliation: Factions.Unaffiliated
   displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
   fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
   lootDrop: LootTables.Empty

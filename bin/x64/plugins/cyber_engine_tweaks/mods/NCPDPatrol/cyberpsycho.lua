@@ -1,6 +1,7 @@
 -- Manual encounter prototype. IDs originate only in this module's CreateEntity.
 local M = {}
-local RECORD = "Character.NCPDPatrol_Cyberpsycho"
+local Variants = require("cyberpsycho_variants")
+local selected, testVariant, previousVariant = nil, nil, nil
 local phase, label = "idle", "No cyberpsycho incident"
 local id, actor, token, origin, command = nil, nil, nil, nil, nil
 local elapsed, poll, resolvedTime, cleanupPoll = 0, 0, 0, 0
@@ -9,7 +10,7 @@ local prepareElapsed, searchRadius, assignedDistance = 0, 0, 0
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCyberpsychoSystem")
-    if not system or system:Version() ~= 2 then error("Install all v0.13b Cyberpsycho files and restart") end
+    if not system or system:Version() ~= 3 then error("Install all v0.15a Cyberpsycho files and restart") end
     return system
 end
 local function distance(a,b)
@@ -26,6 +27,15 @@ local function report(text,status)
 end
 function M.state() return label end
 function M.isActive() return phase~="idle" end
+function M.variantState() return Variants.label(testVariant) end
+function M.cycleVariant(status)
+    testVariant=(testVariant or 0)%Variants.count()+1
+    if status then status("Cyberpsycho | Next dispatch: "..M.variantState()) end
+end
+function M.randomVariants(status)
+    testVariant=nil
+    if status then status("Cyberpsycho | Random variants enabled") end
+end
 function M.reset()
     -- Save/load forgets the previous world. Never delete its old entity IDs.
     phase,label="idle","No cyberpsycho incident"
@@ -33,11 +43,12 @@ function M.reset()
     elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
     finalReason,errorReported=nil,false
     prepareElapsed,searchRadius,assignedDistance=0,0,0
+    selected,testVariant,previousVariant=nil,nil,nil
 end
 function M.diagnostics()
     local ok,result=pcall(function() return native():GetDiagnostics() end)
     return "phase="..phase.." | assigned distance="..tostring(math.floor(assignedDistance)).." m | search radius="..tostring(searchRadius)
-        .." m | entity="..tostring(id and id.hash or "none").." | "
+        .." m | entity="..tostring(id and id.hash or "none").." | variant="..tostring(selected and selected.label or "none").." | "
         ..(ok and tostring(result) or tostring(result))
 end
 local function cleanup(status)
@@ -143,10 +154,10 @@ end
 local function spawnEntity(player,scene)
     local system=Game.GetDynamicEntitySystem()
     if not system or not system:IsReady() then error("Codeware DynamicEntitySystem not ready") end
-    if not TweakDB:GetRecord(TweakDBID.new(RECORD)) then error("Cyberpsycho record unavailable") end
+    if not selected or not TweakDB:GetRecord(TweakDBID.new(selected.record)) then error("Selected cyberpsycho record unavailable") end
     local point=spawnPoint(player,scene)
     local spec=DynamicEntitySpec.new()
-    spec.recordID=TweakDBID.new(RECORD)
+    spec.recordID=TweakDBID.new(selected.record)
     spec.position=point;spec.orientation=player:GetWorldOrientation()
     spec.persistState=false;spec.persistSpawn=false;spec.alwaysSpawned=false
     spec.spawnInView=true;spec.active=true
@@ -181,11 +192,12 @@ function M.request(patrol,status,sound,voice)
         if not journal:IsReady() then error("Cyberpsycho journal resources missing; install the full package and restart") end
         local system=Game.GetDynamicEntitySystem()
         if not system or not system:IsReady() then error("Codeware DynamicEntitySystem not ready") end
-        if not TweakDB:GetRecord(TweakDBID.new(RECORD)) then error("Cyberpsycho record missing; check NCPDPatrol_Cyberpsycho.yaml") end
+        selected=Variants.choose(testVariant,previousVariant)
         local site,radius=chooseDestination(player)
-        local request=journal:BeginDispatch(site.position)
+        local request=journal:BeginVariant(site.position,TweakDBID.new(selected.record))
         if not request or request==0 then error(journal:GetReason()) end
         token=request;origin=site.position;phase="responding"
+        previousVariant=selected.record
         id,actor,command,finalReason,errorReported=nil,nil,nil,nil,false
         prepareElapsed,searchRadius,assignedDistance=0,radius,site.distance
         elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
@@ -194,7 +206,7 @@ function M.request(patrol,status,sound,voice)
         local marker=patrol:PlaceDispatchWaypoint(origin)
         if not marker or not marker.value or marker.value==0 then error("Scene waypoint creation failed") end
         patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho reported. Respond to the marked area within 3 minutes. Backup may be requested.",8,M.sound,M.voice)
-        report("Assigned: cyberpsycho response | distance="..tostring(math.floor(site.distance)).." m | search radius="..tostring(radius).." m",status)
+        report("Assigned: cyberpsycho response | variant="..selected.label.." | distance="..tostring(math.floor(site.distance)).." m | search radius="..tostring(radius).." m",status)
     end)
     if not ok then
         if token then M.finish(patrol,status,"Cyberpsycho dispatch setup failed",true) end

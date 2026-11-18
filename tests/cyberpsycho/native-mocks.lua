@@ -80,7 +80,9 @@ local entities={}
 function entities:IsReady() return f.entityReady end
 function entities:IsManaged(id) return f.managed[id.hash]==true end
 function entities:CreateEntity(spec)
- assert(spec.recordID=='Character.NCPDPatrol_Cyberpsycho')
+ local known=false
+ for _,entry in ipairs(require('cyberpsycho_variants').all()) do if entry.record==spec.recordID then known=true end end
+ assert(known,'non-catalog cyberpsycho created')
  assert(spec.persistSpawn==false and spec.persistState==false and spec.alwaysSpawned==false and spec.active and spec.spawnInView)
  f.creates[#f.creates+1]=spec
  if not f.createOK then return {hash=0} end
@@ -113,7 +115,7 @@ Game={GetPlayer=GetPlayer,GetDynamicEntitySystem=function() return entities end,
   if name=='NCPDPatrolDispatchJournalSystem' then return DispatchJournalBridge end
   if name=='NCPDPatrolSystem' then return patrol end
  end} end}
-TweakDB={GetRecord=function(_,id) if f.recordOK then return {} end end}
+TweakDB={GetRecord=function(_,id) if f.recordOK and not (f.unavailable and f.unavailable[id]) then return {} end end}
 gamedataMappinVariant.FastTravelVariant='fasttravel';gamedataMappinVariant.GangWatchVariant='assault'
 gamedataMappinVariant.OutpostVariant='organized'
 function f:Place(x,y,z,variant,active,phase)
@@ -130,6 +132,7 @@ function f:Reset()
  self.playerPosition={x=0,y=0,z=0,w=1};self.navOK=true;self.pathOK=true;self.navOverride=nil
  self.markerOK=true;self.createOK=true;self.deleteOK=true;self.deleteDeferred=false
  self.recordOK=true;self.actorVisible=true;self.aiMissing=false
+ self.unavailable={}
  self.mapPresent=true
  self.creates={};self.deletes={};self.managed={[990]='ambient'};self.actors={};self.probes={}
  self.notices={};self.markers={};self.logs={};self.scanners={}

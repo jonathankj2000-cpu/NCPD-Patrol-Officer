@@ -1,0 +1,176 @@
+{
+  "reference_repository": "CDPR-Modding-Documentation/Cyberpunk-Tweaks",
+  "reference_commit": "0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d",
+  "variants": [
+    {
+      "record": "Character.NCPDPatrol_Cyberpsycho",
+      "base": "Character.ma_wat_lch_06_cyberpsycho",
+      "label": "Heavy gunner / strong arms - Little China",
+      "parent": "Character.afterlife_rare_gunner3_hmg_mb_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_lch.tweak",
+      "source_blob": "a265fa6d33f50dbb99489b8bbd14d5eb280e22a2",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_bls_ina_se1_07_cyberpsycho_1",
+      "base": "Character.ma_bls_ina_se1_07_cyberpsycho_1",
+      "label": "Armored exo - Badlands",
+      "parent": "Character.Exo_NPC_Base",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_bls_ina.tweak",
+      "source_blob": "70bcecf40cbe949c51b50632ca67d62198c85652",
+      "exo": true,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_bls_ina_se1_08_cyberpsycho",
+      "base": "Character.ma_bls_ina_se1_08_cyberpsycho",
+      "label": "Shotgunner - Badlands",
+      "parent": "Character.generic_shotgun_fshotgun2_palica_ma",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_bls_ina.tweak",
+      "source_blob": "70bcecf40cbe949c51b50632ca67d62198c85652",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_bls_ina_se1_22_psycho",
+      "base": "Character.ma_bls_ina_se1_22_psycho",
+      "label": "Sniper - Badlands",
+      "parent": "Character.aldecaldos_grunt2_sniper2_sor22_wa_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_bls_ina.tweak",
+      "source_blob": "70bcecf40cbe949c51b50632ca67d62198c85652",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_cct_dtn_03_cyberpsycho",
+      "base": "Character.ma_cct_dtn_03_cyberpsycho",
+      "label": "Shotgunner - Downtown",
+      "parent": "Character.adelcaldos_grunt2_ranged2_sidewinder_ma",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_cct_dtn.tweak",
+      "source_blob": "7642cd8cc2783b5c5fd2123452d84adcd204390f",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_cct_dtn_07_cyberpsycho",
+      "base": "Character.ma_cct_dtn_07_cyberpsycho",
+      "label": "Katana / optical camo - Downtown",
+      "parent": "Character.tyger_claws_martial_fmelee2_katana_ma_rare",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_cct_dtn.tweak",
+      "source_blob": "7642cd8cc2783b5c5fd2123452d84adcd204390f",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_hey_spr_04_cyberpsycho",
+      "base": "Character.ma_hey_spr_04_cyberpsycho",
+      "label": "Fast ranged - Wellsprings A",
+      "parent": "Character.valentinos_grunt2_ranged2_overture_wa",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_hey_spr.tweak",
+      "source_blob": "77e59713f54288e7404313bf2f0d3640fe5047b4",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_hey_spr_06_cyberpsycho",
+      "base": "Character.ma_hey_spr_06_cyberpsycho",
+      "label": "Fast ranged - Wellsprings B",
+      "parent": "Character.generic_merc_ranged2_ajax_ma",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_hey_spr.tweak",
+      "source_blob": "77e59713f54288e7404313bf2f0d3640fe5047b4",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_pac_cvi_08_psycho",
+      "base": "Character.ma_pac_cvi_08_psycho",
+      "label": "Shotgunner - Coastview",
+      "parent": "Character.militech_soldier3_shotgun3_crusher_mah_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_pac_cvi.tweak",
+      "source_blob": "c4758d95d0990684f60af6a0eb7ec78ae06b4c93",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_pac_cvi_15_cyberpsycho",
+      "base": "Character.ma_pac_cvi_15_cyberpsycho",
+      "label": "Netrunner - Coastview",
+      "parent": "Character.voodooboys_netrunner2_netrunner2_lexington_ma_rare",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/combat_events/coastview.tweak",
+      "source_blob": "28000f411a4ecb4a1edccb7043a2105aa9610aee",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_std_arr_06_cyberpsycho",
+      "base": "Character.ma_std_arr_06_cyberpsycho",
+      "label": "Netrunner - Arroyo",
+      "parent": "Character.voodooboys_netrunner2_netrunner2_lexington_wa_rare",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_std_arr.tweak",
+      "source_blob": "19fb37ab2a685584860bab16139fa30c387e2015",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_std_rcr_11_cyberpsycho",
+      "base": "Character.ma_std_rcr_11_cyberpsycho",
+      "label": "Armored exo - Rancho Coronado",
+      "parent": "Character.Exo_NPC_Base",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_std_rcr.tweak",
+      "source_blob": "474283de358188a2c53b1b8ca05e015df393f3bb",
+      "exo": true,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_wat_kab_02_cyberpsycho",
+      "base": "Character.ma_wat_kab_02_cyberpsycho",
+      "label": "Sniper - Kabuki",
+      "parent": "Character.arasaka_sniper_sniper3_nekomata_ma_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_kab.tweak",
+      "source_blob": "bc0ae6a06f5dac093c3ef1d932ac962fdb1027cb",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_wat_kab_08_cyberpsycho",
+      "base": "Character.ma_wat_kab_08_cyberpsycho",
+      "label": "Fast melee / strong arms - Kabuki",
+      "parent": "Character.maelstrom_fast_fmelee3_mantis_wa_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_kab.tweak",
+      "source_blob": "bc0ae6a06f5dac093c3ef1d932ac962fdb1027cb",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_wat_nid_03_shard_psycho",
+      "base": "Character.ma_wat_nid_03_shard_psycho",
+      "label": "Fast melee - Northside",
+      "parent": "Character.maelstrom_fast_fmelee2_machete_ma_rare",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_nid.tweak",
+      "source_blob": "1a4e5e4efa752e963f4f5537bd332cbd9b30c851",
+      "exo": false,
+      "reaction_override": false
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_wat_nid_15_psycho",
+      "base": "Character.ma_wat_nid_15_psycho",
+      "label": "Mantis blades - Northside",
+      "parent": "Character.maelstrom_fast_fmelee3_mantis_wa_elite",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_nid_15.tweak",
+      "source_blob": "06e8be6c552031376319cf6b1a2e29cda00f19a9",
+      "exo": false,
+      "reaction_override": true
+    },
+    {
+      "record": "Character.NCPDPatrol_CP_ma_wat_nid_22_monk",
+      "base": "Character.ma_wat_nid_22_monk",
+      "label": "Rifleman - Northside",
+      "parent": "Character.maelstrom_grunt2_ranged2_ajax_ma",
+      "source_path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/quest/minor_activities/ma_wat_nid.tweak",
+      "source_blob": "1a4e5e4efa752e963f4f5537bd332cbd9b30c851",
+      "exo": false,
+      "reaction_override": false
+    }
+  ]
+}

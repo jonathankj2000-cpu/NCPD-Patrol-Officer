@@ -6,6 +6,7 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     private let m_stage: Int32;
     private let m_token: Int32;
     private let m_target: wref<NPCPuppet>;
+    private let m_record: TweakDBID;
     private let m_origin: Vector4;
     private let m_stable: Float;
     private let m_missing: Float;
@@ -21,11 +22,12 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolCyberpsychoSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolCyberpsychoSystem") as NCPDPatrolCyberpsychoSystem;
     }
-    public func Version() -> Int32 { return 2; }
+    public func Version() -> Int32 { return 3; }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {
         this.m_stage = 0; this.m_token += 1; this.m_target = null;
+        this.m_record = t"Character.NCPDPatrol_Cyberpsycho";
         this.m_stable = 0.0; this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 0.0; this.m_preparing = 0.0; this.m_arrived = false;
         this.m_reason = "Cyberpsycho test ready";
@@ -114,16 +116,40 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
         this.m_restorePending = false;
     }
     public func IsTargetRecord(npc: ref<NPCPuppet>) -> Bool {
-        return IsDefined(npc) && Equals(npc.GetRecordID(), t"Character.NCPDPatrol_Cyberpsycho");
+        return IsDefined(npc) && Equals(npc.GetRecordID(), this.m_record);
     }
     public func IsTargetReady(npc: ref<NPCPuppet>) -> Bool {
         return this.IsTargetRecord(npc) && npc.IsAttached() && ScriptedPuppet.IsActive(npc)
             && !npc.IsDead() && !npc.IsDeadNoStatPool() && !ScriptedPuppet.IsDefeated(npc) && !ScriptedPuppet.IsUnconscious(npc);
     }
+    public func IsKnownVariant(record: TweakDBID) -> Bool {
+        // BEGIN GENERATED CYBERPSYCHO ALLOWLIST
+        return Equals(record, t"Character.NCPDPatrol_Cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_bls_ina_se1_07_cyberpsycho_1")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_bls_ina_se1_08_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_bls_ina_se1_22_psycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_cct_dtn_03_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_cct_dtn_07_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_hey_spr_04_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_hey_spr_06_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_pac_cvi_08_psycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_pac_cvi_15_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_std_arr_06_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_std_rcr_11_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_wat_kab_02_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_wat_kab_08_cyberpsycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_wat_nid_03_shard_psycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_wat_nid_15_psycho")
+            || Equals(record, t"Character.NCPDPatrol_CP_ma_wat_nid_22_monk");
+        // END GENERATED CYBERPSYCHO ALLOWLIST
+    }
     public func BeginDispatch(destination: Vector4) -> Int32 {
+        return this.BeginVariant(destination, t"Character.NCPDPatrol_Cyberpsycho");
+    }
+    public func BeginVariant(destination: Vector4, record: TweakDBID) -> Int32 {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         let distance: Float;
-        if !this.Eligible() || this.Running() { return 0; };
+        if !this.Eligible() || this.Running() || !this.IsKnownVariant(record) { return 0; };
         distance = Vector4.Distance(player.GetWorldPosition(), destination);
         if distance != distance || distance < 500.0 || distance > 2000.0 { this.m_reason = "Dispatch destination must be 500-2000 m away"; return 0; };
         if !this.IsReady() { this.m_reason = "Install the complete Cyberpsycho archive/.xl and restart"; return 0; };
@@ -138,7 +164,7 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
             || !this.Write(this.ResponsePath(), "gameJournalQuestObjective", gameJournalEntryState.Active) {
             this.HideJournal(); this.m_previousTracked = null; this.m_reason = "Cyberpsycho journal activation rejected"; return 0;
         };
-        this.m_token += 1; this.m_target = null; this.m_origin = destination;
+        this.m_token += 1; this.m_target = null; this.m_origin = destination; this.m_record = record;
         this.m_stage = 1; this.m_stable = 0.0; this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 180.0; this.m_preparing = 0.0; this.m_arrived = false;
         this.m_reason = "Respond to the marked cyberpsycho incident within 3 minutes";

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.14b | close off-camera VIP ambush and retained scenes
+-- NCPD Patrol v0.15a | officer readiness and 17 cyberpsycho variants
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -52,7 +52,7 @@ end
 local function careerAction(method, value)
     local ok, result = pcall(function()
         local career = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem")
-        if not career or career:Version() ~= 3 then error("Install the complete v0.14b package and restart") end
+        if not career or career:Version() ~= 3 then error("Install the complete v0.15a package and restart") end
         if method == "test" then
             if not career:SetTestUnlocks(value) then return "Test unlock unavailable during combat, wanted status or an unloaded game." end
         elseif method == "claim" then
@@ -230,11 +230,11 @@ local function startShift()
     end
     local ok, err = pcall(function()
         local support = getSupportSystem()
-        if not support or support:Version() ~= 17 then error("Install all v0.14b support files and restart the game") end
+        if not support or support:Version() ~= 17 then error("Install all v0.15a support files and restart the game") end
         if not support:IsPartnerDownConfigured() then error("Partner down effect unavailable. Install the complete mod, including NCPDPatrol_PartnerDown.yaml, and restart the game") end
-        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.14b files and restart the game") end
+        if patrol:Version() ~= 17 then error("Lua/redscript version mismatch; install all v0.15a files and restart the game") end
         local trunk = Game.GetScriptableSystemsContainer():Get("NCPDPatrolTrunkSystem")
-        if not trunk or trunk:Version() ~= 2 then error("Install the v0.14b trunk module and restart the game") end
+        if not trunk or trunk:Version() ~= 2 then error("Install the v0.15a trunk module and restart the game") end
         trunk:FinishSession()
         patrol:BeginShift()
         if not patrol:IsOnDuty() then error("Cannot start a shift while wanted") end
@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.14b loaded. VIP ambush uses an off-camera road point 35-65 m behind you. Defeated attackers remain for 90 seconds or until you leave 150 m. Native vehicle combat and working tyre repair retained. Install the complete package and restart.")
+    status("v0.15a loaded. Partner and on-foot backup mirror drawn/holstered weapons outside combat; native alert/combat takes priority. Cyberpsycho pool: 17 verified private variants, with random no-repeat and CET test selection. Install the complete Lua/redscript/tweak package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -395,7 +395,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.14b")
+    local visible = ImGui.Begin("NCPD Patrol - v0.15a")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()
@@ -418,7 +418,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Log career browser diagnostics") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.14b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15a package and restart") end
                 return browser:GetDiagnostics()
             end)
             status("Career browser | " .. tostring(result))
@@ -426,7 +426,7 @@ registerForEvent("onDraw", function()
         if ImGui.Button("Open NCPD Career (computer browser)") then
             local ok, result = pcall(function()
                 local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.14b package and restart") end
+                if not browser or browser:Version() ~= 1 then error("Install the complete v0.15a package and restart") end
                 if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
                 return "Career page requested on the current computer."
             end)
@@ -461,7 +461,10 @@ registerForEvent("onDraw", function()
         if ImGui.Button("TEST: Request cyberpsycho dispatch") then
             Dispatch.requestCyberpsycho(getPatrolSystem(), status)
         end
-        ImGui.TextWrapped("Cyberpsycho dispatch: respond to a marked area 500-1000 m away (up to 2 km if needed). The threat spawns at that scene when you approach. Requesting from your car is supported. Clear an existing dispatch first. Prototype payments and career credit are not yet included.")
+        ImGui.TextWrapped("Next cyberpsycho: " .. Dispatch.cyberpsychoVariantState())
+        if ImGui.Button("TEST: Next cyberpsycho variant") then Dispatch.cycleCyberpsychoVariant(status) end
+        if ImGui.Button("Use random cyberpsycho variants") then Dispatch.randomCyberpsychoVariants(status) end
+        ImGui.TextWrapped("Cyberpsycho dispatch: 17 variants. Use Next cyberpsycho variant for a forced test, or random mode for variety. Respond to a marked area 500-1000 m away (up to 2 km if needed). The threat spawns at that scene when you approach. Requesting from your car is supported. Clear an existing dispatch first. Prototype payments and career credit are not yet included.")
         ImGui.TextWrapped("Cyberpsycho: " .. Dispatch.cyberpsychoState())
         if ImGui.Button("Log cyberpsycho diagnostics") then status("Cyberpsycho | " .. Dispatch.cyberpsychoDiagnostics()) end
         if ImGui.Button("TEST: Request VIP transport") then Dispatch.requestVIP(getPatrolSystem(), status) end
@@ -492,7 +495,7 @@ registerForEvent("onDraw", function()
         local voicePatrol = getPatrolSystem()
         if voicePatrol then
             local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.14b files.")
+            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.15a files.")
         end
         ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
         if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
@@ -588,7 +591,7 @@ registerForEvent("onDraw", function()
         local patrol = getPatrolSystem()
         if patrol then
             local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.14b files and restart the game." end
+                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.15a files and restart the game." end
                 return patrol:GetMonitorDiagnostics()
                     .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
             end)
