@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\cyberpsycho\cyberpsycho.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\cyberpsycho\cyberpsycho_onscreens.json

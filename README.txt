@@ -1,14 +1,15 @@
-NCPD PATROL v0.12a - CAREER PERSONNEL PORTAL UI TEST
+NCPD PATROL v0.13a - CYBERPSYCHO DISPATCH PROTOTYPE
 =================================================
-Full installation package. The career computer now has a larger adaptive
-personnel portal with Service Record, Rewards & Equipment and Partner
-Assignment pages. Reads the browser content viewport and scales to its area.
-Career progression, rewards, saved receipts, weapon tiers and partner behavior
-are retained from v0.11b.
+Full installation package. Adds one manually requested cyberpsycho encounter
+with a dedicated journal objective. Lethal and non-lethal takedowns resolve it.
+The 0.12a career portal, rewards, weapon tiers, partner, backup and arrests are
+included. This first encounter prototype tests spawning, combat and quest state;
+it does not issue generated-incident payment or career credit yet.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.12a.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.13a.
+Include NCPDPatrol_Cyberpsycho.yaml and the new Cyberpsycho archive/.archive.xl.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
 Military variants with fixed game qualities. It does not edit the vanilla guns.
 r6/tweaks/NCPDPatrol_CareerVehicles.yaml registers the four reward cars
@@ -19,6 +20,41 @@ Codeware, redscript, TweakXL and ArchiveXL. Frameworks are not bundled.
 For the computer page, the main Browser Extension Framework 0.9.7 is optional:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Without BEF, use CET's career/reward/partner controls. The rest of the mod works.
+
+CYBERPSYCHO FIRST TEST
+1. Start a shift. Cancel an existing dispatch if one is active. Stand on foot
+   in a clear outdoor area, outside combat.
+2. CET > DISPATCH CONTROLS > TEST: Request cyberpsycho dispatch.
+   One private cyberpsycho is requested at a reachable nearby point, normally
+   65-85 m ahead or behind you. Navigation failure refuses the request.
+3. Check the scene marker and Cyberpsycho Response journal/HUD objective.
+   Neutralize the target, or request the existing backup patrol to help.
+   Test death and non-lethal defeat/unconsciousness in separate runs.
+4. The exact target must remain neutralized for 0.75 gameplay seconds. Killing
+   another actor or losing the target reference never completes the quest.
+5. Cancel active dispatch (CET or trunk) cancels/clears this incident too.
+   After success, the target remains for inspection until you leave 150 m
+   from the scene or 120 gameplay seconds pass. Cleanup must finish before
+   another incident can start. Ordinary automatic calls wait meanwhile.
+6. Log cyberpsycho diagnostics prints journal/target state for bug reports.
+
+The prototype uses a private clone of Character.ma_wat_lch_06_cyberpsycho:
+HMG/strong-arms equipment and the original cyberpsycho combat configuration.
+Its name, attitude, quest affiliation and loot table are private overrides.
+Original quest records/facts and ambient actors are not edited. The hostile
+setup follows the native DynamicSpawnSystem pattern. Live combat/equipment,
+placement, backup engagement and UI still need game testing. Crowd-directed
+rampage behavior is a later extension.
+
+Scene marker stays at the spawn point; HUD distance follows the actual target.
+GPS can still require opening/closing the map. Leaving more than 350 m for
+five gameplay seconds fails the quest. A missing/unattached target for eight
+seconds also fails it. Menus pause these timers. Ending a shift cancels the
+incident; wanted termination fails it. Loading closes an old active journal
+and discards old-world IDs without attempting to delete them in the new world.
+
+Career and scanner/dispatch/arrest payments keep their existing ledgers.
+Generated-incident rewards/progression are not part of this first test.
 
 COMPUTER
 At a browser-capable computer, open Net and select NCPD Career. Its address is
@@ -122,7 +158,7 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.12a. Open all three career pages. Check that the content fills
+1. Confirm v0.13a. Open all three career pages. Check that the content fills
    the browser, text stays readable and the sidebar/hover/click targets work.
 2. Note your actual incident count and rank. Enable test unlocks and refresh;
    access changes while those real values remain unchanged. Check the seven
@@ -148,8 +184,8 @@ All three authored pages fit native-widget fixtures at 1920x1080, 3840x2160,
 hover and all callback cleanup, including stale pages and detached devices.
 Offline font/layout previews are not in-game screenshots or hit-testing.
 
-All 22 redscript files pass source-derived API checks with BEF installed and
-absent; 12 Lua modules parse. The full 45-file ZIP is checked byte-for-byte.
+All 23 redscript files pass source-derived API checks with BEF installed and
+absent; 13 Lua modules parse. The full 50-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
 Existing arrest/trunk/dispatch tests pass. Archives and payment code remain
 unchanged from v0.11b. Core recognizes the four additional owned police cars; support
@@ -159,7 +195,19 @@ Weapon tests cover the fixed quality definitions, delivery records, unchanged
 legacy receipt identities, missing definitions, partial test-delivery retries,
 and the actual CET button. Real weapon tooltips still need an in-game test.
 
-Interfaces: main/support 17, arrest 5, trunk 2, journal 2, career 3, browser 1.
+Cyberpsycho tests execute the actual native controller and CET spawn/AI/cleanup,
+dispatcher exclusion/cancellation and shipped request/cancel button handlers.
+The new journal/localization resources compile, round-trip and extract exactly
+with WolvenKit 9.1.1. These are native-boundary tests, not a game simulation.
+
+Interfaces: main/support 17, arrest 5, trunk 2, scanner journal 2, career 3,
+browser 1, cyberpsycho 1.
+
+ROLLBACK TO v0.12a
+Exit the game. Remove cyberpsycho.lua, NCPDPatrolCyberpsychoSystem.reds,
+NCPDPatrol_Cyberpsycho.yaml and NCPDPatrol_Cyberpsycho.archive/.archive.xl,
+then reinstall the full v0.12a ZIP. The encounter adds no persistent reward or
+career fields. Earlier packages remain available on GitHub.
 
 ROLLBACK TO v0.11b
 Exit the game and reinstall the entire v0.11b ZIP. This update only changes the

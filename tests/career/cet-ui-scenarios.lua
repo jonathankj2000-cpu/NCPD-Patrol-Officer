@@ -8,6 +8,7 @@ local function no() return false end
 local function zero() return 0 end
 package.loaded.partner={state=display,activeProfile=display,vehicleState=display,aidState=display,spawn=function() spawned=spawned+1 end}
 package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabled=no,isActive=no,
+ cyberpsychoState=display,cyberpsychoDiagnostics=display,
  navigationState=display,state=display,lastOutcome=display,journalDiagnostics=display,hudState=display,
  completed=zero,failedCount=zero,seconds=zero}
 package.loaded.vehicle_radio={isEnabled=no,state=display}

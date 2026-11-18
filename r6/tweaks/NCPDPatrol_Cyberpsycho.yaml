@@ -1,0 +1,10 @@
+# Own record only; inherits the verified Little China HMG/strong-arms psycho.
+# No original quest facts, spawn points or original character records are edited.
+Character.NCPDPatrol_Cyberpsycho:
+  $base: Character.ma_wat_lch_06_cyberpsycho
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  baseAttitudeGroup: hostile
+  displayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  fullDisplayName: LocKey#NCPDPatrol_Cyberpsycho_Name
+  lootDrop: LootTables.Empty

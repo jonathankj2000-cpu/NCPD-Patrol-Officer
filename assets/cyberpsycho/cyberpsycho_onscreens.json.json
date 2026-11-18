@@ -1,0 +1,52 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Title",
+              "femaleVariant": "NCPD Dispatch: Cyberpsycho Response",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Objective",
+              "femaleVariant": "Neutralize the cyberpsycho.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Description",
+              "femaleVariant": "A suspected cyberpsycho has been located in the marked area. Neutralize the threat. Lethal and non-lethal takedowns are accepted. Request police backup if needed.\n\nThe incident closes if you leave the area or end your shift.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Name",
+              "femaleVariant": "Cyberpsycho",
+              "maleVariant": ""
+            }
+          ]
+        }
+      }
+    }
+  }
+}

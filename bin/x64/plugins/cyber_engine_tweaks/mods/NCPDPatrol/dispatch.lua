@@ -1,6 +1,7 @@
 -- Dispatch selects existing scanner activities; rewards remain in redscript.
 local HUD = require("dispatch_hud")
 local Journal = require("dispatch_journal")
+local Cyberpsycho = require("cyberpsycho")
 local M = {}
 local active, used = nil, {}
 local automatic, dutySeen, cleaned = true, false, false
@@ -58,12 +59,14 @@ local function drawObjective(inMenu)
 end
 
 function M.init() HUD.init() end
-function M.state() return state end
+function M.state() return Cyberpsycho.isActive() and Cyberpsycho.state() or state end
+function M.cyberpsychoState() return Cyberpsycho.state() end
+function M.cyberpsychoDiagnostics() return Cyberpsycho.diagnostics() end
 function M.hudState() return HUD.state() end
 function M.isAutomatic() return automatic end
 function M.isBusy() return busy end
 function M.setBusy(value) busy = value == true end
-function M.isActive() return active ~= nil end
+function M.isActive() return active ~= nil or Cyberpsycho.isActive() end
 function M.completed() return completed end
 function M.failedCount() return failedCalls end
 function M.lastOutcome() return lastOutcome end
@@ -81,7 +84,10 @@ function M.seconds() return math.max(0, math.ceil(countdown)) end
 function M.candidates() return candidateCount end
 function M.isSoundEnabled() return soundEnabled end
 function M.isVoiceEnabled() return voiceEnabled end
-function M.navigationState() return navigation end
+function M.navigationState()
+    if Cyberpsycho.isActive() then return "Cyberpsycho scene marker; HUD shows target distance. GPS may require opening the map." end
+    return navigation
+end
 function M.setVoiceEnabled(value, status)
     voiceEnabled = value
     if status then status("Dispatch | Call voice " .. (value and "enabled" or "muted")) end
@@ -131,6 +137,7 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
+    if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
     Journal.update(0, status)
     if active then
         local stage, _, reason = Journal.snapshot(active.journalToken)
@@ -147,6 +154,7 @@ end
 
 -- Used after a load: never remove a marker by an ID from the previous world.
 function M.reset()
+    Cyberpsycho.reset()
     Journal.reset()
     busy = false
     active, used, dutySeen, cleaned = nil, {}, false, false
@@ -172,7 +180,7 @@ function M.request(patrol, status)
         if patrol:Version() ~= 17 then error("Install all v0.7b Lua/redscript files and restart the game") end
         if not patrol:IsOnDuty() then report("Start a shift before requesting a dispatch", status); return false end
         if failed then report("Dispatch stopped after an API error; end and restart the shift to retry", status); return false end
-        if active then report("A dispatch is already assigned; complete or cancel it first", status); return false end
+        if M.isActive() then report("A dispatch or target cleanup is already active; complete or cancel it first", status); return false end
         -- Observe a baseline before selecting so this target is eligible for its bonus.
         patrol:TickBonuses()
         if not patrol:IsOnDuty() then report("Shift inactive; check duty status", status); return false end
@@ -245,6 +253,12 @@ function M.request(patrol, status)
 end
 
 function M.cancel(patrol, status)
+    if Cyberpsycho.isActive() then
+        local cleared = Cyberpsycho.cancel(patrol, status)
+        hide()
+        if cleared then countdown = math.random(60, 120) end
+        return cleared
+    end
     if not active then report("No active dispatch to cancel", status); return false end
     local ok, err = pcall(function()
         local cancelled, message = Journal.cancel(active.journalToken, "Assignment cancelled")
@@ -264,12 +278,23 @@ function M.cancel(patrol, status)
 end
 
 function M.replace(patrol, status)
-    if active and not M.cancel(patrol, status) then return false end
+    if M.isActive() and not M.cancel(patrol, status) then return false end
     return M.request(patrol, status)
+end
+
+function M.requestCyberpsycho(patrol, status)
+    if M.isActive() then
+        if status then status("Cyberpsycho | Cancel/clear the current dispatch before requesting a test incident") end
+        return false
+    end
+    local accepted = Cyberpsycho.request(patrol, status, soundEnabled, voiceEnabled)
+    if accepted then countdown = math.random(60, 120) end
+    return accepted
 end
 
 function M.update(delta, onDuty, status, getPatrol)
     Journal.update(delta, status)
+    local cyberBusy = Cyberpsycho.update(delta, onDuty, getPatrol(), status, HUD)
     poll = poll + delta
     if poll < 1 then return end
     local elapsed = math.min(poll, 2)
@@ -279,11 +304,12 @@ function M.update(delta, onDuty, status, getPatrol)
     local ok, err = pcall(function()
         if patrol:Version() ~= 17 then return end
         if not onDuty or not patrol:IsOnDuty() then
-            if dutySeen then M.reset() end
+            if dutySeen and not Cyberpsycho.isActive() then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
             return
         end
         if not dutySeen then M.start(patrol, status) end
+        if cyberBusy then return end
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
         if active then
@@ -344,6 +370,7 @@ function M.update(delta, onDuty, status, getPatrol)
 end
 
 function M.shutdown(patrol)
+    if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, nil, "Mod shutdown") end
     Journal.cancel(active and active.journalToken or 0, "Mod shutdown")
     if patrol then pcall(clear, patrol) end
     M.reset()
