@@ -1,0 +1,277 @@
+{
+  "version": "v0.15c",
+  "source_commit": "31db8946f73ced8b389cc03c2ce7a5c8c2cf0d36",
+  "base_commit": "e8cf694361dd9e2764013c8fb4de4a156961dc1e",
+  "install_files": 60,
+  "lua_modules_parsed": 17,
+  "redscript_files": 26,
+  "portable_tests": [
+    "tests/arrests/check_arrest.py",
+    "tests/arrests/check_arrest_interactions.py",
+    "tests/trunk_menu/check_trunk.py",
+    "tests/dispatch_journal/check_journal.py",
+    "tests/career/check_career.py",
+    "tests/cyberpsycho/check_cyberpsycho.py",
+    "tests/vip/check_vip.py",
+    "tests/officer_readiness/check_ready.py"
+  ],
+  "zip_path": "releases/NCPD_Patrol_v0.15c_Numeric_Trunk_Officer_AI_TEST.zip",
+  "zip_bytes": 136788,
+  "zip_sha256": "82a0e3b3b744257113c45073326113eb69898b5782702c1f4b3179866e0ae2ac",
+  "zip_git_blob": "e003f30a4d0f5e8b4f45435961fc418c97ada40c",
+  "native_trunk_interface": 4,
+  "native_officer_equipment_interface": 1,
+  "native_cyberpsycho_interface": 3,
+  "native_vip_interface": 2,
+  "trunk_menu": "native R hold opens Codeware blocking popup; two rows of four cards; independent 1-7 and 9 actions; numpad/mouse; scoped lifecycle",
+  "active_backup": "explicit follow commands replace permanent scene hold; boarding priority; existing 10-4 retains scene and reservation",
+  "readiness": "verify actual held slots; stalled command falls back to native equip/unequip with existing tagged-officer inventory; native combat priority",
+  "codeware_api_source": "v1.21.4 / 6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad",
+  "archives_unchanged": true,
+  "cyberpsycho_pool_and_tweaks_unchanged": true,
+  "vip_ambush_aftermath_and_tyre_repair_unchanged": true,
+  "career_and_payment_code_unchanged": true,
+  "actual_game_validation": false,
+  "files": {
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_ambush.lua": {
+      "sha256": "a3973241e35ddc91fa59d2b437d54fffb6fa776320639ef140456a794327d4b4",
+      "git_blob": "1a80952307c089ac26667612f4e5911813f18e4b"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ready.lua": {
+      "sha256": "68ef57738eb98c9da05a72a51b8bc6d565758eb89b9c73f7038964bf0102d1a1",
+      "git_blob": "944485e4e560447a247a8c121cf7fbbe09d364e0"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/boarding.lua": {
+      "sha256": "e69c46604086123f0ec75b542a97ae9b9c3f28ba3770666a5e38370242b56f35",
+      "git_blob": "1b10ff2d0a4d2ca8d15419ae6e2fc71a6dd6934e"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/trunk.lua": {
+      "sha256": "9b870a741ff88e6af7f7a56ac720d918e11b1a8ddf1e8722eaf0710ba5757002",
+      "git_blob": "404c8fb77a89812f5ff54364d6c298cbd603d63c"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/partner.lua": {
+      "sha256": "73f21de3365bc9a86e35de2ebb64b2c40b9410be8e24aa09a9f9b6bb0d4ded14",
+      "git_blob": "3358f8d39be8a40ef20531b146acdb8a034e976a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup.lua": {
+      "sha256": "0f773e0a2c972b3d955bc0e7b1530a0d2ea77d6d32a17dd8e759f1b02fc94abd",
+      "git_blob": "a14cb24274b339e7e9dd8d853279a54e5fd6e53a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua": {
+      "sha256": "126b085f988910dc2e47f9cdf68322b4184f50c4ca39c16c9ae82e20640f8821",
+      "git_blob": "f247cb4b534b3755d1c36c0d84bd76fcc180f670"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/revive_probe.lua": {
+      "sha256": "eeedb79d403e27fabe60e51b71bdf6e5ca89fc76a38f7c5de4e18028c10c66c5",
+      "git_blob": "2175d5a833062f71053012fd8fb589887a169e61"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho_variants.lua": {
+      "sha256": "aedf8dd3a1a22deb4d2d3616f83d0e5a290d5faba513606154ea615c735221c8",
+      "git_blob": "6b7bd71c949050ee2a94a443bfde388137a9fa06"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip.lua": {
+      "sha256": "cae7eebd6794a9d12aeab6a56c0889900b9fb235a8d4ce67120715056badba5e",
+      "git_blob": "40044d448c4961c5b5524aeb4782aeb5364a18ea"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ai.lua": {
+      "sha256": "3db9487b965f2d30170d557d2e55dbfdf9f8ed7f2d83e9282b33124a1cb8732a",
+      "git_blob": "8e0aaf8c9a3044ae3ddd7c3d2dc303d5aa26b58f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua": {
+      "sha256": "d4b6d0118287af6760706c95b9f52db5d10acf410784b1cb57683e65cfe776f5",
+      "git_blob": "5072a134ceccbb9d18997148c1dfbc02a3e8791d"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch.lua": {
+      "sha256": "d4128a44e3ff527602d6b5a1375f6c21f60f404ea227927ddba1d6c39aa127ca",
+      "git_blob": "811eee63badfbf9b6d60f3135f328cf4dd71cf86"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vehicle_radio.lua": {
+      "sha256": "27d2eecef153e2cc828b004e17232504a0197686287528728c2dc38e1176b247",
+      "git_blob": "59bb8050d5f84babc54bd31ece8828a0fe0c3a85"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho.lua": {
+      "sha256": "e55bca6646f21f9a8715db6c86c9460ca3951ea1cae54e2a4f60e02261eff088",
+      "git_blob": "7d8689a6f4715c14663428918df3cbf152e382a3"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_journal.lua": {
+      "sha256": "df636c851fa3c656c0199de0dd0c9ac2215ca68fd399406a549ae0e83d754615",
+      "git_blob": "f4ad3d1290101970b7f99466d66714e19d4d35cc"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_hud.lua": {
+      "sha256": "6de86a32c2bc07afd96917a09c52f0b6d41d2ef78fdce04f989220c775009987",
+      "git_blob": "245d936ddad376a721bf685ef3901a04fced67f6"
+    },
+    "r6/tweaks/NCPDPatrol_CareerVehicles.yaml": {
+      "sha256": "927e57f08ebae95cf7ecdad834045c12b1f0b7bf5972818c4137b42eba95cf67",
+      "git_blob": "7021dbb473218d422f10bf3cc2e3dba6da5476e6"
+    },
+    "r6/tweaks/NCPDPatrol_Cyberpsycho.yaml": {
+      "sha256": "f5c9de109d62a7700c7ac3959c9ae044e16b41e5f2c1b3649da9e38cf19404e1",
+      "git_blob": "6c7b98d58800ebd71adca274a2b933ff8cf87370"
+    },
+    "r6/tweaks/NCPDPatrol_CareerWeapons.yaml": {
+      "sha256": "5ca13c688c15eb7b68d6bea8de2e60a97a89fb58f500d4bf8ce4eb283f690a83",
+      "git_blob": "15579feea82cb90686e292dab14c42e3832b6260"
+    },
+    "r6/tweaks/NCPDPatrol_VIP.yaml": {
+      "sha256": "da362244c3b0af5c707b2a4778d65d6ec95e917a3332c57c2272142e790580ff",
+      "git_blob": "dcc7f6f937c36fe73a5ffb783ac90704d40d8773"
+    },
+    "r6/tweaks/NCPDPatrol_PartnerDown.yaml": {
+      "sha256": "ca033f754f9bb0251af911b1a87531ff7b153e5ffb5399448f380de3f81003a6",
+      "git_blob": "5b0516c0e39951001e178127866c0fc8fc1c42cb"
+    },
+    "r6/tweaks/NCPDPatrol_PoliceHella.yaml": {
+      "sha256": "42b287f1b376a78c93992b91a0ffdd967f368beb1a2e1d81bdbe010d0c5ab713",
+      "git_blob": "800dd4b66b4aa90f83edbdf6a6de8a46dd30d730"
+    },
+    "r6/tweaks/NCPDPatrol_Arrest.yaml": {
+      "sha256": "531829d1d7b97a3c25f35dd9e4fd8428c8b59c8a08acda19d3ac5da865704944",
+      "git_blob": "aad960c2c07fb5d284d0b3001425de713e70c1c9"
+    },
+    "r6/tweaks/NCPDPatrol_Interactions.yaml": {
+      "sha256": "64cad0f14d9394828d91ee522676a8bfc8517e5c9869472c8247211adbdea86b",
+      "git_blob": "6babbf3b26b0682fd876e1cd4ed86895ca6474a6"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds": {
+      "sha256": "936891b6752ea389844b824913a46830365dcc3846d403725b2c5f11180f30a5",
+      "git_blob": "bc3bcf21d758f3c0eb0e02e354972d2811f7c898"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchMappinData.reds": {
+      "sha256": "704d6b0462af918062b3fc9a2f2ca109c9ed3525f0d44a799a87713f34a067e4",
+      "git_blob": "2cda1031453b2325f60d68441ea082960c8c57ad"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds": {
+      "sha256": "6d175847d0b37538b00d6c911afd93e2ade8c194a35f4ca453b3a9beb6294291",
+      "git_blob": "42910d9bb2a0141713fa2321f2c9ce44821cdd91"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds": {
+      "sha256": "06fc5d9b8361c7364beabc6831e7f31626f6896b5172833eedbf10d9d908baa4",
+      "git_blob": "f06e004b0586ab89a316ee096bf73f1e08ddccc7"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolRadioStep.reds": {
+      "sha256": "97cd25ca63e68604fb10f420510ca84fa4377bb9884bc84506a30c7dfd0d91e8",
+      "git_blob": "3fb8669ceb94e1139f3a3089636c38c98c8f5ac4"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVoiceWindow.reds": {
+      "sha256": "8d4939c89098d4e3c20b3826e62e5ee3fe917741eec125b6dc5dde99b7b1f2bb",
+      "git_blob": "67fe01a02121fe384b32e6e7e561a4160a7243b0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestEvents.reds": {
+      "sha256": "1a9ec17af20b608d8fe0e1564f12e65f2f517b4ec3e15f80cc5cedf7ebadde66",
+      "git_blob": "22982b22ace05655dfbb1d3737122522f011a425"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTerminal.reds": {
+      "sha256": "078b09b6e05988023a30f7bb5a2bd3a24f3aed178cd481446d9d73e6b7d48d11",
+      "git_blob": "42665ed21bbcd8ccf2327aa73d424d83d0ffc6b5"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds": {
+      "sha256": "0905db94c661494fd7c42eea242ba64cd2d0a38d039856a35a5a5494c31e807a",
+      "git_blob": "564cfbddb17dbe2a46fa3f1cd30ce6e7b1d837db"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds": {
+      "sha256": "5b05a5183d7ae85075dc37c5e36bb04653f355cc40f4b7ad7e1bca8a3c78503c",
+      "git_blob": "bf5fe9efd7bc40de2aee674df012876234a297bf"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportInteractions.reds": {
+      "sha256": "97cf384182c4911de7fece043abb2a37757e86da51e521d9cc74c3a109541c82",
+      "git_blob": "c81d240b900dece23325208d20beca4a1372e0f6"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds": {
+      "sha256": "5eb2b33e4be2000e4939804969fb7849dd04a515bfccf04b9b60ea17d7b903a9",
+      "git_blob": "21d68ea6afe9377b957b68d1de41db27fcde8040"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkInteractions.reds": {
+      "sha256": "ca29d42470fdba64834955dae242ad851fbb269d48110485d76488a4d4c7aa87",
+      "git_blob": "beb51041205890cc2a2bd96aafcf27f0e5e27b5b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkPopup.reds": {
+      "sha256": "bf21b27f456fc05e1dfcd442fe609e6345b8a60fcde70157515258f4e1d56a71",
+      "git_blob": "73c416cedd8ebddf2c4b16e661c7e5627aeba35f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolNotice.reds": {
+      "sha256": "047dd7803a7ff145d21323bc9e1fb18e12511e2871501b8a097e075d7cbeab49",
+      "git_blob": "34fbb8d66f8ca7b967319b704b2865dbf117b9e0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds": {
+      "sha256": "3cc4b0a77cfa420cf5db4ca1bb20f53e24add6a3e0f9fa5711660038d38478be",
+      "git_blob": "a818167d376cb2c29b0bbc4eb190367eb81903e6"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkVehicle.reds": {
+      "sha256": "e11c9a72bf63d92414c2d632fc4eddcef82d152ac3c8c1b687b291767ed973c3",
+      "git_blob": "68777544d79983bbf50b30749ee4488523b11b6d"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": {
+      "sha256": "cb905aac66f820f819deefbc2b214b57280ae6d825d54adfa97a0e63604cc6c3",
+      "git_blob": "d1c80e36663db73d50bfa0512e41ae4a5c477cef"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds": {
+      "sha256": "333866a4f90b40883a4476d93d6e58b71d955d03b8ab3a67bdbd210dcce85edd",
+      "git_blob": "caa1329d9626291acc25cba7fec13a55348cda0e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkSystem.reds": {
+      "sha256": "dced4b635d5641f43ee1a9779b2626b6da6c05fe62c1be3b1b4844a93fc669b6",
+      "git_blob": "c5ac27ee66e547722ecb3293f091c10e10351530"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds": {
+      "sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "git_blob": "a08075b6347ab206a8e610c87cf445389eccc3ab"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds": {
+      "sha256": "fd5739fe6a2cc3ca81c7aa84df2f242d082db5576445b13e87776b99ccbe4726",
+      "git_blob": "66ff966901294a16d44fdcd933ba5befa3aeef7b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds": {
+      "sha256": "de9630ce7202fc52921da47787ab7cdce9625f82bce5788f5576cf8799833516",
+      "git_blob": "2a826ac1f0e5351ff851153e99e67fc36f407895"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolBonusReceipt.reds": {
+      "sha256": "55fc73d9d2717c1b2a8dc32131c63c4e9fdc034ba5ddccf27ecdea712834cf5b",
+      "git_blob": "974e24d88c917f20e7c82ea3877115c00ac2c51a"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds": {
+      "sha256": "c453cfef670058ad1058b51a22bb793e840ec60cc63bb4b4e990c7afe7a7c3ce",
+      "git_blob": "8c5adfb13dfc9bba7dfe72310728a251964dd7b9"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerEquipment.reds": {
+      "sha256": "539a979e82ca742c38c923a29ef492d2aac8b568183b1f29be932ec619943835",
+      "git_blob": "3886e3538cbbe144dd599dc838807415711fee8b"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive.xl": {
+      "sha256": "61778904e186690f2e61c40b5b406db12fd96aed00639a4e4ea56c05baa89354",
+      "git_blob": "6d01010c2ec9e1df00c1fe36e90406cfee247b19"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive.xl": {
+      "sha256": "e9afcb8d4aceed644944b92ac8c0c58464698fce3903f5bd5da5e39dfe8ebf73",
+      "git_blob": "c9d5b69408f4bf97e05430be28dd5c2eb5b992f2"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive": {
+      "sha256": "b87355076e4771e256c9fe798673ca314ff5c7026ad0c604d6eaf0dab9124223",
+      "git_blob": "c7b94639e9b02eb41dab4088bf7b845e35fb220c"
+    },
+    "archive/pc/mod/NCPDPatrol_Arrest.archive": {
+      "sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3",
+      "git_blob": "25563f7e7f2135cd5f361a28df005a6eb7b31560"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive.xl": {
+      "sha256": "c2d20188e8a59c7f8b40e0470439433c3bea15bf4ae82076620d55217382ab20",
+      "git_blob": "24e1252f3bf72622ccb61fb10c61215b2edfd7ce"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive": {
+      "sha256": "88ad4e299cba6814a3d19857da4faebfd9ff5487c2f75bc7ba31b2e9f03e12d6",
+      "git_blob": "98a1990ff6d2f968820d17f0adba2233dce3e71e"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive": {
+      "sha256": "753398c6592d12fb4d07f40ff311b6eeb03af7f94817e00ef1f99ec82a6b2a2e",
+      "git_blob": "01620ef4065f031cf69922ee0de227216cea885d"
+    },
+    "LICENSE": {
+      "sha256": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
+      "git_blob": "547869b1c104b5a7680458b19c8e2bca54c9c803"
+    },
+    "README.txt": {
+      "sha256": "874b65653959e943e22f422533bffec51c059f8f4ef1114da012faba850eb291",
+      "git_blob": "eaba085637be49ff412a8807ddabec98b4b9f3a6"
+    }
+  }
+}
