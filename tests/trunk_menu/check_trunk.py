@@ -42,7 +42,11 @@ with tempfile.TemporaryDirectory(prefix='ncpd-trunk-tests-') as d:
  ps=re.sub(r'}\s+else\s+{','} else {',ps)
  p.write_text(ps);lua.globals().TrunkPS=lua.execute(translate(p))
  src=(NATIVE/'NCPDPatrolTrunkVehicle.reds').read_text()
- p.write_text('public class RepairFixture extends IScriptable {\n'+extract(src,r'public func NCPDPatrolRepairVehicle\(')+'\n}')
+ repair_methods=[]
+ for name in ['NCPDPatrolRepairVehicle','NCPDPatrolRepairTyres','NCPDPatrolScheduleTyres','OnNCPDPatrolTyreRepairEvent','OnToggleBrokenTireEvent','OnVehicleFinishedMountingEvent','OnUnmountingEvent']:
+  method=extract(src,r'(?:public|private|protected)\s+(?:cb\s+)?func '+name+r'\(')
+  repair_methods.append(method.replace('protected cb func','public func').replace('new NCPDPatrolTyreRepairEvent()','NewTyreRepairEvent()'))
+ p.write_text('public class RepairFixture extends IScriptable {\nprivate let m_ncpdTyreRepairArmed: Bool;\nprivate let m_ncpdTyreRepairGeneration: Int32;\n'+'\n'.join(repair_methods)+'\n}')
  lua.globals().Repair=lua.execute(translate(p))
 
 yaml=(ROOT/'r6/tweaks/NCPDPatrol_Interactions.yaml').read_text()

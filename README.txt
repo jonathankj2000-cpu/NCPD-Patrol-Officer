@@ -1,15 +1,15 @@
-NCPD PATROL v0.13b - DISTANT CYBERPSYCHO DISPATCH PROTOTYPE
-=================================================
-Full installation package. Adds a distant cyberpsycho response assignment
-with travel and neutralization objectives. Lethal and non-lethal takedowns resolve it.
-The 0.12a career portal, rewards, weapon tiers, partner, backup and arrests are
-included. This first encounter prototype tests spawning, combat and quest state;
-it does not issue generated-incident payment or career credit yet.
+NCPD PATROL v0.14a - VIP TRANSPORT AND TYRE REPAIR PROTOTYPE
+========================================================
+Full installation package. Adds a two-objective protected-witness transport
+and one optional attacker-car encounter per trip. Includes the working v0.13b
+cyberpsycho dispatch and all existing career, partner, backup and arrest features.
+Generated incidents do not issue money or career credit in this prototype.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.13b.
-Include NCPDPatrol_Cyberpsycho.yaml and the new Cyberpsycho archive/.archive.xl.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.14a.
+Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
+Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
 Military variants with fixed game qualities. It does not edit the vanilla guns.
 r6/tweaks/NCPDPatrol_CareerVehicles.yaml registers the four reward cars
@@ -20,6 +20,54 @@ Codeware, redscript, TweakXL and ArchiveXL. Frameworks are not bundled.
 For the computer page, the main Browser Extension Framework 0.9.7 is optional:
 https://www.nexusmods.com/cyberpunk2077/mods/10038
 Without BEF, use CET's career/reward/partner controls. The rest of the mod works.
+
+VIP TRANSPORT TEST (MANUAL FIRST VERSION)
+1. Start a shift, clear any active dispatch, and use CET > DISPATCH CONTROLS >
+   TEST: Request VIP transport. Outside combat; a car request is supported.
+2. Objective 1: collect the witness 500-1000 m away (up to 2 km if needed).
+   Reach the marker in five gameplay minutes. The VIP spawns near pickup when
+   you approach within 140 m; nothing is spawned beside you on request.
+3. Stop near the witness, as DRIVER of an OWNED POLICE CAR. Leave a passenger
+   seat free. The VIP tries rear-right, rear-left, then front-right. Your partner
+   keeps their occupied seat. VIP boarding is animated, with no teleport fallback.
+4. Objective 2 appears only when the witness is actually seated in your car.
+   A delivery marker 800-2500 m from pickup is then revealed. Deliver within
+   15 gameplay minutes. Menus pause the mission timer.
+5. One hostile car with two gang members may pursue you after driving 250-400 m.
+   TEST: Trigger VIP ambush arms it sooner; it still waits for a road position
+   your car actually drove through, 120-220 m behind you. Keep driving on a clear
+   road until a suitable trail exists. It will not spawn during the last 180 m
+   to delivery. No new hotkey is required. The car starts at a recorded position;
+   traffic/lane clearance and native chase AI still require live testing.
+6. If you stop for three seconds while the pursuers are within 45 m, they brake,
+   wait until their car is stationary, get out and attack. You can escape instead:
+   staying over 350 m away for ten gameplay seconds closes the ambush. One ambush
+   per trip. The encounter has a 150-second test limit; shooting from the moving
+   attacker car is not implemented in this first version.
+7. Stop within 30 m of delivery. The witness must ACTUALLY EXIT alive near the
+   destination before the journal succeeds. You need not kill the pursuers.
+   The delivered witness stays briefly, then is removed after 20 gameplay seconds
+   or once you leave 80 m. Cancel active dispatch works from CET or the trunk.
+8. Log VIP diagnostics shows current phase, seat, native quest state and ambush.
+   Pickup uses fast-travel location anchors, without performing fast travel.
+   NCART and anchors near unfinished scanners are excluded. Some anchors may be
+   unsuitable for car access; test in a clear roadside area. GPS has the same
+   known map-open/close limitation as other dispatch markers.
+
+Only the mod-created witness, car and crew are managed. Death/incapacitation of
+this witness, a lost transport vehicle, abandonment, timeout or journal rejection
+cannot succeed. End shift cancels; wanted termination fails. Load closes a saved
+active VIP journal without deleting actors using old-world entity IDs. New calls
+stay blocked until owned-entity cleanup is confirmed. The first prototype uses a
+municipal worker as the protected witness; no story NPC is recruited or edited.
+
+VEHICLE REPAIR / TYRES
+The existing ten-second trunk service now resets tyres AFTER body repair and
+retries after wheel-physics activation on entering/exiting. The repair receipt
+is invalidated by a fresh puncture event, so newly shot tyres remain damaged.
+Test: shoot front and rear tyres, request repair, wait ten seconds, enter and
+leave the car, and drive. Then shoot a tyre again: it should stay flat until
+another repair. Engine/native visual persistence must be confirmed in game.
 
 CYBERPSYCHO DISPATCH TEST
 1. Start a shift and cancel any existing dispatch. Outside combat, use CET >
@@ -162,7 +210,7 @@ Test copies remain in inventory if you save. Inspect tier, appearance, damage
 and mod slots in game; the fixed-tier records use native quality generation.
 
 SUGGESTED IN-GAME CHECK
-1. Confirm v0.13b. Open all three career pages. Check that the content fills
+1. Confirm v0.14a. Open all three career pages. Check that the content fills
    the browser, text stays readable and the sidebar/hover/click targets work.
 2. Note your actual incident count and rank. Enable test unlocks and refresh;
    access changes while those real values remain unchanged. Check the seven
@@ -188,8 +236,8 @@ All three authored pages fit native-widget fixtures at 1920x1080, 3840x2160,
 hover and all callback cleanup, including stale pages and detached devices.
 Offline font/layout previews are not in-game screenshots or hit-testing.
 
-All 23 redscript files pass source-derived API checks with BEF installed and
-absent; 13 Lua modules parse. The full 50-file ZIP is checked byte-for-byte.
+All 24 redscript files pass source-derived API checks with BEF installed and
+absent; 15 Lua modules parse. The full 56-file ZIP is checked byte-for-byte.
 This is not validation against the real game script cache or actual gameplay.
 Existing arrest/trunk/dispatch tests pass. Archives and payment code remain
 unchanged from v0.11b. Core recognizes the four additional owned police cars; support

@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\vip\vip.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\vip\vip_onscreens.json

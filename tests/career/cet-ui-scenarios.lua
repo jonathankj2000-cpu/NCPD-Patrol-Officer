@@ -6,9 +6,13 @@ local function noop() end
 local function display() return 'fixture' end
 local function no() return false end
 local function zero() return 0 end
+local vipRequests,ambushRequests=0,0
 package.loaded.partner={state=display,activeProfile=display,vehicleState=display,aidState=display,spawn=function() spawned=spawned+1 end}
 package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabled=no,isActive=no,
  cyberpsychoState=display,cyberpsychoDiagnostics=display,
+ vipState=display,vipDiagnostics=display,vipAmbushState=display,
+ requestVIP=function() vipRequests=vipRequests+1 end,
+ requestVIPAmbush=function() ambushRequests=ambushRequests+1 end,
  navigationState=display,state=display,lastOutcome=display,journalDiagnostics=display,hudState=display,
  completed=zero,failedCount=zero,seconds=zero}
 package.loaded.vehicle_radio={isEnabled=no,state=display}
@@ -24,6 +28,8 @@ Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
 end} end
 dofile(MOD_DIR..'/init.lua');callbacks.onOverlayOpen()
 local function click(label) pressed=label;callbacks.onDraw();assert(labels[label],'CET button missing: '..label);pressed=nil end
+click('TEST: Request VIP transport');click('TEST: Trigger VIP ambush');click('Log VIP diagnostics')
+assert(vipRequests==1 and ambushRequests==1)
 click('TEST: Unlock all milestones (session)')
 assert(Career:IsTestUnlockActive() and Career:GetAvailableRewards()==7 and Core:GetRecordedScannerCount()==0)
 assert(#f.itemCalls==0 and #f.vehicleCalls==0)

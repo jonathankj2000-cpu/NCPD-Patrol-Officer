@@ -2,6 +2,7 @@
 local HUD = require("dispatch_hud")
 local Journal = require("dispatch_journal")
 local Cyberpsycho = require("cyberpsycho")
+local VIP = require("vip")
 local M = {}
 local active, used = nil, {}
 local automatic, dutySeen, cleaned = true, false, false
@@ -59,14 +60,17 @@ local function drawObjective(inMenu)
 end
 
 function M.init() HUD.init() end
-function M.state() return Cyberpsycho.isActive() and Cyberpsycho.state() or state end
+function M.state() return VIP.isActive() and VIP.state() or (Cyberpsycho.isActive() and Cyberpsycho.state() or state) end
+function M.vipState() return VIP.state() end
+function M.vipDiagnostics() return VIP.diagnostics() end
+function M.vipAmbushState() return VIP.ambushState() end
 function M.cyberpsychoState() return Cyberpsycho.state() end
 function M.cyberpsychoDiagnostics() return Cyberpsycho.diagnostics() end
 function M.hudState() return HUD.state() end
 function M.isAutomatic() return automatic end
 function M.isBusy() return busy end
 function M.setBusy(value) busy = value == true end
-function M.isActive() return active ~= nil or Cyberpsycho.isActive() end
+function M.isActive() return active ~= nil or Cyberpsycho.isActive() or VIP.isActive() end
 function M.completed() return completed end
 function M.failedCount() return failedCalls end
 function M.lastOutcome() return lastOutcome end
@@ -85,6 +89,7 @@ function M.candidates() return candidateCount end
 function M.isSoundEnabled() return soundEnabled end
 function M.isVoiceEnabled() return voiceEnabled end
 function M.navigationState()
+    if VIP.isActive() then return "VIP pickup/delivery marker active. GPS may require opening the map." end
     if Cyberpsycho.isActive() then return "Cyberpsycho scene marker; HUD shows target distance. GPS may require opening the map." end
     return navigation
 end
@@ -137,6 +142,7 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
+    if VIP.isActive() then VIP.finish(patrol, status, "Shift ended; VIP transport closed") end
     if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
     Journal.update(0, status)
     if active then
@@ -153,7 +159,8 @@ function M.finish(patrol, status)
 end
 
 -- Used after a load: never remove a marker by an ID from the previous world.
-function M.reset()
+function M.reset(keepVIPCleanup)
+    if not keepVIPCleanup then VIP.reset() end
     Cyberpsycho.reset()
     Journal.reset()
     busy = false
@@ -253,6 +260,12 @@ function M.request(patrol, status)
 end
 
 function M.cancel(patrol, status)
+    if VIP.isActive() then
+        local cleared = VIP.cancel(patrol, status)
+        hide()
+        if cleared then countdown = math.random(60, 120) end
+        return cleared
+    end
     if Cyberpsycho.isActive() then
         local cleared = Cyberpsycho.cancel(patrol, status)
         hide()
@@ -292,9 +305,21 @@ function M.requestCyberpsycho(patrol, status)
     return accepted
 end
 
+function M.requestVIP(patrol, status)
+    if M.isActive() then
+        if status then status("VIP | Cancel/clear the current dispatch before requesting transport") end
+        return false
+    end
+    local accepted = VIP.request(patrol, status, soundEnabled, voiceEnabled)
+    if accepted then countdown = math.random(60, 120) end
+    return accepted
+end
+function M.requestVIPAmbush(status) return VIP.requestAmbush(status) end
+
 function M.update(delta, onDuty, status, getPatrol)
     Journal.update(delta, status)
     local cyberBusy = Cyberpsycho.update(delta, onDuty, getPatrol(), status, HUD)
+    local vipBusy = VIP.update(delta, onDuty, getPatrol(), status, HUD)
     poll = poll + delta
     if poll < 1 then return end
     local elapsed = math.min(poll, 2)
@@ -304,12 +329,12 @@ function M.update(delta, onDuty, status, getPatrol)
     local ok, err = pcall(function()
         if patrol:Version() ~= 17 then return end
         if not onDuty or not patrol:IsOnDuty() then
-            if dutySeen and not Cyberpsycho.isActive() then M.reset() end
+            if dutySeen and not Cyberpsycho.isActive() and not VIP.isActive() then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
             return
         end
         if not dutySeen then M.start(patrol, status) end
-        if cyberBusy then return end
+        if cyberBusy or vipBusy then return end
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
         if active then
@@ -370,10 +395,11 @@ function M.update(delta, onDuty, status, getPatrol)
 end
 
 function M.shutdown(patrol)
+    if VIP.isActive() then VIP.finish(patrol, nil, "Mod shutdown") end
     if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, nil, "Mod shutdown") end
     Journal.cancel(active and active.journalToken or 0, "Mod shutdown")
     if patrol then pcall(clear, patrol) end
-    M.reset()
+    M.reset(true)
     HUD.shutdown()
 end
 

@@ -1,0 +1,21 @@
+# Private clones. Verified against Cyberpunk-Tweaks 0f39f780c92c.
+# General affiliation removes the original minor-activity quest association.
+Character.NCPDPatrol_VIP:
+  $base: Character.ma_wat_lch_03_garbage_man
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  baseAttitudeGroup: neutral
+  displayName: LocKey#NCPDPatrol_VIP_Name
+  fullDisplayName: LocKey#NCPDPatrol_VIP_Name
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_VIPAttacker:
+  $base: Character.maelstrom_grunt1_ranged1_lexington_ma
+  quest: NPCQuestAffiliation.General
+  priority: SpawnableObjectPriority.Regular
+  baseAttitudeGroup: neutral
+  lootDrop: LootTables.Empty
+
+Vehicle.NCPDPatrol_VIPAmbush:
+  $base: Vehicle.v_standard2_archer_hella
+  randomPassengers: []

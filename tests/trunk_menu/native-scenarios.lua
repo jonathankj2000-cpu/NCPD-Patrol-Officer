@@ -193,17 +193,44 @@ reset(); onDuty=false; actions={n=0}; TrunkPS:GetTrunkActions(actions,{})
 assert(actions.n==1 and actions[0].kind=='stash')
 reset()
 
--- Execute the actual repair wrapper: health routine, four tires and visual resets.
-local repairedParts={}; local tires={}; local body,glass,health,fx,visual=0,0,0,0,0
-AnimationControllerComponent={SetInputFloat=function(_,v,key,value) assert(v==vehicle and value==0); repairedParts[key]=true end}
+-- Execute repair and the actual delayed/mount/damage handlers. Wheel physics
+-- here forgets a parked-car reset on activation, matching the reported symptom.
+local repairedParts={}; local flat={[0]=true,[1]=false,[2]=false,[3]=true}
+local body,glass,health,fx,visual,psChanges=0,0,0,0,0,0
+local scheduled={}
+function NewTyreRepairEvent() return {} end
+function wrappedMethod() return true end
+AnimationControllerComponent={SetInputFloat=function(_,v,key,value) assert(v==vehicle and value==0);repairedParts[key]=true end}
 function Repair:GetVehicle() return vehicle end
 function Repair:RepairVehicle() health=health+1 end
 function Repair:UpdateDamageEngineEffects() fx=fx+1 end
 function Repair:VehicleVisualDestructionSetup() visual=visual+1 end
-function vehicle:ToggleBrokenTire(index,state) assert(not state and not tires[index]); tires[index]=true end
+function Repair:GetPS() return {ForcePersistentStateChanged=function() psChanges=psChanges+1 end} end
+function vehicle:GetGame() return {} end
+function vehicle:GetFlatTireIndex() for i=0,3 do if flat[i] then return i end end;return -1 end
+function vehicle:ToggleBrokenTire(index,state) flat[index]=state;return true end
 function vehicle:DestructionResetGrid() body=body+1 end
 function vehicle:DestructionResetGlass() glass=glass+1 end
-vehicle.attached=true; vehicle.destroyed=false; Repair:NCPDPatrolRepairVehicle()
+GameInstance.GetDelaySystem=function() return {DelayEvent=function(_,target,event,delay)
+ assert(target==vehicle and delay==0.5);scheduled[#scheduled+1]=event
+end} end
+local function flush()
+ local count=0
+ while #scheduled>0 do local event=table.remove(scheduled,1);Repair:OnNCPDPatrolTyreRepairEvent(event);count=count+1;assert(count<40,'unbounded tyre repair loop') end
+ return count
+end
+vehicle.attached=true;vehicle.destroyed=false;Repair:NCPDPatrolRepairVehicle()
 assert(health==1 and fx==1 and visual==1 and body==1 and glass==1)
-assert(tires[0] and tires[1] and tires[2] and tires[3] and repairedParts.hood_destruction)
-vehicle.destroyed=true; Repair:NCPDPatrolRepairVehicle(); assert(health==1)
+assert(vehicle:GetFlatTireIndex()==-1 and repairedParts.hood_destruction and psChanges==1)
+-- Native activation recreates the old puncture AFTER the first synchronous fix.
+flat[3]=true;flush();assert(vehicle:GetFlatTireIndex()==-1 and health==1)
+-- Getting in/out can reactivate wheel state; the repair receipt rechecks both.
+flat[0]=true;assert(Repair:OnVehicleFinishedMountingEvent({}));assert(flush()==4 and vehicle:GetFlatTireIndex()==-1)
+flat[3]=true;assert(Repair:OnUnmountingEvent({}));flush();assert(vehicle:GetFlatTireIndex()==-1)
+-- Fresh damage invalidates pending events and ALL later mount rechecks.
+Repair:OnVehicleFinishedMountingEvent({});flat[0]=true
+assert(Repair:OnToggleBrokenTireEvent({toggle=true,tireIndex=0}));flush();assert(flat[0])
+Repair:OnVehicleFinishedMountingEvent({});Repair:OnUnmountingEvent({});assert(#scheduled==0 and flat[0])
+-- A new service repairs the new puncture, with a fresh generation.
+Repair:NCPDPatrolRepairVehicle();flush();assert(health==2 and vehicle:GetFlatTireIndex()==-1)
+vehicle.destroyed=true;Repair:NCPDPatrolRepairVehicle();assert(health==2)

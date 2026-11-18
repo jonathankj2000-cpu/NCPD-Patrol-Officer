@@ -1,5 +1,19 @@
 # NCPD Patrol
 
+## v0.14a: VIP transport and tyre repair
+
+[Download the complete v0.14a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.14a_VIP_Transport_Tyre_Repair_TEST.zip)
+
+Use **CET > DISPATCH CONTROLS > TEST: Request VIP transport**, on duty with any existing dispatch cleared. Objective 1 sends you to a protected witness. Stop nearby as driver of your owned police car, with a free passenger seat. The witness uses rear seats first; the partner keeps their seat. Objective 2 and its destination appear only after actual boarding. At delivery, stop and allow the living witness to exit before completion.
+
+One hostile car and two gang members can pursue the transport. **TEST: Trigger VIP ambush** arms the encounter manually; drive until there is a recorded road position 120–220 m behind you. The automatic trigger waits for 250–400 m of driving. If you stop for three seconds with pursuers nearby, they brake, exit and attack. You can outrun them; killing the attackers is not a delivery condition. Native traffic pathfinding and animations need a game test. Moving-car gunfire is outside this first version.
+
+The ten-second trunk repair now resets tyres after body repair and retries after entering/exiting activates wheel physics. New punctures invalidate that repair receipt, so tyres remain vulnerable. Verify front/rear tyres, entering/exiting, driving and a fresh shot after repair in game.
+
+Pickup/delivery use native fast-travel marker locations without performing fast travel. Some anchors may have poor car access; this is a prototype location pool. Pickup has five gameplay minutes, delivery fifteen; menus pause them. End shift/cancel/load and failed entity cleanup are handled. Generated incidents still have no payment or career credit. Existing scanner, dispatch and arrest payments and saved progression remain unchanged.
+
+Full install: extract the **entire ZIP** into the game folder and restart, including **NCPDPatrol_VIP.archive**, its **.archive.xl**, and **NCPDPatrol_VIP.yaml**. Browser Extension remains optional. [VIP test cases and source references](tests/vip/README.md) cover boarding proof, stage transitions, delivery/failures, car/crew chase/escape and cleanup with engine boundaries mocked. This is not an in-game validation.
+
 ## v0.13b: distant cyberpsycho dispatch
 
 [Download the complete v0.13b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13b_Distant_Cyberpsycho_Dispatch_TEST.zip)
@@ -57,7 +71,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.13b**. Include the bundled career and Cyberpsycho tweak files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.14a**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.
@@ -70,8 +84,8 @@ Browser Extension remains **optional**. Without it, progression, rewards and par
 
 [Automated checks](tests/career/README.md) execute authored reward/progression code, partner spawning/replacement, the real CET test-button handlers and all three computer pages. Portal checks exercise the native viewport lookup helpers, layout bounds at five viewport sizes, routes, hover feedback, callback cleanup, stale pages, missing viewports and detached devices. They use the actual pinned BEF base/registry with native game/widget boundaries mocked. Existing reward/save/partner/arrest/trunk/dispatch regressions also pass.
 
-All 23 production redscript files pass source-derived API checks with and without BEF. All 13 Lua modules parse. The complete 50-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
+All 24 production redscript files pass source-derived API checks with and without BEF. All 15 Lua modules parse. The complete 56-file install ZIP is verified byte-for-byte. Offline layout previews use the authored widget tree; they do not reproduce the game's renderer. Real computer scaling, text rendering and pointer hit testing still need a game test, as do the item tiers/appearance/tooltips under testing in v0.11b.
 
-Existing scanner/arrest archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, and partner/backup/arrest behavior are byte-for-byte unchanged from v0.13a. The dispatcher adds mutual exclusion and cancellation routing for the new test incident. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **2**.
+Existing scanner/arrest archives, core/support logic, career progression/reward logic and UI, vehicle and weapon tweaks, and partner/backup/arrest behavior are byte-for-byte unchanged from v0.13b. The dispatcher adds mutual exclusion and cancellation routing for VIP transport; vehicle repair adds tyre rechecks. Career interface is **3**; main/support **17**, arrest **5**, trunk **2**, scanner journal **2** and browser diagnostics **1** remain unchanged; the cyberpsycho interface is **2**; VIP is **1**.
 
 [Full instructions](README.txt) · [Previous v0.13a ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.13a_Cyberpsycho_Dispatch_TEST.zip) · [Earlier packages](releases)
