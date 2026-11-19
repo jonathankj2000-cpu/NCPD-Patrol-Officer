@@ -17,7 +17,7 @@ from translate import translate
 
 SCENARIOS=[HERE.parent/'incidents'/name for name in ['native-scenarios.lua','mixed-scenarios.lua','background-scenarios.lua','partial-cleanup-scenarios.lua']] + [HERE/'scanner-contracts.lua']
 
-def runtime(modules, trace, observe_lifecycle=False):
+def runtime(modules, trace, observe_lifecycle=False, install_trace=True):
     lua=LuaRuntime(unpack_returned_tuples=True)
     lua.execute('math.randomseed(20261119)')
     lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
@@ -33,7 +33,7 @@ def runtime(modules, trace, observe_lifecycle=False):
         # Moving a throwing statement necessarily changes its source location.
         trace.append(re.sub(r'[^\s|]*\.lua:\d+', '<lua>', row))
     lua.globals().Trace=record
-    lua.execute((HERE/'trace.lua').read_text())
+    if install_trace:lua.execute((HERE/'trace.lua').read_text())
     if observe_lifecycle:
         lua.execute((HERE/'lifecycle.lua').read_text())
     return lua

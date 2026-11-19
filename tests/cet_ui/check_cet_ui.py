@@ -16,6 +16,10 @@ def base_file(name):
 def verify_session_source():
     before=base_file('init.lua').split('registerForEvent("onDraw", function()',1)[0]
     after=(ROOT/PREFIX/'init.lua').read_text().split('-- The menu reads live session state',1)[0]
+    after=after.replace('-- NCPD Patrol v0.17d VIP refactor r3 | extracted locations and waypoint ownership',
+                        '-- NCPD Patrol v0.17d CET refactor r2 | separated menu and live session')
+    after=after.replace('v0.17d VIP refactor r3 loaded. VIP locations and waypoint ownership are separate modules. Transport, ambush, rewards and the CET menu retain their existing behavior. Install the complete package and restart.',
+                        'v0.17d CET refactor r2 loaded. Patrol, Dispatch, Career, Settings, Diagnostics and Testing tabs. Existing gameplay and dispatch refactor retained. Install the complete package and restart.')
     after=after.replace('-- NCPD Patrol v0.17d CET refactor r2 | separated menu and live session',
                         '-- NCPD Patrol v0.17d dispatch refactor r1 | unchanged gameplay contracts')
     after=after.replace('v0.17d CET refactor r2 loaded. Patrol, Dispatch, Career, Settings, Diagnostics and Testing tabs. Existing gameplay and dispatch refactor retained. Install the complete package and restart.',

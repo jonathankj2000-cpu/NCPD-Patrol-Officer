@@ -1,5 +1,23 @@
 # NCPD Patrol
 
+## VIP refactor r3 — branch test
+
+VIP location selection and waypoint ownership now live in separate modules.
+`vip.lua` keeps the native quest/token, witness, boarding, delivery and actor
+cleanup flow. Selection order/ranges, marker recovery, rewards and both ambush
+modules retain the r2 behavior. The six-tab CET menu is included.
+
+[Download the complete VIP refactor r3 ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_VIP_Refactor_r3_TEST.zip)
+
+Install the **entire package** and restart; CET announces **v0.17d VIP refactor r3**.
+Include both `vip_locations.lua` and `vip_waypoint.lua`. No new dependency,
+native interface or save migration. Main remains separate from this branch.
+
+Verification: **16 suites**, **29,208 matching VIP trace rows against r2**, the
+unchanged **17,374-row dispatch comparison** and **156 CET action comparisons**;
+24 Lua modules, 28 unchanged native scripts and a complete 72-file ZIP. Actual
+game validation remains necessary. [Ownership and checks](docs/VIP_REFACTOR.md).
+
 ## CET interface refactor r2 — branch test
 
 The CET menu now has **Patrol, Dispatch, Career, Settings, Diagnostics and Testing**

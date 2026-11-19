@@ -22,13 +22,13 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Verify CET routes, dispatch compatibility and complete refactor r2 ZIP
-        run: .ci-python/bin/python tools/build_cet_ui_refactor_release.py
+      - name: Verify VIP extraction, CET/dispatch compatibility and complete r3 ZIP
+        run: .ci-python/bin/python tools/build_vip_refactor_release.py
       - name: Commit verified branch test package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.17d_CET_Interface_Refactor_r2_TEST.zip releases/NCPD_Patrol_CET_Refactor_r2_verification.json
+          git add releases/NCPD_Patrol_v0.17d_VIP_Refactor_r3_TEST.zip releases/NCPD_Patrol_VIP_Refactor_r3_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified CET interface refactor r2 test package"
+          git commit -m "Build verified VIP refactor r3 test package"
           git push origin HEAD:git-checkout--b-refactor/cleanup

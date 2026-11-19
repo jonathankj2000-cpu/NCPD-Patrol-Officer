@@ -1,3 +1,28 @@
+NCPD PATROL v0.17d VIP REFACTOR r3 - COMPLETE BRANCH TEST
+
+VIP location selection and waypoint ownership have their own modules.
+The existing transport still owns its quest/token, witness, actual boarding,
+delivery, completion/failure and actor/scene cleanup. Ranges, random selection,
+marker inspection/recovery, rewards and ambush behavior retain the r2 contracts.
+The six-tab CET interface is included.
+
+Install this COMPLETE package into the game root (bin/r6/archive) and restart.
+CET announces "v0.17d VIP refactor r3". Include the new vip_locations.lua and
+vip_waypoint.lua files. No dependency, native interface or save-format change.
+Browser Extension remains optional. Reapply an optional Chinese preview overlay
+after this full installation.
+
+16 suites pass: 29,208 matching VIP trace rows against r2, the unchanged
+17,374-row dispatch comparison and 156 CET action routes. 24 Lua modules,
+28 unchanged native scripts, 72 install files. Source guards preserve the moved
+policies and remaining transport/cleanup flow. Real engine boundaries are mocked.
+Check pickup/delivery markers, boarding, payment, cancellation/load and the next
+automatic dispatch in game. Ambush placement/chase tuning is a later round.
+
+See docs/VIP_REFACTOR.md in the repository for ownership and in-game checks.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d CET REFACTOR r2 - COMPLETE BRANCH TEST
 
 Six CET tabs: Patrol, Dispatch, Career, Settings, Diagnostics, Testing.

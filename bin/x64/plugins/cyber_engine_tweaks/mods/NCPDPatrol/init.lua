@@ -1,4 +1,4 @@
--- NCPD Patrol v0.17d CET refactor r2 | separated menu and live session
+-- NCPD Patrol v0.17d VIP refactor r3 | extracted locations and waypoint ownership
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.17d CET refactor r2 loaded. Patrol, Dispatch, Career, Settings, Diagnostics and Testing tabs. Existing gameplay and dispatch refactor retained. Install the complete package and restart.")
+    status("v0.17d VIP refactor r3 loaded. VIP locations and waypoint ownership are separate modules. Transport, ambush, rewards and the CET menu retain their existing behavior. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

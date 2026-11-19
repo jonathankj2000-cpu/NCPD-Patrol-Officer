@@ -2,6 +2,8 @@
 -- decide when objective two unlocks and when the passenger is delivered.
 local Crew = require("officer_ai")
 local Ambush = require("vip_ambush")
+local Locations = require("vip_locations").new()
+local Waypoint = require("vip_waypoint").new()
 local M = {}
 local RECORD="Character.NCPDPatrol_VIP"
 local phase,label="idle","No VIP transport"
@@ -9,10 +11,6 @@ local id,actor,token,pickup,destination,car,command=nil,nil,nil,nil,nil,nil,nil
 local elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
 local boardingSeat,finalReason,lastStage=nil,nil,0
 local keepResolvedScene=false
-local locationInfo="Not selected"
-local waypointID,waypointPoint=nil,nil
-local waypointPoll,waypointMissing,waypointCooldown,waypointRepairs=0,0,0,0
-local waypointKind,waypointStatus="Pickup","No active VIP waypoint"
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
     if not system or system:Version()~=4 then error("Install the complete v0.17a VIP package and restart") end
@@ -25,72 +23,6 @@ end
 local function same(a,b) return a and b and tostring(a:GetEntityID().hash)==tostring(b:GetEntityID().hash) end
 local function report(text,status) label=text;if status then status("VIP | "..text) end end
 local function notify(patrol,text) if patrol then patrol:NotifyDispatch("NCPD VIP: "..text,8) end end
-local function releaseWaypointID()
-    if waypointID then
-        local system=Game.GetMappinSystem()
-        if not system then error("Mappin system unavailable for VIP marker removal") end
-        system:UnregisterMappin(waypointID)
-    end
-    waypointID=nil
-end
-local function clearWaypoint()
-    local ok,err=pcall(releaseWaypointID)
-    waypointPoint=nil
-    waypointStatus=ok and "No active VIP waypoint" or ("VIP marker removal pending: "..tostring(err))
-end
-local function waypoint(patrol,point,kind)
-    releaseWaypointID()
-    waypointPoint=Vector4.new(point.x,point.y,point.z,1)
-    local marker=patrol:PlaceDispatchWaypoint(point)
-    if not marker or marker.value==nil or marker.value==0 then error("VIP waypoint creation failed") end
-    waypointID,waypointKind=marker,kind
-    waypointPoll,waypointMissing,waypointCooldown=0,0,0
-    waypointStatus=kind.." marker registered; awaiting registry verification"
-end
-local function checkWaypoint(delta,patrol,status)
-    if not waypointPoint then return end
-    waypointPoll=waypointPoll+delta
-    waypointCooldown=math.max(0,waypointCooldown-delta)
-    if waypointPoll<1 then return end
-    local step=waypointPoll;waypointPoll=0
-    local checked,system,found=pcall(function()
-        local map=Game.GetMappinSystem()
-        if not map then error("Mappin system unavailable") end
-        for _,pin in ipairs(map:GetAllMappins()) do
-            local ok,id=pcall(function() return pin:GetNewMappinID() end)
-            if ok and id and waypointID and tostring(id.value)==tostring(waypointID.value) then return map,pin end
-        end
-        return map,nil
-    end)
-    if not checked then waypointStatus="VIP marker inspection pending: "..tostring(system);return end
-    if found then
-        waypointMissing=0
-        local ok,err=pcall(function()
-            local active=found:IsActive()
-            local aligned=distance(found:GetWorldPosition(),waypointPoint)<=1
-            if not aligned then system:SetMappinPosition(waypointID,waypointPoint) end
-            if not active then system:SetMappinActive(waypointID,true) end
-            waypointStatus=waypointKind..(active and aligned and " marker present" or " marker activation/position requested")
-        end)
-        if not ok then waypointStatus="VIP marker update pending: "..tostring(err) end
-        return
-    end
-    waypointMissing=waypointMissing+step
-    waypointStatus=waypointKind.." marker missing; automatic recovery pending"
-    if waypointMissing<2 or waypointCooldown>0 then return end
-    waypointCooldown=5
-    local ok,err=pcall(function()
-        -- Only this assignment's cached ID is removed. Retired scenes and
-        -- other dispatch types cannot lose their marker to a VIP repair.
-        releaseWaypointID()
-        local marker=patrol:PlaceDispatchWaypoint(waypointPoint)
-        if not marker or marker.value==nil or marker.value==0 then error("VIP marker re-registration rejected") end
-        waypointID=marker;waypointRepairs=waypointRepairs+1;waypointMissing=0
-        waypointStatus=waypointKind.." marker re-registered; awaiting registry verification"
-    end)
-    if not ok then waypointStatus="VIP marker recovery pending: "..tostring(err) end
-    if status then status("VIP navigation | "..waypointStatus.." | repairs="..waypointRepairs) end
-end
 function M.state() return label end
 function M.ambushState() return Ambush.state() end
 function M.ambushSetting() return Ambush.setting() end
@@ -111,18 +43,14 @@ function M.reset()
     elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
     boardingSeat,finalReason,lastStage=nil,nil,0
     keepResolvedScene=false
-    locationInfo="Not selected"
-    -- The load observer forgets old-world marker IDs without unregistering them.
-    waypointID,waypointPoint=nil,nil
-    waypointPoll,waypointMissing,waypointCooldown,waypointRepairs=0,0,0,0
-    waypointKind,waypointStatus="Pickup","No active VIP waypoint"
+    Locations.reset()
+    Waypoint.reset()
     Ambush.reset()
 end
 function M.diagnostics()
     local ok,info=pcall(function() return native():GetDiagnostics() end)
     return "phase="..phase.." | seat="..tostring(boardingSeat).." | entity="..tostring(id and id.hash or "none")
-        .." | locations="..locationInfo.." | waypoint="..waypointStatus.." | waypoint ID="..tostring(waypointID and waypointID.value or "none")
-        .." | waypoint repairs="..waypointRepairs.." | waypoint position="..(waypointPoint and string.format("%.1f,%.1f,%.1f",waypointPoint.x,waypointPoint.y,waypointPoint.z) or "none")
+        .." | locations="..Locations.diagnostics().." | "..Waypoint.diagnostics()
         .." | ambush="..Ambush.state().." | "..tostring(info)
 end
 function M.refreshWaypoint(patrol,status)
@@ -133,10 +61,9 @@ function M.refreshWaypoint(patrol,status)
             or patrol:IsDispatchMenuOpen() or token~=backend:GetToken() or (stage~=1 and stage~=2) then
             error("VIP assignment is not available for marker refresh")
         end
-        waypoint(patrol,stage==2 and destination or pickup,stage==2 and "Delivery" or "Pickup")
-        waypointRepairs=waypointRepairs+1
+        Waypoint.rebuild(patrol,stage==2 and destination or pickup,stage==2 and "Delivery" or "Pickup")
     end)
-    if status then status("VIP navigation | "..(ok and waypointStatus or tostring(err))) end
+    if status then status("VIP navigation | "..(ok and Waypoint.status() or tostring(err))) end
     return ok
 end
 local function stopCommand()
@@ -169,7 +96,7 @@ function M.finish(patrol,status,reason,failed,flushRetired)
             if failed then native():Fail(token,finalReason) else native():Cancel(token,finalReason) end
         end)
     end
-    clearWaypoint()
+    Waypoint.clear()
     stopCommand();phase="cleanup";retry=0
     return cleanup(status)
 end
@@ -178,74 +105,6 @@ function M.cancel(patrol,status)
     local cleared=M.finish(patrol,status,"VIP transport cancelled/cleared")
     notify(patrol,cleared and "Assignment cancelled." or "Assignment cancelled; unit cleanup pending.")
     return cleared
-end
-local function chooseLocations(player)
-    local pins=Game.GetMappinSystem():GetAllMappins()
-    local sites,occupied,seen={},{},{}
-    local terminals,dropPoints=0,0
-    local start=player:GetWorldPosition()
-    for _,pin in ipairs(pins) do
-        -- Interaction availability is not geographic availability: native
-        -- fast travel can be inactive while V is in a car or during a lock.
-        local ok,variant,phaseNow,point=pcall(function() return pin:GetVariant(),pin:GetPhase(),pin:GetWorldPosition() end)
-        if ok and finite(point) and (point.x~=0 or point.y~=0 or point.z~=0) then
-            if variant==gamedataMappinVariant.FastTravelVariant
-                or variant==gamedataMappinVariant.ServicePointDropPointVariant then
-                local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
-                if not seen[key] then
-                    seen[key]=true
-                    local kind=variant==gamedataMappinVariant.FastTravelVariant and "fast travel" or "drop point"
-                    if kind=="fast travel" then terminals=terminals+1 else dropPoints=dropPoints+1 end
-                    sites[#sites+1]={position=Vector4.new(point.x,point.y,point.z,1),distance=distance(start,point),kind=kind}
-                end
-            elseif (variant==gamedataMappinVariant.GangWatchVariant or variant==gamedataMappinVariant.OutpostVariant)
-                and phaseNow~=gamedataMappinPhase.CompletedPhase then occupied[#occupied+1]=point end
-        end
-    end
-    local safe={}
-    for _,site in ipairs(sites) do
-        local clear=true
-        for _,point in ipairs(occupied) do if distance(site.position,point)<100 then clear=false;break end end
-        if clear then safe[#safe+1]=site end
-    end
-    local nearby,localRange,extended,nearest=0,0,0,math.huge
-    for _,site in ipairs(safe) do
-        nearest=math.min(nearest,site.distance)
-        if site.distance<250 then nearby=nearby+1
-        elseif site.distance<=2000 then localRange=localRange+1
-        elseif site.distance<=5000 then extended=extended+1 end
-    end
-    locationInfo=string.format("fast travel=%d | drop points=%d | clear=%d | blocked by scanner=%d | clear <250 m=%d | clear 250-2000 m=%d | clear 2000-5000 m=%d | nearest clear=%s",
-        terminals,dropPoints,#safe,#sites-#safe,nearby,localRange,extended,nearest<math.huge and string.format("%.0f m",nearest) or "none")
-    -- Prefer short routes, then relax proximity/trip length before expanding
-    -- the pickup radius. Native validation and response time use the same caps.
-    -- This reads markers only; no travel node is unlocked or registered.
-    for _,limits in ipairs({{500,1000,800,2500},{500,1500,800,2500},{500,2000,800,2500},
-        {250,2000,500,3500},{250,3500,500,5000},{250,5000,500,5000}}) do
-        for _,includeDropPoints in ipairs({false,true}) do
-            local pairs={}
-            for _,site in ipairs(safe) do
-                if (includeDropPoints or site.kind=="fast travel") and site.distance>=limits[1] and site.distance<=limits[2] then
-                    local drops={}
-                    for _,drop in ipairs(safe) do
-                        local metres=distance(site.position,drop.position)
-                        if (includeDropPoints or drop.kind=="fast travel") and metres>=limits[3] and metres<=limits[4] then drops[#drops+1]=drop end
-                    end
-                    if #drops>0 then
-                        local drop=drops[math.random(1,#drops)]
-                        pairs[#pairs+1]={pickup=site.position,drop=drop.position,kind=site.kind.." -> "..drop.kind}
-                    end
-                end
-            end
-            if #pairs>0 then
-                local pair=pairs[math.random(1,#pairs)]
-                pair.distance=distance(start,pair.pickup)
-                locationInfo=locationInfo.." | selected="..pair.kind.." | radius="..limits[2].." m | pickup="..math.floor(pair.distance+.5).." m | trip="..math.floor(distance(pair.pickup,pair.drop)+.5).." m"
-                return pair
-            end
-        end
-    end
-    error("No safe VIP terminal pair after expanded search (pickup 250-5000 m; trip 500-5000 m). "..locationInfo)
 end
 local function spawnVIP(player)
     local system=Game.GetDynamicEntitySystem()
@@ -310,14 +169,13 @@ function M.request(patrol,status,sound,voice)
         if patrol:IsDispatchMenuOpen() or player:IsInCombat() then error("Leave game menus and combat before requesting VIP transport") end
         local backend=native()
         if not backend:IsReady() then error("VIP journal unavailable; install the new archive/.xl and restart") end
-        local pair=chooseLocations(player);pickup,destination=pair.pickup,pair.drop
-        if status then status("VIP locations | "..locationInfo) end
+        local pair=Locations.choose(player);pickup,destination=pair.pickup,pair.drop
+        if status then status("VIP locations | "..Locations.diagnostics()) end
         token=backend:BeginDispatch(pickup,destination)
         if not token or token==0 then error("VIP journal request rejected: "..tostring(backend:GetReason())) end
         phase,elapsed,poll,lastStage="responding",0,0,1;finalReason=nil;searchAge=0;keepResolvedScene=false
         if not Ambush.begin() then error("Previous ambush cleanup still active") end
-        waypointRepairs=0
-        waypoint(patrol,pickup,"Pickup")
+        Waypoint.beginAssignment(patrol,pickup,"Pickup")
         local extended=pair.distance>2000 and string.format(" Extended response area: %.1f km.",pair.distance/1000) or ""
         patrol:NotifyDispatch("NCPD DISPATCH: Protected witness transport. Collect the VIP at the marked location. Use an owned police car with a free passenger seat."..extended,10,sound,voice)
         report("Assigned: collect protected witness; destination follows after boarding",status)
@@ -410,7 +268,7 @@ function M.update(delta,onDuty,patrol,status,HUD)
         if token~=backend:GetToken() then M.finish(patrol,status,"VIP world/session changed");return end
         if stage>=3 then
             if phase~="resolved" then
-                finalReason=backend:GetReason();clearWaypoint();HUD.set("",false)
+                finalReason=backend:GetReason();Waypoint.clear();HUD.set("",false)
                 report((stage==3 and "COMPLETED | " or "CLOSED | ")..finalReason,status)
                 keepResolvedScene=stage==3
                 notify(patrol,finalReason);Ambush.finish(status,keepResolvedScene)
@@ -427,12 +285,12 @@ function M.update(delta,onDuty,patrol,status,HUD)
         if patrol:IsDispatchMenuOpen() then HUD.set("",false);return end
         if delta<=0 or delta>0.5 then return end
         if stage==2 and lastStage~=2 then
-            phase="transport";waypoint(patrol,destination,"Delivery")
+            phase="transport";Waypoint.place(patrol,destination,"Delivery")
             notify(patrol,"Witness aboard. Delivery destination assigned. Keep moving and protect your passenger.")
             report("Objective 2 active after confirmed boarding",status)
         end
         lastStage=stage
-        checkWaypoint(delta,patrol,status)
+        Waypoint.update(delta,patrol,status)
         local vehicle=Game.GetMountedVehicle(Game.GetPlayer())
         local validTransport=stage==2 and actor and same(Game.GetMountedVehicle(actor),car) and same(vehicle,car) and backend:CanUseVehicle(car)
         local near=destination and distance(Game.GetPlayer():GetWorldPosition(),destination)<180
