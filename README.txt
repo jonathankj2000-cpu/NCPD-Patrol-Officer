@@ -1,4 +1,24 @@
-NCPD PATROL v0.17c - VIP WAYPOINT RECOVERY
+NCPD PATROL v0.17d - VIP PARTIAL AMBUSH CLEANUP
+
+V0.17D FIX
+Completed VIP dispatch no longer waits for known ambush NPC/car IDs to despawn.
+They stay owned/retried in the bounded background queue. Earlier retirement only
+recognized combat-resolved crews; never-attached cars and normal partial cleanup
+could hold dispatch forever despite a completed journal and removed witness.
+Vehicle-only cleanup also releases cancelled/failed assignments once NPC IDs are
+gone. Recheck eligibility after deletion and during updates; late units join the
+same convoy scene. Keep three scenes maximum, no re-spawning from retired units,
+and ordinary combat/menu/Busy pauses. A full queue permits other dispatch types.
+
+Diagnostics now show pending vehicle/NPC/unknown counts, whether the car ever
+attached, crew IDs requested and last status. A registered controller/ID does
+not prove its car appeared. This fixes cleanup blocking, not unseen-car spawning.
+
+Install the COMPLETE package and restart; CET announces v0.17d. Marker recovery,
+native scripts, archives and rewards are unchanged. Thirteen suites include three
+never-attached cars, partial crew deletion, pending NPC despawn, later cleanup,
+automatic next dispatch and preservation of the next marker/journal. Engine
+boundaries are mocked; in-game verification is still required.
 
 V0.17C FIX
 VIP checks its current waypoint ID against the game marker registry every

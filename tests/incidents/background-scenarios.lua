@@ -30,7 +30,7 @@ local function request(count)
  v.player.mounted=nil;f.playerPosition.x=0;v.car.pos.x=800;v.car.speed=0
  assert(A.configure(count));assert(D.requestVIP(f.patrol,log))
 end
-local function deliver(count,neutralize)
+local function deliver(count,neutralize,cancel)
  request(count);f.playerPosition.x=780;update(1)
  local witness=f.actors[1000+#f.creates]
  v:Drive();update(.25);v:Mount(witness,v.car);update(.5)
@@ -46,6 +46,9 @@ local function deliver(count,neutralize)
   if actor.record=='Character.NCPDPatrol_VIPAttacker' then
    actor.dead=neutralize;actor.mounted=nil
   end
+ end
+ if cancel then
+  assert(not D.cancel(f.patrol,log));update(21);return ids
  end
  v.car.speed=0;v.car.pos.x=1800;f.playerPosition.x=1800;update(.5)
  witness.mounted=nil;witness.pos.x=1800;update(.5)
@@ -92,8 +95,15 @@ update(3)
 assert(VIPNative:GetStage()==1 and VIPNative:GetToken()==token and f.markers[1]==marker)
 assert(not VIP.hasCleanup() and D.isActive());D.cancel(f.patrol,log)
 
--- Still-active attackers must never be moved into the neutralized queue.
+-- A completed delivery no longer has an ambush objective. Pending NPC deletion
+-- is background cleanup too, without claiming those NPCs were neutralized.
 reset();ids=deliver(1,false);update(125)
+assert(not D.isActive() and not VIP.isActive() and A.retainedCount()==1)
+for _,id in ipairs(ids) do despawn(id) end
+update(3);assert(not VIP.hasCleanup())
+
+-- A cancelled/failed escort with live NPCs retains its foreground guard.
+reset();ids=deliver(1,false,true);update(125)
 assert(D.isActive() and VIP.isActive() and A.retainedCount()==0)
 for _,id in ipairs(ids) do despawn(id) end
 update(3);assert(not D.isActive())

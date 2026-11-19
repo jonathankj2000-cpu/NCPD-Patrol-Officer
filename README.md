@@ -1,5 +1,35 @@
 # NCPD Patrol
 
+## v0.17d: partial ambush cleanup after VIP delivery
+
+[Download the complete v0.17d ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17d_VIP_Partial_Cleanup_FIX.zip)
+
+Fixes the remaining dispatch lock with `stage=3`, `entity=none`, three current
+ambush controllers and one pending ID per controller. Earlier retirement required
+a confirmed combat-resolution flag. Cars that never attached, or cars left after
+normal crew deletion, never met that condition and stayed in foreground cleanup.
+
+After confirmed VIP delivery, known pending ambush IDs now move to the bounded
+background queue even when despawn is incomplete. Vehicle-only cleanup can also
+retire after cancellation/failure once every owned NPC ID is confirmed gone.
+Eligibility is checked before and after deletion and during later updates. Late
+units join the same convoy scene, preserving the three-scene limit. Retired units
+cannot retry spawning or issue new ambush commands; their IDs remain owned until
+deletion is confirmed. A full queue skips VIP while permitting scanner/cyberpsycho
+fallback. Ordinary combat/menu/Busy pauses still apply.
+
+Diagnostics separate pending vehicle/NPC/unknown IDs, whether the car ever attached,
+crew IDs requested and the last unit status. Three controllers do not prove three
+cars appeared in game. The new checks prevent their pending cleanup from reserving
+a completed assignment; they do not guarantee that a previously unseen car spawns.
+
+Install the **complete package** and restart; CET announces **v0.17d**. The v0.17c
+VIP marker recovery, native scripts, archives and saved rewards are unchanged.
+Thirteen regression suites include three never-attached cars, attached cars with
+deleted crew, pending NPC despawn, later partial cleanup, automatic next calls and
+old cleanup preserving the next journal/marker. Engine attachment/physics/rendering
+are mocked and still need game validation.
+
 ## v0.17c: VIP waypoint recovery
 
 [Download the complete v0.17c ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17c_VIP_Waypoint_Recovery_FIX.zip)

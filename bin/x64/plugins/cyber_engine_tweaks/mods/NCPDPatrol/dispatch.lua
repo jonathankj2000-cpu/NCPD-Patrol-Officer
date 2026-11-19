@@ -162,7 +162,7 @@ function M.schedulerStatus(patrol)
             end
             return "Assignment active; standby starts when it closes"
         end
-        return "Next automatic call in about "..M.seconds().." s"..(VIP.hasCleanup() and "; previous neutralized scenes clean in background" or "")
+        return "Next automatic call in about "..M.seconds().." s"..(VIP.hasCleanup() and "; previous ambush cleanup continues in background" or "")
     end)
     return ok and text or ("Scheduler status unavailable: "..tostring(text))
 end

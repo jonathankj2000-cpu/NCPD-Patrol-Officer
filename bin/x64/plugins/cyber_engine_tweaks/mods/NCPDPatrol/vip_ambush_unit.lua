@@ -12,6 +12,20 @@ local triggerAt = 300
 local spawnPoint,trailVehicle=nil,nil
 local attempts,retryAfterCleanup,settling=0,false,0
 local resolvedScene=false
+local everAttached=false
+local function sameID(a,b) return a and b and tostring(a.hash)==tostring(b.hash) end
+local function pendingKinds()
+    local vehicles,npcs,unknown=0,0,0
+    for _,id in ipairs(ids) do
+        if sameID(id,carID) then vehicles=vehicles+1
+        else
+            local known=false
+            for _,unit in ipairs(units) do if sameID(id,unit.id) then known=true;break end end
+            if known then npcs=npcs+1 else unknown=unknown+1 end
+        end
+    end
+    return vehicles,npcs,unknown
+end
 local function finite(p)
     return p and p.x==p.x and p.y==p.y and p.z==p.z
         and math.abs(p.x)<100000 and math.abs(p.y)<100000 and math.abs(p.z)<100000
@@ -31,7 +45,11 @@ function M.state()
     if phase=="resolved" then
         return label.." | retention remaining="..math.max(0,math.ceil(90-elapsed)).." s | away="..string.format("%.1f",escaped).."/3 s"
     end
-    if phase=="cleanup" then return "Ambush actor cleanup pending="..#ids end
+    if phase=="cleanup" then
+        local vehicles,npcs,unknown=pendingKinds()
+        return "Ambush actor cleanup pending="..#ids.." | vehicles="..vehicles.." | NPCs="..npcs.." | unknown="..unknown
+            .." | ever attached="..tostring(everAttached).." | crew IDs requested="..#units.." | last="..label
+    end
     return label
 end
 function M.isActive() return phase~="idle" end
@@ -53,6 +71,7 @@ function M.reset()
     triggerAt=options.triggerAt or math.random(250,400)
     spawnPoint,trailVehicle=nil,nil;attempts,retryAfterCleanup,settling=0,false,0
     resolvedScene=false
+    everAttached=false
 end
 function M.begin()
     if M.isActive() then return false end
@@ -95,7 +114,7 @@ local function cleanup(status)
 end
 function M.finish(status,keepResolvedScene)
     retryAfterCleanup=false
-    if keepResolvedScene and phase=="resolved" then return false end
+    if keepResolvedScene and phase=="resolved" and M.canRetire() then return false end
     if phase=="idle" and #ids==0 then used,requested=true,false;trail={};return true end
     requested=false;trail={};used=true;phase="cleanup";retry=0
     return cleanup(status)
@@ -215,6 +234,7 @@ local function spawn(point,patrol,status)
     -- Reserve before the first create; partial creation must also be cleaned up.
     used,requested=true,false;phase="spawning";elapsed,age=0,0
     attempts=attempts+1;retryAfterCleanup=false;settling=0;spawnPoint=point
+    everAttached=false
     local system=Game.GetDynamicEntitySystem()
     if not system or not system:IsReady() then error("Ambush entity system not ready") end
     local pos=point.position
@@ -249,9 +269,35 @@ local function crewNeutralized()
     end
     return true
 end
-function M.canRetire()
-    if not resolvedScene or (phase~="resolved" and phase~="cleanup") then return false end
+function M.canRetire(completedDelivery)
+    if phase~="resolved" and phase~="cleanup" then return false end
+    -- A known vehicle ID is passive once every owned NPC ID has been removed
+    -- from the cleanup list. This also covers cars that never attached and
+    -- normal cancellation/cleanup that never passed through combat resolution.
+    local vehicles,npcs,unknown=pendingKinds()
+    if unknown>0 then return false end
+    -- A successfully delivered witness has no remaining ambush objective.
+    -- Keep deletion ownership in the bounded background queue, even when an
+    -- owned NPC has not acknowledged despawn yet. Ongoing ambushes never enter
+    -- cleanup here, and cancelled/failed escorts retain the live-NPC guard.
+    if phase=="cleanup" and completedDelivery then return true end
+    if phase=="cleanup" and vehicles>0 and npcs==0 and unknown==0 then return true end
+    if not resolvedScene then return false end
     for _,unit in ipairs(units) do if alive(unit.actor) then return false end end
+    return true
+end
+function M.retire(completedDelivery)
+    if not M.canRetire(completedDelivery) then return false end
+    retryAfterCleanup=false;used,requested=true,false;trail={}
+    stopChase()
+    if phase=="cleanup" then
+        for _,unit in ipairs(units) do
+            if unit.actor and unit.command then
+                pcall(function() unit.actor:GetAIControllerComponent():StopExecutingCommand(unit.command,false) end)
+                unit.command=nil
+            end
+        end
+    end
     return true
 end
 local function resolve(status)
@@ -277,6 +323,7 @@ local function active(delta,vehicle,patrol,status)
         local system=Game.GetDynamicEntitySystem()
         car=system:GetEntity(carID)
         if car and car:IsAttached() then
+            everAttached=true
             if not positioned() then
                 settling=0
                 if elapsed>=1 then rejectPlacement(status) end

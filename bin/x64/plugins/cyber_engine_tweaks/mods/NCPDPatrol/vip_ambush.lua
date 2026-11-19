@@ -4,6 +4,8 @@ local Unit=require("vip_ambush_unit")
 local M={}
 local workers={}
 local retired={}
+local retirementGroup=nil
+local completedDelivery=false
 local mode=0 -- 0 random 1-3, otherwise an exact 1/2/3-car test preference.
 local begun,ended,requested,warned,lostNotified=false,false,false,false,false
 local spawnWindow,sawEscape=0,false
@@ -31,6 +33,8 @@ function M.state()
 end
 local function resetCurrent()
     workers={};begun,ended,requested,warned,lostNotified=false,false,false,false,false
+    retirementGroup=nil
+    completedDelivery=false
     spawnWindow,sawEscape=0,false
 end
 function M.reset()
@@ -104,26 +108,35 @@ function M.clearRetired(status)
     for i=#retired,1,-1 do
         local gone=true
         for _,worker in ipairs(retired[i]) do if not worker.finish(status) then gone=false end end
-        if gone then table.remove(retired,i) end
+        if gone then
+            if retirementGroup==retired[i] then retirementGroup=nil end
+            table.remove(retired,i)
+        end
     end
+end
+local function retireEligible(status)
+    if not ended or (not retirementGroup and #retired>=3) then return end
+    local remaining,moved={},0
+    for _,worker in ipairs(workers) do
+        if worker.retire(completedDelivery) then
+            if not retirementGroup then retirementGroup={};retired[#retired+1]=retirementGroup end
+            retirementGroup[#retirementGroup+1]=worker;moved=moved+1
+        else remaining[#remaining+1]=worker end
+    end
+    workers=remaining
+    if moved>0 and status then status("VIP ambush | "..moved.." closed/resolved unit(s) moved to background cleanup; remaining active units="..#workers) end
 end
 function M.finish(status,keepResolvedScene)
     ended=true;requested=false
-    if keepResolvedScene and #retired<3 then
-        local scene,remaining={},{}
-        for _,worker in ipairs(workers) do
-            if worker.canRetire() then scene[#scene+1]=worker else remaining[#remaining+1]=worker end
-        end
-        if #scene>0 then
-            retired[#retired+1]=scene;workers=remaining
-            if status then status("VIP ambush | Neutralized scene moved to background cleanup; dispatch reservation released") end
-        end
-    end
-    local complete=true
+    if keepResolvedScene then completedDelivery=true end
+    if keepResolvedScene then retireEligible(status) end
     for _,worker in ipairs(workers) do
-        if not worker.finish(status,keepResolvedScene) then complete=false end
+        worker.finish(status,keepResolvedScene)
     end
-    return complete
+    -- Cleanup can remove crew while leaving its car managed asynchronously.
+    -- Reclassify after that work too, instead of requiring a prior combat flag.
+    retireEligible(status)
+    return not M.isActive()
 end
 function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
     -- These workers own no VIP token, marker or assignment slot. Refused
@@ -134,7 +147,10 @@ function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
             worker.update(delta,nil,false,true,patrol,status)
             if worker.isActive() then gone=false end
         end
-        if gone then table.remove(retired,i) end
+        if gone then
+            if retirementGroup==retired[i] then retirementGroup=nil end
+            table.remove(retired,i)
+        end
     end
     local ticks=delta>0 and delta<=.5 and patrol and not patrol:IsDispatchMenuOpen()
     if ticks and transporting and not ended and started() then
@@ -152,6 +168,7 @@ function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
         local log=status and function(text) status(#workers>1 and ("Convoy car "..i.." | "..text) or text) end or nil
         worker.update(delta,vehicle,transporting and not ended,nearDestination,patrol,log)
     end
+    retireEligible(status)
     if ticks and sawEscape and not lostNotified and not ended then
         local threat,pending=false,false
         for _,worker in ipairs(workers) do

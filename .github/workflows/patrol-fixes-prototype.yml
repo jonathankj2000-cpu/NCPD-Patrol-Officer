@@ -1,13 +1,13 @@
-name: NCPD Patrol VIP waypoint recovery
+name: NCPD Patrol VIP partial cleanup
 on:
   push:
-    branches: [prototype/ncpd-vip-waypoint-v017c]
+    branches: [prototype/ncpd-vip-partial-cleanup-v017d]
     paths-ignore: ['releases/**']
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: ncpd-vip-waypoint-v017c
+  group: ncpd-vip-partial-cleanup-v017d
   cancel-in-progress: true
 jobs:
   verify-and-package:
@@ -21,14 +21,14 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Verify VIP marker identity, recovery, stage transitions and existing gameplay; build full ZIP
+      - name: Verify three never-attached cars, partial ambush cleanup and existing gameplay; build full ZIP
         run: |
           .ci-python/bin/python tools/build_patrol_fixes_release.py
       - name: Commit verified prototype package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.17c_VIP_Waypoint_Recovery_FIX.zip releases/NCPD_Patrol_v0.17c_verification.json
+          git add releases/NCPD_Patrol_v0.17d_VIP_Partial_Cleanup_FIX.zip releases/NCPD_Patrol_v0.17d_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified v0.17c VIP waypoint recovery"
-          git push origin HEAD:prototype/ncpd-vip-waypoint-v017c
+          git commit -m "Build verified v0.17d VIP partial cleanup"
+          git push origin HEAD:prototype/ncpd-vip-partial-cleanup-v017d

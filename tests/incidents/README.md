@@ -27,9 +27,20 @@ scene countdowns and deferred deletion. Neutralized ambush scenes move into a
 separate queue, bounded to three convoys. New VIPs retain older IDs. A full queue
 allows scanner/cyberpsycho fallback. Tests keep deletion refused for more than
 five simulated minutes and emulate Codeware's first-accepted/subsequent-false
-contract until a despawn event. Live attacker and VIP cleanup still block a new
-assignment. Later cleanup cannot remove the next marker/journal or repay the VIP.
+contract until a despawn event. Live attacker cleanup in cancelled/failed escorts
+and foreground VIP cleanup still block a new assignment. Later cleanup cannot
+remove the next marker/journal or repay the VIP.
 Shift-end retries continue off duty; world resets forget only old-world IDs.
+
+`partial-cleanup-scenarios.lua` reproduces three current car controllers with
+one pending vehicle ID each. Cases include all cars never attaching, normal crew
+deletion leaving cars managed, pending NPCs after successful delivery and later
+partial cancellation cleanup. They drive automatic scanner selection while the
+old cars refuse despawn for more than five simulated minutes, preserve that
+call's marker/journal and then start another VIP. Units from one convoy consume
+one scene slot even when eligible on different updates. Cancelled/failed escorts
+retain their guard for live or streamed-out NPCs until cleanup is confirmed;
+completed delivery has no remaining ambush objective and backgrounds known IDs.
 
 Career tests sum existing scanner history and generated completions without
 counting the separate EUR$500 scanner supplement again. Existing promotion

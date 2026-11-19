@@ -1,6 +1,6 @@
 # Changes since Nexus version 0.8.1
 
-Current development package: **0.17c**. Baseline: the published
+Current development package: **0.17d**. Baseline: the published
 [NCPD Patrol Officer 0.8.1 page](https://www.nexusmods.com/cyberpunk2077/mods/38800?tab=description).
 The career portal, original equipment milestones and first patrol trunk menu
 were already included in that release.
@@ -14,9 +14,14 @@ were already included in that release.
   cleanup instead of waiting for body retention first. Neutralized ambush scenes
   clean independently, so refused despawn cannot lock every new dispatch. IDs
   remain tracked in a queue bounded to three convoy scenes; a full queue skips
-  new VIP calls while allowing scanner/cyberpsycho fallback. Live attackers and
-  undelivered VIPs retain their cleanup reservation. CET shows the scheduler gate,
+  new VIP calls while allowing scanner/cyberpsycho fallback. Live attackers in
+  cancelled/failed escorts and undelivered VIPs retain their cleanup reservation.
+  CET shows the scheduler gate,
   remaining ambush retention time and pending deletion count.
+- **Partial ambush cleanup fix:** completed VIP dispatch releases known pending
+  ambush IDs to background cleanup, including cars that never attached and cars
+  left after crew deletion. Late cleanup joins the same bounded convoy scene.
+  Diagnostics distinguish vehicle/NPC IDs and actual attachment from requests.
 - **Cyberpsycho incidents:** added dispatches to distant scenes, with arrival
   and neutralization journal objectives. The pool contains 17 private variants
   based on the game's cyberpsychos. Lethal and non-lethal outcomes complete the
