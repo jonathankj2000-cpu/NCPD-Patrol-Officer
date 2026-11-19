@@ -1,5 +1,16 @@
 # NCPD Patrol
 
+## v0.16e: broader VIP routes, 1–3-car ambushes and arrest notices
+
+[Download the complete v0.16e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16e_VIP_Convoy_Arrest_Notices_TEST.zip)
+
+- **VIP selection:** prefer existing 500–2000 m pickups and 800–2500 m trips. If no pair exists, allow a closer 250 m pickup/500 m trip, then expand pickup radius through 3.5 km to 5 km and trip distance to 5 km. Local mixed/drop-point routes are considered before remote fast-travel-only routes. The 100 m clearance from unfinished scanners remains. Diagnostics show the nearest clear point and distance buckets, so total marker counts are no longer the only clue.
+- **VIP deadlines:** ordinary responses retain five minutes; pickups beyond 2 km gain time with distance, up to ten minutes at 5 km. The journal briefing now refers to the assigned deadline; its rebuilt archive is included. Delivery retains fifteen minutes and actual living drop-off checks.
+- **Ambush convoy:** random **1–3 cars**, two attackers per car, once per transport. **CET > DISPATCH CONTROLS > Ambush cars … (change)** cycles Random/1/2/3; **TEST: Trigger VIP ambush** uses that choice. Change it before the ambush starts; live-convoy changes apply to the next transport. Each car has its own placement, crew, actual mounting, chase, combat and cleanup. Reservations keep at least 12 m between cars and there is one hostile warning. The existing road/deck/barrier/camera checks remain. Cars without a safe start within the 20-second convoy window are skipped, so fixed 3 is a request subject to available space.
+- **Arrest feedback:** unsuitable placement produces “Move the suspect to flat, clear ground and try again.” Technical paths and rejection counts stay in CET. Fresh placement checks retry briefly for up to about two seconds, allowing transient navigation after a carry/drop to settle. The navigation probe reaches 0.9 m; actual relocation remains within 2 m/0.75 m, with the same surface, activation and payment checks. No twenty-second cooldown was added. Persistent engine rejection on apparently flat ground still needs an in-game check; the new counters identify the failing check.
+
+Install the **entire ZIP** and restart; CET announces **v0.16e** and VIP native interface is **3**. Includes the new `vip_ambush_unit.lua` and updated VIP archive. No new dependency. Twelve portable suites cover expanded selection/deadlines, fixed/random convoy sizes, crew ownership, deferred cleanup, partial failure and clean arrest notices; offline source/API compilation passes with and without optional BEF. Actual traffic, collision and animation still require game testing.
+
 ## v0.16d: terrain, VIP locations and ambush placement
 
 [Download the complete v0.16d test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16d_Terrain_VIP_Ambush_Fixes_TEST.zip)
@@ -182,7 +193,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16d**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16e**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

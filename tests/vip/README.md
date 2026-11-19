@@ -1,5 +1,20 @@
 # VIP transport and tyre regression checks
 
+v0.16e exercises a 28-fast-travel/3-drop-point/19-clear marker pool whose only
+usable pickup is beyond 2 km, staged 250-5000 m pickup/500-5000 m trip fallback,
+local mixed-terminal preference, unchanged scanner exclusion and native
+300-600-second response deadlines. The six-key journal text archive is rebuilt,
+round-tripped and extracted with WolvenKit 9.1.1. `assets/vip/compiled.json`
+records resource/archive/input hashes checked by the portable suite.
+
+`fleet-scenarios.lua` runs the actual convoy manager and independent car
+controllers at fixed sizes 1, 2 and 3 plus seeded random sizes. It checks 12 m
+reservations, exactly two crew per car, own-car mount completion, one warning,
+independent neutralization, all-ID deferred cleanup, partial creation failure,
+world reset and the 20-second window that prevents late extra cars. Tests model
+native physics/mounting; they cannot prove live vehicle pathfinding. There are
+18 parsed Lua modules, 27 native scripts and 65 install files in this package.
+
 v0.16d adds authored-code scenarios for inactive fast-travel markers while
 driving, drop-point-only and mixed terminal pairs when no discovered FT pair
 exists, FT preference, and distance/scanner/NaN/unrelated-marker rejection.

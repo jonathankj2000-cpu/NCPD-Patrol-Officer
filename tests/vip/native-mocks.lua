@@ -75,7 +75,11 @@ function v.entities:CreateEntity(spec)
  if spec.recordID=='Vehicle.NCPDPatrol_VIPAmbush' and v.carSpawnOffset then
   a.pos=Vector4.new(a.pos.x+(v.carSpawnOffset.x or 0),a.pos.y+(v.carSpawnOffset.y or 0),a.pos.z+(v.carSpawnOffset.z or 0),1)
  elseif spec.recordID=='Character.NCPDPatrol_VIPAttacker' then
-  assert(v.ambushCar and math.abs(a.pos.x-v.ambushCar.pos.x)<.01 and math.abs(a.pos.y-v.ambushCar.pos.y)<.01,'crew spawned beyond the checked car footprint')
+  local ownCar=false
+  for _,candidate in ipairs(v.ambushCars) do
+   if f.managed[candidate.id.hash] and math.abs(a.pos.x-candidate.pos.x)<.01 and math.abs(a.pos.y-candidate.pos.y)<.01 then ownCar=true end
+  end
+  assert(ownCar,'crew spawned beyond any checked car footprint')
  end
  f.actors[id.hash]=a;return id
 end
@@ -116,7 +120,9 @@ function v:Actor(record,id)
    if a.record=='Character.NCPDPatrol_VIP' then
     assert(not data.isInstant and not data.ignoreHLS and not data.allowFailsafeTeleport)
     assert(data.slotName~='seat_front_left','VIP overwrote driver')
-   elseif command.kind=='mount' and v.autoCrewMount then a.mounted=v.ambushCar;a.seat=data.slotName
+   elseif command.kind=='mount' and v.autoCrewMount then
+    a.mounted=f.actors[data.mountParentEntityId.hash];a.seat=data.slotName
+    assert(a.mounted and a.mounted.vehicle,'crew mounted the wrong/nonexistent convoy car')
    elseif command.kind=='unmount' and v.autoCrewUnmount then a.mounted=nil end
   end
  end
@@ -126,7 +132,7 @@ function v:Actor(record,id)
  return a
 end
 function v:Car(id)
- local a={id=id or {hash=88},pos={x=800,y=0,z=0,w=1},attached=true,owned=true,destroyed=false,speed=0,
+ local a={id=id or {hash=88},pos={x=800,y=0,z=0,w=1},attached=true,vehicle=true,owned=true,destroyed=false,speed=0,
   slots={seat_front_left=true,seat_front_right=true,seat_back_right=true,seat_back_left=true},occupied={},commands={}}
  function a:GetEntityID() return self.id end
  function a:GetWorldPosition() return {x=self.pos.x,y=self.pos.y,z=self.pos.z,w=1} end
@@ -140,7 +146,7 @@ function v:Car(id)
  function a:ForceBrakesUntilStoppedOrFor(seconds) self.brakes=seconds end
  local ai={SetInitCmd=function(_,command) a.initCmd=command end,StopExecutingCommand=function(_,command) a.stopped=command end}
  function a:GetAIComponent() return ai end
- if id then self.ambushCar=a end
+ if id then self.ambushCar=a;self.ambushCars[#self.ambushCars+1]=a end
  return a
 end
 VehicleComponent={HasSlot=function(car,seat) return car.slots[seat]==true end,
@@ -151,7 +157,7 @@ VehicleComponent={HasSlot=function(car,seat) return car.slots[seat]==true end,
  end}
 function v:Reset()
  f:Reset();self.player.mounted=nil;self.player.seat=nil
- self.car=self:Car();self.ambushCar=nil;self.autoCrewMount=true;self.autoCrewUnmount=false
+ self.ambushCars={};self.car=self:Car();self.ambushCar=nil;self.autoCrewMount=true;self.autoCrewUnmount=false
  self.cameraPresent=true;self.cameraTransformOK=true;self.cameraYaw=0;self.cameraFOV=75;self.cameraAspect=16/9;self.cameraPosition=nil
  self.lastAmbushSpawnDistance=nil
  self.spatialAvailable=true;self.roadMissing=false;self.roadBlocked=false;self.roadHeight=0;self.carSpawnOffset=nil

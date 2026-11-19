@@ -51,13 +51,22 @@ v:Reset();token=begin();f.duty=false;v:Advance(0.25);assert(n:GetStage()==5)
 v:Reset();local story=JournalFixture:Story();JournalFixture.tracked=story;token,actor=boarded()
 n:Cancel(token,'cancel');assert(JournalFixture.tracked==story)
 v:Reset();token=begin();n:OnRestored(0,0);n:Tick(0.25);assert(n:GetStage()==0 and v:State()==1)
-for _,coords in ipairs({{x=499,y=0,z=0},{x=2001,y=0,z=0},{x=0/0,y=0,z=0}}) do
+for _,coords in ipairs({{x=249,y=0,z=0},{x=5001,y=0,z=0},{x=0/0,y=0,z=0}}) do
  v:Reset();assert(n:BeginDispatch(coords,drop)==0)
+end
+for _,x in ipairs({250,2200,4800}) do
+ v:Reset();token=n:BeginDispatch({x=x,y=0,z=0},{x=x+1000,y=0,z=0})
+ assert(token>0 and n:GetRemainingSeconds()==(x<=2000 and 300 or 300+(x-2000)/10),'expanded native bounds/deadline disagree with Lua search')
+ n:Cancel(token,'test')
+end
+for _,metres in ipairs({499,5001}) do
+ v:Reset();assert(n:BeginDispatch(pickup,{x=pickup.x+metres,y=0,z=0})==0)
 end
 v:Reset();JournalFixture.ignoreWrites=true;assert(n:BeginDispatch(pickup,drop)==0)
 
 -- Run actual Lua transport modules with the same native controller.
 local VIP=require('vip');local Ambush=require('vip_ambush')
+assert(Ambush.configure(1)) -- deterministic single-car regressions; fleet cases follow below.
 local HUD={set=function(text,visible) v.hud=visible and text or '' end}
 local function log(text) f.logs[#f.logs+1]=text end
 local function reset() VIP.reset();v:Reset() end
@@ -85,17 +94,41 @@ end
 -- checks. A blocked terminal is never used as a fallback destination.
 for _,bad in ipairs({'near','far','short-trip','scanner','nan','unrelated'}) do
  reset()
- local x=bad=='near' and 100 or bad=='far' and 2500 or 800
+ local x=bad=='near' and 100 or bad=='far' and 5500 or 800
  local other=bad=='short-trip' and 1000 or 1800
  local variant=bad=='unrelated' and 'unrelated' or 'drop-point'
  f.places={f:Place(x,0,0,variant),f:Place(other,0,0,variant)}
  if bad=='near' then f.places[2]=f:Place(200,0,0,variant) end
- if bad=='far' then f.places[2]=f:Place(3500,0,0,variant) end
+ if bad=='far' then f.places[2]=f:Place(6500,0,0,variant) end
  if bad=='scanner' then f.places[#f.places+1]=f:Place(800,0,0,'assault',true,2) end
  if bad=='nan' then f.places[1]=f:Place(0/0,0,0,variant) end
  assert(not VIP.request(f.patrol,log,true,true),'unsafe fallback pair '..bad)
  assert(#f.creates==0 and n:GetStage()==0 and not VIP.isActive())
 end
+-- A 28-FT/3-drop-point/19-clear pool can still have no pickup within 2 km.
+-- Expanded selection finds its 3 km pair without removing scanner exclusion.
+reset();f.places={}
+for i=1,31 do
+ local x=i==1 and 3000 or i==2 and 4100 or i<=19 and 7000+i*1000 or -1000-(i-20)*200
+ f.places[#f.places+1]=f:Place(x,0,0,i<=28 and 'fasttravel' or 'drop-point')
+ if i>19 then f.places[#f.places+1]=f:Place(x,0,0,'assault',true,2) end
+end
+assert(VIP.request(f.patrol,log,true,true),table.concat(f.logs,'\n'))
+assert(f.markers[1].x==3000 and n:GetRemainingSeconds()==400 and #f.creates==0)
+assert(VIP.diagnostics():find('fast travel=28 | drop points=3 | clear=19',1,true))
+assert(VIP.diagnostics():find('clear 250-2000 m=0',1,true) and VIP.diagnostics():find('radius=3500 m',1,true))
+assert(f.notices[#f.notices].text:find('Extended response area: 3.0 km',1,true));VIP.cancel(f.patrol,log)
+-- Nearby routes and mixed terminals win before expanding to remote FT-only
+-- pairs. A shorter 500-799 m delivery is allowed only by the fallback passes.
+reset();f.places={f:Place(800,0,0,'drop-point'),f:Place(1800,0,0,'drop-point'),f:Place(3000),f:Place(4100)}
+assert(VIP.request(f.patrol,log,true,true) and f.markers[1].x==800)
+VIP.cancel(f.patrol,log)
+reset();f.places={f:Place(300),f:Place(900)}
+assert(VIP.request(f.patrol,log,true,true) and n:GetStage()==1)
+assert(f.markers[1].x==300 or f.markers[1].x==900);VIP.cancel(f.patrol,log)
+reset();f.places={f:Place(800),f:Place(4200)}
+assert(VIP.request(f.patrol,log,true,true) and f.markers[1].x==800)
+VIP.cancel(f.patrol,log)
 reset()
 local function step(seconds)
  for _=1,math.floor((seconds or .25)*4+0.0001) do VIP.update(.25,f.duty,f.patrol,log,HUD) end

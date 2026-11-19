@@ -1,5 +1,14 @@
 # Arrest checks
 
+v0.16e adds fresh bounded ground retries for a briefly unavailable native
+navigation query after carry/drop. Persistent failure produces a short player
+instruction; fixtures assert that `.lua:` and internal ground-error identifiers
+never enter notifications. Detailed CET counters distinguish navigation,
+collision misses, slope, floor height, displacement/path and footprint rejects.
+The larger 0.9 m navigation search still feeds the original 2 m/0.75 m
+displacement limits. No native deadline/cooldown, health or payment policy is
+relaxed. Real post-drop navigation timing remains an engine boundary.
+
 Install Python 3 and `lupa`, then run from a repository checkout:
 
 ```sh

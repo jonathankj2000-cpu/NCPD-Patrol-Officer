@@ -55,7 +55,7 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_VIP_ResponseDescription",
-              "femaleVariant": "Dispatch has arranged a witness pickup at the marked location. Respond within five minutes in an owned police car. Keep a passenger seat free and stop near the witness to allow boarding. The delivery location will be assigned once your passenger is aboard.",
+              "femaleVariant": "Dispatch has arranged a witness pickup at the marked location. Respond before the assigned deadline in an owned police car. Keep a passenger seat free and stop near the witness to allow boarding. The delivery location will be assigned once your passenger is aboard.",
               "maleVariant": ""
             }
           ]

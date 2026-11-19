@@ -12,7 +12,7 @@ local keepResolvedScene=false
 local locationInfo="Not selected"
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
-    if not system or system:Version()~=2 then error("Install the complete v0.14b VIP package and restart") end
+    if not system or system:Version()~=3 then error("Install the complete v0.16e VIP package and restart") end
     return system
 end
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
@@ -29,6 +29,8 @@ local function waypoint(patrol,point)
 end
 function M.state() return label end
 function M.ambushState() return Ambush.state() end
+function M.ambushSetting() return Ambush.setting() end
+function M.cycleAmbushCars(status) return Ambush.cycle(status) end
 function M.isActive() return phase~="idle" or Ambush.isActive() end
 function M.reset()
     -- World transitions forget old IDs without touching the previous world.
@@ -113,19 +115,28 @@ local function chooseLocations(player)
         for _,point in ipairs(occupied) do if distance(site.position,point)<100 then clear=false;break end end
         if clear then safe[#safe+1]=site end
     end
-    locationInfo=string.format("fast travel=%d | drop points=%d | clear=%d",terminals,dropPoints,#safe)
-    -- Prefer the established local fast-travel routes. If there is no pair,
-    -- expand the same search with native drop-point terminal locations. This
-    -- reads world markers only; never registers/unlocks a travel point.
-    for _,includeDropPoints in ipairs({false,true}) do
-        for _,radius in ipairs({1000,1500,2000}) do
+    local nearby,localRange,extended,nearest=0,0,0,math.huge
+    for _,site in ipairs(safe) do
+        nearest=math.min(nearest,site.distance)
+        if site.distance<250 then nearby=nearby+1
+        elseif site.distance<=2000 then localRange=localRange+1
+        elseif site.distance<=5000 then extended=extended+1 end
+    end
+    locationInfo=string.format("fast travel=%d | drop points=%d | clear=%d | blocked by scanner=%d | clear <250 m=%d | clear 250-2000 m=%d | clear 2000-5000 m=%d | nearest clear=%s",
+        terminals,dropPoints,#safe,#sites-#safe,nearby,localRange,extended,nearest<math.huge and string.format("%.0f m",nearest) or "none")
+    -- Prefer short routes, then relax proximity/trip length before expanding
+    -- the pickup radius. Native validation and response time use the same caps.
+    -- This reads markers only; no travel node is unlocked or registered.
+    for _,limits in ipairs({{500,1000,800,2500},{500,1500,800,2500},{500,2000,800,2500},
+        {250,2000,500,3500},{250,3500,500,5000},{250,5000,500,5000}}) do
+        for _,includeDropPoints in ipairs({false,true}) do
             local pairs={}
             for _,site in ipairs(safe) do
-                if (includeDropPoints or site.kind=="fast travel") and site.distance>=500 and site.distance<=radius then
+                if (includeDropPoints or site.kind=="fast travel") and site.distance>=limits[1] and site.distance<=limits[2] then
                     local drops={}
                     for _,drop in ipairs(safe) do
                         local metres=distance(site.position,drop.position)
-                        if (includeDropPoints or drop.kind=="fast travel") and metres>=800 and metres<=2500 then drops[#drops+1]=drop end
+                        if (includeDropPoints or drop.kind=="fast travel") and metres>=limits[3] and metres<=limits[4] then drops[#drops+1]=drop end
                     end
                     if #drops>0 then
                         local drop=drops[math.random(1,#drops)]
@@ -135,12 +146,13 @@ local function chooseLocations(player)
             end
             if #pairs>0 then
                 local pair=pairs[math.random(1,#pairs)]
-                locationInfo=locationInfo.." | selected="..pair.kind.." | radius="..radius.." m"
+                pair.distance=distance(start,pair.pickup)
+                locationInfo=locationInfo.." | selected="..pair.kind.." | radius="..limits[2].." m | pickup="..math.floor(pair.distance+.5).." m | trip="..math.floor(distance(pair.pickup,pair.drop)+.5).." m"
                 return pair
             end
         end
     end
-    error("No safe VIP terminal pair 500-2000 m away ("..locationInfo.."). Travel to another area and retry.")
+    error("No safe VIP terminal pair after expanded search (pickup 250-5000 m; trip 500-5000 m). "..locationInfo)
 end
 local function spawnVIP(player)
     local system=Game.GetDynamicEntitySystem()
@@ -208,7 +220,8 @@ function M.request(patrol,status,sound,voice)
         phase,elapsed,poll,lastStage="responding",0,0,1;finalReason=nil;searchAge=0;keepResolvedScene=false
         if not Ambush.begin() then error("Previous ambush cleanup still active") end
         waypoint(patrol,pickup)
-        patrol:NotifyDispatch("NCPD DISPATCH: Protected witness transport. Collect the VIP at the marked location. Use an owned police car with a free passenger seat.",10,sound,voice)
+        local extended=pair.distance>2000 and string.format(" Extended response area: %.1f km.",pair.distance/1000) or ""
+        patrol:NotifyDispatch("NCPD DISPATCH: Protected witness transport. Collect the VIP at the marked location. Use an owned police car with a free passenger seat."..extended,10,sound,voice)
         report("Assigned: collect protected witness; destination follows after boarding",status)
     end)
     if not ok then

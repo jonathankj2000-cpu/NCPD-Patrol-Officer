@@ -64,6 +64,8 @@ function M.state() return VIP.isActive() and VIP.state() or (Cyberpsycho.isActiv
 function M.vipState() return VIP.state() end
 function M.vipDiagnostics() return VIP.diagnostics() end
 function M.vipAmbushState() return VIP.ambushState() end
+function M.vipAmbushCars() return VIP.ambushSetting() end
+function M.cycleVIPAmbushCars(status) return VIP.cycleAmbushCars(status) end
 function M.cyberpsychoState() return Cyberpsycho.state() end
 function M.cyberpsychoDiagnostics() return Cyberpsycho.diagnostics() end
 function M.cyberpsychoVariantState() return Cyberpsycho.variantState() end

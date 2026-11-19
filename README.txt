@@ -1,4 +1,35 @@
-NCPD PATROL v0.16d - TERRAIN, VIP AND AMBUSH FIXES
+NCPD PATROL v0.16e - VIP ROUTES, CONVOYS AND ARREST NOTICES
+
+V0.16E TEST
+VIP searches retain preferred 500-2000 m pickups and 800-2500 m trips. If no
+pair exists, try 250-2000 m pickups/500-3500 m trips, then pickup radii of
+3.5 km and 5 km with trips up to 5 km. Nearby mixed/drop-point routes precede
+remote fast-travel-only routes. Scanner clearance stays 100 m. Location
+diagnostics show total/clear/blocked counts, distance buckets and nearest point.
+Responses beyond 2 km gain time: five minutes normally, up to ten minutes at
+5 km. The packed journal briefing refers to the assigned deadline. Delivery
+still has fifteen minutes and requires actual boarding and a living exit.
+
+An ambush can now have 1-3 cars, each with two attackers and separate mounting,
+chase, combat and cleanup. Default: random 1-3. CET > DISPATCH CONTROLS >
+Ambush cars ... (change) cycles Random/1/2/3. TEST: Trigger VIP ambush uses
+that choice. Changes made after a car starts apply to the next transport.
+Each car needs its own checked off-camera road position and 12 m separation.
+One warning follows actual mounting. Extra cars with no safe start within
+20 gameplay seconds are skipped. One convoy per trip; no late second wave.
+
+An unsuitable arrest area now shows a short instruction to move the suspect
+to flat, clear ground. Technical errors and rejection counters stay in CET.
+Fresh placement queries retry briefly for up to about two seconds, with a
+0.9 m navigation probe. Actual displacement remains capped at 2 m/0.75 m and
+existing surface, native activation and payment checks remain. There is no
+20-second cooldown. Apparently flat ground that still fails needs a live test;
+the new log counters distinguish navigation, collision, slope and height.
+
+Install the ENTIRE package and restart: includes vip_ambush_unit.lua and the
+updated VIP archive. VIP native API is 3. No new dependency. Twelve portable
+suites and offline API compilation pass; native traffic, collision, animation
+and installed-game compilation still need in-game confirmation.
 
 V0.16D TEST
 Arrest placement now scores nearby ground using navigation and real collision
@@ -128,7 +159,7 @@ needed or bundled. No extra framework dependency is added.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.16d.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.16e.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only
@@ -229,16 +260,19 @@ No new archive/dependency is needed beyond the files already bundled in the ZIP.
 VIP TRANSPORT TEST (MANUAL FIRST VERSION)
 1. Start a shift, clear any active dispatch, and use CET > DISPATCH CONTROLS >
    TEST: Request VIP transport. Outside combat; a car request is supported.
-2. Objective 1: collect the witness 500-1000 m away (up to 2 km if needed).
-   Reach the marker in five gameplay minutes. The VIP spawns near pickup when
+2. Objective 1: collect the witness, preferably 500-2000 m away. Sparse areas
+   may use a 250 m pickup or expand out to 5 km. Response time is five minutes
+   normally, rising up to ten minutes with distant pickups. The VIP spawns when
    you approach within 140 m; nothing is spawned beside you on request.
 3. Stop near the witness, as DRIVER of an OWNED POLICE CAR. Leave a passenger
    seat free. The VIP tries rear-right, rear-left, then front-right. Your partner
    keeps their occupied seat. VIP boarding is animated, with no teleport fallback.
 4. Objective 2 appears only when the witness is actually seated in your car.
-   A delivery marker 800-2500 m from pickup is then revealed. Deliver within
+   A delivery marker normally 800-2500 m from pickup (500-5000 m fallback) is
+   then revealed. Deliver within
    15 gameplay minutes. Menus pause the mission timer.
-5. One hostile car with two gang members may pursue you after driving 250-400 m.
+5. A convoy of 1-3 hostile cars, two gang members each, may pursue you after
+   driving 250-400 m. Use Ambush cars ... (change) to set Random/1/2/3.
    TEST: Trigger VIP ambush arms it sooner; it still waits for a road position
    your car actually drove through, 35-65 m behind you and outside the active
    camera view. Looking backwards delays the spawn until the scene bounds are

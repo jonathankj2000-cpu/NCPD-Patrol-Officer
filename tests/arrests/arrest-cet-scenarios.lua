@@ -98,6 +98,7 @@ ResourceHelper=setmetatable({},{__index=function() error('ResourceHelper cannot 
 CName={new=function(v)return v end};DynamicEntitySpec={new=function()return {} end};WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0,PlayAtResourcePosition=1}
 local looked
 local navOK,pathOK,navZ,centerBlocked=true,true,0,false
+local navBlockedUntil=0
 local floorMode='flat'
 Vector4.new=function(x,y,z,w)
  return setmetatable({x=x,y=y,z=z,w=w},{__index=function(t,k)return rawget(t,string.lower(k))end})
@@ -107,8 +108,8 @@ AINavigationSystem={HasPathFromAtoB=function()return pathOK end}
 Game={GetPlayer=function()return player end,GetDynamicEntitySystem=function()return dynamic end,
  GetWorkspotSystem=function()return ws end,GetResourceDepot=function()return depot end,
  GetAINavigationSystem=function()return {FindPointInSphereForCharacter=function(_,point,radius,npc)
-  local denied=centerBlocked and radius==.6 and point.x==npc.position.x and point.y==npc.position.y
-  return {status=navOK and not denied and 1 or 0,point=Vector4.new(point.x,point.y,point.z+navZ,1)}
+  local denied=centerBlocked and radius==.9 and point.x==npc.position.x and point.y==npc.position.y
+  return {status=navOK and clock>=navBlockedUntil and not denied and 1 or 0,point=Vector4.new(point.x,point.y,point.z+navZ,1)}
  end}end,
  GetSpatialQueriesSystem=function() return {SyncRaycastByCollisionGroup=function(_,from,to,group,staticOnly,dynamicOnly)
   assert(group=='Static' and staticOnly and not dynamicOnly)
@@ -340,6 +341,24 @@ for _,mode in ipairs({'missing','steep'}) do
  assert(wallet==bank and #played==before and not npc.physicsDisabled and not npc.teleports)
 end
 floorMode='flat'
+-- Native navigation can be briefly unavailable after a carry/drop. Retry the
+-- same target/token for a bounded interval; no helper/payment before it passes.
+Module.reset();local settling=arrestSuspect(1185);settling.ragdoll=true
+navBlockedUntil=clock+2.75;bank=wallet;before=#played
+assert(ArrestNative:StartArrest(settling));step(9)
+assert(ArrestNative:GetStage()==2 and #played==before and wallet==bank)
+step(15);assert(wallet==bank+250 and ArrestNative:IsArrested(settling));releasePaid()
+navBlockedUntil=0
+-- If the patch remains unsafe, the game receives a short instruction, with
+-- technical paths and per-check rejection reasons reserved for the CET log.
+Module.reset();local unsafe=arrestSuspect(1186);unsafe.ragdoll=true;navOK=false
+bank=wallet;assert(ArrestNative:StartArrest(unsafe));step(16)
+assert(ArrestNative:GetStage()==0 and wallet==bank)
+assert(ArrestNative:GetStatus()=='Move the suspect to flat, clear ground and try again.')
+for _,message in ipairs(notifications) do
+ assert(not message:find('.lua:',1,true) and not message:find('NCPD_GROUND_UNSUITABLE',1,true),'technical arrest error leaked to a game notification')
+end
+navOK=true
 -- Unsupported, unreachable or vertically remote points cannot trigger physics,
 -- teleportation, playback or payment. Setup failure releases the reservation.
 for failure=1,3 do

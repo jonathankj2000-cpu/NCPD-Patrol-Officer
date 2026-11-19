@@ -22,7 +22,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolVIPSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolVIPSystem") as NCPDPatrolVIPSystem;
     }
-    public func Version() -> Int32 { return 2; }
+    public func Version() -> Int32 { return 3; }
     // A conservative sphere encloses the Hella and the temporary crew spawn
     // positions. Reject any overlap with the active camera's padded frustum.
     // Native script owns the camera transform's output parameter.
@@ -169,12 +169,14 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     }
     public func BeginDispatch(pickup: Vector4, destination: Vector4) -> Int32 {
         let distance: Float;
+        let responseDistance: Float;
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         if !this.Eligible() || this.Running() || !this.IsReady() { return 0; };
         distance = Vector4.Distance(player.GetWorldPosition(), pickup);
-        if distance != distance || distance < 500.0 || distance > 2000.0 { return 0; };
+        if distance != distance || distance < 250.0 || distance > 5000.0 { return 0; };
+        responseDistance = distance;
         distance = Vector4.Distance(pickup, destination);
-        if distance != distance || distance < 800.0 || distance > 2500.0 { return 0; };
+        if distance != distance || distance < 500.0 || distance > 5000.0 { return 0; };
         this.ReconcileLoadedJournal();
         if this.m_restorePending { return 0; };
         this.m_previousTracked = null;
@@ -190,6 +192,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
         this.m_origin = pickup; this.m_destination = destination; this.m_dropStarted = false;
         this.m_arrived = false;
         this.m_stage = 1; this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0; this.m_remaining = 300.0;
+        if responseDistance > 2000.0 { this.m_remaining = 300.0 + (responseDistance - 2000.0) / 10.0; };
         this.m_reason = "Collect the protected witness in an owned police vehicle";
         this.Journal().TrackEntry(this.Entry(this.ResponsePath(), "gameJournalQuestObjective"));
         return this.m_token;

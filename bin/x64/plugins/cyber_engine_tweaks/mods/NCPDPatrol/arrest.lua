@@ -3,11 +3,18 @@
 local M = {}
 local CLIP = "lie_ground_0__2h_back_handcuffs_a__01"
 local units, observedToken = {}, nil
+local pendingPlacement=nil
 local poll, lastRevision = 0, -1
 local label = "Ready on duty; EUR$250 per arrest"
 local unavailableReported = false
 local lastLook = nil
 local configuredLoop, configuredSource = nil, nil
+local GROUND_FAILURE="NCPD_GROUND_UNSUITABLE"
+local function groundFailure(reason) return tostring(reason):find(GROUND_FAILURE,1,true)~=nil end
+local function publicFailure(reason)
+    if groundFailure(reason) then return "Move the suspect to flat, clear ground and try again." end
+    return "Unable to secure the suspect. Try again."
+end
 
 local function native()
     return Game.GetScriptableSystemsContainer():Get("NCPDPatrolArrestSystem")
@@ -39,25 +46,38 @@ local function lyingPosition(npc)
     local length=math.sqrt(forward.x*forward.x+forward.y*forward.y)
     local fx,fy=0,1
     if length>.01 then fx,fy=forward.x/length,forward.y/length end
+    local surface={missing=0,slope=0,height=0}
     local function ground(point)
         local hit,trace=spatial:SyncRaycastByCollisionGroup(
             Vector4.new(point.x,point.y,point.z+.4,1),Vector4.new(point.x,point.y,point.z-.6,1),
             CName.new("Static"),true,false)
-        if not hit or not trace or not finite(trace.position) or not finite(trace.normal)
-            or trace.normal.z<.95 or math.abs(trace.position.z-point.z)>.35 then return nil end
+        if not hit or not trace or not finite(trace.position) or not finite(trace.normal) then
+            surface.missing=surface.missing+1;return nil
+        end
+        if trace.normal.z<.95 then surface.slope=surface.slope+1;return nil end
+        if math.abs(trace.position.z-point.z)>.35 then surface.height=surface.height+1;return nil end
         return Vector4.new(trace.position.x,trace.position.y,trace.position.z,1)
     end
     local best,bestScore,bestMove=nil,math.huge,nil
+    local rejected={nav=0,floor=0,bounds=0,path=0,footprint=0}
     -- Score every supported candidate rather than accepting the current spot
     -- first. A flatter patch wins even when the root is already on navmesh.
     for _,offset in ipairs({{0,0},{.75,0},{-.75,0},{0,.75},{0,-.75},{1,1},{-1,1},{1,-1},{-1,-1},
         {1.6,0},{-1.6,0},{0,1.6},{0,-1.6},{1.3,.7},{-1.3,.7},{1.3,-.7},{-1.3,-.7}}) do
         local probe=Vector4.new(origin.x+offset[1],origin.y+offset[2],origin.z,1)
-        local result=nav:FindPointInSphereForCharacter(probe,.6,npc)
+        -- Search depth may exceed the displacement budget; the resulting floor
+        -- must still pass the same 2 m / 0.75 m native placement limits below.
+        local result=nav:FindPointInSphereForCharacter(probe,.9,npc)
         if result and result.status==worldNavigationRequestStatus.OK and finite(result.point) then
             local point=ground(result.point)
-            local clear=point and pointDistance(point,origin)<=1.95 and math.abs(point.z-origin.z)<=.7
-                and pointDistance(point,from)<=2.45 and AINavigationSystem.HasPathFromAtoB(player,from,point)
+            local clear=point~=nil
+            if not clear then rejected.floor=rejected.floor+1
+            elseif pointDistance(point,origin)>1.95 or math.abs(point.z-origin.z)>.7 or pointDistance(point,from)>2.45 then
+                clear=false;rejected.bounds=rejected.bounds+1
+            elseif not AINavigationSystem.HasPathFromAtoB(player,from,point) then
+                clear=false;rejected.path=rejected.path+1
+            end
+            local footprintStarted=clear
             local low,high=point and point.z or 0,point and point.z or 0
             -- Check the full lying footprint, including both sides, against
             -- real static collision as well as pedestrian navigation. Navmesh
@@ -76,18 +96,20 @@ local function lyingPosition(npc)
                     end
                 end
             end
+            if footprintStarted and not clear then rejected.footprint=rejected.footprint+1 end
             if clear then
                 local moved=pointDistance(point,origin)
                 local score=(high-low)*10+moved*.04
                 if score<bestScore then best,bestScore,bestMove=Vector4.new(point.x,point.y,point.z+.03,1),score,moved end
             end
-        end
+        else rejected.nav=rejected.nav+1 end
     end
     if best then
         print(string.format("[NCPD Patrol] Arrest placement | supported floor selected | move=%.2f m | target=(%.2f, %.2f, %.2f)",bestMove,best.x,best.y,best.z))
         return best
     end
-    error("No nearby supported ground for arrest; use R pickup to move the suspect to clear ground and retry")
+    error(string.format("%s | no supported nearby patch | nav=%d | collision=%d | bounds=%d | path=%d | footprint=%d | ray misses=%d | slope=%d | floor height=%d | root=(%.2f,%.2f,%.2f)",
+        GROUND_FAILURE,rejected.nav,rejected.floor,rejected.bounds,rejected.path,rejected.footprint,surface.missing,surface.slope,surface.height,origin.x,origin.y,origin.z))
 end
 
 local function recoverPhysics(system,unit,delta)
@@ -198,7 +220,7 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16d package") end
+        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16e package") end
         local name = system:AnimationName(unit.component.name)
         if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the bundled archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
@@ -289,11 +311,11 @@ end
 local function fail(system, unit, reason)
     if unit.failed then return end
     unit.failed, unit.retiring = true, true
-    if not unit.paid then system:FailPose(unit.token, reason) end
+    if not unit.paid then system:FailPose(unit.token, publicFailure(reason)) end
     print("[NCPD Patrol] Arrest | " .. reason)
 end
 
-local function create(system, npc, token)
+local function create(system, npc, token, quiet)
     local dynamic = entities()
     if not dynamic or not dynamic:IsReady() then error("Codeware entity system unavailable") end
     if workspots():IsActorInWorkspot(npc) then error("Suspect is already in another workspot") end
@@ -301,8 +323,10 @@ local function create(system, npc, token)
     local template = depot:ResourceExists(system:GetHelperTemplate())
     local bank = depot:ResourceExists(system:GetWorkspotResource())
     local loop = depot:ResourceExists(system:GetLoopResource())
-    print("[NCPD Patrol] Arrest setup | archive=" .. tostring(depot:ArchiveExists("NCPDPatrol_Arrest.archive"))
-        .. " | template=" .. tostring(template) .. " | bank=" .. tostring(bank) .. " | loop=" .. tostring(loop))
+    if not quiet then
+        print("[NCPD Patrol] Arrest setup | archive=" .. tostring(depot:ArchiveExists("NCPDPatrol_Arrest.archive"))
+            .. " | template=" .. tostring(template) .. " | bank=" .. tostring(bank) .. " | loop=" .. tostring(loop))
+    end
     if not template or not bank or not loop then error("Arrest animation resources unavailable; no playback requested") end
     local spec = DynamicEntitySpec.new()
     spec.templatePath = system:GetHelperTemplate()
@@ -403,12 +427,14 @@ function M.state() return label end
 -- IDs or stop old actor handles in a newly attached world.
 function M.reset()
     units, observedToken, poll, lastRevision = {}, nil, 0, -1
+    pendingPlacement=nil
     configuredLoop, configuredSource = nil, nil
     label, unavailableReported = "Ready on duty; EUR$250 per arrest", false
     lastLook = nil
 end
 
 function M.finish()
+    pendingPlacement=nil
     pcall(function()
         local system = native()
         if system and system:Version() == 6 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
@@ -427,7 +453,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 6 then error("Install all v0.16d arrest scripts and restart the game") end
+        if not system or system:Version() ~= 6 then error("Install all v0.16e arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.
@@ -442,16 +468,32 @@ function M.update(delta, onDuty, paused)
                 table.remove(units, index)
             end
         end
-        if onDuty and not paused and system:GetStage() == 2 then
+        if not onDuty or system:GetStage()~=2 then pendingPlacement=nil
+        elseif not paused then
             local token = system:GetToken()
             if token ~= observedToken then
                 observedToken = token
-                local made, unit = pcall(create, system, system:GetTarget(), token)
-                if made then
-                    units[#units+1] = unit
-                else
-                    system:FailPose(token, tostring(unit))
-                    print("[NCPD Patrol] Arrest | " .. tostring(unit))
+                pendingPlacement={token=token,npc=system:GetTarget(),age=0,retry=0,attempts=0}
+            end
+            local pending=pendingPlacement
+            if pending then
+                pending.age=pending.age+delta;pending.retry=pending.retry-delta
+                if pending.retry<=0 then
+                    pending.attempts=pending.attempts+1
+                    local made, unit = pcall(create, system, pending.npc, token,pending.attempts>1)
+                    if made then
+                        units[#units+1] = unit
+                        if pending.attempts>1 then
+                            print(string.format("[NCPD Patrol] Arrest ground | ready after %d checks over %.2f s",pending.attempts,pending.age))
+                        end
+                        pendingPlacement=nil
+                    elseif groundFailure(unit) and pending.age<1.5 then
+                        pending.retry=.35
+                    else
+                        system:FailPose(token, publicFailure(unit))
+                        print(string.format("[NCPD Patrol] Arrest | %s | checks=%d | observed=%.2f s",tostring(unit),pending.attempts,pending.age))
+                        pendingPlacement=nil
+                    end
                 end
             end
         end
