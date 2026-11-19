@@ -7,6 +7,12 @@ local phase, label = "idle", "No ambush this trip"
 local used, requested = false, false
 local travelled, sample, clock, elapsed, age, stopped, escaped, retry = 0, 0, 0, 0, 0, 0, 0, 0
 local triggerAt = 300
+local spawnPoint,trailVehicle=nil,nil
+local attempts,retryAfterCleanup,settling=0,false,0
+local function finite(p)
+    return p and p.x==p.x and p.y==p.y and p.z==p.z
+        and math.abs(p.x)<100000 and math.abs(p.y)<100000 and math.abs(p.z)<100000
+end
 local function distance(a,b)
     return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2)
 end
@@ -23,6 +29,7 @@ function M.reset()
     phase,label="idle","No ambush this trip";used,requested=false,false
     travelled,sample,clock,elapsed,age,stopped,escaped,retry=0,0,0,0,0,0,0,0
     triggerAt=math.random(250,400)
+    spawnPoint,trailVehicle=nil,nil;attempts,retryAfterCleanup,settling=0,false,0
 end
 function M.begin()
     if M.isActive() then return false end
@@ -54,9 +61,17 @@ local function cleanup(status)
     ids=remaining
     if #ids>0 then phase="cleanup";return false end
     units={};carID,car=nil,nil;phase="idle"
-    report("Ambush closed",status);return true
+    spawnPoint=nil
+    if retryAfterCleanup and attempts<3 then
+        retryAfterCleanup=false;used,requested=false,true;trail={};sample=0
+        report("Unsafe road spawn released; waiting for a new checked road point (attempt "..attempts.."/3)",status)
+    else
+        retryAfterCleanup=false;report("Ambush closed",status)
+    end
+    return true
 end
 function M.finish(status,keepResolvedScene)
+    retryAfterCleanup=false
     if keepResolvedScene and phase=="resolved" then return false end
     if phase=="idle" and #ids==0 then used,requested=true,false;trail={};return true end
     requested=false;trail={};used=true;phase="cleanup";retry=0
@@ -97,46 +112,107 @@ local function hostile(actor,attack)
 end
 local function roadPoint(vehicle)
     local pos,forward=vehicle:GetWorldPosition(),vehicle:GetWorldForward()
+    local spatial=Game.GetSpatialQueriesSystem()
+    if not spatial or not finite(pos) or not finite(forward) then return nil end
+    local function ray(from,to)
+        return spatial:SyncRaycastByCollisionGroup(from,to,CName.new("Static"),true,false)
+    end
+    local function floorAt(p)
+        local hit,result=ray(Vector4.new(p.x,p.y,p.z+.75,1),Vector4.new(p.x,p.y,p.z-1.5,1))
+        if not hit or not result or not finite(result.position) or not finite(result.normal)
+            or result.normal.z<.85 or math.abs(result.position.z-p.z)>1.3 then return nil end
+        return result
+    end
+    local function supported(point)
+        local centre=floorAt(point.position)
+        local direction=point.forward
+        if not centre or not finite(direction) then return false end
+        for _,corner in ipairs({{-2,-.85},{-2,.85},{2,-.85},{2,.85}}) do
+            local dx=direction.x*corner[1]-direction.y*corner[2]
+            local dy=direction.y*corner[1]+direction.x*corner[2]
+            local p=Vector4.new(point.position.x+dx,point.position.y+dy,point.position.z,1)
+            local floor=floorAt(p)
+            local expected=centre.position.z-(centre.normal.x*dx+centre.normal.y*dy)/centre.normal.z
+            if not floor or math.abs(floor.position.z-expected)>.2 then return false end
+        end
+        return centre.position
+    end
+    -- Walk the recent route backwards. A spatially close point from another
+    -- carriageway, an earlier loop or a different bridge level is not "behind".
+    local along,previous=0,pos
     for i=#trail,1,-1 do
         local point=trail[i]
+        local segment=distance(previous,point.position)
+        along=along+segment
+        if along>65 then break end
+        -- Check the swept car corridor along each recorded segment. Fail closed
+        -- at barriers instead of projecting onto pedestrian navmesh/another road.
+        for _,side in ipairs(segment>.1 and {-.8,0,.8} or {}) do
+            local dx,dy=-point.forward.y*side,point.forward.x*side
+            local hit=ray(Vector4.new(previous.x+dx,previous.y+dy,previous.z+.6,1),
+                Vector4.new(point.position.x+dx,point.position.y+dy,point.position.z+.6,1))
+            if hit then return nil end
+        end
+        previous=point.position
         local metres=distance(point.position,pos)
         local behind=(point.position.x-pos.x)*forward.x+(point.position.y-pos.y)*forward.y
-        if metres>=35 and metres<=65 and behind < -25 and clock-point.time>=1 and clock-point.time<=45
-            and math.abs(point.position.z-pos.z)<=15 then
+        local heading=point.forward.x*forward.x+point.forward.y*forward.y
+        if along>=35 and metres>=35 and metres<=65 and behind < -25 and heading>=.9
+            and clock-point.time>=.5 and clock-point.time<=12 and math.abs(point.position.z-pos.z)<=4 then
+            local ground=supported(point)
             local ok,hidden=pcall(function()
                 local native=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
                 return native and native:Version()==2 and native:CanSpawnAmbushAt(point.position)
             end)
-            if ok and hidden==true then return point end
+            if ground and ok and hidden==true then
+                return {position=point.position,ground=ground,orientation=point.orientation,forward=point.forward,time=point.time}
+            end
         end
     end
 end
 local function record(delta,vehicle)
     clock=clock+delta;sample=sample+delta
-    if sample<1 or math.abs(vehicle:GetCurrentSpeed())<3 then return end
+    if not same(trailVehicle,vehicle) then trail={};trailVehicle=vehicle;sample=0 end
+    if sample<.25 or math.abs(vehicle:GetCurrentSpeed())<3 then return end
     sample=0
     local pos=vehicle:GetWorldPosition()
     local prev=trail[#trail]
     local moved=prev and distance(pos,prev.position) or 0
     if prev and moved>120 then trail={};travelled=0;prev=nil end
-    if prev and moved<8 then return end
+    if not finite(pos) then trail={};return end
+    if prev and moved<5 then return end
     travelled=travelled+(prev and moved or 0)
-    trail[#trail+1]={position=Vector4.new(pos.x,pos.y,pos.z,1),orientation=vehicle:GetWorldOrientation(),time=clock}
-    if #trail>60 then table.remove(trail,1) end
+    local forward=vehicle:GetWorldForward()
+    if not finite(forward) then return end
+    trail[#trail+1]={position=Vector4.new(pos.x,pos.y,pos.z,1),orientation=vehicle:GetWorldOrientation(),
+        forward=Vector4.new(forward.x,forward.y,forward.z,0),time=clock}
+    if #trail>120 then table.remove(trail,1) end
 end
 local function spawn(point,patrol,status)
     -- Reserve before the first create; partial creation must also be cleaned up.
     used,requested=true,false;phase="spawning";elapsed,age=0,0
+    attempts=attempts+1;retryAfterCleanup=false;settling=0;spawnPoint=point
     local system=Game.GetDynamicEntitySystem()
     if not system or not system:IsReady() then error("Ambush entity system not ready") end
     local pos=point.position
-    carID=create(system,"Vehicle.NCPDPatrol_VIPAmbush",Vector4.new(pos.x,pos.y,pos.z+0.15,1),point.orientation)
+    carID=create(system,"Vehicle.NCPDPatrol_VIPAmbush",Vector4.new(pos.x,pos.y,point.ground.z+0.15,1),point.orientation)
     units={}
-    for i,seat in ipairs({"seat_front_left","seat_front_right"}) do
-        local id=create(system,"Character.NCPDPatrol_VIPAttacker",Vector4.new(pos.x+i*3,pos.y+3,pos.z+0.2,1),point.orientation)
-        units[#units+1]={id=id,seat=seat}
-    end
-    report("Attacker car created at a recorded road position",status)
+    report("Attacker car requested at checked road history; verifying actual road level",status)
+end
+local function positioned()
+    if not car or not car:IsAttached() or not spawnPoint then return false end
+    local actual,expected=car:GetWorldPosition(),spawnPoint.ground
+    return finite(actual) and math.sqrt((actual.x-expected.x)^2+(actual.y-expected.y)^2)<=1.5
+        and actual.z>=expected.z-.25 and actual.z<=expected.z+1.2
+end
+local function rejectPlacement(status)
+    local actual=car and car:GetWorldPosition()
+    local expected=spawnPoint and spawnPoint.position
+    report(string.format("Road placement rejected | actual=%s | requested=%s",
+        actual and string.format("%.1f,%.1f,%.1f",actual.x,actual.y,actual.z) or "unavailable",
+        expected and string.format("%.1f,%.1f,%.1f",expected.x,expected.y,expected.z) or "unavailable"),status)
+    retryAfterCleanup=true;phase="cleanup";retry=0
+    cleanup(status)
 end
 local function alive(actor)
     return actor and actor:IsAttached() and not actor:IsDead() and not actor:IsDeadNoStatPool()
@@ -171,10 +247,34 @@ local function active(delta,vehicle,patrol,status)
     if phase=="spawning" then
         local system=Game.GetDynamicEntitySystem()
         car=system:GetEntity(carID)
+        if car and car:IsAttached() then
+            if not positioned() then
+                settling=0
+                if elapsed>=1 then rejectPlacement(status) end
+                return
+            end
+            if #units==0 then
+                if settling==0 then car:ForceBrakesUntilStoppedOrFor(1) end
+                settling=settling+delta
+                if settling<.75 then return end
+                -- Spawn inside the verified car footprint, then mount each
+                -- attached actor immediately. Sideways +3/+6 m offsets can put
+                -- crew beyond a guardrail or off the edge of a bridge.
+                local pos=car:GetWorldPosition()
+                for _,seat in ipairs({"seat_front_left","seat_front_right"}) do
+                    local id=create(system,"Character.NCPDPatrol_VIPAttacker",Vector4.new(pos.x,pos.y,pos.z+1,1),spawnPoint.orientation)
+                    units[#units+1]={id=id,seat=seat}
+                end
+            end
+        end
         local ready=car and car:IsAttached()
-        for _,unit in ipairs(units) do unit.actor=system:GetEntity(unit.id);ready=ready and unit.actor and unit.actor:IsAttached() end
-        if ready then
-            for _,unit in ipairs(units) do mount(unit,false) end
+        for _,unit in ipairs(units) do
+            unit.actor=system:GetEntity(unit.id)
+            local attached=unit.actor and unit.actor:IsAttached()
+            if attached and not unit.command then mount(unit,false) end
+            ready=ready and attached
+        end
+        if ready and #units==2 then
             phase,elapsed="seating",0
         elseif elapsed>=12 then error("Ambush entities failed to attach") end
         return
@@ -182,9 +282,11 @@ local function active(delta,vehicle,patrol,status)
     if not car or not car:IsAttached() then error("Ambush vehicle unavailable") end
     if crewNeutralized() then resolve(status);return end
     if phase=="seating" then
+        if not positioned() then rejectPlacement(status);return end
         local ready=true
         for _,unit in ipairs(units) do ready=ready and same(Game.GetMountedVehicle(unit.actor),car) end
         if ready then
+            if distance(Game.GetPlayer():GetWorldPosition(),car:GetWorldPosition())>130 then rejectPlacement(status);return end
             for _,unit in ipairs(units) do unit.command=nil;hostile(unit.actor,false) end
             -- Native DynamicSpawnSystem uses this command/event/init sequence.
             chase=AIVehicleChaseCommand.new();chase.target=Game.GetPlayer()

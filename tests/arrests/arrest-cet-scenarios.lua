@@ -17,6 +17,7 @@ function dynamic:CreateEntity(spec)
  assert(not spec.persistState and not spec.persistSpawn and not spec.alwaysSpawned and spec.spawnInView and spec.active)
  nextID=nextID+1
  local helper=supportActor(nextID,'private helper',spec.position.x,spec.position.y,spec.position.z)
+ helper.orientation=spec.orientation
  function helper:FindComponentByType(kind)
   assert(kind=='workWorkspotResourceComponent')
   if not missingComponent then return {name='NCPDPatrolArrestLoop'} end
@@ -45,7 +46,13 @@ function ws:SendDebugCommandFunctionalTests(...) error('functional-test callback
 function ws:StopInDevice(...) error('unverified ambient actor stop attempted') end
 function ws:PlayInDeviceSimple(helper,npc,free,actorComp,deviceComp,sync,slideTime,behaviour,recipient)
  assert(not npc:IsRagdollEnabled(),'workspot requested while physical ragdoll still owns the suspect')
- assert(not free and actorComp=='NCPDPatrolArrestLoop' and slideTime==0 and behaviour==0 and recipient==helper)
+ assert(not free and actorComp=='NCPDPatrolArrestLoop' and recipient==helper)
+ if npc.physicsDisabled then
+  assert(slideTime==.5 and behaviour==1,'recovered ragdoll did not use native ground-anchor sliding')
+  if not npc.rejectWorkspotPlacement then
+   npc.position=Vector4.new(helper.position.x,helper.position.y,helper.position.z+(npc.workspotRootHeight or 0),1)
+  end
+ else assert(slideTime==0 and behaviour==0,'working animated-down path changed') end
  played[#played+1]={helper=helper,npc=npc,time=clock};bound[helper.id.hash]=npc
  inWS[npc.id.hash]=entryMode~='none'
  flags[npc.id.hash]={isActive=entryMode=='active' or entryMode=='exiting',entering=entryMode=='entering',exiting=entryMode=='exiting'}
@@ -88,9 +95,10 @@ function depot:LoadResource(path)
  if isLoop then loopTokens[#loopTokens+1]=token else tokens[#tokens+1]=token end;return token
 end
 ResourceHelper=setmetatable({},{__index=function() error('ResourceHelper cannot load the async component field') end})
-CName={new=function(v)return v end};DynamicEntitySpec={new=function()return {} end};WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
+CName={new=function(v)return v end};DynamicEntitySpec={new=function()return {} end};WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0,PlayAtResourcePosition=1}
 local looked
 local navOK,pathOK,navZ,centerBlocked=true,true,0,false
+local floorMode='flat'
 Vector4.new=function(x,y,z,w)
  return setmetatable({x=x,y=y,z=z,w=w},{__index=function(t,k)return rawget(t,string.lower(k))end})
 end
@@ -102,6 +110,14 @@ Game={GetPlayer=function()return player end,GetDynamicEntitySystem=function()ret
   local denied=centerBlocked and radius==.6 and point.x==npc.position.x and point.y==npc.position.y
   return {status=navOK and not denied and 1 or 0,point=Vector4.new(point.x,point.y,point.z+navZ,1)}
  end}end,
+ GetSpatialQueriesSystem=function() return {SyncRaycastByCollisionGroup=function(_,from,to,group,staticOnly,dynamicOnly)
+  assert(group=='Static' and staticOnly and not dynamicOnly)
+  if floorMode=='missing' then return false,nil end
+  local height,normal=0,1
+  if floorMode=='curb' and from.x<1.35 then height=from.y>0 and .1 or 0 end
+  if floorMode=='steep' then normal=.5 end
+  return true,{position=Vector4.new(from.x,from.y,height,1),normal=Vector4.new(0,0,normal,0)}
+ end} end,
  GetScriptableSystemsContainer=function()return {Get=function()return ArrestNative end}end,
  GetTargetingSystem=function()return {GetLookAtObject=function()return looked end}end}
 GameInstance.GetWorkspotSystem=function()return ws end
@@ -298,6 +314,32 @@ Module.reset();local animatedPhysics=arrestSuspect(1180);animatedPhysics.animate
 bank=wallet;assert(ArrestNative:StartArrest(animatedPhysics));step(20)
 assert(wallet==bank+250 and ArrestNative:IsArrested(animatedPhysics) and not animatedPhysics:IsRagdollEnabled())
 assert(animatedPhysics.physicsDisabled and animatedPhysics.health==2);releasePaid()
+-- A navigable current spot may straddle a curb. Evaluate the complete set and
+-- prefer the nearby flatter real collision footprint, not the first nav hit.
+Module.reset();local uneven=arrestSuspect(1181);uneven.ragdoll=true;floorMode='curb'
+bank=wallet;assert(ArrestNative:StartArrest(uneven));step(22)
+assert(wallet==bank+250 and ArrestNative:IsArrested(uneven) and uneven.position.x==1.75)
+releasePaid();floorMode='flat'
+-- Capsule/root height need not equal the floor. A delayed/rejected teleport
+-- must not prevent the native workspot from completing bounded placement.
+Module.reset();local rooted=arrestSuspect(1182);rooted.ragdoll=true;rooted.rejectTeleport=true;rooted.workspotRootHeight=.8
+centerBlocked=true;bank=wallet;assert(ArrestNative:StartArrest(rooted));step(22)
+assert(rooted.teleports==1 and rooted.position.x==1.75 and wallet==bank+250 and ArrestNative:IsArrested(rooted))
+releasePaid();centerBlocked=false
+-- Native playback alone cannot pay when the recovered actor is still outside
+-- the chosen footprint. Retain the physics lease only until helper cleanup.
+Module.reset();local misplaced=arrestSuspect(1183);misplaced.ragdoll=true
+misplaced.rejectTeleport=true;misplaced.rejectWorkspotPlacement=true;centerBlocked=true
+bank=wallet;assert(ArrestNative:StartArrest(misplaced));step(45)
+assert(wallet==bank and not ArrestNative:IsArrested(misplaced) and not ArrestNative:OwnsPosePhysics(misplaced))
+centerBlocked=false
+-- Missing collision or a steep surface is not safe, even with a good navmesh.
+for _,mode in ipairs({'missing','steep'}) do
+ Module.reset();floorMode=mode;local npc=arrestSuspect(1184);npc.ragdoll=true;bank=wallet;before=#played
+ assert(ArrestNative:StartArrest(npc));step(20)
+ assert(wallet==bank and #played==before and not npc.physicsDisabled and not npc.teleports)
+end
+floorMode='flat'
 -- Unsupported, unreachable or vertically remote points cannot trigger physics,
 -- teleportation, playback or payment. Setup failure releases the reservation.
 for failure=1,3 do

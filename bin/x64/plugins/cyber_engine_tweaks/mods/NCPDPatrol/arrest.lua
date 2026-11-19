@@ -32,32 +32,62 @@ local function pointDistance(a,b)
     return math.sqrt(x*x+y*y+z*z)
 end
 local function lyingPosition(npc)
-    local nav,player=Game.GetAINavigationSystem(),Game.GetPlayer()
-    if not nav or not player then error("Arrest ground placement unavailable") end
+    local nav,player,spatial=Game.GetAINavigationSystem(),Game.GetPlayer(),Game.GetSpatialQueriesSystem()
+    if not nav or not player or not spatial then error("Arrest ground placement unavailable; R pickup can move the suspect") end
     local origin,from,forward=npc:GetWorldPosition(),player:GetWorldPosition(),npc:GetWorldForward()
     if not finite(origin) or not finite(from) or not finite(forward) then error("Invalid arrest placement coordinates") end
-    for _,offset in ipairs({{0,0},{.75,0},{-.75,0},{0,.75},{0,-.75},{1,1},{-1,1},{1,-1},{-1,-1}}) do
+    local length=math.sqrt(forward.x*forward.x+forward.y*forward.y)
+    local fx,fy=0,1
+    if length>.01 then fx,fy=forward.x/length,forward.y/length end
+    local function ground(point)
+        local hit,trace=spatial:SyncRaycastByCollisionGroup(
+            Vector4.new(point.x,point.y,point.z+.4,1),Vector4.new(point.x,point.y,point.z-.6,1),
+            CName.new("Static"),true,false)
+        if not hit or not trace or not finite(trace.position) or not finite(trace.normal)
+            or trace.normal.z<.95 or math.abs(trace.position.z-point.z)>.35 then return nil end
+        return Vector4.new(trace.position.x,trace.position.y,trace.position.z,1)
+    end
+    local best,bestScore,bestMove=nil,math.huge,nil
+    -- Score every supported candidate rather than accepting the current spot
+    -- first. A flatter patch wins even when the root is already on navmesh.
+    for _,offset in ipairs({{0,0},{.75,0},{-.75,0},{0,.75},{0,-.75},{1,1},{-1,1},{1,-1},{-1,-1},
+        {1.6,0},{-1.6,0},{0,1.6},{0,-1.6},{1.3,.7},{-1.3,.7},{1.3,-.7},{-1.3,-.7}}) do
         local probe=Vector4.new(origin.x+offset[1],origin.y+offset[2],origin.z,1)
         local result=nav:FindPointInSphereForCharacter(probe,.6,npc)
         if result and result.status==worldNavigationRequestStatus.OK and finite(result.point) then
-            local point=result.point
-            local clear=pointDistance(point,origin)<=1.95 and math.abs(point.z-origin.z)<=.7
+            local point=ground(result.point)
+            local clear=point and pointDistance(point,origin)<=1.95 and math.abs(point.z-origin.z)<=.7
                 and pointDistance(point,from)<=2.45 and AINavigationSystem.HasPathFromAtoB(player,from,point)
-            -- Check support at both ends of a short body footprint. Never move
-            -- a suspect to another floor or through an unreachable wall.
-            for _,sign in ipairs({-1,1}) do
+            local low,high=point and point.z or 0,point and point.z or 0
+            -- Check the full lying footprint, including both sides, against
+            -- real static collision as well as pedestrian navigation. Navmesh
+            -- alone can smooth over curbs/stairs and is not the floor surface.
+            for _,foot in ipairs({{-.7,-.25},{-.7,.25},{.7,-.25},{.7,.25},{0,-.3},{0,.3}}) do
                 if clear then
-                    local endPoint=Vector4.new(point.x+forward.x*.65*sign,point.y+forward.y*.65*sign,point.z,1)
+                    local endPoint=Vector4.new(point.x+fx*foot[1]-fy*foot[2],point.y+fy*foot[1]+fx*foot[2],point.z,1)
                     local support=nav:FindPointInSphereForCharacter(endPoint,.2,npc)
                     clear=support and support.status==worldNavigationRequestStatus.OK and finite(support.point)
                         and pointDistance(endPoint,support.point)<=.25 and math.abs(support.point.z-point.z)<=.2
                         and AINavigationSystem.HasPathFromAtoB(player,point,support.point)
+                    if clear then
+                        local floor=ground(endPoint)
+                        clear=floor~=nil
+                        if clear then low,high=math.min(low,floor.z),math.max(high,floor.z);clear=high-low<=.16 end
+                    end
                 end
             end
-            if clear then return Vector4.new(point.x,point.y,point.z+.03,1) end
+            if clear then
+                local moved=pointDistance(point,origin)
+                local score=(high-low)*10+moved*.04
+                if score<bestScore then best,bestScore,bestMove=Vector4.new(point.x,point.y,point.z+.03,1),score,moved end
+            end
         end
     end
-    error("No nearby supported ground for arrest; move closer to a clear area and retry")
+    if best then
+        print(string.format("[NCPD Patrol] Arrest placement | supported floor selected | move=%.2f m | target=(%.2f, %.2f, %.2f)",bestMove,best.x,best.y,best.z))
+        return best
+    end
+    error("No nearby supported ground for arrest; use R pickup to move the suspect to clear ground and retry")
 end
 
 local function recoverPhysics(system,unit,delta)
@@ -81,13 +111,11 @@ local function recoverPhysics(system,unit,delta)
         return false
     end
     if unit.recoveryAge<.25 then return false end
-    local actual=unit.npc:GetWorldPosition()
-    if not finite(actual) or pointDistance(actual,unit.position)>.5 or math.abs(actual.z-unit.position.z)>.3 then
-        if unit.recoveryAge>1 then error("Recovered suspect did not reach the arrest position") end
-        return false
-    end
+    -- Teleport is a request and the character root need not equal floor height.
+    -- Native workspot sliding performs the final alignment; confirm its actual
+    -- position after entry below, before any payment, rather than blocking it.
     unit.needsRecovery=false
-    print("[NCPD Patrol] Arrest recovery | ragdoll released; nearby placement confirmed")
+    print("[NCPD Patrol] Arrest recovery | ragdoll released; final placement delegated to the workspot")
     return true
 end
 
@@ -170,7 +198,7 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16c package") end
+        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16d package") end
         local name = system:AnimationName(unit.component.name)
         if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the bundled archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
@@ -286,7 +314,23 @@ local function create(system, npc, token)
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
     return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false,
-        position=position,needsRecovery=needsRecovery,physicsOwned=false}
+        position=position,needsRecovery=needsRecovery,groundPlacement=needsRecovery,physicsOwned=false}
+end
+
+local function placementReady(unit)
+    if not unit.groundPlacement then return true end
+    local actual=unit.npc:GetWorldPosition()
+    if not finite(actual) then return false end
+    local horizontal=math.sqrt((actual.x-unit.position.x)^2+(actual.y-unit.position.y)^2)
+    local vertical=math.abs(actual.z-unit.position.z)
+    -- A human capsule/root can be above the floor while the lying animation
+    -- is aligned with its device. Require local alignment, not an exact Z match.
+    local ready=horizontal<=.65 and actual.z>=unit.position.z-.2 and actual.z<=unit.position.z+1.2
+    if unit.placementReady~=ready then
+        unit.placementReady=ready
+        print(string.format("[NCPD Patrol] Arrest placement | aligned=%s | horizontal=%.2f m | root/floor height=%.2f m",tostring(ready),horizontal,vertical))
+    end
+    return ready
 end
 
 local function updateUnit(system, unit, delta, onDuty, paused)
@@ -329,8 +373,9 @@ local function updateUnit(system, unit, delta, onDuty, paused)
         end
         unit.started = true
         workspots():PlayInDeviceSimple(helper, unit.npc, false, CName.new("NCPDPatrolArrestLoop"),
-            CName.new("None"), CName.new("None"), 0,
-            WorkspotSlidingBehaviour.DontPlayAtResourcePosition, helper)
+            CName.new("None"), CName.new("None"), unit.groundPlacement and .5 or 0,
+            unit.groundPlacement and WorkspotSlidingBehaviour.PlayAtResourcePosition
+                or WorkspotSlidingBehaviour.DontPlayAtResourcePosition, helper)
         jump(unit)
         print("[NCPD Patrol] Arrest request | private infinite idle | entry=" .. unit.entry .. " | requested clip=" .. unit.clip .. " | observed clip=unavailable | result recipient=private helper")
         return false
@@ -340,7 +385,7 @@ local function updateUnit(system, unit, delta, onDuty, paused)
         fail(system, unit, "Native arrest playback ended before confirmation; no payment")
         return cleanup(unit)
     end
-    if unit.proof:Matches(unit.npc, unit.token) then
+    if unit.proof:Matches(unit.npc, unit.token) and placementReady(unit) then
         if system:ConfirmActivatedArrest(unit.npc, unit.token, unit.proof) then
             unit.paid = true
             print("[NCPD Patrol] Arrest | Registered via " .. activationSource(unit) .. "; separate EUR$250 payment")
@@ -382,7 +427,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 6 then error("Install all v0.16c arrest scripts and restart the game") end
+        if not system or system:Version() ~= 6 then error("Install all v0.16d arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

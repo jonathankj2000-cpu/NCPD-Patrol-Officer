@@ -1,4 +1,37 @@
-NCPD PATROL v0.16c - PATROL FIXES
+NCPD PATROL v0.16d - TERRAIN, VIP AND AMBUSH FIXES
+
+V0.16D TEST
+Arrest placement now scores nearby ground using navigation and real collision
+across the lying footprint, preferring a flatter patch within the existing 2 m
+and 0.75 m height limits. Native workspot sliding does the final alignment;
+the actor's root height no longer blocks the animation before it can start.
+Actual local alignment plus the existing native activation proof is required
+before payment. Unsafe/no nearby ground still rejects without payment.
+
+R pickup is preserved before arrest and after a failed attempt. Only primary
+Loot/F is replaced; pickup is blocked during the short active securing request.
+Use native pickup to move a suspect when no safe nearby patch exists.
+
+VIP selection ignores fast-travel interaction availability and falls back to
+native drop-point terminal markers when the discovered fast-travel network
+does not provide a valid pair. It does not unlock any travel point. Existing
+500-2000 m pickup, 800-2500 m delivery, scanner clearance and arrival navigation
+checks remain. Log VIP diagnostics shows location counts and selected sources.
+Regions without suitable world markers can still be unavailable.
+
+Ambushes check recent driven route distance, static road support, the car
+footprint and a corridor clear of barriers. Spawned car position/height must
+match the checked lane before crew creation and chase. Crew now spawn within
+the car footprint instead of 3-6 m to its side. Wrong-level/lane cars are
+deleted before retry, with three attempts maximum per trip. No hostile warning
+until verified placement and actual boarding. Unsafe points defer spawning.
+
+Install the entire ZIP and restart. Test R pickup and ragdoll arrest near curbs,
+VIP dispatch in a sparsely discovered district while driving, and manual VIP
+ambushes on bridges/divided roads. Road placement rejection logs actual and
+requested coordinates. Twelve portable suites plus offline API compilation
+pass; actual game traffic/physics and installed-cache compilation need testing.
+No partner weapon-state changes. Existing payments and archives are retained.
 
 V0.16C FIXES
 Living physical ragdolls can be prepared for the same lying arrest loop. The
@@ -95,7 +128,7 @@ needed or bundled. No extra framework dependency is added.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.16c.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.16d.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

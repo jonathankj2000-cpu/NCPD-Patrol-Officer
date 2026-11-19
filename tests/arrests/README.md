@@ -14,3 +14,17 @@ Source and private resource tokens are independent. Tests cover pending/missing 
 Existing cases execute the actual activation proof, result receiver, interaction and payment code: missing debug/clip data with stable native fallback, exact-helper positive/negative/stale results, no-entry/transition states, timers/menus, eligibility/range/death/wanted, asynchronous failures, cleanup retries, world loads, saved paid identities and independent scanner/arrest 1000/250 payments and receipts. Unverified StopInDevice or ambient deletion calls fail the fixture.
 
 These are logic/contract checks. They do not emulate native metadata initialization, animation rendering, AI, physics, event dispatch or native save loading. The user confirmed registration/payment in v0.7e and the physical private lying loop in v0.7f. v0.8a retains the arrest source and archive unchanged. Separate local checks compile all 15 redscripts against source-derived API contracts, not the actual game cache.
+
+## v0.16d terrain and pickup checks
+
+The actual CET module scores static-collision footprints, chooses a flatter
+nearby curb alternative, requests native ground-anchor sliding, and confirms
+local placement after native activation. Scenarios model a delayed teleport,
+different capsule/root height, misplaced playback, missing/steep collision,
+physics rollback and the existing exact-once activation/payment guards.
+
+The authored native interaction wrappers replace only Loot/F and preserve R
+pickup/secondary choice data before securing and after failure. Securing still
+blocks stale pickup; carried bodies cannot start an arrest. Engine choices,
+collision traces and movement completion are test boundaries, so an actual
+game test is needed for the rendered pose and body-carry UI.

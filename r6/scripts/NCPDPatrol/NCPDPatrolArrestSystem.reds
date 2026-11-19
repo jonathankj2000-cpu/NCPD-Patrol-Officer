@@ -68,6 +68,9 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         // excludes those bodies rather than replacing their story interaction.
         if npc.IsQuest() || npc.IsBoss() || !npc.IsEnemy() { return false; };
         if VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), npc) { return false; };
+        // Native R pickup remains available before securing. A carried body is
+        // mounted to V, not necessarily to a vehicle; never start/recover it.
+        if GameInstance.GetMountingFacility(this.GetGameInstance()).IsMountedToAnything(npc.GetEntityID()) { return false; };
         return ScriptedPuppet.IsDefeated(npc) || ScriptedPuppet.IsUnconscious(npc);
     }
 

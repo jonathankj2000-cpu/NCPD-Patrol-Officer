@@ -1,5 +1,6 @@
 VIPFixture={}
 local v=VIPFixture;local f=CyberFixture
+gamedataMappinVariant.ServicePointDropPointVariant='drop-point'
 v.root='quests/minor_quest/ncpd_patrol_vip'
 local originalChange=JournalFixture.ChangeEntryState
 function JournalFixture:ChangeEntryState(path,kind,state,notify)
@@ -70,7 +71,13 @@ function v.entities:CreateEntity(spec)
  if not f.createOK then return {hash=0} end
  local id={hash=1000+#f.creates};f.managed[id.hash]=true
  local a=spec.recordID:sub(1,7)=='Vehicle' and v:Car(id) or v:Actor(spec.recordID,id)
- a.pos=spec.position;f.actors[id.hash]=a;return id
+ a.pos=spec.position
+ if spec.recordID=='Vehicle.NCPDPatrol_VIPAmbush' and v.carSpawnOffset then
+  a.pos=Vector4.new(a.pos.x+(v.carSpawnOffset.x or 0),a.pos.y+(v.carSpawnOffset.y or 0),a.pos.z+(v.carSpawnOffset.z or 0),1)
+ elseif spec.recordID=='Character.NCPDPatrol_VIPAttacker' then
+  assert(v.ambushCar and math.abs(a.pos.x-v.ambushCar.pos.x)<.01 and math.abs(a.pos.y-v.ambushCar.pos.y)<.01,'crew spawned beyond the checked car footprint')
+ end
+ f.actors[id.hash]=a;return id
 end
 function v.entities:GetEntity(id) if f.actorVisible then return f.actors[id.hash] end end
 function v.entities:DeleteEntity(id)
@@ -81,6 +88,17 @@ function v.entities:DeleteEntity(id)
  return true
 end
 Game.GetDynamicEntitySystem=function() return v.entities end
+Game.GetSpatialQueriesSystem=function()
+ if not v.spatialAvailable then return nil end
+ return {SyncRaycastByCollisionGroup=function(_,from,to,group,staticOnly,dynamicOnly)
+  assert(group=='Static' and staticOnly and not dynamicOnly)
+  if math.abs(from.x-to.x)<.001 and math.abs(from.y-to.y)<.001 and from.z>to.z then
+   if v.roadMissing then return false,nil end
+   return true,{position=Vector4.new(from.x,from.y,v.roadHeight or 0,1),normal=Vector4.new(0,0,1,0)}
+  end
+  return v.roadBlocked==true,nil
+ end}
+end
 function v:Actor(record,id)
  local a=f:Actor(record or 'Character.NCPDPatrol_VIP',id or {hash=100})
  a.pos={x=812,y=0,z=0,w=1}
@@ -136,6 +154,7 @@ function v:Reset()
  self.car=self:Car();self.ambushCar=nil;self.autoCrewMount=true;self.autoCrewUnmount=false
  self.cameraPresent=true;self.cameraTransformOK=true;self.cameraYaw=0;self.cameraFOV=75;self.cameraAspect=16/9;self.cameraPosition=nil
  self.lastAmbushSpawnDistance=nil
+ self.spatialAvailable=true;self.roadMissing=false;self.roadBlocked=false;self.roadHeight=0;self.carSpawnOffset=nil
  f.places={f:Place(800),f:Place(1800)}
  for _,spec in ipairs({{'','gameJournalQuest'},{'/main','gameJournalQuestPhase'},{'/main/pickup','gameJournalQuestObjective'},
   {'/main/pickup/briefing','gameJournalQuestDescription'},{'/main/deliver','gameJournalQuestObjective'},{'/main/deliver/briefing','gameJournalQuestDescription'}}) do

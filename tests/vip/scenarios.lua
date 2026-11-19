@@ -61,6 +61,42 @@ local VIP=require('vip');local Ambush=require('vip_ambush')
 local HUD={set=function(text,visible) v.hud=visible and text or '' end}
 local function log(text) f.logs[#f.logs+1]=text end
 local function reset() VIP.reset();v:Reset() end
+-- Selection reads terminal geography, not fast-travel interaction availability
+-- (which can be false in a car). Drop points cover sparse/empty discovered FT
+-- networks without registering/unlocking any fast-travel node.
+for case=1,4 do
+ reset();v:Drive()
+ if case==1 then
+  f.places={f:Place(800,0,0,'fasttravel',false),f:Place(1800,0,0,'fasttravel',false)}
+ elseif case==2 then
+  f.places={f:Place(800,0,0,'drop-point',false),f:Place(1800,0,0,'drop-point',false)}
+ elseif case==3 then
+  f.places={f:Place(800,0,0,'fasttravel',false),f:Place(1800,0,0,'drop-point',false)}
+ else
+  f.places={f:Place(800,0,0,'fasttravel',false),f:Place(1800,0,0,'fasttravel',false),f:Place(850,0,0,'drop-point')}
+ end
+ for _,pin in ipairs(f.places) do function pin:IsActive() error('interaction availability must not filter VIP locations') end end
+ assert(VIP.request(f.patrol,log,true,true),table.concat(f.logs,'\n'))
+ assert(#f.creates==0 and f.markers[1].x==800 and n:GetStage()==1)
+ assert(VIP.diagnostics():find(case==2 and 'selected=drop point -> drop point' or case==3 and 'selected=fast travel -> drop point' or 'selected=fast travel -> fast travel',1,true))
+ assert(VIP.cancel(f.patrol,log))
+end
+-- Drop-point fallback keeps the distance, scanner safety and finite-coordinate
+-- checks. A blocked terminal is never used as a fallback destination.
+for _,bad in ipairs({'near','far','short-trip','scanner','nan','unrelated'}) do
+ reset()
+ local x=bad=='near' and 100 or bad=='far' and 2500 or 800
+ local other=bad=='short-trip' and 1000 or 1800
+ local variant=bad=='unrelated' and 'unrelated' or 'drop-point'
+ f.places={f:Place(x,0,0,variant),f:Place(other,0,0,variant)}
+ if bad=='near' then f.places[2]=f:Place(200,0,0,variant) end
+ if bad=='far' then f.places[2]=f:Place(3500,0,0,variant) end
+ if bad=='scanner' then f.places[#f.places+1]=f:Place(800,0,0,'assault',true,2) end
+ if bad=='nan' then f.places[1]=f:Place(0/0,0,0,variant) end
+ assert(not VIP.request(f.patrol,log,true,true),'unsafe fallback pair '..bad)
+ assert(#f.creates==0 and n:GetStage()==0 and not VIP.isActive())
+end
+reset()
 local function step(seconds)
  for _=1,math.floor((seconds or .25)*4+0.0001) do VIP.update(.25,f.duty,f.patrol,log,HUD) end
 end
@@ -124,7 +160,7 @@ assert(enemy.initCmd.ignoreChaseVehiclesLimit and enemy.chaseDestination)
 assert(not VIP.requestAmbush(log) and #f.creates==4)
 -- Three stopped seconds -> brake -> wait for actual standstill -> animated exit.
 v.car.speed=0;enemy.speed=8;enemy.pos.x=v.car.pos.x-25
-step(2.75);assert(not enemy.brakes)
+step(2.75);assert(enemy.brakes~=8)
 step(.25);assert(enemy.brakes==8 and enemy.stopped==enemy.initCmd, tostring(enemy.brakes)..' | '..Ambush.state()..' | '..VIP.state()..' | '..n:GetReason()..' | '..table.concat(f.logs,'\n'))
 local first,second=f.actors[1003],f.actors[1004]
 assert(first.commands[#first.commands].kind=='mount','crew exited before car stopped')
@@ -194,6 +230,79 @@ local function spawnAmbush()
  assert(v.ambushCar and #f.creates==4)
  return witness,v.ambushCar,f.actors[1003],f.actors[1004]
 end
+-- A bridge keeps its actual collision height. Crew are created over the
+-- verified car, never on the old +3/+6 m roadside offsets.
+reset();actor=enter();v.car.pos.z=20;f.playerPosition.z=20;v.roadHeight=20
+assert(VIP.requestAmbush(log));driveTrail();step(1)
+assert(v.ambushCar and math.abs(v.ambushCar.pos.z-20.15)<.001 and v.ambushCar.initCmd)
+assert(#f.creates==4 and f.creates[3].position.x==f.creates[2].position.x
+ and f.creates[3].position.y==f.creates[2].position.y)
+VIP.cancel(f.patrol,log)
+-- If native creation settles under the bridge, no crew/hostile warning is
+-- started. Delete the failed owned car before retry; bound retries to three.
+reset();actor=enter();v.car.pos.z=20;f.playerPosition.z=20;v.roadHeight=20
+v.carSpawnOffset={z=-12};assert(VIP.requestAmbush(log));v.car.speed=16
+for _=1,130 do v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;step(.25) end
+step(2)
+local failedCars=0
+for _,spec in ipairs(f.creates) do
+ if spec.recordID=='Vehicle.NCPDPatrol_VIPAmbush' then failedCars=failedCars+1 end
+ assert(spec.recordID~='Character.NCPDPatrol_VIPAttacker','crew spawned on the wrong road level')
+end
+assert(failedCars==3 and not Ambush.isActive() and n:GetStage()==2)
+for _,notice in ipairs(f.notices) do assert(not notice.text:find('Possible hostile vehicle',1,true)) end
+assert(not VIP.requestAmbush(log),'failed road placement bypassed retry bound')
+VIP.cancel(f.patrol,log)
+-- A lateral native displacement beyond the lane is also rejected. A later
+-- checked attempt can succeed, without consuming multiple active ambushes.
+reset();actor=enter();v.carSpawnOffset={y=4};assert(VIP.requestAmbush(log));v.car.speed=16
+for _=1,40 do
+ v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;step(.25)
+ if #f.creates>1 then break end
+end
+step(2)
+assert(not Ambush.isActive() and #f.creates==2)
+v.carSpawnOffset=nil;driveTrail();step(1)
+assert(Ambush.isActive() and v.ambushCar.initCmd and #f.creates==5)
+VIP.cancel(f.patrol,log)
+-- Failed road placement must keep its reservation while native deletion is
+-- deferred, even if DeleteEntity returns true. Only confirmed cleanup retries.
+reset();actor=enter();v.carSpawnOffset={y=4};f.deleteDeferred=true
+assert(VIP.requestAmbush(log));v.car.speed=16
+for _=1,40 do
+ v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;step(.25)
+ if #f.creates>1 then break end
+end
+step(3);assert(Ambush.isActive() and #f.creates==2 and not VIP.requestAmbush(log))
+driveTrail();assert(#f.creates==2,'retried before the wrong-lane car was actually gone')
+f.managed[1002]=nil;f.actors[1002]=nil;f.deleteDeferred=false;v.carSpawnOffset=nil
+step(2.25);driveTrail();step(1)
+assert(#f.creates==5 and v.ambushCar.initCmd and f.managed[990]=='ambient')
+VIP.cancel(f.patrol,log)
+-- No surface query, missing bridge deck, or a barrier in the swept car
+-- corridor waits safely without creating entities or consuming the request.
+for _,blocked in ipairs({'query','floor','barrier'}) do
+ reset();actor=enter();assert(VIP.requestAmbush(log))
+ if blocked=='query' then v.spatialAvailable=false elseif blocked=='floor' then v.roadMissing=true else v.roadBlocked=true end
+ driveTrail();assert(#f.creates==1 and not Ambush.isActive())
+ v.spatialAvailable=true;v.roadMissing=false;v.roadBlocked=false
+ driveTrail();step(1);assert(#f.creates==4 and v.ambushCar.initCmd)
+ VIP.cancel(f.patrol,log)
+end
+-- An earlier loop can be close in the world but hundreds of metres back along
+-- the road. It cannot become a spawn across a median/on another carriageway.
+reset();actor=enter();assert(VIP.requestAmbush(log));v.cameraYaw=math.pi;v.car.speed=16
+local function move(dx,dy,steps)
+ for _=1,steps do
+  v.car.pos.x=v.car.pos.x+dx;v.car.pos.y=v.car.pos.y+dy
+  f.playerPosition.x=v.car.pos.x;f.playerPosition.y=v.car.pos.y;step(.25)
+ end
+end
+move(4,0,10);move(0,4,25);move(4,0,25);move(0,-4,25);move(-4,0,10)
+v.cameraYaw=0;step(.25)
+assert(#f.creates==1,'air distance selected an old road loop')
+move(4,0,25);step(1);assert(#f.creates==4 and v.ambushCar.initCmd)
+VIP.cancel(f.patrol,log)
 -- Waiting while looking back does not consume the single ambush reservation.
 reset();actor=enter();assert(VIP.requestAmbush(log));v.cameraYaw=math.pi;driveTrail()
 assert(#f.creates==1 and not Ambush.isActive())

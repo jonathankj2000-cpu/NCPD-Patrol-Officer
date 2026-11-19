@@ -1,5 +1,16 @@
 # NCPD Patrol
 
+## v0.16d: terrain, VIP locations and ambush placement
+
+[Download the complete v0.16d test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16d_Terrain_VIP_Ambush_Fixes_TEST.zip)
+
+- **Ragdoll arrests on uneven ground:** compare nearby candidates using navigation, real static floor normals and a complete lying footprint. Prefer a flatter patch within the existing 2 m/0.75 m limits. Native workspot sliding performs final placement; root height is checked after activation rather than blocking animation before entry. Failed placement still pays nothing.
+- **Native R body pickup before arrest:** only Loot/F is replaced, preserving the game's pickup and other secondary choices. Pickup is guarded during the active securing request and returns after failure. This allows manual repositioning when there is no safe nearby patch.
+- **VIP location fallback:** retain fast-travel routes, ignore their current interaction availability, and include native drop-point terminal markers if no fast-travel-only pair exists. Pickup remains 500–2000 m away; delivery is 800–2500 m from pickup. Active scanner clearance and arrival navigation checks remain. No fast-travel point is unlocked or registered. **Log VIP diagnostics** shows candidate counts and the selected source; regions without suitable world markers can still be unavailable.
+- **Bridge/guardrail ambush checks:** use 35–65 m of recent driven route, denser samples, real surface/footprint checks and barrier checks along the car corridor. Verify the spawned car's actual lane position and height before creating crew. Crew spawn within the checked car footprint and board as each attaches. Misplaced cars are cleaned before another attempt, with a maximum of three attempts per trip. The hostile warning follows verified placement and actual boarding. Unsafe roads/camera views can defer an ambush.
+
+Install the **entire ZIP** over the previous version and restart; CET announces **v0.16d**. Test arrest and R pickup near a curb, VIP assignment while driving in a district with few discovered terminals, then a manual VIP ambush on a bridge/divided road. If placement is rejected, the CET log reports requested/actual coordinates. Twelve portable suites and offline source/API compilation with and without optional BEF pass; live physics, traffic and the installed game cache require an in-game test. Partner weapon-state logic and existing reward ledgers are retained.
+
 
 ## v0.16c: patrol fixes
 
@@ -171,7 +182,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16c**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16d**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

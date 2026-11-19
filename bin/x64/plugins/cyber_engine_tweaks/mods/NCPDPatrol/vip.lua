@@ -9,6 +9,7 @@ local id,actor,token,pickup,destination,car,command=nil,nil,nil,nil,nil,nil,nil
 local elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
 local boardingSeat,finalReason,lastStage=nil,nil,0
 local keepResolvedScene=false
+local locationInfo="Not selected"
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
     if not system or system:Version()~=2 then error("Install the complete v0.14b VIP package and restart") end
@@ -36,12 +37,13 @@ function M.reset()
     elapsed,poll,retry,resolvedTime,boardingAge,searchAge=0,0,0,0,0,0
     boardingSeat,finalReason,lastStage=nil,nil,0
     keepResolvedScene=false
+    locationInfo="Not selected"
     Ambush.reset()
 end
 function M.diagnostics()
     local ok,info=pcall(function() return native():GetDiagnostics() end)
     return "phase="..phase.." | seat="..tostring(boardingSeat).." | entity="..tostring(id and id.hash or "none")
-        .." | ambush="..Ambush.state().." | "..tostring(info)
+        .." | locations="..locationInfo.." | ambush="..Ambush.state().." | "..tostring(info)
 end
 local function stopCommand()
     if actor and command then pcall(function() actor:GetAIControllerComponent():StopExecutingCommand(command,false) end) end
@@ -85,13 +87,22 @@ end
 local function chooseLocations(player)
     local pins=Game.GetMappinSystem():GetAllMappins()
     local sites,occupied,seen={},{},{}
+    local terminals,dropPoints=0,0
     local start=player:GetWorldPosition()
     for _,pin in ipairs(pins) do
-        local ok,variant,active,phaseNow,point=pcall(function() return pin:GetVariant(),pin:IsActive(),pin:GetPhase(),pin:GetWorldPosition() end)
+        -- Interaction availability is not geographic availability: native
+        -- fast travel can be inactive while V is in a car or during a lock.
+        local ok,variant,phaseNow,point=pcall(function() return pin:GetVariant(),pin:GetPhase(),pin:GetWorldPosition() end)
         if ok and finite(point) and (point.x~=0 or point.y~=0 or point.z~=0) then
-            if variant==gamedataMappinVariant.FastTravelVariant and active then
+            if variant==gamedataMappinVariant.FastTravelVariant
+                or variant==gamedataMappinVariant.ServicePointDropPointVariant then
                 local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
-                if not seen[key] then seen[key]=true;sites[#sites+1]={position=Vector4.new(point.x,point.y,point.z,1),distance=distance(start,point)} end
+                if not seen[key] then
+                    seen[key]=true
+                    local kind=variant==gamedataMappinVariant.FastTravelVariant and "fast travel" or "drop point"
+                    if kind=="fast travel" then terminals=terminals+1 else dropPoints=dropPoints+1 end
+                    sites[#sites+1]={position=Vector4.new(point.x,point.y,point.z,1),distance=distance(start,point),kind=kind}
+                end
             elseif (variant==gamedataMappinVariant.GangWatchVariant or variant==gamedataMappinVariant.OutpostVariant)
                 and phaseNow~=gamedataMappinPhase.CompletedPhase then occupied[#occupied+1]=point end
         end
@@ -102,21 +113,34 @@ local function chooseLocations(player)
         for _,point in ipairs(occupied) do if distance(site.position,point)<100 then clear=false;break end end
         if clear then safe[#safe+1]=site end
     end
-    for _,radius in ipairs({1000,1500,2000}) do
-        local pairs={}
-        for _,site in ipairs(safe) do
-            if site.distance>=500 and site.distance<=radius then
-                local drops={}
-                for _,drop in ipairs(safe) do
-                    local metres=distance(site.position,drop.position)
-                    if metres>=800 and metres<=2500 then drops[#drops+1]=drop.position end
+    locationInfo=string.format("fast travel=%d | drop points=%d | clear=%d",terminals,dropPoints,#safe)
+    -- Prefer the established local fast-travel routes. If there is no pair,
+    -- expand the same search with native drop-point terminal locations. This
+    -- reads world markers only; never registers/unlocks a travel point.
+    for _,includeDropPoints in ipairs({false,true}) do
+        for _,radius in ipairs({1000,1500,2000}) do
+            local pairs={}
+            for _,site in ipairs(safe) do
+                if (includeDropPoints or site.kind=="fast travel") and site.distance>=500 and site.distance<=radius then
+                    local drops={}
+                    for _,drop in ipairs(safe) do
+                        local metres=distance(site.position,drop.position)
+                        if (includeDropPoints or drop.kind=="fast travel") and metres>=800 and metres<=2500 then drops[#drops+1]=drop end
+                    end
+                    if #drops>0 then
+                        local drop=drops[math.random(1,#drops)]
+                        pairs[#pairs+1]={pickup=site.position,drop=drop.position,kind=site.kind.." -> "..drop.kind}
+                    end
                 end
-                if #drops>0 then pairs[#pairs+1]={pickup=site.position,drop=drops[math.random(1,#drops)]} end
+            end
+            if #pairs>0 then
+                local pair=pairs[math.random(1,#pairs)]
+                locationInfo=locationInfo.." | selected="..pair.kind.." | radius="..radius.." m"
+                return pair
             end
         end
-        if #pairs>0 then return pairs[math.random(1,#pairs)] end
     end
-    error("No suitable pickup/delivery pair. Travel to another district and try again.")
+    error("No safe VIP terminal pair 500-2000 m away ("..locationInfo.."). Travel to another area and retry.")
 end
 local function spawnVIP(player)
     local system=Game.GetDynamicEntitySystem()
@@ -178,6 +202,7 @@ function M.request(patrol,status,sound,voice)
         local backend=native()
         if not backend:IsReady() then error("VIP journal unavailable; install the new archive/.xl and restart") end
         local pair=chooseLocations(player);pickup,destination=pair.pickup,pair.drop
+        if status then status("VIP locations | "..locationInfo) end
         token=backend:BeginDispatch(pickup,destination)
         if not token or token==0 then error("VIP journal request rejected: "..tostring(backend:GetReason())) end
         phase,elapsed,poll,lastStage="responding",0,0,1;finalReason=nil;searchAge=0;keepResolvedScene=false

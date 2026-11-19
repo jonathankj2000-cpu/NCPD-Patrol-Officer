@@ -30,13 +30,28 @@ public final const func GetValidChoices(const actions: script_ref<[wref<ObjectAc
     let arrest: ref<NCPDPatrolArrestSystem> = NCPDPatrolArrestSystem.Get(this.GetGameInstance());
     let npc: ref<NPCPuppet> = this.GetOwnerEntity() as NPCPuppet;
     let choice: InteractionChoice;
+    let i: Int32;
+    wrappedMethod(actions, context, objectActionsCallbackController, checkPlayerQuickHackList, choices);
     if IsDefined(arrest) && IsDefined(npc) && arrest.IsDutyEligible()
         && (arrest.CanStartArrest(npc) || arrest.IsPendingSuspect(npc))
         && Equals(Deref(context).requestType, gamedeviceRequestType.Direct)
         && Equals(Deref(context).interactionLayerTag, n"Loot") {
-        // Primary F is used for arrest while eligible. Ordinary body/loot
-        // choices return immediately after registration or when off duty.
-        ArrayClear(Deref(choices));
+        // Replace only primary Loot/F. Preserve native secondary choices,
+        // including R pickup, so a suspect can be moved before securing.
+        // During the short securing/playback request, stale pickup is guarded
+        // below; failure restores native choices on the next refresh.
+        if arrest.IsPendingSuspect(npc) {
+            ArrayClear(Deref(choices));
+        } else {
+            i = ArraySize(Deref(choices)) - 1;
+            while i >= 0 {
+                if Equals(Deref(choices)[i].choiceMetaData.tweakDBName, "Loot")
+                    || Deref(choices)[i].choiceMetaData.tweakDBID == t"Interactions.Loot" {
+                    ArrayErase(Deref(choices), i);
+                };
+                i = i - 1;
+            };
+        };
         choice.choiceMetaData.tweakDBName = "NCPDPatrolArrest";
         choice.choiceMetaData.tweakDBID = t"Interactions.NCPDPatrolArrest";
         choice.caption = GetLocalizedTextByKey(n"NCPDPatrol-Arrest");
@@ -47,10 +62,9 @@ public final const func GetValidChoices(const actions: script_ref<[wref<ObjectAc
             ChoiceTypeWrapper.SetType(choice.choiceMetaData.type, gameinteractionsChoiceType.Inactive);
         };
         InteractionChoiceCaption.AddTextPart(choice.captionParts, choice.caption);
-        ArrayPush(Deref(choices), choice);
+        ArrayInsert(Deref(choices), 0, choice);
         return;
     };
-    wrappedMethod(actions, context, objectActionsCallbackController, checkPlayerQuickHackList, choices);
 }
 
 @wrapMethod(ScriptedPuppet)

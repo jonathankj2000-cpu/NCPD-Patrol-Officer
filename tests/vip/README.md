@@ -1,5 +1,19 @@
 # VIP transport and tyre regression checks
 
+v0.16d adds authored-code scenarios for inactive fast-travel markers while
+driving, drop-point-only and mixed terminal pairs when no discovered FT pair
+exists, FT preference, and distance/scanner/NaN/unrelated-marker rejection.
+No test unlocks or registers travel points. Location diagnostics report counts
+and the selected terminal kinds; an area without suitable markers can still
+reject the request. Arrival navigation and the two native stages are retained.
+
+Ambush cases now cover a supported bridge deck, a native car appearing below
+the requested deck or across a median, a three-attempt bound, cleanup before
+retry including deferred deletion, crew spawned within the checked car footprint,
+missing road collision/API, a blocked swept corridor, and a spatially nearby old
+road loop that is too far back along the driven route. Real static-ray results,
+body/capsule placement and traffic AI remain mocked engine boundaries.
+
 Run `python tests/vip/check_vip.py` with Python 3 and lupa. The release builder
 runs this and all six existing arrest/trunk/scanner/career/cyberpsycho suites.
 
