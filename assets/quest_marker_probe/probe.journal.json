@@ -68,19 +68,13 @@
                                         "enableGPS": 1,
                                         "reference": {
                                           "$type": "gameEntityReference",
-                                          "type": "Tag",
+                                          "type": "EntityRef",
                                           "reference": {
                                             "$type": "NodeRef",
-                                            "$value": "",
-                                            "$storage": "string"
+                                            "$storage": "uint64",
+                                            "$value": "0"
                                           },
-                                          "names": [
-                                            {
-                                              "$type": "CName",
-                                              "$storage": "string",
-                                              "$value": "NCPDPatrol_QuestMarkerProbeAnchor"
-                                            }
-                                          ],
+                                          "names": [],
                                           "slotName": {
                                             "$type": "CName",
                                             "$storage": "string",
@@ -110,15 +104,19 @@
                                             "$storage": "string"
                                           },
                                           "variant": "DefaultQuestVariant",
-                                          "active": 1,
+                                          "active": 0,
                                           "visibleThroughWalls": 1,
-                                          "debugCaption": "NCPD QUEST MARKER TEST"
+                                          "debugCaption": "NCPD QUEST MARKER TEST",
+                                          "localizedCaption": {
+                                            "unk1": "0",
+                                            "value": "NCPDPatrol_MarkerProbe_Location"
+                                          }
                                         },
                                         "offset": {
                                           "$type": "Vector3",
-                                          "X": 0,
-                                          "Y": 0,
-                                          "Z": 0.5
+                                          "X": -1549.817505,
+                                          "Y": -1544.082886,
+                                          "Z": 70.155853
                                         }
                                       }
                                     }

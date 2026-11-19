@@ -1,63 +1,68 @@
-local function tick(n) for i=1,n do Native:Tick(.25) end end
-local function begin() assert(Native:Begin(F:Anchor(),F.pos)) end
-local function ownState() return F.entries['quests/minor_quest/ncpd_patrol_marker_probe'].state end
--- A successful ExecuteNode return is NOT proof. No native pin is the default.
-F:Reset();begin();assert(not Native:IsConfirmed());tick(24)
-assert(#F.requests==1 and F.requests[1]=='Active' and not Native:IsConfirmed())
+local root='quests/minor_quest/ncpd_patrol_marker_probe'
+local prefix='ncpd_patrol_marker_probe_r4c_'
+local function tick(n) for _=1,n do F:StepGraph();Native:Tick(.25) end end
+local function begin() assert(Native:Begin());F:StepGraph();Native:Tick(.25) end
+local function stop() Native:Stop('done');tick(2) end
+local function ownState() return F.entries[root].state end
+-- A journal alone is insufficient: require a real loaded phase acknowledgement.
+F:Reset(false);assert(not Native:IsReady() and not Native:Begin() and #F.requests==0)
+F:StepGraph();assert(Native:IsReady() and Native:GetGraphStage()==0 and ownState()==1)
+-- Native phase Out/stage acknowledgement is NOT proof of a rendered quest pin.
+F:Reset();begin();assert(Native:GetGraphStage()==1 and not Native:IsConfirmed())
+tick(24);assert(#F.requests==1 and F.requests[1]=='Active' and not Native:IsConfirmed())
 assert(Native.m_reason:find('NOT CONFIRMED',1,true))
-assert(not Native:Begin(F:Anchor(),F.pos) and #F.requests==1)
-Native:Stop('done');assert(F.manual==700 and F.tracked==F.previous and ownState()==1 and F.requests[2]=='Inactive')
--- Independent conditions: hash, position, objective link and exactly one pin.
-F:Reset();begin();F:AddPin(111);tick(4);assert(not Native:IsConfirmed())
-F.pins={n=0};F:AddPin(nil,Vector4.new(250,0,0,1));tick(4);assert(not Native:IsConfirmed())
-F.pins[0].pos=F.pos;F.linked=false;tick(4);assert(not Native:IsConfirmed())
-F.linked=true;tick(4);assert(Native:IsConfirmed())
-F:AddPin();tick(4);assert(not Native:IsConfirmed())
-Native:Stop('done');assert(F.pins.n==0 and F.manual==700)
--- Deletion only touches matching quest hashes; retry retains pending state.
+assert(not Native:Begin() and #F.requests==1);stop()
+assert(F.manual==700 and F.tracked==F.previous and ownState()==1)
+assert(F.requests[2]=='Inactive' and not Native:HasPendingCleanup())
+-- Hash, position, objective link, type and unique pin remain independent gates.
+F:Reset();begin();F:AddPin(111);tick(1);assert(not Native:IsConfirmed())
+F.pins={n=0};F:AddPin(nil,Vector4.new(0,0,0,1));tick(1);assert(not Native:IsConfirmed())
+F.pins[0].pos=F.pos;F.linked=false;tick(1);assert(not Native:IsConfirmed())
+F.linked=true;tick(1);assert(Native:IsConfirmed())
+F:AddPin();tick(1);assert(not Native:IsConfirmed());stop();assert(F.pins.n==0)
+F:Reset();begin();local manual=F:AddPin();manual.kind='StaticMappin';tick(1)
+assert(not Native:IsConfirmed());stop();assert(F.pins.n==1 and #F.removed==0)
+-- Stop must wait for phase acknowledgement, then confirm current-world cleanup.
 F:Reset();F.materialize=true;begin();local other=F:AddPin(222)
-F.failDelete=true;Native:Stop('pending');assert(Native:HasPendingCleanup())
-assert(not Native:Begin(F:Anchor(),F.pos));F.failDelete=false;tick(4)
-assert(not Native:HasPendingCleanup() and F.pins.n==1 and F.pins[0]==other)
-F:Reset();begin();local manual=F:AddPin();manual.kind='StaticMappin'
-tick(4);assert(not Native:IsConfirmed());Native:Stop('done')
-assert(F.pins.n==1 and #F.removed==0) -- matching hash alone cannot claim another type
--- A player's new story selection/waypoint takes precedence over old snapshots.
-F:Reset();F.materialize=true;begin();assert(Native:IsConfirmed() and F.requests[1]=='Active')
-local newStory={path='story-new',state=2};F.tracked=newStory;F.manual=800
-Native:Stop('done');assert(F.tracked==newStory and F.manual==800)
+F.graphStalled=true;Native:Stop('pending');tick(12)
+assert(Native:HasPendingCleanup() and #F.removed==0 and not Native:Begin())
+F.graphStalled=false;F.failDelete=true;tick(2);assert(Native:HasPendingCleanup())
+F.failDelete=false;tick(2);assert(not Native:HasPendingCleanup() and F.pins.n==1 and F.pins[0]==other)
+-- A player's newer story selection or waypoint takes precedence over snapshots.
+F:Reset();F.materialize=true;begin();assert(Native:IsConfirmed())
+local newStory={state=2,path='new-story'};F.tracked=newStory;F.manual=800;tick(1)
+assert(Native.m_afterCreate.value==700);stop();assert(F.tracked==newStory and F.manual==800)
 F:Reset();F.changeManual=true;F.materialize=true;begin()
-assert(Native.m_reason:find('manual ID changed',1,true));assert(F.manual==701)
-Native:Stop('done');assert(F.manual==701) -- do not "restore" over user intent
--- Map inspection pauses rather than cancels. Normal duty/combat ends the test.
-F:Reset();begin();F.menu=true;tick(50);assert(Native:HasRequest() and Native.m_elapsed==0)
-F.menu=false;F.duty=true;tick(1);assert(not Native:HasRequest() and ownState()==1)
-F:Reset();begin();F.combat=true;tick(1);assert(not Native:HasRequest())
-F:Reset();begin();F.wanted=true;tick(1);assert(not Native:HasRequest())
-F:Reset();begin();tick(2400);assert(not Native:HasRequest() and ownState()==1)
--- Restore forgets stale handles, then closes only our saved journal entry.
-F:Reset();F.materialize=true;begin();Native:OnRestored(0,0);tick(1)
+assert(Native.m_reason:find('manual ID changed',1,true));stop();assert(F.manual==701)
+-- Menu inspection pauses lifetime. Duty/combat/wanted terminate and clean up.
+F:Reset();begin();local elapsed=Native.m_elapsed;F.menu=true;tick(50)
+assert(Native:HasRequest() and Native.m_elapsed==elapsed)
+F.menu=false;F.duty=true;tick(3);assert(not Native:HasRequest() and not Native:HasPendingCleanup())
+F:Reset();begin();F.combat=true;tick(3);assert(not Native:HasRequest())
+F:Reset();begin();F.wanted=true;tick(3);assert(not Native:HasRequest())
+F:Reset();begin();tick(2402);assert(not Native:HasRequest() and ownState()==1)
+-- The actual graph loops: start/stop/start needs no game restart or new journal.
+F:Reset();F.materialize=true;begin();stop();begin();assert(Native:IsConfirmed());stop()
+assert(#F.requests==4 and F.facts[prefix..'request']==0 and F.facts[prefix..'stage']==0)
+-- Save restore forgets old tracking/IDs, signals off, then closes the saved phase.
+F:Reset();F.materialize=true;begin();Native.m_lastMarker={value=999999}
+Native:OnRestored(0,0);tick(3)
 assert(not Native:HasRequest() and ownState()==1 and F.pins.n==0 and F.manual==700)
-F:Reset();F.ready=false;assert(not Native:Begin(F:Anchor(),F.pos) and #F.requests==0)
--- Real Lua controller: no implicit spawn/start/stop during unused updates.
+for _,id in ipairs(F.removed) do assert(id~=999999) end
+-- Actual Lua coordinator: no dynamic entity API is even supplied in Game.
 local Probe=require('quest_marker_probe')
-F:Reset();Probe.reset();F.created=0;F.deleted=0;Probe.update(.25,false)
-assert(F.created==0 and #F.requests==0);Probe.finish();assert(#F.requests==0)
-F.duty=true;assert(not Probe.start());assert(F.created==0);F.duty=false
-assert(Probe.start());assert(F.created==1 and #F.requests==0)
-local start=F.spec.position;assert(start.x==150 and start.y==0)
-Probe.update(.25,false);assert(#F.requests==1 and Native:HasRequest())
-assert(not Probe.start())
-F.menu=true;Probe.update(.25,false);assert(Native:HasRequest() and F.spec.position==start)
-F.menu=false;F.deferAnchor=true;assert(not Probe.finish());assert(F.managed)
-assert(not Probe.start());F.deferAnchor=false;for i=1,4 do Probe.update(.25,false) end
-assert(not F.managed and Probe.start());Probe.update(.25,false);Probe.finish()
-assert(Probe.start())
-Probe.update(.25,false);assert(F.requests[#F.requests]=='Active');Probe.update(.25,true)
-assert(not Native:HasRequest() and not F.managed)
--- Old-world reset never deletes stale entity IDs or executes a quest node.
-F:Reset();Probe.reset();assert(Probe.start());local deleted=F.deleted;Probe.reset()
-assert(F.deleted==deleted and #F.requests==0)
--- Missing module is reported on explicit use; untouched normal frames are quiet.
-F.noNative=true;local notices={};Probe.reset();Probe.update(.25,false,function(s) notices[#notices+1]=s end)
-assert(#notices==0);assert(not Probe.start(function(s) notices[#notices+1]=s end));assert(#notices==1)
+F:Reset();Probe.reset();Probe.update(.25,false);Probe.finish()
+assert(#F.requests==0 and ownState()==1)
+F.duty=true;assert(not Probe.start());F.duty=false
+assert(Probe.start() and not Probe.start());F:StepGraph();Probe.update(.25,false)
+assert(Native:GetGraphStage()==1 and #F.requests==1)
+F.graphStalled=true;assert(not Probe.finish());assert(not Probe.start())
+F.graphStalled=false;F:StepGraph();Probe.update(.25,false);assert(Probe.start())
+F:StepGraph();Probe.update(.25,false);Probe.update(.25,true)
+F:StepGraph();Probe.update(.25,false);assert(not Native:HasPendingCleanup())
+-- No old-world native handles are unregistered by a Lua reset.
+F:Reset();Probe.reset();assert(Probe.start());local requests=#F.requests;Probe.reset()
+assert(#F.requests==requests)
+F.noNative=true;local notices={};Probe.reset()
+Probe.update(.25,false,function(s) notices[#notices+1]=s end);assert(#notices==0)
+assert(not Probe.start(function(s) notices[#notices+1]=s end) and #notices==1)

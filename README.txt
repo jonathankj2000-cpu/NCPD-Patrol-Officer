@@ -1,34 +1,32 @@
-NCPD PATROL v0.17d QUEST MARKER PROBE r4b - COMPLETE BRANCH TEST
+NCPD PATROL v0.17d QUEST PHASE MARKER PROBE r4c - COMPLETE BRANCH TEST
 
-r4b fixes the marker node contract: activation uses Active, removal Inactive.
-The containing quest file entry index is 2. Unsupported input choices are removed.
-Diagnostics include actual file index and anchor attachment/position. The r4a
-explicit Uint16 node ID conversion is retained. No native engine success is
-assumed before an actual quest pin and journal objective link are observed.
+This test uses a real archived .questphase registered through ArchiveXL.
+The phase starts passive. CET Start signals its private fact; the phase activates
+the private quest/objective/marker, waits for Remove, then closes and re-arms.
+No dynamic entity or loose ExecuteNode call is used.
 
-Optional test: CET > Testing > Quest marker experiment. Remain OFF DUTY.
-Set a manual waypoint first, then Start static quest marker. Wait five seconds.
-Inspect the map/HUD for an independent quest marker 150 m ahead of your starting
-position, with your manual waypoint preserved. Log diagnostics, then Remove.
-If NOT CONFIRMED: log diagnostics and remove the test; report the complete line.
-Each start sends one native request. Normal dispatch navigation is unchanged.
+The marker has a FIXED position from the last test:
+X -1549.817505, Y -1544.082886, Z 70.155853.
+It is NOT 150 m ahead of V. Inspect the WORLD MAP, alongside your manual waypoint.
 
-Install this COMPLETE package into the game root (bin/r6/archive) and restart.
-Includes NCPDPatrol_QuestMarkerProbe.archive/.xl, quest_marker_probe.lua and
-NCPDPatrolQuestMarkerProbeSystem.reds. Uses existing dependencies; Codeware
-1.21.4 API checked. Browser Extension remains optional. Reapply an optional
-Chinese preview overlay after installation; new experiment text is English.
+Install the COMPLETE bin/r6/archive package into the game root and restart.
+Include NCPDPatrol_QuestMarkerProbe.archive AND its .archive.xl. Existing
+dependencies remain; Browser Extension is optional. Native probe interface = 4.
 
-Actual native creation, game compilation, marker appearance and GPS require
-in-game testing. API calls/fixtures do not establish that the engine accepts
-this standalone quest node. The journal, objective, fixed tagged anchor and
-native QuestMappin inspection are isolated from mission rewards/progression.
-Map inspection pauses the test; normal duty/combat and active timeout end it.
-Remove the test before installing/reverting; use a full game restart.
+OFF DUTY > CET > Testing > Quest marker experiment > Start static quest marker.
+Wait five seconds, then Log quest marker test diagnostics:
+- graph ready=4: the archived phase finished initialization
+- graph stage=1: its activation route completed
+- confirmed=true requires an actual QuestMappin, correct position and objective link
+Use Remove and wait for cleanup before another test.
+A journal alone, or graph stage=1 alone, does not establish marker success.
 
-17 portable suites, 25 Lua modules, 29 native files, 76 installed files.
-Existing dispatch/VIP control-flow and CET route comparisons are retained.
-See docs/QUEST_MARKER_PROBE.md in the repository for details and rollback.
+The archive uses ArchiveXL's null-NodeRef / absolute-offset support for this
+static control. Normal dispatch, currency and progression retain their behavior.
+Actual game execution, presentation and GPS require in-game testing.
+Use a test save; the phase/facts are owned by this isolated experiment.
+17 portable suites; 25 Lua modules, 29 native files, 76 installed files.
+See docs/QUEST_MARKER_PROBE.md for sources, install, diagnostics and rollback.
 
 PREVIOUS BUILD NOTES
 

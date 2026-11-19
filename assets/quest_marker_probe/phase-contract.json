@@ -1,0 +1,161 @@
+{
+  "fact_prefix": "ncpd_patrol_marker_probe_r4c_",
+  "ready_value": 4,
+  "position": {
+    "X": -1549.817505,
+    "Y": -1544.082886,
+    "Z": 70.155853
+  },
+  "edges": [
+    [
+      0,
+      "Out",
+      2,
+      "In"
+    ],
+    [
+      2,
+      "Out",
+      3,
+      "In"
+    ],
+    [
+      3,
+      "Out",
+      10,
+      "Inactive"
+    ],
+    [
+      10,
+      "Out",
+      11,
+      "Inactive"
+    ],
+    [
+      11,
+      "Out",
+      12,
+      "Inactive"
+    ],
+    [
+      12,
+      "Out",
+      13,
+      "Inactive"
+    ],
+    [
+      13,
+      "Out",
+      14,
+      "In"
+    ],
+    [
+      30,
+      "Out",
+      31,
+      "Inactive"
+    ],
+    [
+      31,
+      "Out",
+      32,
+      "Inactive"
+    ],
+    [
+      32,
+      "Out",
+      33,
+      "Inactive"
+    ],
+    [
+      33,
+      "Out",
+      34,
+      "In"
+    ],
+    [
+      14,
+      "Out",
+      15,
+      "In"
+    ],
+    [
+      15,
+      "Out",
+      16,
+      "In"
+    ],
+    [
+      16,
+      "Out",
+      20,
+      "Active"
+    ],
+    [
+      20,
+      "Out",
+      21,
+      "Active"
+    ],
+    [
+      21,
+      "Out",
+      22,
+      "Active"
+    ],
+    [
+      22,
+      "Out",
+      23,
+      "Active"
+    ],
+    [
+      23,
+      "Out",
+      24,
+      "In"
+    ],
+    [
+      24,
+      "Out",
+      25,
+      "In"
+    ],
+    [
+      25,
+      "Out",
+      30,
+      "Inactive"
+    ],
+    [
+      34,
+      "Out",
+      16,
+      "In"
+    ]
+  ],
+  "nodes": {
+    "0": "questInputNodeDefinition",
+    "1": "questOutputNodeDefinition",
+    "2": "questFactsDBManagerNodeDefinition",
+    "3": "questFactsDBManagerNodeDefinition",
+    "10": "questMappinManagerNodeDefinition",
+    "11": "questJournalNodeDefinition",
+    "12": "questJournalNodeDefinition",
+    "13": "questJournalNodeDefinition",
+    "14": "questFactsDBManagerNodeDefinition",
+    "30": "questMappinManagerNodeDefinition",
+    "31": "questJournalNodeDefinition",
+    "32": "questJournalNodeDefinition",
+    "33": "questJournalNodeDefinition",
+    "34": "questFactsDBManagerNodeDefinition",
+    "15": "questFactsDBManagerNodeDefinition",
+    "16": "questPauseConditionNodeDefinition",
+    "20": "questJournalNodeDefinition",
+    "21": "questJournalNodeDefinition",
+    "22": "questJournalNodeDefinition",
+    "23": "questMappinManagerNodeDefinition",
+    "24": "questFactsDBManagerNodeDefinition",
+    "25": "questPauseConditionNodeDefinition"
+  }
+}

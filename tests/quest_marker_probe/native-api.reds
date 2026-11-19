@@ -18,6 +18,8 @@ public final native func IsQuestMappin() -> Bool;
 public final native func GetWorldPosition() -> Vector4;
 public native class QuestsSystem extends IScriptable {
  public native func ExecuteNode(node: ref<questNodeDefinition>, opt inputSocket: CName) -> Void;
+ public native func GetFactStr(factName: String) -> Int32;
+ public native func SetFactStr(factName: String, value: Int32) -> Void;
 }
 public native class graphGraphNodeDefinition extends IScriptable {}
 public abstract native class questNodeDefinition extends graphGraphNodeDefinition {

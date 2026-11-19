@@ -2,7 +2,7 @@
 import re
 
 def without_probe(source):
-    source=re.sub(r'quest marker test r4[ab]', 'quest marker test r4', source)
+    source=re.sub(r'quest marker test r4[abc]', 'quest marker test r4', source)
     source=re.sub(r'^.* -- r4 probe hook[^\n]*\n','',source,flags=re.M)
     source=re.sub(r'^        -- r4 probe UI begin\n.*?^        -- r4 probe UI end\n','',source,flags=re.M|re.S)
     return source.replace('-- NCPD Patrol v0.17d quest marker test r4 | isolated opt-in experiment',

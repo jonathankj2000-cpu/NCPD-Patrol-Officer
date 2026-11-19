@@ -1,29 +1,67 @@
-"""Build private probe journal/localization and a meshless tagged target anchor."""
+"""Build/round-trip a private journal and passive ArchiveXL quest phase."""
 from pathlib import Path
-import argparse,hashlib,json,shutil,subprocess,tempfile
+import argparse,hashlib,json,math,shutil,subprocess,tempfile
 ROOT=Path(__file__).resolve().parents[1]
 TAG='NCPDPatrol_QuestMarkerProbeAnchor'
 
-def validate(journal,texts,anchor):
+def validate_phase(doc):
+ contract=json.loads((ROOT/'assets/quest_marker_probe/phase-contract.json').read_text())
+ handles={}
+ def collect(value):
+  if isinstance(value,dict):
+   if 'HandleId' in value and isinstance(value.get('Data'),dict):
+    assert value['HandleId'] not in handles;handles[value['HandleId']]=value['Data']
+   for child in value.values():collect(child)
+  elif isinstance(value,list):
+   for child in value:collect(child)
+ collect(doc)
+ def key(h):return h.get('HandleId',h.get('HandleRefId'))
+ def resolve(h):return handles[key(h)]
+ root=doc['Data']['RootChunk'];assert root['$type']=='questQuestPhaseResource' and not root['phasePrefabs'] and not root['inplacePhases']
+ graph=resolve(root['graph']);nodes={str(resolve(n)['id']):resolve(n) for n in graph['nodes']}
+ assert {k:v['$type'] for k,v in nodes.items()}==contract['nodes']
+ owners={key(s):int(n['id']) for n in nodes.values() for s in n['sockets']}
+ edges=[]
+ for ident,d in handles.items():
+  if d['$type']=='graphGraphConnectionDefinition':
+   source,destination=key(d['source']),key(d['destination'])
+   assert source in owners and destination in owners
+   assert [key(x) for x in handles[source]['connections']].count(ident)==1
+   assert [key(x) for x in handles[destination]['connections']].count(ident)==1
+   edges.append([owners[source],handles[source]['name']['$value'],owners[destination],handles[destination]['name']['$value']])
+  if d['$type']=='gameJournalPath':
+   assert d['fileEntryIndex']==2 and d['realPath'].startswith('quests/minor_quest/ncpd_patrol_marker_probe')
+  if d['$type']=='questSetVar_NodeType':assert d['factName'].startswith(contract['fact_prefix']) and d['setExactValue']
+  if d['$type']=='questVarComparison_ConditionType':assert d['factName']==contract['fact_prefix']+'request'
+  if d['$type']=='questMappinManagerNodeDefinition':assert not d['disablePreviousMappins']
+  if d['$type']=='questJournalEntry_NodeType':assert not d['sendNotification']
+ assert sorted(edges)==sorted(contract['edges'])
+ return contract
+
+def validate(journal,texts,anchor,quest_phase):
+ contract=validate_phase(quest_phase)
  root=journal['Data']['RootChunk'];folder=root['entry']['Data']['entries'][0]['Data']
  quest=folder['entries'][0]['Data'];assert len(folder['entries'])==1 and quest['id']=='ncpd_patrol_marker_probe'
  phase=quest['entries'][0]['Data'];objective=phase['entries'][0]['Data']
  assert len(phase['entries'])==1 and objective['id']=='inspect' and len(objective['entries'])==2
  pin=objective['entries'][1]['Data'];assert pin['$type']=='gameJournalQuestMapPin' and pin['id']=='location' and pin['enableGPS']
- assert pin['reference']['type']=='Tag' and pin['reference']['names'][0]['$value']==TAG
+ assert pin['reference']['type']=='EntityRef' and not pin['reference']['names']
+ assert pin['reference']['reference']['$value'] in ['0','']
+ assert all(math.isclose(pin['offset'][k],v,abs_tol=.001) for k,v in contract['position'].items())
+ assert not pin['mappinData']['active'] and pin['mappinData']['localizedCaption']['value']=='NCPDPatrol_MarkerProbe_Location'
  assert pin['slotName']['$value'] in ['', 'None'] and pin['mappinData']['mappinType']['$value']=='Mappins.QuestStaticMappinDefinition'
  assert pin['mappinData']['variant']=='DefaultQuestVariant' and 'CustomPositionVariant' not in json.dumps(root)
- rows=texts['Data']['RootChunk']['root']['Data']['entries'];assert len(rows)==3
- assert {x['secondaryKey'] for x in rows}=={'NCPDPatrol_MarkerProbe_'+x for x in ['Title','Objective','Description']}
+ rows=texts['Data']['RootChunk']['root']['Data']['entries'];assert len(rows)==4
+ assert {x['secondaryKey'] for x in rows}=={'NCPDPatrol_MarkerProbe_'+x for x in ['Title','Objective','Description','Location']}
  a=anchor['Data']['RootChunk'];assert not a['components'] and not a['includes']
  assert a['entity']['Data']['$type']=='gameObject' and a['entity']['Data']['tags']['tags'][0]['$value']==TAG
  assert a['compiledData']['Data']['Chunks']==[a['entity']['Data']]
- assert all(doc['Data']['RootChunk']['cookingPlatform']=='PLATFORM_PC' for doc in [journal,texts,anchor])
+ assert all(doc['Data']['RootChunk']['cookingPlatform']=='PLATFORM_PC' for doc in [journal,texts,anchor,quest_phase])
 
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--wk-cli',type=Path,required=True);args=parser.parse_args()
  def run(*a):subprocess.run([str(args.wk_cli),*map(str,a)],check=True)
- names=['probe.journal','probe_onscreens.json','probe_anchor.ent']
+ names=['probe.journal','probe_onscreens.json','probe_anchor.ent','probe.questphase']
  authored={n:ROOT/'assets/quest_marker_probe'/(n+'.json') for n in names}
  validate(*(json.loads(authored[n].read_text()) for n in names))
  with tempfile.TemporaryDirectory(prefix='ncpd-marker-assets-') as tmp:

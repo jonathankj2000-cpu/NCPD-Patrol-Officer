@@ -32,10 +32,17 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
-              "femaleVariant": "CET TEST ONLY. This objective has its own native quest-map pin. Keep your manual waypoint and compare both markers. The invisible target stays at the position chosen when the test starts. Remove this experiment through CET > Testing > Quest marker experiment. No incident credit or payment is awarded.",
+              "femaleVariant": "CET TEST ONLY. The archived quest phase activates one fixed native quest marker at the test location. Compare it with your manual waypoint and remove it through CET > Testing. No incident credit or payment is awarded.",
               "maleVariant": "",
               "primaryKey": "0",
               "secondaryKey": "NCPDPatrol_MarkerProbe_Description"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "femaleVariant": "NCPD marker test location",
+              "maleVariant": "",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_MarkerProbe_Location"
             }
           ]
         }
