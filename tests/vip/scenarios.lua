@@ -379,10 +379,10 @@ actor,enemy,a,b=spawnAmbush();v.car.speed=0;v.car.pos.x=1800;f.playerPosition.x=
 for _,unit in ipairs({a,b}) do unit.mounted=nil;unit.pos=point(1780);unit.dead=true end
 step(.25);assert(Ambush.isActive())
 step(.25);actor.mounted=nil;actor.pos=point(1800);step(.25)
-assert(n:GetStage()==3 and Ambush.isActive() and f.managed[1003])
-step(21);assert(VIP.isActive() and Ambush.isActive() and f.managed[1003] and not f.managed[1001])
+assert(n:GetStage()==3 and not Ambush.isActive() and Ambush.hasCleanup() and f.managed[1003])
+step(21);assert(not VIP.isActive() and Ambush.hasCleanup() and f.managed[1003] and not f.managed[1001])
 f.playerPosition.x=2000;step(5)
-assert(not VIP.isActive() and not Ambush.isActive() and f.managed[990]=='ambient')
+assert(not VIP.isActive() and not Ambush.isActive() and not Ambush.hasCleanup() and f.managed[990]=='ambient')
 -- Explicit cancel/shift end still tears down immediately, with retry reservation.
 actor,enemy,a,b=spawnAmbush();a.dead=true;b.dead=true;step(.25)
 f.deleteOK=false;assert(not VIP.cancel(f.patrol,log) and VIP.isActive())

@@ -70,6 +70,94 @@ reset();f.scanners={}
 assert(rolls({{100,25},{50,50}},function() return D.requestMixed(f.patrol,log) end))
 assert(selected()=='Cyberpsycho');D.cancel(f.patrol,log)
 
+-- Automatic dispatch must resume within its 120-second maximum after actual
+-- VIP completion, including retained ambush bodies. Cleanup and standby time
+-- run together; scene retention must not add another 90 seconds first.
+local function delivered(retainScene)
+ reset();D.setAutomatic(true)
+ assert(require('vip_ambush').configure(1))
+ assert(D.requestVIP(f.patrol,log));f.playerPosition.x=780;update(1)
+ local witness=f.actors[1001];v:Drive();update(.25)
+ v:Mount(witness,v.car);update(.5)
+ if retainScene then
+  assert(D.requestVIPAmbush(log));v.car.speed=16
+  for _=1,40 do v.car.pos.x=v.car.pos.x+4;f.playerPosition.x=v.car.pos.x;update(.25) end
+  update(1)
+  assert(v.ambushCar and #f.creates==4)
+  v.ambushCar.pos.x=1780
+  for _,key in ipairs({1003,1004}) do
+   f.actors[key].dead=true;f.actors[key].mounted=nil;f.actors[key].pos.x=1780
+  end
+ end
+ v.car.speed=0;v.car.pos.x=1800;f.playerPosition.x=1800;update(.5)
+ witness.mounted=nil;witness.pos.x=1800;update(.5)
+ assert(VIPNative:GetStage()==3 and IncidentRewardFixture.wallet==2000)
+ return witness
+end
+math.random=function(a,b)
+ if a==60 and b==120 then return 120 end
+ if a==1 and b==100 then return 1 end
+ return random(a,b)
+end
+for _,retained in ipairs({false,true}) do
+ delivered(retained)
+ if retained then assert(D.vipAmbushState():find('retention remaining=',1,true)) end
+ update(30)
+ assert(D.seconds()<=91,'VIP cleanup adds to the automatic standby interval')
+ update(91)
+ assert(selected()=='Scanner','automatic calls did not resume after VIP delivery')
+ assert(IncidentRewardFixture.wallet==2000 and D.completed()==1)
+ local marker=f.markers[1];update(3)
+ assert(f.markers[1]==marker and DispatchJournalNative:GetStage()==1,'old VIP cleanup altered the next call')
+ D.cancel(f.patrol,log)
+end
+
+-- Match the reported failure: VIP gone, journal completed, old neutralized
+-- ambush actors cannot be deleted. Those bodies must not reserve dispatch.
+delivered(true)
+local deleteEntity=v.entities.DeleteEntity
+function v.entities:DeleteEntity(id)
+ if id.hash>=1002 and id.hash<=1004 then return false end
+ return deleteEntity(self,id)
+end
+update(121)
+assert(not f.managed[1001] and VIPNative:GetStage()==3)
+assert(selected()=='Scanner','completed VIP remains globally blocked by neutralized ambush cleanup')
+assert(f.managed[1002] and f.managed[1003] and f.managed[1004],'refused scene IDs were forgotten')
+assert(VIP.hasCleanup() and D.vipAmbushState():find('actor cleanup pending=',1,true))
+D.cancel(f.patrol,log);D.setAutomatic(false);update(181)
+assert(not D.isActive() and VIP.hasCleanup() and IncidentRewardFixture.wallet==2000)
+v.entities.DeleteEntity=deleteEntity;update(3)
+assert(not VIP.hasCleanup() and not f.managed[1002] and f.managed[990]=='ambient')
+
+-- The new concurrent countdown retains Busy/menu/combat pauses. Each gate is
+-- visible without having to infer it from a scanner journal with stage zero.
+for _,gate in ipairs({'busy','menu','combat'}) do
+ delivered(true);update(10);local seconds=D.seconds()
+ if gate=='busy' then D.setBusy(true) elseif gate=='menu' then f.paused=true else f.combat=true end
+ update(100)
+ assert(D.seconds()==seconds,gate..' did not pause standby')
+ assert(selected()==(gate=='menu' and 'VIP' or 'none'),'unexpected call while '..gate)
+ local status=D.schedulerStatus(f.patrol)
+ assert(status:find(gate=='busy' and 'BUSY' or gate=='menu' and 'menu' or 'combat',1,true),status)
+ D.setBusy(false);f.paused=false;f.combat=false
+ update(121);assert(selected()=='Scanner',gate..' did not resume after VIP completion')
+ D.cancel(f.patrol,log)
+end
+
+-- An actually refused deletion remains a reservation even after the standby
+-- interval expires. Once deletion succeeds, request the next call immediately
+-- without another 60-120 second wait or a second completion/payment.
+delivered(true);f.deleteOK=false
+update(125)
+assert(D.seconds()==0 and selected()=='VIP' and #f.creates==4)
+assert(D.schedulerStatus(f.patrol):find('waiting for confirmed actor cleanup',1,true))
+assert(D.vipAmbushState():find('actor cleanup pending=',1,true))
+f.deleteOK=true;update(3)
+assert(selected()=='Scanner' and #f.creates==4 and IncidentRewardFixture.wallet==2000 and D.completed()==1)
+D.cancel(f.patrol,log)
+math.random=random
+
 -- The live dispatcher services the earned-reward queue and reports generated
 -- outcomes/counts, including when the player ends duty after completing a call.
 reset();D.setAutomatic(false);assert(D.requestVIP(f.patrol,log))

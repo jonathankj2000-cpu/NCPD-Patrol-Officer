@@ -1,9 +1,9 @@
-"""Verify mixed dispatch, durable rewards and career accounting; package the complete mod."""
+"""Verify post-VIP automatic dispatch and existing gameplay; package the complete mod."""
 from pathlib import Path
 import hashlib,json,os,subprocess,sys,zipfile
 ROOT=Path(__file__).resolve().parents[1]
-BASE='bcf15393cd0b6e05618fde95e3688edf534a043d'
-NAME='NCPD_Patrol_v0.17a_Mixed_Dispatch_Rewards_TEST.zip'
+BASE='22b7c6ca5d916cf8e310f2e92dbcb42105455f04'
+NAME='NCPD_Patrol_v0.17b_VIP_Dispatch_Standby_FIX.zip'
 def run(*args):subprocess.run([*map(str,args)],cwd=ROOT,check=True)
 def blob(data):return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
 def main():
@@ -17,9 +17,8 @@ def main():
   'tests/vip/check_vip.py','tests/officer_readiness/check_ready.py','tests/incidents/check_incidents.py']
  for test in tests:run(sys.executable,ROOT/test)
  prefix='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
- changed={prefix+name for name in ['init.lua','arrest.lua','vip.lua','cyberpsycho.lua','vip_ambush_unit.lua','dispatch.lua']}
- changed|={'r6/scripts/NCPDPatrol/'+name for name in ['NCPDPatrolVIPSystem.reds','NCPDPatrolCyberpsychoSystem.reds','NCPDPatrolCareerSystem.reds']}
- added={'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds'}
+ changed={prefix+name for name in ['init.lua','vip.lua','vip_ambush.lua','vip_ambush_unit.lua','dispatch.lua']}
+ added=set()
  original=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  run('git','diff','--exit-code',BASE,'--','LICENSE',*[path for path in original if path not in changed])
  paths=[]
@@ -35,7 +34,7 @@ def main():
   assert z.testzip() is None and set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for path in paths:assert z.read(path.relative_to(ROOT).as_posix())==path.read_bytes()
  data=release.read_bytes()
- report={'version':'v0.17a','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
+ report={'version':'v0.17b','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':tests,
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(data),'zip_sha256':hashlib.sha256(data).hexdigest(),'zip_git_blob':blob(data),
   'native_arrest_interface':6,'native_trunk_interface':4,'native_officer_equipment_interface':1,'native_cyberpsycho_interface':4,'native_vip_interface':4,'native_incident_interface':1,
@@ -43,9 +42,10 @@ def main():
   'active_backup':'explicit follow commands replace permanent scene hold; boarding priority; existing 10-4 retains scene and reservation',
   'readiness':'verify actual held slots; stalled command falls back to native equip/unequip with existing tagged-officer inventory; native combat priority',
   'codeware_api_source':'v1.21.4 / 6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad',
-  'archives_changed':[],'other_archives_unchanged':True,'redscript_changed':['NCPDPatrolVIPSystem.reds','NCPDPatrolCyberpsychoSystem.reds','NCPDPatrolCareerSystem.reds'],'redscript_added':['NCPDPatrolIncidentSystem.reds'],'weapon_readiness_rules_unchanged':True,'cyberpsycho_pool_and_tweaks_unchanged':True,
+  'archives_changed':[],'other_archives_unchanged':True,'redscript_changed':[],'redscript_added':[],'weapon_readiness_rules_unchanged':True,'cyberpsycho_pool_and_tweaks_unchanged':True,
   'aftermath_rules_and_tyre_repair_unchanged':True,'scanner_arrest_and_dispatch_payments_unchanged':True,
   'shift_entry_fix_included':True,
+  'post_generated_standby':{'seconds':[60,120],'starts_on_native_terminal_result':True,'runs_during_scene_retention':True,'busy_menu_combat_pauses_retained':True,'foreground_vip_and_active_hostile_cleanup_still_blocks':True,'neutralized_ambush_cleanup_is_independent':True,'retained_convoy_scene_limit':3,'full_retired_queue_skips_vip_but_allows_scanner_cyberpsycho':True,'refused_and_codeware_style_deferred_deletion_tested':True,'older_cleanup_cannot_clear_next_marker_or_journal':True,'off_duty_cleanup_and_world_reset_tested':True,'visible_scheduler_gate':True,'visible_ambush_retention_seconds_and_pending_actor_count':True,'automatic_resume_with_and_without_ambush_tested':True},
   'mixed_dispatch':{'weights':{'scanner':50,'vip':30,'cyberpsycho':20},'weighted_fallback_without_replacement':True,'max_type_attempts':3,'automatic_and_normal_requests':True,'individual_test_buttons_preserved':True,'all_unavailable_retry_seconds':30,'cleanup_blocks_new_assignment':True},
   'generated_rewards':{'vip_flat':2000,'cyberpsycho_base':3000,'cyberpsycho_non_lethal_extra':500,'career_incidents_per_success':1,'persistent_serial_and_completed_paid_records':True,'payment_retry_survives_load':True,'active_assignments_cancel_on_load':True,'completion_credit_independent_of_payment_retry':True,'paid_notice_delay_seconds':8,'scanner_and_arrest_ledgers_untouched':True,'old_milestone_receipts_preserved':True},
   'arrest_recovery':{'living_ragdolls':True,'max_displacement_metres':2,'max_height_change_metres':0.75,'navigation_and_static_collision_footprint_checked':True,'prefer_flatter_nearby_ground':True,'native_workspot_ground_alignment':True,'position_check_after_native_activation':True,'life_health_and_defeat_unchanged':True,'native_physics_ownership_released_on_cleanup':True,'native_pickup_handoff':True,'native_R_pickup_preserved_before_arrest_and_after_failure':True,'payment_requires_existing_activation_proof':True},
@@ -58,6 +58,6 @@ def main():
   'compatibility_guard':'observed game compiler forms rejected in CI; negative controls included; not a game-cache compiler',
   'actual_game_validation':False,
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
- (ROOT/'releases/NCPD_Patrol_v0.17a_verification.json').write_text(json.dumps(report,indent=2)+'\n')
+ (ROOT/'releases/NCPD_Patrol_v0.17b_verification.json').write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
 if __name__=='__main__':main()

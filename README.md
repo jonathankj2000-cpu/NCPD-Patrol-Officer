@@ -1,5 +1,36 @@
 # NCPD Patrol
 
+## v0.17b: automatic dispatch after VIP delivery
+
+[Download the complete v0.17b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17b_VIP_Dispatch_Standby_FIX.zip)
+
+Completed VIP missions no longer reserve dispatch for neutralized ambush bodies.
+Those scenes move into a separate cleanup queue; even refused or delayed despawn
+cannot lock scanner/cyberpsycho calls. Their IDs remain owned and retried, with a
+maximum of **three convoy scenes**. A full queue temporarily skips new VIP calls
+and allows the normal fallback. Starting a new VIP preserves older scenes.
+Bodies retain their existing 90-second/150-m cleanup rules. Live attackers and
+an undelivered VIP still reserve their assignment until cleanup is confirmed.
+
+The **60–120 second** standby starts when a generated assignment closes and runs
+during scene cleanup. Previously retention delayed that wait, and a failed
+ambush despawn could leave the entire dispatch stuck in `phase=cleanup`.
+Busy, game menus, combat and the automatic-dispatch toggle retain their pauses.
+
+CET now shows **Automatic dispatch** with the current timer or blocking reason.
+**Log automatic dispatch diagnostics** includes VIP/cyberpsycho state in one
+entry. Retained ambush scenes show their remaining gameplay seconds; pending
+deletion shows the remaining actor count. A scanner journal at stage zero is
+not a diagnosis of a VIP's cleanup state.
+
+Install the **complete package** and restart. This is a Lua scheduling/status
+fix; native scripts, archives, the 50/30/20 mix and saved rewards are unchanged.
+Thirteen regression suites include VIP delivery through the next automatic call,
+neutralized scenes refusing deletion for over five simulated minutes, Codeware's
+accepted-then-pending despawn contract, three-scene capacity/fallback, all pause
+gates and still-active attacker cleanup. Engine boundaries are mocked; in-game
+validation remains necessary.
+
 ## v0.17a: mixed dispatch, rewards and career incidents
 
 [Download the complete v0.17a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17a_Mixed_Dispatch_Rewards_TEST.zip)

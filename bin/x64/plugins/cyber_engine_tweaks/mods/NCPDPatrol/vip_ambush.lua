@@ -3,6 +3,7 @@
 local Unit=require("vip_ambush_unit")
 local M={}
 local workers={}
+local retired={}
 local mode=0 -- 0 random 1-3, otherwise an exact 1/2/3-car test preference.
 local begun,ended,requested,warned,lostNotified=false,false,false,false,false
 local spawnWindow,sawEscape=0,false
@@ -15,26 +16,39 @@ function M.isActive()
     for _,worker in ipairs(workers) do if worker.isActive() then return true end end
     return false
 end
+function M.hasCleanup() return #retired>0 end
+function M.retainedCount() return #retired end
+function M.canBegin() return not M.isActive() and #retired<3 end
 function M.setting() return mode==0 and "Random (1-3)" or tostring(mode).." car"..(mode==1 and "" or "s") end
 function M.state()
-    if #workers==0 then return "No ambush this trip" end
-    if #workers==1 then return workers[1].state() end
     local labels={}
     for i,worker in ipairs(workers) do labels[#labels+1]="Car "..i..": "..worker.state() end
-    return "Convoy: "..#workers.." cars | "..table.concat(labels," | ")
+    for i,scene in ipairs(retired) do
+        for j,worker in ipairs(scene) do labels[#labels+1]="Previous scene "..i..", car "..j..": "..worker.state() end
+    end
+    if #labels==0 then return "No ambush this trip" end
+    return "Current cars="..#workers.." | background scenes="..#retired.."/3 | "..table.concat(labels," | ")
 end
-function M.reset()
+local function resetCurrent()
     workers={};begun,ended,requested,warned,lostNotified=false,false,false,false,false
     spawnWindow,sawEscape=0,false
 end
+function M.reset()
+    -- Only a world transition may forget IDs from retained scenes.
+    resetCurrent();retired={}
+end
 local function canSpawnAt(point,own)
-    for _,other in ipairs(workers) do
-        if other~=own then
-            local position=other.position()
-            if position then
-                if position.x~=position.x or position.y~=position.y or position.z~=position.z then return false end
-                local x,y,z=position.x-point.x,position.y-point.y,position.z-point.z
-                if x*x+y*y+z*z<144 then return false end
+    local scenes={workers}
+    for _,scene in ipairs(retired) do scenes[#scenes+1]=scene end
+    for _,scene in ipairs(scenes) do
+        for _,other in ipairs(scene) do
+            if other~=own then
+                local position=other.position()
+                if position then
+                    if position.x~=position.x or position.y~=position.y or position.z~=position.z then return false end
+                    local x,y,z=position.x-point.x,position.y-point.y,position.z-point.z
+                    if x*x+y*y+z*z<144 then return false end
+                end
             end
         end
     end
@@ -61,8 +75,8 @@ local function buildWorkers()
     end
 end
 function M.begin()
-    if M.isActive() then return false end
-    M.reset();begun=true;buildWorkers();return true
+    if not M.canBegin() then return false end
+    resetCurrent();begun=true;buildWorkers();return true
 end
 function M.configure(value,status)
     if type(value)~="number" or value~=value or value%1~=0 or value<0 or value>3 then return false end
@@ -86,8 +100,25 @@ function M.request(status)
     if status then status("VIP ambush | "..#workers.." car(s) armed; waiting for separate checked road positions") end
     return true
 end
+function M.clearRetired(status)
+    for i=#retired,1,-1 do
+        local gone=true
+        for _,worker in ipairs(retired[i]) do if not worker.finish(status) then gone=false end end
+        if gone then table.remove(retired,i) end
+    end
+end
 function M.finish(status,keepResolvedScene)
     ended=true;requested=false
+    if keepResolvedScene and #retired<3 then
+        local scene,remaining={},{}
+        for _,worker in ipairs(workers) do
+            if worker.canRetire() then scene[#scene+1]=worker else remaining[#remaining+1]=worker end
+        end
+        if #scene>0 then
+            retired[#retired+1]=scene;workers=remaining
+            if status then status("VIP ambush | Neutralized scene moved to background cleanup; dispatch reservation released") end
+        end
+    end
     local complete=true
     for _,worker in ipairs(workers) do
         if not worker.finish(status,keepResolvedScene) then complete=false end
@@ -95,6 +126,16 @@ function M.finish(status,keepResolvedScene)
     return complete
 end
 function M.update(delta,vehicle,transporting,nearDestination,patrol,status)
+    -- These workers own no VIP token, marker or assignment slot. Refused
+    -- deletion keeps their IDs in this bounded queue, never the dispatcher.
+    for i=#retired,1,-1 do
+        local gone=true
+        for _,worker in ipairs(retired[i]) do
+            worker.update(delta,nil,false,true,patrol,status)
+            if worker.isActive() then gone=false end
+        end
+        if gone then table.remove(retired,i) end
+    end
     local ticks=delta>0 and delta<=.5 and patrol and not patrol:IsDispatchMenuOpen()
     if ticks and transporting and not ended and started() then
         spawnWindow=spawnWindow+delta

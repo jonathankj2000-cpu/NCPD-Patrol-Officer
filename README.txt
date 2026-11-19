@@ -1,4 +1,26 @@
-NCPD PATROL v0.17a - MIXED DISPATCH, REWARDS AND CAREER INCIDENTS
+NCPD PATROL v0.17b - AUTOMATIC DISPATCH AFTER VIP DELIVERY
+
+V0.17B FIX
+Completed VIP missions release dispatch while neutralized ambush bodies clean
+in a separate queue. Delayed/refused despawn no longer blocks every new call.
+All IDs remain owned and retried, with at most three retained convoy scenes.
+A full queue skips new VIPs while allowing scanner/cyberpsycho fallback. A new
+VIP preserves older scenes. Existing body retention stays 90 seconds/150 m.
+Still-active attackers and undelivered VIP cleanup retain their reservation.
+
+The 60-120 second standby starts when the generated assignment closes and runs
+during cleanup. Previously retention delayed that timer, and failed ambush
+despawn could leave the entire dispatcher stuck. Busy/menu/combat pauses stay.
+
+CET shows Automatic dispatch with the timer or blocking reason. Log automatic
+dispatch diagnostics includes VIP/cyberpsycho state. Ambush status now shows
+remaining retention seconds or the number of actors awaiting deletion.
+
+Install the COMPLETE package and restart; CET announces v0.17b. Native scripts,
+archives, the 50/30/20 mix and saved rewards remain unchanged. Thirteen portable
+suites cover VIP-to-next-call continuity, bodies refusing deletion for over five
+simulated minutes, Codeware-style deferred despawn, three-scene capacity and
+fallback, pause gates and live attacker cleanup. In-game validation is needed.
 
 V0.17A TEST
 Automatic calls, Request dispatch now and the trunk's Request new dispatch

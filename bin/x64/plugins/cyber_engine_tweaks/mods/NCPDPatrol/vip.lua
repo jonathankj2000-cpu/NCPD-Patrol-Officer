@@ -32,6 +32,7 @@ function M.ambushState() return Ambush.state() end
 function M.ambushSetting() return Ambush.setting() end
 function M.cycleAmbushCars(status) return Ambush.cycle(status) end
 function M.isActive() return phase~="idle" or Ambush.isActive() end
+function M.hasCleanup() return phase=="cleanup" or Ambush.hasCleanup() end
 function M.reset()
     -- World transitions forget old IDs without touching the previous world.
     phase,label="idle","No VIP transport"
@@ -68,7 +69,8 @@ local function cleanup(status)
     phase="idle";token,pickup,destination,car=nil,nil,nil,nil
     report(finalReason or "VIP transport cleared",status);return true
 end
-function M.finish(patrol,status,reason,failed)
+function M.finish(patrol,status,reason,failed,flushRetired)
+    if flushRetired then Ambush.clearRetired(status) end
     keepResolvedScene=false
     finalReason=reason or "VIP assignment cancelled"
     if token then
@@ -207,6 +209,10 @@ local function mount(vehicle,seat,unmount)
 end
 function M.request(patrol,status,sound,voice)
     if M.isActive() then report("Transport/cleanup already active",status);return false end
+    if not Ambush.canBegin() then
+        report("Three previous ambush scenes await cleanup; scanner/cyberpsycho calls remain available",status)
+        return false
+    end
     local ok,err=pcall(function()
         local player=Game.GetPlayer()
         if not player or not patrol or not patrol:IsOnDuty() then error("Start a shift before requesting VIP transport") end
@@ -301,12 +307,13 @@ function M.update(delta,onDuty,patrol,status,HUD)
         -- Reconcile a saved active journal even though transient actors were
         -- deliberately forgotten on load.
         if Game.GetPlayer() then pcall(function() native():Tick(delta) end) end
+        Ambush.update(delta,nil,false,true,patrol,status)
         return Ambush.isActive()
     end
     local ok,err=pcall(function()
         if not patrol or not Game.GetPlayer() then return end
         local backend=native();backend:Tick(delta)
-        if not onDuty or not patrol:IsOnDuty() then M.finish(patrol,status,"Shift ended");HUD.set("",false);return end
+        if not onDuty or not patrol:IsOnDuty() then M.finish(patrol,status,"Shift ended",false,true);HUD.set("",false);return end
         local stage=backend:GetStage()
         if token~=backend:GetToken() then M.finish(patrol,status,"VIP world/session changed");return end
         if stage>=3 then

@@ -11,6 +11,7 @@ local travelled, sample, clock, elapsed, age, stopped, escaped, retry = 0, 0, 0,
 local triggerAt = 300
 local spawnPoint,trailVehicle=nil,nil
 local attempts,retryAfterCleanup,settling=0,false,0
+local resolvedScene=false
 local function finite(p)
     return p and p.x==p.x and p.y==p.y and p.z==p.z
         and math.abs(p.x)<100000 and math.abs(p.y)<100000 and math.abs(p.z)<100000
@@ -26,7 +27,13 @@ local function notify(patrol,text)
     if options.notify then options.notify(patrol,text)
     elseif patrol then patrol:NotifyDispatch("NCPD: "..text,8) end
 end
-function M.state() return label end
+function M.state()
+    if phase=="resolved" then
+        return label.." | retention remaining="..math.max(0,math.ceil(90-elapsed)).." s | away="..string.format("%.1f",escaped).."/3 s"
+    end
+    if phase=="cleanup" then return "Ambush actor cleanup pending="..#ids end
+    return label
+end
 function M.isActive() return phase~="idle" end
 function M.hasStarted() return used or attempts>0 end
 function M.canStart() return phase=="idle" and not used end
@@ -45,6 +52,7 @@ function M.reset()
     travelled,sample,clock,elapsed,age,stopped,escaped,retry=0,0,0,0,0,0,0,0
     triggerAt=options.triggerAt or math.random(250,400)
     spawnPoint,trailVehicle=nil,nil;attempts,retryAfterCleanup,settling=0,false,0
+    resolvedScene=false
 end
 function M.begin()
     if M.isActive() then return false end
@@ -67,7 +75,7 @@ local function cleanup(status)
     for i=#ids,1,-1 do
         local id=ids[i]
         local checked,gone=pcall(function()
-            if not system then return false end
+            if not system or not system:IsReady() then return false end
             if system:IsManaged(id)==false then return true end
             return system:DeleteEntity(id)==true and system:IsManaged(id)==false
         end)
@@ -241,8 +249,14 @@ local function crewNeutralized()
     end
     return true
 end
+function M.canRetire()
+    if not resolvedScene or (phase~="resolved" and phase~="cleanup") then return false end
+    for _,unit in ipairs(units) do if alive(unit.actor) then return false end end
+    return true
+end
 local function resolve(status)
     stopChase();car:ForceBrakesUntilStoppedOrFor(8)
+    resolvedScene=true
     phase,elapsed,escaped="resolved",0,0
     report("Attackers neutralized; scene retained for 90 seconds or until you leave 150 m",status)
 end

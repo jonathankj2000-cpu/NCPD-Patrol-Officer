@@ -21,8 +21,9 @@ lua.execute((HERE.parent/'vip/native-mocks.lua').read_text())
 lua.execute((HERE/'engine-mocks.lua').read_text())
 lua.execute((HERE/'native-scenarios.lua').read_text())
 lua.execute((HERE/'mixed-scenarios.lua').read_text())
+lua.execute((HERE/'background-scenarios.lua').read_text())
 source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds').read_text()
 for field in ['m_serial','m_completedIds','m_completedKinds','m_completedAmounts','m_paidIds']:
  assert re.search(r'private persistent let '+field+r'\s*:',source),field
 assert all(name not in source for name in ['m_paidActivities','m_paidSuspects','SetFact'])
-print('PASS: actual VIP 2000 / cyberpsycho 3000+500 non-lethal outcomes; one career incident, duplicate/cancel/stale/load/failure guards, persistent unique IDs and payment retries, delayed receipts, preserved scanner/arrest records; authored 50/30/20 mixed selection, availability fallback and cleanup gating (engine APIs mocked)')
+print('PASS: actual VIP 2000 / cyberpsycho 3000+500 non-lethal outcomes; one career incident, duplicate/cancel/stale/load/failure guards, persistent unique IDs and payment retries, delayed receipts, preserved scanner/arrest records; authored 50/30/20 mix/fallback; automatic resume after VIP with/without retained ambush, concurrent standby, paused gates and refused/deferred cleanup (engine APIs mocked)')

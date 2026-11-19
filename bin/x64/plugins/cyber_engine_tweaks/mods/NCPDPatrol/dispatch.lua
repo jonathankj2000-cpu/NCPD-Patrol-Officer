@@ -18,7 +18,8 @@ local navigation = "No active dispatch"
 local lastBriefing = nil
 local incidentBaseline,lastRewardRevision=0,-1
 local seenGenerated={}
-local function observeGenerated(recordOnly)
+local generatedCooling=false
+local function observeGenerated(recordOnly,status)
     for _,name in ipairs({"NCPDPatrolVIPSystem","NCPDPatrolCyberpsychoSystem"}) do
         pcall(function()
             local backend=Game.GetScriptableSystemsContainer():Get(name)
@@ -29,6 +30,9 @@ local function observeGenerated(recordOnly)
             if seenGenerated[key] then return end
             seenGenerated[key]=true
             if recordOnly then return end
+            generatedCooling=true
+            countdown=math.random(60,120)
+            if status then status("Dispatch | Assignment closed; next automatic call in "..countdown.." seconds. Scene cleanup runs during standby.") end
             if stage==3 then lastOutcome="COMPLETED | "..tostring(backend:GetReason())
             elseif stage==5 then lastOutcome="CANCELLED | "..tostring(backend:GetReason())
             else
@@ -141,6 +145,30 @@ function M.armTimeoutTest(patrol, status)
     return true
 end
 function M.seconds() return math.max(0, math.ceil(countdown)) end
+function M.schedulerStatus(patrol)
+    local ok,text=pcall(function()
+        if not patrol or not Game.GetPlayer() then return "Load a save" end
+        if not patrol:IsOnDuty() then return "OFF DUTY" end
+        if failed then return "Stopped after a dispatch API error; check CET log" end
+        if not automatic then return "Automatic calls paused" end
+        if busy then return "BUSY; automatic calls paused" end
+        if patrol:IsDispatchMenuOpen() then return "Game menu open; standby timer paused" end
+        if Game.GetPlayer():IsInCombat() then return "In combat; standby timer paused" end
+        if M.isActive() then
+            if generatedCooling then
+                return countdown>0 and ("Next call in about "..M.seconds().." s; scene cleanup continues")
+                    or "Standby elapsed; waiting for confirmed actor cleanup"
+            end
+            return "Assignment active; standby starts when it closes"
+        end
+        return "Next automatic call in about "..M.seconds().." s"..(VIP.hasCleanup() and "; previous neutralized scenes clean in background" or "")
+    end)
+    return ok and text or ("Scheduler status unavailable: "..tostring(text))
+end
+function M.schedulerDiagnostics(patrol)
+    return M.schedulerStatus(patrol).." | seconds="..M.seconds().." | generated standby="..tostring(generatedCooling)
+        .." | VIP: "..VIP.diagnostics().." | Cyberpsycho: "..Cyberpsycho.diagnostics()
+end
 function M.candidates() return candidateCount end
 function M.isSoundEnabled() return soundEnabled end
 function M.isVoiceEnabled() return voiceEnabled end
@@ -186,6 +214,7 @@ function M.start(patrol, status)
     failedCalls, lastOutcome = 0, "No dispatch result this shift"
     incidentBaseline,lastRewardRevision=generatedCount(),-1
     seenGenerated={};observeGenerated(true)
+    generatedCooling=false
     failed, dutySeen = false, true
     cleaned = false
     local ok, err = pcall(clear, patrol)
@@ -200,7 +229,7 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
-    if VIP.isActive() then VIP.finish(patrol, status, "Shift ended; VIP transport closed") end
+    if VIP.isActive() or VIP.hasCleanup() then VIP.finish(patrol, status, "Shift ended; VIP transport closed", false, true) end
     if Cyberpsycho.isActive() or Cyberpsycho.hasCleanup() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
     Journal.update(0, status)
     if active then
@@ -228,6 +257,7 @@ function M.reset(keepVIPCleanup)
     failedCalls, lastOutcome = 0, "No dispatch result this shift"
     incidentBaseline,lastRewardRevision=generatedCount(),-1
     seenGenerated={};observeGenerated(true)
+    generatedCooling=false
     navigation = "No active dispatch"
     hide()
 end
@@ -293,6 +323,7 @@ function M.request(patrol, status)
             return false
         end
         active = chosen
+        generatedCooling=false
         lastBriefing = briefing
         active.journalToken = token
         patrol:ClearDispatchWaypoints()
@@ -361,7 +392,7 @@ function M.requestCyberpsycho(patrol, status)
         return false
     end
     local accepted = Cyberpsycho.request(patrol, status, soundEnabled, voiceEnabled)
-    if accepted then countdown = math.random(60, 120) end
+    if accepted then generatedCooling=false;countdown = math.random(60, 120) end
     return accepted
 end
 
@@ -371,7 +402,7 @@ function M.requestVIP(patrol, status)
         return false
     end
     local accepted = VIP.request(patrol, status, soundEnabled, voiceEnabled)
-    if accepted then countdown = math.random(60, 120) end
+    if accepted then generatedCooling=false;countdown = math.random(60, 120) end
     return accepted
 end
 function M.requestVIPAmbush(status) return VIP.requestAmbush(status) end
@@ -427,7 +458,7 @@ function M.update(delta, onDuty, status, getPatrol)
     Journal.update(delta, status)
     local cyberBusy = Cyberpsycho.update(delta, onDuty, getPatrol(), status, HUD)
     local vipBusy = VIP.update(delta, onDuty, getPatrol(), status, HUD)
-    observeGenerated(false)
+    observeGenerated(false,status)
     poll = poll + delta
     if poll < 1 then return end
     local elapsed = math.min(poll, 2)
@@ -437,14 +468,22 @@ function M.update(delta, onDuty, status, getPatrol)
     local ok, err = pcall(function()
         if patrol:Version() ~= 17 then return end
         if not onDuty or not patrol:IsOnDuty() then
-            if dutySeen and not Cyberpsycho.isActive() and not Cyberpsycho.hasCleanup() and not VIP.isActive() then M.reset() end
+            if dutySeen and not Cyberpsycho.isActive() and not Cyberpsycho.hasCleanup() and not VIP.isActive() and not VIP.hasCleanup() then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
             return
         end
         if not dutySeen then M.start(patrol, status) end
-        if cyberBusy or vipBusy then return end
         if failed then return end
         local inMenu = patrol:IsDispatchMenuOpen()
+        if cyberBusy or vipBusy then
+            -- A completed generated call can retain bodies while they are
+            -- cleaned. Do not add that retention time before the normal wait.
+            -- Actual actor cleanup still owns the assignment reservation.
+            if generatedCooling and automatic and not busy and not inMenu and not Game.GetPlayer():IsInCombat() then
+                countdown=math.max(0,countdown-elapsed)
+            end
+            return
+        end
         if active then
             local stage, _, reason = Journal.snapshot(active.journalToken)
             if stage == 4 or stage == 5 or stage == 6 or stage == -1 then
@@ -503,7 +542,7 @@ function M.update(delta, onDuty, status, getPatrol)
 end
 
 function M.shutdown(patrol)
-    if VIP.isActive() then VIP.finish(patrol, nil, "Mod shutdown") end
+    if VIP.isActive() or VIP.hasCleanup() then VIP.finish(patrol, nil, "Mod shutdown", false, true) end
     if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, nil, "Mod shutdown") end
     Journal.cancel(active and active.journalToken or 0, "Mod shutdown")
     if patrol then pcall(clear, patrol) end

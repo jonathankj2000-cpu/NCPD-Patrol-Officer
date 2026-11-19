@@ -19,6 +19,18 @@ Failed/absent transactions leave a persistent earned record to retry after load
 or ending duty. Receipt delay/menu pause never grants money. The live dispatch
 update services payouts and reports generated completions/failures once.
 
+Post-VIP regressions force the full 120-second standby and drive actual pickup,
+boarding, delivery, retained ambush bodies and the next automatic scanner call.
+Standby starts at the native terminal result and runs during scene retention.
+The same cases check Busy/menu/combat pauses, visible scheduler gates, retained
+scene countdowns and deferred deletion. Neutralized ambush scenes move into a
+separate queue, bounded to three convoys. New VIPs retain older IDs. A full queue
+allows scanner/cyberpsycho fallback. Tests keep deletion refused for more than
+five simulated minutes and emulate Codeware's first-accepted/subsequent-false
+contract until a despawn event. Live attacker and VIP cleanup still block a new
+assignment. Later cleanup cannot remove the next marker/journal or repay the VIP.
+Shift-end retries continue off duty; world resets forget only old-world IDs.
+
 Career tests sum existing scanner history and generated completions without
 counting the separate EUR$500 scanner supplement again. Existing promotion
 thresholds and individual equipment claim IDs are preserved. Prototype VIP/CP
