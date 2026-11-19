@@ -22,13 +22,13 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Verify VIP extraction, CET/dispatch compatibility and complete r3 ZIP
-        run: .ci-python/bin/python tools/build_vip_refactor_release.py
+      - name: Verify isolated quest marker probe, existing behavior and complete r4 ZIP
+        run: .ci-python/bin/python tools/build_quest_marker_probe_release.py
       - name: Commit verified branch test package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.17d_VIP_Refactor_r3_TEST.zip releases/NCPD_Patrol_VIP_Refactor_r3_verification.json
+          git add releases/NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4_TEST.zip releases/NCPD_Patrol_Quest_Marker_Probe_r4_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified VIP refactor r3 test package"
+          git commit -m "Build verified quest marker probe r4 test package"
           git push origin HEAD:git-checkout--b-refactor/cleanup

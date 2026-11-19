@@ -1,3 +1,31 @@
+NCPD PATROL v0.17d QUEST MARKER PROBE r4 - COMPLETE BRANCH TEST
+
+Optional test: CET > Testing > Quest marker experiment. Remain OFF DUTY.
+Set a manual waypoint first, then Start static quest marker. Wait five seconds.
+Inspect the map/HUD for an independent quest marker 150 m ahead of your starting
+position, with your manual waypoint preserved. Log diagnostics, then Remove.
+If NOT CONFIRMED: remove, cycle Activation input (default / Enable / In), retry.
+Each start sends one native request. Normal dispatch navigation is unchanged.
+
+Install this COMPLETE package into the game root (bin/r6/archive) and restart.
+Includes NCPDPatrol_QuestMarkerProbe.archive/.xl, quest_marker_probe.lua and
+NCPDPatrolQuestMarkerProbeSystem.reds. Uses existing dependencies; Codeware
+1.21.4 API checked. Browser Extension remains optional. Reapply an optional
+Chinese preview overlay after installation; new experiment text is English.
+
+Actual native creation, game compilation, marker appearance and GPS require
+in-game testing. API calls/fixtures do not establish that the engine accepts
+this standalone quest node. The journal, objective, fixed tagged anchor and
+native QuestMappin inspection are isolated from mission rewards/progression.
+Map inspection pauses the test; normal duty/combat and active timeout end it.
+Remove the test before installing/reverting; use a full game restart.
+
+17 portable suites, 25 Lua modules, 29 native files, 76 installed files.
+Existing dispatch/VIP control-flow and CET route comparisons are retained.
+See docs/QUEST_MARKER_PROBE.md in the repository for details and rollback.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d VIP REFACTOR r3 - COMPLETE BRANCH TEST
 
 VIP location selection and waypoint ownership have their own modules.

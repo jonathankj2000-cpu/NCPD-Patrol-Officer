@@ -1,0 +1,16 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive",
+  "archive_sha256": "71ebd4fe902cf52165a61d4336ca09ae285df098b40e8159c5deafb0601e1ca0",
+  "authored_inputs": {
+    "assets/quest_marker_probe/probe.journal.json": "fa50653ca69d3e91e32a1e8541c8ccffb62ce8cee6132fcde4faac7345ef7159",
+    "assets/quest_marker_probe/probe_onscreens.json.json": "142890ab1bae0e6c3d71ca10367d5b2a6ab2a2fe4ab4ee8aefab9e728021307b",
+    "assets/quest_marker_probe/probe_anchor.ent.json": "d4a85d0b66d579a8501b87202068605202dee5ff0f7094c14e28523069d4e0a2"
+  },
+  "resources": {
+    "probe.journal": "04954322c86ff04c8e95a2232599fc1dd5edcdca969ef2bd7fa2ae63abc9142c",
+    "probe_onscreens.json": "0517033a0c999846e31aa8bdf7b0e0be72a67f0756d7593a6b75693db8d216ba",
+    "probe_anchor.ent": "6857d5210660d71177c9a8760d9956969ff4b1606c2ab3a2a944940e8725e348"
+  },
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true
+}

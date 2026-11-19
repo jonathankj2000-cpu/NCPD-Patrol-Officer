@@ -221,6 +221,18 @@ function M.new(context)
     end
 
     local function drawTesting()
+        -- r4 probe UI begin
+        if ImGui.CollapsingHeader("Quest marker experiment") then
+            local probe = context.markerProbe
+            ImGui.TextWrapped("OFF DUTY test: a fixed native quest marker 150 m ahead of your starting position. Set a manual waypoint first, then compare both on the map. This does not replace dispatch markers or award credits.")
+            ImGui.TextWrapped(probe.state())
+            if ImGui.Button("TEST: Start static quest marker") then probe.start(status) end
+            if ImGui.Button("Remove quest marker test") then probe.finish(status) end
+            if ImGui.Button("Log quest marker test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
+            if ImGui.Button("Activation input: " .. probe.mode()) then probe.cycleMode(status) end
+            ImGui.TextWrapped("Start with default. If not confirmed after five seconds, log diagnostics, remove the test, then try the next input. Each start sends exactly one native request. No game-engine success is assumed.")
+        end
+        -- r4 probe UI end
         ImGui.TextWrapped("Use a test save. Test grants and claimed rewards remain if you save. Session unlocks leave your real incident count unchanged.")
         if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
         if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
@@ -262,7 +274,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d VIP refactor r3###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

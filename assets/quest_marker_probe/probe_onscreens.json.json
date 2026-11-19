@@ -1,0 +1,45 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "femaleVariant": "NCPD: Quest marker experiment",
+              "maleVariant": "",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_MarkerProbe_Title"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "femaleVariant": "Inspect the fixed test marker",
+              "maleVariant": "",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_MarkerProbe_Objective"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "femaleVariant": "CET TEST ONLY. This objective has its own native quest-map pin. Keep your manual waypoint and compare both markers. The invisible target stays at the position chosen when the test starts. Remove this experiment through CET > Testing > Quest marker experiment. No incident credit or payment is awarded.",
+              "maleVariant": "",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_MarkerProbe_Description"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

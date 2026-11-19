@@ -55,6 +55,9 @@ local trunk={repairSeconds=function() return f.repair or 0 end}
 for _,name in ipairs({'prepareShift','finish','reset','update','showStats'}) do trunk[name]=command('trunk.'..name) end
 function trunk.setBusy(value,status) record('trunk.setBusy',value,status);f.busy=value end
 for name,value in pairs({partner=partner,dispatch=dispatch,vehicle_radio=radio,backup=backup,arrest=arrest,trunk=trunk}) do package.loaded[name]=value end
+package.loaded.quest_marker_probe={state=display,mode=function() return 'default' end,
+    diagnostics=display,reset=noop,update=noop,finish=noop,
+    start=command('probe.start'),cycleMode=command('probe.cycleMode')}
 
 local patrol={fixtureName='patrol',Version=function() return 17 end,
     IsOnDuty=function() return f.onDuty end,HasWantedLevel=no,WasTerminatedForCrime=no,

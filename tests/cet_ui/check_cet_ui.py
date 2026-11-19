@@ -9,6 +9,8 @@ ROOT=HERE.parents[1]
 BASE='3c20841bba35d69289e5f70784b3202a5fbf8881'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
 TABS=['Patrol','Dispatch','Career','Settings','Diagnostics','Testing']
+sys.path.insert(0,str(HERE.parent/'quest_marker_probe'))
+from probe_source import without_probe,PROBE_BUTTONS
 
 def base_file(name):
     return subprocess.check_output(['git','show',f'{BASE}:{PREFIX}/{name}'],cwd=ROOT,text=True)
@@ -16,6 +18,7 @@ def base_file(name):
 def verify_session_source():
     before=base_file('init.lua').split('registerForEvent("onDraw", function()',1)[0]
     after=(ROOT/PREFIX/'init.lua').read_text().split('-- The menu reads live session state',1)[0]
+    after=without_probe(after)
     after=after.replace('-- NCPD Patrol v0.17d VIP refactor r3 | extracted locations and waypoint ownership',
                         '-- NCPD Patrol v0.17d CET refactor r2 | separated menu and live session')
     after=after.replace('v0.17d VIP refactor r3 loaded. VIP locations and waypoint ownership are separate modules. Transport, ambush, rewards and the CET menu retain their existing behavior. Install the complete package and restart.',
@@ -65,6 +68,8 @@ def check_routes(reference,current):
     total=0;inventory=[]
     for duty,enabled in [(False,False),(True,False),(True,True)]:
         old=buttons(reference,duty,enabled);new=buttons(current,duty,enabled)
+        assert PROBE_BUTTONS<=set(new),'The four isolated probe controls must remain available'
+        new={label:tab for label,tab in new.items() if label not in PROBE_BUTTONS}
         assert set(old)==set(new),{'missing':sorted(set(old)-set(new)),'added':sorted(set(new)-set(old))}
         for label,tab in sorted(new.items()):
             before=click(reference,duty,enabled,'Patrol',label)
@@ -158,7 +163,7 @@ def main():
         assert click(reference,False,False,'Patrol','Request dispatch now')!=click(broken,False,False,'Dispatch','Request dispatch now')
     report={'base_commit':BASE,'tabs':TABS,'button_inventory':inventory,'compared_action_routes':total,
             'cet_api_version':api['version'],'cet_api_commit':api['commit'],'cet_methods':sorted(methods),
-            'default_buttons':normal,'session_source_unchanged_except_build_labels':True,
+            'default_buttons':normal,'session_source_unchanged_except_probe_hooks_and_build_labels':True,
             'begin_end_balancing':True,'inactive_tabs_do_not_run_actions':True,'live_session_and_status_getters':True,
             'panel_errors_preserve_scopes_and_log_once':True,
             'font_scaled_footer':[14,18,24,32],'missing_native_and_optional_browser':True,

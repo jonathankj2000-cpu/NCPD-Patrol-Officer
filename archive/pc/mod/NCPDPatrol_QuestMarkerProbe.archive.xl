@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\quest_marker_probe\probe.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\quest_marker_probe\probe_onscreens.json

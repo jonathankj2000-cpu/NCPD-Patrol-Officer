@@ -1,6 +1,8 @@
 """Byte-preservation guards for a mechanical extraction, not gameplay replicas."""
 from pathlib import Path
-import subprocess,textwrap
+import subprocess,textwrap,sys
+sys.path.insert(0,str(__import__('pathlib').Path(__file__).resolve().parents[1]/'quest_marker_probe'))
+from probe_source import without_probe
 BASE='a9b654fed01145dd908ffe82de6e097bf2917c56'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 BRANDING={
@@ -64,4 +66,4 @@ def verify(root):
         for before,after in replacements:
             assert expected.count(before)==1
             expected=expected.replace(before,after)
-        assert (mods/name).read_text()==expected,'Only build labels may change in '+name
+        assert without_probe((mods/name).read_text())==expected,'Only build labels and isolated r4 probe hooks may change in '+name
