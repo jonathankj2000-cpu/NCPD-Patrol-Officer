@@ -1,4 +1,4 @@
-name: NCPD Patrol dispatch refactor
+name: NCPD Patrol refactor checks
 on:
   push:
     branches: ['git-checkout--b-refactor/cleanup']
@@ -22,13 +22,13 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Compare against v0.17d, run integration suites and build full ZIP
-        run: .ci-python/bin/python tools/build_dispatch_refactor_release.py
+      - name: Verify CET routes, dispatch compatibility and complete refactor r2 ZIP
+        run: .ci-python/bin/python tools/build_cet_ui_refactor_release.py
       - name: Commit verified branch test package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.17d_Dispatch_Refactor_r1_TEST.zip releases/NCPD_Patrol_Dispatch_Refactor_r1_verification.json
+          git add releases/NCPD_Patrol_v0.17d_CET_Interface_Refactor_r2_TEST.zip releases/NCPD_Patrol_CET_Refactor_r2_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified dispatch refactor r1 test package"
+          git commit -m "Build verified CET interface refactor r2 test package"
           git push origin HEAD:git-checkout--b-refactor/cleanup

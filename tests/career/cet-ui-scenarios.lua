@@ -31,11 +31,31 @@ function registerHotkey() end
 ImGui={Begin=function() return true end,End=noop,Text=noop,TextWrapped=noop,Separator=noop,
  CollapsingHeader=function() return true end,
  Button=function(label) labels[label]=true;return label==pressed end}
+ImGuiCond={FirstUseEver=4}
+ImGui.SetNextWindowSize=noop;ImGui.SetNextWindowSizeConstraints=noop
+ImGui.SameLine=noop;ImGui.Spacing=noop;ImGui.TextColored=noop;ImGui.ProgressBar=noop
+ImGui.GetTextLineHeightWithSpacing=function() return 18 end
+ImGui.BeginChild=function() return true end;ImGui.EndChild=noop
+ImGui.BeginTabBar=function() return true end;ImGui.EndTabBar=noop;ImGui.EndTabItem=noop
+local selectedTab="Career"
+ImGui.BeginTabItem=function(name) return name==selectedTab end
 Game.GetScriptableSystemsContainer=function() return {Get=function(_,name)
  if name=='NCPDPatrolCareerSystem' then return Career end
 end} end
 dofile(MOD_DIR..'/init.lua');callbacks.onOverlayOpen()
-local function click(label) pressed=label;callbacks.onDraw();assert(labels[label],'CET button missing: '..label);pressed=nil end
+local function click(label)
+ local routes={
+  ["TEST: Request VIP transport"]="Testing",["TEST: Trigger VIP ambush"]="Testing",
+  ["TEST: Request scanner dispatch"]="Testing",["TEST: Unlock all milestones (session)"]="Testing",
+  ["Clear test unlocks"]="Testing",["TEST: Give tiered reward weapons"]="Testing",
+  ["TEST: Give Bean Bagger (Tier 2)"]="Testing",["Log VIP diagnostics"]="Diagnostics",
+  ["Log incident reward diagnostics"]="Diagnostics",["Log automatic dispatch diagnostics"]="Diagnostics",
+  ["Rebuild VIP waypoint"]="Diagnostics",["Request dispatch now"]="Dispatch",
+  ["Ambush cars: fixture (change)"]="Settings",["10-4: Release backup"]="Patrol",
+ }
+ selectedTab=routes[label] or "Career";labels={};pressed=label
+ callbacks.onDraw();assert(labels[label],'CET button missing: '..label);pressed=nil
+end
 click('TEST: Request VIP transport');click('TEST: Trigger VIP ambush');click('Log VIP diagnostics')
 assert(vipRequests==1 and ambushRequests==1)
 click('Request dispatch now');click('TEST: Request scanner dispatch');click('Log incident reward diagnostics')

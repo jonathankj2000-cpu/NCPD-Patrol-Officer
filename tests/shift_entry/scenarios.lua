@@ -43,6 +43,13 @@ local function scenario(route,trunkVersion,missing)
  local pressed=nil
  ImGui={Begin=function() return true end,End=noop,Text=noop,TextWrapped=noop,Separator=noop,
   CollapsingHeader=function() return false end,Button=function(label) return label==pressed end}
+ ImGuiCond={FirstUseEver=4}
+ ImGui.SetNextWindowSize=noop;ImGui.SetNextWindowSizeConstraints=noop
+ ImGui.SameLine=noop;ImGui.Spacing=noop;ImGui.TextColored=noop;ImGui.ProgressBar=noop
+ ImGui.GetTextLineHeightWithSpacing=function() return 18 end
+ ImGui.BeginChild=function() return true end;ImGui.EndChild=noop
+ ImGui.BeginTabBar=function() return true end;ImGui.EndTabBar=noop;ImGui.EndTabItem=noop
+ ImGui.BeginTabItem=function(name) return name=="Patrol" end
  dofile(MOD_DIR..'/init.lua');f.callbacks.onInit()
  local function invoke(start)
   if route=='hotkey' then f.hotkeys.ncpdpatrol_toggle_duty()

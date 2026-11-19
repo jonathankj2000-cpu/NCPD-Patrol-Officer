@@ -1,3 +1,30 @@
+NCPD PATROL v0.17d CET REFACTOR r2 - COMPLETE BRANCH TEST
+
+Six CET tabs: Patrol, Dispatch, Career, Settings, Diagnostics, Testing.
+Duty/availability stay at the top; last status stays in a separate footer.
+Each tab scrolls independently. Technical logs and test grants have their own
+sections. Career shows rank/progress/next reward. Active test unlocks show a
+warning on every tab. All 52 previous controls remain available.
+
+Install this COMPLETE package in the game root (bin/r6/archive) and restart.
+CET announces "v0.17d CET refactor r2". Include the new cet_ui.lua module.
+No new dependency, native API or save-format change. Browser Extension remains
+optional. Reapply an optional Chinese preview overlay after this full install.
+
+The menu is separate from the live session. Existing shift/update/cleanup,
+dispatch, partner, backup, arrests, repair, rewards and progression retain their
+owners. Main and previous test packages remain available separately.
+
+15 suites pass: 156 old/new action routes, all existing gameplay checks and
+17,374 matching dispatch trace rows. 22 Lua modules, 28 unchanged native scripts,
+70 install files. CET 1.37.1 APIs were checked; game rendering/input are mocked.
+Please check all tabs, resizing/scrolling/status footer, normal patrol controls
+and a completed VIP followed by the next automatic dispatch in game.
+
+See docs/CET_UI_REFACTOR.md in the repository for code ownership and checks.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d DISPATCH REFACTOR r1 - BRANCH TEST
 
 Dispatch now separates scanner assignments, scheduling and result tracking.

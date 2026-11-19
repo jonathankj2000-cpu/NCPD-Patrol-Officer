@@ -1,5 +1,26 @@
 # NCPD Patrol
 
+## CET interface refactor r2 — branch test
+
+The CET menu now has **Patrol, Dispatch, Career, Settings, Diagnostics and Testing**
+tabs. Duty/availability controls stay at the top, each tab scrolls independently,
+and the last action's status stays in a separate footer. Logs and test grants
+are grouped away from normal patrol actions. Career shows rank, progress and
+next reward; active test unlocks display a persistent warning.
+
+[Download the complete CET refactor r2 ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_CET_Interface_Refactor_r2_TEST.zip)
+
+Install the **entire package** and restart; CET announces **v0.17d CET refactor r2**.
+`cet_ui.lua` owns presentation; `init.lua` retains session/shift ownership and
+update order. All 52 previous controls and their gameplay owners remain.
+Native scripts, rewards, progression, dispatch timing and actor cleanup are
+unchanged. Main stays separate from this refactor branch.
+
+Verification: **15 suites**, **156 old/new button-action comparisons**, the
+unchanged **17,374-row dispatch comparison**, 22 Lua modules, 28 unchanged native
+scripts and a complete 70-file ZIP. CET 1.37.1 bindings were checked; actual
+rendering/input still need an in-game test. [Details and checks](docs/CET_UI_REFACTOR.md).
+
 ## Dispatch refactor r1 — branch test
 
 The dispatch coordinator now delegates scanner assignments, scheduling and result
