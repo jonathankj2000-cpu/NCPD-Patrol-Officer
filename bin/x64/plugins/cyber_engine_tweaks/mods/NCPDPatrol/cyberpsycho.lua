@@ -29,6 +29,11 @@ end
 function M.state() return label end
 function M.isActive() return phase~="idle" end
 function M.hasCleanup() return phase=="cleanup" or #retired>0 end
+-- Read-only lifecycle view; retained bodies never own a dispatch reservation.
+function M.lifecycle()
+    return {phase=phase, assignment=phase~="idle" and phase~="cleanup", reserved=M.isActive(),
+        foregroundCleanup=phase=="cleanup", backgroundCleanup=#retired>0}
+end
 function M.variantState() return Variants.label(testVariant) end
 function M.cycleVariant(status)
     testVariant=(testVariant or 0)%Variants.count()+1

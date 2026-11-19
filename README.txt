@@ -1,3 +1,27 @@
+NCPD PATROL v0.17d DISPATCH REFACTOR r1 - BRANCH TEST
+
+Dispatch now separates scanner assignments, scheduling and result tracking.
+CET/trunk integration, 50/30/20 selection, timers, native journals, rewards,
+career records, marker recovery and actor cleanup keep their existing contracts.
+Read-only diagnostics distinguish assignment reservations and scene cleanup.
+No new dependencies, native API changes or save migration.
+
+Install this COMPLETE package in the game root (bin/r6/archive) and restart.
+CET announces "v0.17d dispatch refactor r1". This is a test build for the
+refactor branch; main and the previous v0.17d release remain available.
+Reapply the optional Chinese preview overlay after installing this full ZIP.
+
+All 13 existing test suites plus the v0.17d behavioral comparison are run.
+21 Lua modules, 28 unchanged native scripts, 69 install files. Engine APIs are
+mocked; actual game validation is still required. Check scanner/VIP/cyberpsycho
+completion, next automatic call within 120 gameplay seconds when Available,
+Busy/cancel/replacement at the trunk, saved career credits and partner/backup.
+Foreground actor cleanup can still explicitly hold the next assignment.
+
+See docs/DISPATCH_REFACTOR.md in the repository for ownership and test details.
+
+PREVIOUS GAMEPLAY BUILD NOTES
+
 NCPD PATROL v0.17d - VIP PARTIAL AMBUSH CLEANUP
 
 V0.17D FIX

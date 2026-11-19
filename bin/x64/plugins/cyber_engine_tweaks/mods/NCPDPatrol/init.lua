@@ -1,4 +1,4 @@
--- NCPD Patrol v0.17d | completed VIP dispatch releases partial ambush cleanup
+-- NCPD Patrol v0.17d dispatch refactor r1 | unchanged gameplay contracts
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -303,7 +303,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.17d loaded. Completed VIP delivery releases known ambush cleanup, including never-attached cars and pending crew despawn. Marker recovery and rewards retained. Install the complete package and restart.")
+    status("v0.17d dispatch refactor r1 loaded. Scanner, scheduling and result tracking are separate modules. Existing rewards, progression, markers and actor cleanup retained. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -395,7 +395,7 @@ end)
 
 registerForEvent("onDraw", function()
     if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.17d")
+    local visible = ImGui.Begin("NCPD Patrol - v0.17d dispatch refactor r1")
     if visible then
         ImGui.Text("PATROL STATUS")
         ImGui.Separator()

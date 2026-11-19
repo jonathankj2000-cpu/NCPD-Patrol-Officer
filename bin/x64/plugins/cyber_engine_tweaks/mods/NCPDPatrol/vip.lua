@@ -97,6 +97,13 @@ function M.ambushSetting() return Ambush.setting() end
 function M.cycleAmbushCars(status) return Ambush.cycle(status) end
 function M.isActive() return phase~="idle" or Ambush.isActive() end
 function M.hasCleanup() return phase=="cleanup" or Ambush.hasCleanup() end
+-- Read-only lifecycle view. Keep ownership/cleanup decisions in this module.
+function M.lifecycle()
+    local assignment = phase~="idle" and phase~="resolved" and phase~="cleanup"
+    local reserved = M.isActive()
+    return {phase=phase, assignment=assignment, reserved=reserved,
+        foregroundCleanup=reserved and not assignment, backgroundCleanup=Ambush.hasCleanup()}
+end
 function M.reset()
     -- World transitions forget old IDs without touching the previous world.
     phase,label="idle","No VIP transport"

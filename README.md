@@ -1,5 +1,23 @@
 # NCPD Patrol
 
+## Dispatch refactor r1 — branch test
+
+The dispatch coordinator now delegates scanner assignments, scheduling and result
+tracking to separate modules. Existing CET/trunk calls, the 50/30/20 mix,
+standby, native journals, payments, career progress and actor cleanup contracts
+are preserved. Read-only lifecycle diagnostics distinguish assignments,
+foreground cleanup and background scenes.
+
+[Download the complete refactor r1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Dispatch_Refactor_r1_TEST.zip)
+
+Install the complete package and restart; CET announces **v0.17d dispatch
+refactor r1**. No new dependency or save migration. This branch contains the
+refactor; `main` remains unchanged. See [ownership, contracts and game checks](docs/DISPATCH_REFACTOR.md).
+
+Verification: all 13 existing suites plus a differential comparison against
+pinned v0.17d; 21 Lua modules, 28 unchanged redscript files and a complete
+69-file ZIP. Actual game validation is still required.
+
 ## v0.17d: partial ambush cleanup after VIP delivery
 
 [Download the complete v0.17d ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17d_VIP_Partial_Cleanup_FIX.zip)
