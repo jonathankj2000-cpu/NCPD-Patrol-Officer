@@ -4,11 +4,10 @@ local M={}
 local TAG='NCPDPatrol_QuestMarkerProbeAnchor'
 local phase,label='idle','Quest marker test ready (off duty only)'
 local id,target=nil,nil
-local mode,elapsed,retry,revision=0,0,0,-1
-local modes={'default','Enable','In'}
+local elapsed,retry,revision=0,0,-1
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get('NCPDPatrolQuestMarkerProbeSystem')
-    if not system or system:Version()~=1 then error('Install the complete r4 quest-marker test package and restart') end
+    if not system or system:Version()~=2 then error('Install the complete r4b quest-marker test package and restart') end
     return system
 end
 local function report(text,status) label=text;if status then status('Quest marker test | '..text) end end
@@ -23,11 +22,6 @@ local function deleteAnchor()
     return false
 end
 function M.state() return label end
-function M.mode() return modes[mode+1] end
-function M.cycleMode(status)
-    if phase~='idle' then report('Remove the current test and wait for cleanup before changing input',status);return false end
-    mode=(mode+1)%3;report('Next activation input: '..M.mode(),status);return true
-end
 function M.reset()
     -- Loading a world forgets old IDs without touching a reused handle.
     phase,label='idle','Quest marker test ready (off duty only)'
@@ -79,7 +73,7 @@ function M.start(status)
 end
 function M.diagnostics()
     local ok,text=pcall(function() return native():GetDiagnostics() end)
-    return 'phase='..phase..' | anchor='..tostring(id and id.hash or 'none')..' | next input='..M.mode()..' | '..(ok and text or tostring(text))
+    return 'phase='..phase..' | anchor='..tostring(id and id.hash or 'none')..' | input=Active | '..(ok and text or tostring(text))
 end
 function M.update(delta,onDuty,status)
     if not Game.GetPlayer() then return end
@@ -104,7 +98,7 @@ function M.update(delta,onDuty,status)
             local entities=Game.GetDynamicEntitySystem()
             local anchor=entities:GetEntity(id)
             if anchor and anchor:IsAttached() then
-                if not entities:IsTagged(id,TAG) or not backend:Begin(anchor,target,mode) then error('Native probe rejected attached anchor; '..backend:GetDiagnostics()) end
+                if not entities:IsTagged(id,TAG) or not backend:Begin(anchor,target) then error('Native probe rejected attached anchor; '..backend:GetDiagnostics()) end
                 phase='active'
             elseif elapsed>=15 then error('Private anchor did not attach within 15 seconds') end
         elseif not backend:HasRequest() then M.finish(status,'Native probe closed; cleaning anchor') end

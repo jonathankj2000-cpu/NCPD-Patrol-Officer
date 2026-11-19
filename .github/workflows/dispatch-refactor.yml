@@ -22,13 +22,13 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Verify quest node compile fix, existing behavior and complete r4a ZIP
+      - name: Verify quest marker activation contract, existing behavior and complete r4b ZIP
         run: .ci-python/bin/python tools/build_quest_marker_probe_release.py
       - name: Commit verified branch test package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4a_TEST.zip releases/NCPD_Patrol_Quest_Marker_Probe_r4a_verification.json
+          git add releases/NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4b_TEST.zip releases/NCPD_Patrol_Quest_Marker_Probe_r4b_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build quest marker probe r4a compile fix package"
+          git commit -m "Build quest marker probe r4b activation test package"
           git push origin HEAD:git-checkout--b-refactor/cleanup

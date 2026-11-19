@@ -65,11 +65,13 @@ function F:AddPin(hash,pos)
  self.pins[self.pins.n]=pin;self.pins.n=self.pins.n+1;return pin
 end
 function quests:ExecuteNode(node,input)
- assert(node.path.realPath==root..'/main/inspect/location' and node.path.fileEntryIndex==-1)
+ assert(node.path.realPath==root..'/main/inspect/location')
+ assert(node.path.fileEntryIndex==ActivationContract.file_entry_index,'Wrong containing quest file entry index')
  assert(node.path.className=='gameJournalQuestMapPin' and node.disablePreviousMappins==false)
- F.requests[#F.requests+1]=input or 'default'
- if input~='Disable' and F.materialize then F:AddPin() end
- if input~='Disable' and F.changeManual then F.manual=701 end
+ assert(input==ActivationContract.activate or input==ActivationContract.deactivate,'Unsupported MappinManager state input')
+ F.requests[#F.requests+1]=input
+ if input==ActivationContract.activate and F.materialize then F:AddPin() end
+ if input==ActivationContract.activate and F.changeManual then F.manual=701 end
 end
 function player:IsAttached() return F.loaded end
 function player:IsDead() return false end

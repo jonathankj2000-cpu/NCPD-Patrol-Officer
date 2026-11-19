@@ -1,65 +1,70 @@
-r4a corrects the r4 startup compilation error: questNodeDefinition.id now
-receives Cast<Uint16>(0), matching its Codeware field type. Compatibility lint
-rejects the original untyped Int32 assignment. The newer offline compiler had
-accepted it; the supplied game log is the evidence for this correction.
+The r4b branch package corrects the quest-marker node contract. The previous
+default/Enable inputs produced zero native quest pins in the supplied in-game
+diagnostics. Matching journal/node hashes proved neither node activation nor
+successful world-target resolution.
 
-This r4 branch package is an opt-in native quest-marker experiment. It does not
-replace normal scanner/VIP/cyberpsycho navigation. Those destinations are fixed
-when assigned; live tracking of moving actors is outside this experiment.
+The node now receives Active when starting and Inactive when removing. These
+are the input sockets defined by the [WolvenKit editor implementation](https://github.com/WolvenKit/WolvenKit/blob/c6065b22f70cb0a53913f5440d112ab1b7dd00a4/WolvenKit.App/ViewModels/GraphEditor/Nodes/Quest/questMappinManagerNodeDefinitionWrapper.cs).
+The containing quest file entry index is now 2 for
+quests/minor_quest/ncpd_patrol_marker_probe/...; the old -1 was the class's
+unconfigured default. The [quest resource authoring documentation](https://hlky.github.io/cyberpunk-quest-authoring/journal/mappins.html#activating-and-hiding-a-quest-pin)
+explains this index and identifies a concrete SQ021 vanilla resource for
+comparison. Its examples do not prove this standalone Codeware test will run.
+The r4a explicit Cast<Uint16>(0) node-ID compilation fix is retained.
 
-Install the complete ZIP into the game root and restart the game. Keep the
-existing dependencies. The native-node API was checked against Codeware 1.21.4
-(6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad). Browser Extension remains optional.
-Include the new quest-marker archive, its .xl, Lua module and redscript system.
-No additional marker mod is required. The new test text is English.
+This remains an opt-in native marker experiment. Normal scanner/VIP/cyberpsycho
+navigation keeps its existing behavior. Destinations are fixed when assigned;
+the test does not add live moving-target tracking.
+
+Install the complete ZIP into the game root and restart. Existing dependencies
+remain sufficient; the native API was checked against Codeware 1.21.4
+(6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad). Browser Extension is optional.
+Include the quest-marker archive/.xl, Lua module and redscript system. The probe
+system is interface version 2 so mixing the older native file with new Lua is
+rejected on explicit use. New test text is English.
 
 1. Load a save, remain OFF DUTY and leave combat/wanted status/game menus.
 2. Set an ordinary manual waypoint somewhere easy to recognize.
 3. CET > Testing > Quest marker experiment > TEST: Start static quest marker.
-   Default activation input sends exactly one Codeware ExecuteNode request.
-4. Close CET. The test destination is fixed 150 m ahead of where V was facing
-   at activation, at that starting elevation. The invisible target has no NPC,
-   mesh, collision or interaction. It does not move with V.
-5. Wait five seconds, then inspect the HUD and map. Check that your manual
-   waypoint remains, that the separate test objective has its own quest marker,
-   and whether selecting/tracking it produces GPS guidance. Try moving your
-   ordinary waypoint while the test remains active.
-6. Use Log quest marker test diagnostics and Remove quest marker test. Confirm
-   the experiment disappears and the ordinary waypoint remains.
+4. Close CET and wait five seconds. The stationary, invisible target is 150 m
+   ahead of V's starting position, at that starting elevation. It has no mesh,
+   collision, NPC or interaction and does not move with V.
+5. Inspect the HUD/map for an independent quest marker, with your ordinary
+   waypoint still present. Check whether tracking the objective gives GPS.
+6. Use Log quest marker test diagnostics, then Remove quest marker test. Confirm
+   the test disappears and your ordinary waypoint remains.
 
-CONFIRMED requires an actual QuestMappin matching the private journal hash,
-exactly one matching pin near the fixed target, and an objective-to-pin link.
-ExecuteNode returning without an error is explicitly NOT success. Diagnostics
-compare manual waypoint IDs before/after activation and removal without writing
-to them. A native pin can be confirmed even if its UI/GPS behavior still needs
-work; describe those separately in feedback.
+There is no activation-input cycling in r4b. Each start issues exactly one
+Active request. CONFIRMED requires exactly one actual QuestMappin matching the
+private journal hash near the fixed target and an objective-to-pin link.
+ExecuteNode returning without error is explicitly not success.
 
-If it says NOT CONFIRMED, log the complete line, remove the test and wait for
-cleanup, then cycle Activation input to Enable and repeat; try In last. These
-are controlled, empirical socket tests. The game-engine behavior of this node
-when executed outside a normal quest graph is not yet confirmed. Do not run
-multiple requests against a live test. A missing archive/module is an explicit
-installation failure rather than a reason to retry activation inputs.
+Diagnostics report the actual node file-entry index, private anchor attachment
+and displacement, pin count/hash/link, and manual waypoint IDs before/after
+creation/removal. If NOT CONFIRMED persists, report the full line and remove
+the test. Anchor attachment proves the private object exists; it does not prove
+the engine can resolve the journal's tagged target. That boundary remains for
+in-game verification after the corrected activation request.
 
-Map/game menus pause the experiment. Starting a shift, entering combat/wanted
-status or ten minutes of active test time ends it. Normal removal restores the
-previous active journal objective only if the experiment is still tracked.
-A newer story selection takes precedence. The experiment only changes its own
-journal entries and removes QuestMappins with its own journal hash.
+Menus pause the test. Starting a shift, entering combat/wanted status or ten
+minutes of active test time ends it. Removal restores the previous active
+journal objective only if the experiment is still tracked; a newer story
+selection takes precedence. Writes are scoped to the private journal and
+QuestMappins with its own hash. No manual waypoint write/untracking is used.
 
-Anchor deletion is confirmed before another test starts; deferred deletion
-retains the current entity ID for retry. World loading forgets previous handles
-and closes a saved active probe journal. The anchor does not persist through
-saves. Install/revert with a full game restart, not CET hot reload. For a clean
-rollback remove the test via its button, then install r3 and remove the four new
-probe payload files listed in the verification report.
+Anchor deletion is confirmed before restart; deferred deletion retains its
+current ID. World loading forgets old handles and closes a saved active probe
+journal. The anchor does not persist through saves. Install/revert with a full
+game restart. For clean rollback remove the test, install r3, and remove the
+four probe payload files listed in the verification report.
 
-Validation: portable tests execute the authored native controller and actual
-Lua coordinator against mocked engine boundaries, including no-pin responses,
-wrong hashes/positions/links/types, duplicates, menu pauses, blocked retries,
-foreign pins, manual waypoint changes and load/duty/cleanup cases. Existing
-dispatch, VIP and CET comparison suites run with their original reference code.
-The new resources are compiled, serialized back, inspected and extracted from
-the packed archive with byte comparisons. Offline native compilation is run
-with and without Browser Extension. Actual Cyberpunk compilation/rendering,
-quest-node execution and GPS still require the above in-game test.
+Portable tests execute the authored native controller and actual Lua coordinator
+with engine boundaries mocked. The node boundary now enforces the sourced state
+inputs and containing-quest index; negative controls must reject old index -1,
+Enable activation and Disable cleanup. No-pin responses remain failures, and
+hash/position/link/type, duplicate, menu, load, duty, manual waypoint and cleanup
+cases remain covered. Existing dispatch/VIP/CET reference comparisons run too.
+Resources were compiled, round-tripped, extracted and byte-compared. Offline
+native compilation runs with and without Browser Extension. Actual game-cache
+compilation, standalone node execution, target resolution, UI and GPS still
+require the above in-game test.

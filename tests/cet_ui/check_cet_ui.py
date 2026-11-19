@@ -68,7 +68,7 @@ def check_routes(reference,current):
     total=0;inventory=[]
     for duty,enabled in [(False,False),(True,False),(True,True)]:
         old=buttons(reference,duty,enabled);new=buttons(current,duty,enabled)
-        assert PROBE_BUTTONS<=set(new),'The four isolated probe controls must remain available'
+        assert PROBE_BUTTONS<=set(new),'The isolated probe controls must remain available'
         new={label:tab for label,tab in new.items() if label not in PROBE_BUTTONS}
         assert set(old)==set(new),{'missing':sorted(set(old)-set(new)),'added':sorted(set(new)-set(old))}
         for label,tab in sorted(new.items()):

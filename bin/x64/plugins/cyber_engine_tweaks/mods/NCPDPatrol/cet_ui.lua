@@ -229,8 +229,7 @@ function M.new(context)
             if ImGui.Button("TEST: Start static quest marker") then probe.start(status) end
             if ImGui.Button("Remove quest marker test") then probe.finish(status) end
             if ImGui.Button("Log quest marker test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
-            if ImGui.Button("Activation input: " .. probe.mode()) then probe.cycleMode(status) end
-            ImGui.TextWrapped("Start with default. If not confirmed after five seconds, log diagnostics, remove the test, then try the next input. Each start sends exactly one native request. No game-engine success is assumed.")
+            ImGui.TextWrapped("Activation: Active. Cleanup: Inactive. If not confirmed after five seconds, log diagnostics, then remove the test. Each start sends exactly one native request. No game-engine success is assumed.")
         end
         -- r4 probe UI end
         ImGui.TextWrapped("Use a test save. Test grants and claimed rewards remain if you save. Session unlocks leave your real incident count unchanged.")
@@ -274,7 +273,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4a###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4b###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

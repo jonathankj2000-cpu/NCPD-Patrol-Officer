@@ -17,7 +17,6 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     private let m_pinCount: Int32;
     private let m_positionOK: Bool;
     private let m_linked: Bool;
-    private let m_mode: Int32;
     private let m_poll: Float;
     private let m_elapsed: Float;
     private let m_revision: Int32;
@@ -32,7 +31,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         this.m_poll = 0.0; this.m_elapsed = 0.0; this.m_restorePending = true;
         this.Report("Quest marker experiment ready (off duty only)");
     }
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
     public func GetAnchorTemplate() -> ResRef { return r"base\\ncpd_patrol\\quest_marker_probe\\probe_anchor.ent"; }
     private func Root() -> String { return "quests/minor_quest/ncpd_patrol_marker_probe"; }
     private func PhasePath() -> String { return this.Root() + "/main"; }
@@ -70,7 +69,8 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     private func MakeNode() -> ref<questMappinManagerNodeDefinition> {
         let path: ref<gameJournalPath> = new gameJournalPath();
         let node: ref<questMappinManagerNodeDefinition> = new questMappinManagerNodeDefinition();
-        path.realPath = this.PinPath(); path.className = n"gameJournalQuestMapPin"; path.fileEntryIndex = -1;
+        // quests / minor_quest / <quest>: the containing quest is segment 2.
+        path.realPath = this.PinPath(); path.className = n"gameJournalQuestMapPin"; path.fileEntryIndex = 2;
         node.id = Cast<Uint16>(0); node.path = path; node.disablePreviousMappins = false;
         this.m_pathHash = path.GetHash();
         return node;
@@ -81,7 +81,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         return IsDefined(player) && player.IsAttached() && !player.IsDead() && !player.IsInCombat()
             && IsDefined(patrol) && !patrol.IsOnDuty() && !patrol.HasWantedLevel();
     }
-    public func Begin(anchor: ref<GameObject>, target: Vector4, mode: Int32) -> Bool {
+    public func Begin(anchor: ref<GameObject>, target: Vector4) -> Bool {
         let journal: ref<JournalManager> = this.Journal();
         let map: ref<MappinSystem> = this.Map();
         let quests: ref<QuestsSystem> = GameInstance.GetQuestsSystem(this.GetGameInstance());
@@ -99,15 +99,11 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
             this.Stop("Probe journal activation rejected"); return false;
         };
         this.m_restorePending = false; this.m_requested = true; this.m_confirmed = false;
-        this.m_anchor = anchor; this.m_target = target; this.m_mode = mode;
+        this.m_anchor = anchor; this.m_target = target;
         this.m_elapsed = 0.0; this.m_poll = 0.0;
         journal.TrackEntry(this.Entry(this.ObjectivePath(), "gameJournalQuestObjective"));
         this.m_node = this.MakeNode();
-        if mode == 1 { quests.ExecuteNode(this.m_node, n"Enable"); } else {
-            if mode == 2 { quests.ExecuteNode(this.m_node, n"In"); } else {
-                quests.ExecuteNode(this.m_node);
-            };
-        };
+        quests.ExecuteNode(this.m_node, n"Active");
         this.m_afterCreate = map.GetManuallyTrackedMappinID();
         this.Report("Native mappin node requested; awaiting actual QuestMappin + journal link + fixed-position proof");
         this.Inspect();
@@ -141,7 +137,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
                 this.Report("Native quest pin confirmed, but manual ID changed across activation; investigate before normal dispatch integration");
             };
         } else {
-            if this.m_elapsed >= 5.0 { this.Report("NOT CONFIRMED: node call alone is not success. Inspect diagnostics; remove the test before changing activation input"); };
+            if this.m_elapsed >= 5.0 { this.Report("NOT CONFIRMED after Active: no proven quest pin yet. Log diagnostics, then remove the test"); };
         };
     }
     private func RemoveOwnPins() -> Int32 {
@@ -174,7 +170,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         if !this.IsReady() { this.m_requested = false; this.m_cleanup = false; this.Report(reason); return; };
         if IsDefined(map) { this.m_beforeRemove = map.GetManuallyTrackedMappinID(); };
         if !IsDefined(this.m_node) { this.m_node = this.MakeNode(); };
-        if IsDefined(quests) { quests.ExecuteNode(this.m_node, n"Disable"); };
+        if IsDefined(quests) { quests.ExecuteNode(this.m_node, n"Inactive"); };
         this.Write(this.PinPath(), "gameJournalQuestMapPin", gameJournalEntryState.Inactive);
         this.Write(this.ObjectivePath(), "gameJournalQuestObjective", gameJournalEntryState.Inactive);
         this.Write(this.PhasePath(), "gameJournalQuestPhase", gameJournalEntryState.Inactive);
@@ -213,8 +209,13 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     public func GetRevision() -> Int32 { return this.m_revision; }
     public func GetDiagnostics() -> String {
         let current: NewMappinID;
+        let anchorAttached: Bool = IsDefined(this.m_anchor) && this.m_anchor.IsAttached();
+        let anchorDistance: Float = -1.0;
+        let fileEntryIndex: Int32 = -1;
         let map: ref<MappinSystem> = this.Map();
         if IsDefined(map) { current = map.GetManuallyTrackedMappinID(); };
-        return s"ready=\(this.IsReady()) | requested=\(this.m_requested) | confirmed=\(this.m_confirmed) | pending marker cleanup=\(this.m_cleanup) | native quest pins=\(this.m_pinCount) | objective link=\(this.m_linked) | position OK=\(this.m_positionOK) | pin ID=\(this.m_lastMarker.value) | journal hash=\(this.PinHash()) | node path hash=\(this.m_pathHash) | activation mode=\(this.m_mode) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | manual before/after create=\(this.m_beforeCreate.value)/\(this.m_afterCreate.value) | manual current=\(current.value) | manual before/after remove=\(this.m_beforeRemove.value)/\(this.m_afterRemove.value) | \(this.m_reason)";
+        if anchorAttached { anchorDistance = Vector4.Distance(this.m_anchor.GetWorldPosition(), this.m_target); };
+        if IsDefined(this.m_node) && IsDefined(this.m_node.path) { fileEntryIndex = this.m_node.path.fileEntryIndex; };
+        return s"ready=\(this.IsReady()) | requested=\(this.m_requested) | confirmed=\(this.m_confirmed) | pending marker cleanup=\(this.m_cleanup) | native quest pins=\(this.m_pinCount) | objective link=\(this.m_linked) | position OK=\(this.m_positionOK) | pin ID=\(this.m_lastMarker.value) | journal hash=\(this.PinHash()) | node path hash=\(this.m_pathHash) | activation input=Active | deactivation input=Inactive | file entry index=\(fileEntryIndex) | anchor attached=\(anchorAttached) | anchor distance from target=\(anchorDistance) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | manual before/after create=\(this.m_beforeCreate.value)/\(this.m_afterCreate.value) | manual current=\(current.value) | manual before/after remove=\(this.m_beforeRemove.value)/\(this.m_afterRemove.value) | \(this.m_reason)";
     }
 }

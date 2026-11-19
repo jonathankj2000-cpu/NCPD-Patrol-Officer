@@ -1,13 +1,16 @@
-NCPD PATROL v0.17d QUEST MARKER PROBE r4a - COMPLETE BRANCH TEST
+NCPD PATROL v0.17d QUEST MARKER PROBE r4b - COMPLETE BRANCH TEST
 
-r4a startup fix: the quest node ID now uses an explicit Uint16 conversion.
-This corrects the Int32/Uint16 compilation failure reported by the game.
+r4b fixes the marker node contract: activation uses Active, removal Inactive.
+The containing quest file entry index is 2. Unsupported input choices are removed.
+Diagnostics include actual file index and anchor attachment/position. The r4a
+explicit Uint16 node ID conversion is retained. No native engine success is
+assumed before an actual quest pin and journal objective link are observed.
 
 Optional test: CET > Testing > Quest marker experiment. Remain OFF DUTY.
 Set a manual waypoint first, then Start static quest marker. Wait five seconds.
 Inspect the map/HUD for an independent quest marker 150 m ahead of your starting
 position, with your manual waypoint preserved. Log diagnostics, then Remove.
-If NOT CONFIRMED: remove, cycle Activation input (default / Enable / In), retry.
+If NOT CONFIRMED: log diagnostics and remove the test; report the complete line.
 Each start sends one native request. Normal dispatch navigation is unchanged.
 
 Install this COMPLETE package into the game root (bin/r6/archive) and restart.
