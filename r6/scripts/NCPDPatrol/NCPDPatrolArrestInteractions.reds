@@ -4,6 +4,13 @@ public func NCPDPatrolRefreshArrestInteraction() -> Void {
     this.UpdateLootInteraction();
 }
 
+@wrapMethod(NPCPuppet)
+public final const func CanEnableRagdollComponent(opt fromSetDeathParams: Bool) -> Bool {
+    let arrests: ref<NCPDPatrolArrestSystem> = NCPDPatrolArrestSystem.Get(this.GetGame());
+    if IsDefined(arrests) && arrests.OwnsPosePhysics(this) { return false; };
+    return wrappedMethod(fromSetDeathParams);
+}
+
 @wrapMethod(ScriptedPuppet)
 protected final func UpdateLootInteraction() -> Void {
     let arrest: ref<NCPDPatrolArrestSystem> = NCPDPatrolArrestSystem.Get(this.GetGame());

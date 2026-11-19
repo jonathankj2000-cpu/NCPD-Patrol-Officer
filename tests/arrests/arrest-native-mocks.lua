@@ -34,6 +34,34 @@ function arrestSuspect(id,x)
     function a:IsBoss() return self.boss==true end
     function a:IsEnemy() return self.friendly~=true end
     function a:GetWorldOrientation() return {i=0,j=0,k=0,r=1} end
+    function a:GetWorldForward() return {x=0,y=1,z=0,w=0} end
+    function a:IsRagdolling() return self.ragdoll==true end
+    function a:IsRagdollEnabled() return self.ragdoll==true or self.animatedRagdoll==true end
+    function a:QueueEvent(event) self.physicsEvents=self.physicsEvents or {};self.physicsEvents[#self.physicsEvents+1]=event end
+    function a:SetDisableRagdoll(value)
+        self.physicsDisabled=value
+        if value and not self.stuckRagdoll then self.ragdoll=false;self.animatedRagdoll=false end
+    end
+    function a:CanEnableRagdollComponent() return not self.nativeRagdollBlocked and not ArrestNative:OwnsPosePhysics(self) end
+    setmetatable(a.position,{__index=function(t,k) return rawget(t,string.lower(k)) end})
     function a:NCPDPatrolRefreshArrestInteraction() self.refreshes=self.refreshes+1 end
     return a
+end
+function CreateDisableRagdollEvent(source) return {kind='disable',source=source} end
+function CreateForceRagdollNoPowerPoseEvent(source) return {kind='restore',source=source} end
+Quaternion={ToEulerAngles=function(_,value) return value end}
+AbsF=math.abs
+GameInstance.GetTeleportationFacility=function()
+    return {Teleport=function(_,actor,point)
+        actor.teleports=(actor.teleports or 0)+1
+        if not actor.rejectTeleport then
+            actor.position=setmetatable({x=point.x,y=point.y,z=point.z},{__index=function(t,k)return rawget(t,string.lower(k))end})
+        end
+    end}
+end
+GameInstance.GetMountingFacility=function()
+    return {IsMountedToAnything=function(_,id)
+        local actor=supportActors[id.hash]
+        return actor and (actor.carried==true or actor.vehicle~=nil) or false
+    end}
 end

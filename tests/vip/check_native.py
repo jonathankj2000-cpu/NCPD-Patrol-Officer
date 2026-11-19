@@ -13,7 +13,7 @@ originals=[WORK/'v11a-check/game-api.reds']+[base/n for n in ['support-api.reds'
 source='\n'.join(p.read_text() for p in originals)
 subprocess.run([sys.executable, str(ROOT/'tests/compile_compatibility/check_legacy_api.py')],check=True)
 source=re.sub(r'public enum gamedataNPCHighLevelState \{[^}]+\}', 'public enum gamedataNPCHighLevelState { Alerted = 0, Combat = 2, Dead = 3, Relaxed = 5, Unconscious = 7 }', source)
-additions='\n'.join(p.read_text() for p in [ROOT/'tests/career/contracts/vip-vehicle.reds', ROOT/'tests/officer_readiness/equipment-api.reds', ROOT/'tests/trunk_menu/popup-api.reds', ROOT/'tests/beanbagger/damage-api.reds'])
+additions='\n'.join(p.read_text() for p in [ROOT/'tests/career/contracts/vip-vehicle.reds', ROOT/'tests/officer_readiness/equipment-api.reds', ROOT/'tests/trunk_menu/popup-api.reds', ROOT/'tests/beanbagger/damage-api.reds', ROOT/'tests/arrests/recovery-api.reds'])
 for target,method in re.findall(r'@addMethod\((\w+)\)\n([^\n]+)',additions):
  pattern=r'(public native (?:class|struct) '+target+r'[^\{]*\{)'
  source,count=re.subn(pattern,lambda m:m[0]+'\n '+method,source,count=1)

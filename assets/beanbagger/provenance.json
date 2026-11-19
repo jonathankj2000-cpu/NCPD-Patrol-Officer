@@ -18,5 +18,15 @@
   "partner_assignment_changed": false,
   "actual_game_validation": false,
   "appearance_source": "Beanbagger (2).zip supplied by the user; assets/beanbagger/visuals/authoring.json",
-  "appearance_factory": "NCPDPatrol_BeanBagger"
+  "appearance_factory": "NCPDPatrol_BeanBagger",
+  "inventory_icon": {
+    "record": "UIIcon.weapon_Preset_Tactician_Default_None__Default",
+    "icon_path": "weapon_Preset_Tactician_Default_None__Default",
+    "source_repository": "CDPR-Modding-Documentation/Cyberpunk-Tweaks",
+    "source_commit": "0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d",
+    "source_path": "tweaks/base/gameplay/static_data/database/ui/icons/generated/items_icons.tweak",
+    "source_blob": "487f706b13c0beb928628c139edbc10496a2fd87",
+    "atlas": "base/gameplay/gui/common/icons/items/item_icons4.inkatlas",
+    "custom_art": false
+  }
 }

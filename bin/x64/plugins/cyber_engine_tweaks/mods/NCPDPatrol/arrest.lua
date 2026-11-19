@@ -23,6 +23,74 @@ local function distance(a, b)
     return math.sqrt(x*x+y*y+z*z)
 end
 
+local function finite(point)
+    return point and point.x==point.x and point.y==point.y and point.z==point.z
+        and math.abs(point.x)<100000 and math.abs(point.y)<100000 and math.abs(point.z)<100000
+end
+local function pointDistance(a,b)
+    local x,y,z=a.x-b.x,a.y-b.y,a.z-b.z
+    return math.sqrt(x*x+y*y+z*z)
+end
+local function lyingPosition(npc)
+    local nav,player=Game.GetAINavigationSystem(),Game.GetPlayer()
+    if not nav or not player then error("Arrest ground placement unavailable") end
+    local origin,from,forward=npc:GetWorldPosition(),player:GetWorldPosition(),npc:GetWorldForward()
+    if not finite(origin) or not finite(from) or not finite(forward) then error("Invalid arrest placement coordinates") end
+    for _,offset in ipairs({{0,0},{.75,0},{-.75,0},{0,.75},{0,-.75},{1,1},{-1,1},{1,-1},{-1,-1}}) do
+        local probe=Vector4.new(origin.x+offset[1],origin.y+offset[2],origin.z,1)
+        local result=nav:FindPointInSphereForCharacter(probe,.6,npc)
+        if result and result.status==worldNavigationRequestStatus.OK and finite(result.point) then
+            local point=result.point
+            local clear=pointDistance(point,origin)<=1.95 and math.abs(point.z-origin.z)<=.7
+                and pointDistance(point,from)<=2.45 and AINavigationSystem.HasPathFromAtoB(player,from,point)
+            -- Check support at both ends of a short body footprint. Never move
+            -- a suspect to another floor or through an unreachable wall.
+            for _,sign in ipairs({-1,1}) do
+                if clear then
+                    local endPoint=Vector4.new(point.x+forward.x*.65*sign,point.y+forward.y*.65*sign,point.z,1)
+                    local support=nav:FindPointInSphereForCharacter(endPoint,.2,npc)
+                    clear=support and support.status==worldNavigationRequestStatus.OK and finite(support.point)
+                        and pointDistance(endPoint,support.point)<=.25 and math.abs(support.point.z-point.z)<=.2
+                        and AINavigationSystem.HasPathFromAtoB(player,point,support.point)
+                end
+            end
+            if clear then return Vector4.new(point.x,point.y,point.z+.03,1) end
+        end
+    end
+    error("No nearby supported ground for arrest; move closer to a clear area and retry")
+end
+
+local function recoverPhysics(system,unit,delta)
+    if not unit.needsRecovery then return true end
+    if not unit.physicsOwned then
+        if not unit.npc:IsRagdollEnabled() then unit.needsRecovery=false;return true end
+        if not system:BeginPoseRecovery(unit.npc,unit.token) then error("Ragdoll arrest recovery was refused") end
+        unit.physicsOwned=true;unit.recoveryAge=0
+        print("[NCPD Patrol] Arrest recovery | ragdoll reset requested; preparing nearby supported ground")
+        return false
+    end
+    unit.recoveryAge=unit.recoveryAge+delta
+    if unit.npc:IsRagdollEnabled() then
+        if unit.recoveryAge>2 then error("Suspect physics did not release for arrest") end
+        return false
+    end
+    if not unit.placed then
+        if unit.recoveryAge<.25 then return false end
+        if not system:PlaceRecoveredSuspect(unit.npc,unit.token,unit.position) then error("Nearby arrest placement was refused") end
+        unit.placed=true;unit.recoveryAge=0
+        return false
+    end
+    if unit.recoveryAge<.25 then return false end
+    local actual=unit.npc:GetWorldPosition()
+    if not finite(actual) or pointDistance(actual,unit.position)>.5 or math.abs(actual.z-unit.position.z)>.3 then
+        if unit.recoveryAge>1 then error("Recovered suspect did not reach the arrest position") end
+        return false
+    end
+    unit.needsRecovery=false
+    print("[NCPD Patrol] Arrest recovery | ragdoll released; nearby placement confirmed")
+    return true
+end
+
 local function read(object, field)
     local ok, value = pcall(function() return object[field] end)
     if ok then return value end
@@ -102,9 +170,9 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.7f archive") end
+        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16c package") end
         local name = system:AnimationName(unit.component.name)
-        if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the v0.7f archive and restart") end
+        if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the bundled archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
     end
     -- Preload both async references before using the component. No reference
@@ -170,11 +238,23 @@ local function cleanup(unit)
     unit.started = false
     -- Release only our managed helper. No unverified StopInDevice command is
     -- sent to an ambient actor whose current device cannot be inspected.
-    if not unit.id then return true end
+    local function releasePhysics()
+        if unit.physicsOwned then
+            local system=native()
+            if not system then return false end
+            system:ReleasePosePhysics(unit.npc)
+            unit.physicsOwned=false
+        end
+        return true
+    end
+    if not unit.id then return releasePhysics() end
     local system = entities()
     if not system or not system:IsReady() then return false end
-    if not system:IsManaged(unit.id) then unit.id = nil; return true end
-    if system:DeleteEntity(unit.id) then unit.id = nil; return true end
+    if not system:IsManaged(unit.id) then unit.id = nil; return releasePhysics() end
+    if system:DeleteEntity(unit.id) and not system:IsManaged(unit.id) then
+        unit.id = nil
+        return releasePhysics()
+    end
     return false
 end
 
@@ -198,12 +278,15 @@ local function create(system, npc, token)
     if not template or not bank or not loop then error("Arrest animation resources unavailable; no playback requested") end
     local spec = DynamicEntitySpec.new()
     spec.templatePath = system:GetHelperTemplate()
-    spec.position, spec.orientation = npc:GetWorldPosition(), npc:GetWorldOrientation()
+    local needsRecovery=npc:IsRagdollEnabled()
+    local position=needsRecovery and lyingPosition(npc) or npc:GetWorldPosition()
+    spec.position, spec.orientation = position, npc:GetWorldOrientation()
     spec.persistState, spec.persistSpawn = false, false
     spec.alwaysSpawned, spec.spawnInView, spec.active = false, true, true
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
-    return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false}
+    return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false,
+        position=position,needsRecovery=needsRecovery,physicsOwned=false}
 end
 
 local function updateUnit(system, unit, delta, onDuty, paused)
@@ -239,6 +322,7 @@ local function updateUnit(system, unit, delta, onDuty, paused)
     if not helper or not helper:IsAttached() then return false end
     if not unit.started then
         if not prepare(system, unit, helper) then return false end
+        if not recoverPhysics(system,unit,delta) then return false end
         unit.proof = NCPDPatrolArrestPlayback.new()
         if not system:ArmPlayback(unit.npc, helper, unit.token, unit.proof) then
             error("Arrest playback could not arm a clean native start")
@@ -282,7 +366,7 @@ end
 function M.finish()
     pcall(function()
         local system = native()
-        if system and system:Version() == 5 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
+        if system and system:Version() == 6 and system:GetStage() ~= 0 then system:CancelArrest("Arrest cancelled: shift ended") end
     end)
     for index = #units, 1, -1 do
         local unit = units[index]
@@ -298,7 +382,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 5 then error("Install all v0.7f arrest scripts and restart the game") end
+        if not system or system:Version() ~= 6 then error("Install all v0.16c arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

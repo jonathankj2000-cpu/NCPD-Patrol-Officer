@@ -32,4 +32,4 @@ rows=json.loads((ROOT/'assets/cyberpsycho/variants.json').read_text())['variants
 assert len(rows)==17 and len({row['base'] for row in rows})==17
 assert len([row for row in rows if row['exo']])==2
 assert all(row['source_path'] and len(row['source_blob'])==40 for row in rows)
-print('PASS: 17 verified private cyberpsycho variants; exact selected native identity, all lethal/non-lethal outcomes, random no-repeat/availability, manual CET selection; distant dispatch/arrival/deadline/cancel/load/cleanup and scanner exclusion; no payment/progress writes (native boundaries mocked)')
+print('PASS: 17 verified private cyberpsycho variants; exact selected native identity, all lethal/non-lethal outcomes, random no-repeat/availability, manual CET selection; vehicle/inactive-marker dispatch; immediate repeat after completion with independent bounded aftermath cleanup; distant arrival/deadline/cancel/load and scanner exclusion; no payment/progress writes (native boundaries mocked)')

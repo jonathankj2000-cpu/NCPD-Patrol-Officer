@@ -6,6 +6,7 @@ Items.NCPDBeanBagger_M2038:
   $base: Items.Preset_Tactician_Default
   quality: Quality.Uncommon
   appearanceResourceName: NCPDPatrol_BeanBagger
+  iconPath: weapon_Preset_Tactician_Default_None__Default
   displayName: LocKey#NCPD_BeanBagger_WeaponName
   localizedDescription: LocKey#NCPD_BeanBagger_Description
   statModifiers:

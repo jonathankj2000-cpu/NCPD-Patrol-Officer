@@ -90,14 +90,14 @@ update(30);assert(#f.creates==0 and #f.probes==0 and f.hud.text:find('Respond to
 arrive();assert(#f.creates==1 and f:ResponseState()==3 and f:ObjectiveState()==2 and f.hud.visible)
 target=f.actors[1001];assert(math.abs(target.pos.x-800)<=50 and target.pos.x>=500)
 assert(target.attitudes.group=='hostile' and target.attitudes.hostile==2 and #target.commands==1)
-target.unconscious=true;update(0.75);assert(c:GetStage()==3 and Cyber.isActive())
+target.unconscious=true;update(0.75);assert(c:GetStage()==3 and not Cyber.isActive() and Cyber.hasCleanup())
 assert(Cyber.state():find('COMPLETED',1,true) and #f.deletes==0 and DispatchRewardFixture.wallet==0)
 f.playerPosition.x=951;update(0.25);assert(not Cyber.isActive() and #f.deletes==1 and f.managed[990]=='ambient')
 fresh();request();update(180);assert(not Cyber.isActive() and #f.creates==0 and f:State()==4)
 fresh();request();assert(Cyber.cancel(f.patrol,status) and #f.deletes==0 and f:State()==1)
 fresh();f.mounted=true;request();assert(#f.creates==0);arrive();assert(#f.creates==1);Cyber.cancel(f.patrol,status)
 
--- Range tiers, minimum distance, NCART/inactive filtering and occupied scanner areas.
+-- Range tiers, minimum distance, NCART filtering and occupied scanner areas.
 for _,x in ipairs({800,1300,1800}) do
  fresh();f.places={f:Place(100),f:Place(x),f:Place(2100)};request()
  assert(c:GetTargetPosition().x==x and #f.creates==0)
@@ -106,10 +106,27 @@ for _,x in ipairs({800,1300,1800}) do
 end
 fresh();f.places={f:Place(1300),f:Place(800)};request();assert(c:GetTargetPosition().x==800);Cyber.cancel(f.patrol,status)
 for _,places in ipairs({{}, {f:Place(499)}, {f:Place(2001)}, {f:Place(800,0,0,'ncart')},
- {f:Place(800,0,0,nil,false)}, {f:Place(0/0)}, {f:Place(800),f:Place(830,0,0,'assault')},
+ {f:Place(0/0)}, {f:Place(800),f:Place(830,0,0,'assault')},
  {f:Place(800),f:Place(830,0,0,'assault',false)}}) do
  fresh();f.places=places;assert(not Cyber.request(f.patrol,status) and #f.creates==0 and not Cyber.isActive())
 end
+-- A mounted player disables fast-travel interactions, not their world anchors.
+for _,mounted in ipairs({false,true}) do
+ fresh();f.mounted=mounted;local pin=f:Place(800,0,0,nil,false)
+ function pin:IsActive() error('interaction availability must not be queried for scene selection') end
+ f.places={pin};request();assert(c:GetStage()==1 and #f.creates==0)
+ Cyber.cancel(f.patrol,status)
+end
+-- Completion frees dispatch immediately while retaining the neutralized actor.
+-- Its later cleanup cannot touch a new assignment's marker/journal.
+fresh();request();arrive();f.actors[1001].defeated=true;update(.75)
+assert(not Cyber.isActive() and Cyber.hasCleanup() and f.managed[1001])
+f.places={f:Place(1450)};request();local nextToken=c:GetToken()
+assert(c:GetStage()==1 and #f.markers==1 and f.markers[1].x==1450)
+update(120.25)
+assert(not f.managed[1001] and not Cyber.hasCleanup() and Cyber.isActive())
+assert(c:GetToken()==nextToken and c:GetStage()==1 and #f.markers==1 and f.markers[1].x==1450)
+Cyber.cancel(f.patrol,status)
 fresh();f.places={f:Place(800),f:Place(830,0,0,'assault',true,gamedataMappinPhase.CompletedPhase)}
 request();Cyber.cancel(f.patrol,status)
 fresh();f.playerPosition.x=800;f.places={f:Place(0)}
@@ -174,6 +191,15 @@ assert(Cyber.isActive(),'off-duty reset discarded pending cleanup')
 f.deleteOK=true;dispatcher(1);assert(not Cyber.isActive())
 assert(f.managed[990]=='ambient' and DispatchRewardFixture.wallet==0)
 
+-- Exercise the reported sequence through the real dispatch reservation gate.
+fresh();Dispatch.reset();Dispatch.start(f.patrol,status);Dispatch.setAutomatic(false,status)
+assert(Dispatch.requestCyberpsycho(f.patrol,status));f.playerPosition.x=700;dispatcher(1)
+f.actors[1001].dead=true;dispatcher(.75)
+assert(not Dispatch.isActive() and Cyber.hasCleanup() and f.managed[1001])
+f.places={f:Place(1450)};assert(Dispatch.requestCyberpsycho(f.patrol,status))
+local nextToken=c:GetToken();f.playerPosition.x=1350;dispatcher(1)
+assert(not f.managed[1001] and c:GetToken()==nextToken and c:GetStage()==2 and #f.markers==1)
+assert(Dispatch.cancel(f.patrol,status));Dispatch.setAutomatic(true,status)
 -- Actual shipped CET button: initial request creates a journey, not an enemy beside V.
 fresh();Dispatch.reset();Dispatch.start(f.patrol,status)
 local function no() return false end

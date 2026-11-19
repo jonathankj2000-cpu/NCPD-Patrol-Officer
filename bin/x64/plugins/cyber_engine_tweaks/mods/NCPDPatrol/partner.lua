@@ -111,6 +111,9 @@ local function sendFollow()
     if not officer or not loaded() or not officer:IsAttached() or Boarding.busy() or supportState ~= 1 then return end
     local ai = officer:GetAIControllerComponent()
     if not ai then return end
+    -- Replace our previous indefinite follow request, as backup already does.
+    -- Keep one owned follow request without changing weapon readiness rules.
+    stopFollow()
     local cmd = AIFollowTargetCommand.new()
     cmd.target = Game.GetPlayer()
     cmd.lookAtTarget = Game.GetPlayer()

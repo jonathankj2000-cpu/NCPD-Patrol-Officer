@@ -146,7 +146,7 @@ end
 
 function M.finish(patrol, status)
     if VIP.isActive() then VIP.finish(patrol, status, "Shift ended; VIP transport closed") end
-    if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
+    if Cyberpsycho.isActive() or Cyberpsycho.hasCleanup() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
     Journal.update(0, status)
     if active then
         local stage, _, reason = Journal.snapshot(active.journalToken)
@@ -332,7 +332,7 @@ function M.update(delta, onDuty, status, getPatrol)
     local ok, err = pcall(function()
         if patrol:Version() ~= 17 then return end
         if not onDuty or not patrol:IsOnDuty() then
-            if dutySeen and not Cyberpsycho.isActive() and not VIP.isActive() then M.reset() end
+            if dutySeen and not Cyberpsycho.isActive() and not Cyberpsycho.hasCleanup() and not VIP.isActive() then M.reset() end
             if not cleaned then clear(patrol); cleaned = true end
             return
         end

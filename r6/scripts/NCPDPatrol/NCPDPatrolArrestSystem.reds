@@ -12,12 +12,16 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
     private let m_receipts: array<String>;
     private let m_receiptTime: Float;
     private let m_playback: ref<NCPDPatrolArrestPlayback>;
+    private let m_posePhysics: array<wref<NPCPuppet>>;
+    private let m_recoveryTarget: wref<NPCPuppet>;
+    private let m_recoveryToken: Int32;
+    private let m_recoveryOrigin: Vector4;
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolArrestSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolArrestSystem") as NCPDPatrolArrestSystem;
     }
 
-    public func Version() -> Int32 { return 5; }
+    public func Version() -> Int32 { return 6; }
     public func Reward() -> Int32 { return 250; }
     public func GetHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\arrest_workspot.ent"; }
     public func GetLoopResource() -> ResRef { return r"base\\ncpd_patrol\\arrest_lying_loop.workspot"; }
@@ -30,6 +34,9 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
         // The saved payment ledger survives loads and shift changes. References
         // and workspot ownership from the old world must never be reused.
         this.m_target = null;
+        ArrayClear(this.m_posePhysics);
+        this.m_recoveryTarget = null;
+        this.m_recoveryToken = 0;
         this.m_playback = null;
         this.m_stage = 0;
         this.m_elapsed = 0.0;
@@ -70,6 +77,66 @@ public class NCPDPatrolArrestSystem extends ScriptableSystem {
 
     public func IsPendingSuspect(npc: ref<GameObject>) -> Bool {
         return this.m_stage != 0 && IsDefined(npc) && npc == this.m_target;
+    }
+
+    public func OwnsPosePhysics(const npc: ref<NPCPuppet>) -> Bool {
+        let i: Int32 = 0;
+        if !IsDefined(npc) { return false; };
+        while i < ArraySize(this.m_posePhysics) {
+            if this.m_posePhysics[i] == npc { return true; };
+            i += 1;
+        };
+        return false;
+    }
+
+    public func BeginPoseRecovery(npc: ref<NPCPuppet>, token: Int32) -> Bool {
+        if this.m_stage != 2 || token != this.m_token || npc != this.m_target { return false; };
+        if !this.IsEligibleSuspect(npc) || !this.InRange(npc) { return false; };
+        if this.OwnsPosePhysics(npc) { return this.m_recoveryTarget == npc && this.m_recoveryToken == token; };
+        if !npc.IsRagdollEnabled() { return false; };
+        this.m_recoveryTarget = npc;
+        this.m_recoveryToken = token;
+        this.m_recoveryOrigin = npc.GetWorldPosition();
+        ArrayPush(this.m_posePhysics, npc);
+        npc.QueueEvent(CreateDisableRagdollEvent(n"NCPDPatrolArrest"));
+        npc.SetDisableRagdoll(true);
+        return true;
+    }
+
+    public func PlaceRecoveredSuspect(npc: ref<NPCPuppet>, token: Int32, point: Vector4) -> Bool {
+        let teleport: ref<TeleportationFacility> = GameInstance.GetTeleportationFacility(this.GetGameInstance());
+        if this.m_stage != 2 || token != this.m_token || npc != this.m_target { return false; };
+        if npc != this.m_recoveryTarget || token != this.m_recoveryToken || !this.OwnsPosePhysics(npc) { return false; };
+        if !this.IsEligibleSuspect(npc) || !this.InRange(npc) || npc.IsRagdollEnabled() || !IsDefined(teleport) { return false; };
+        if point.X != point.X || point.Y != point.Y || point.Z != point.Z { return false; };
+        if AbsF(point.X) > 100000.0 || AbsF(point.Y) > 100000.0 || AbsF(point.Z) > 100000.0 { return false; };
+        if Vector4.Distance(point, this.m_recoveryOrigin) > 2.0 || AbsF(point.Z - this.m_recoveryOrigin.Z) > 0.75 { return false; };
+        if Vector4.Distance(GetPlayer(this.GetGameInstance()).GetWorldPosition(), point) > 2.5 { return false; };
+        teleport.Teleport(npc, point, Quaternion.ToEulerAngles(npc.GetWorldOrientation()));
+        return true;
+    }
+
+    public func ReleasePosePhysics(npc: ref<NPCPuppet>) -> Void {
+        let i: Int32 = 0;
+        let found: Bool = false;
+        while i < ArraySize(this.m_posePhysics) {
+            if this.m_posePhysics[i] == npc {
+                ArrayErase(this.m_posePhysics, i);
+                found = true;
+            } else { i += 1; };
+        };
+        if !found { return; };
+        if this.m_recoveryTarget == npc { this.m_recoveryTarget = null; this.m_recoveryToken = 0; };
+        if !IsDefined(npc) || !npc.IsAttached() { return; };
+        // Pickup/mounting can take ownership after payment. Its own unmount
+        // sequence restores physics; do not force a carried body to drop.
+        if GameInstance.GetMountingFacility(this.GetGameInstance()).IsMountedToAnything(npc.GetEntityID()) { return; };
+        // Remove our gate first; other mods and native restrictions keep priority.
+        npc.SetDisableRagdoll(false);
+        if !npc.IsDead() && !npc.IsDeadNoStatPool() && (ScriptedPuppet.IsDefeated(npc) || ScriptedPuppet.IsUnconscious(npc))
+            && npc.CanEnableRagdollComponent() && !GameInstance.GetWorkspotSystem(this.GetGameInstance()).IsActorInWorkspot(npc) {
+            npc.QueueEvent(CreateForceRagdollNoPowerPoseEvent(n"NCPDPatrolArrestReleased"));
+        };
     }
 
     private func InRange(npc: ref<NPCPuppet>) -> Bool {

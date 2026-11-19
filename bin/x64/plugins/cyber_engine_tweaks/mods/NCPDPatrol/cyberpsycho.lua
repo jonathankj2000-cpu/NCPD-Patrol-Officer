@@ -4,13 +4,14 @@ local Variants = require("cyberpsycho_variants")
 local selected, testVariant, previousVariant = nil, nil, nil
 local phase, label = "idle", "No cyberpsycho incident"
 local id, actor, token, origin, command = nil, nil, nil, nil, nil
-local elapsed, poll, resolvedTime, cleanupPoll = 0, 0, 0, 0
+local elapsed, poll, cleanupPoll = 0, 0, 0
 local finalReason, errorReported = nil, false
 local prepareElapsed, searchRadius, assignedDistance = 0, 0, 0
+local retired = {}
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCyberpsychoSystem")
-    if not system or system:Version() ~= 3 then error("Install all v0.15a Cyberpsycho files and restart") end
+    if not system or system:Version() ~= 3 then error("Install the complete v0.16c package and restart") end
     return system
 end
 local function distance(a,b)
@@ -27,6 +28,7 @@ local function report(text,status)
 end
 function M.state() return label end
 function M.isActive() return phase~="idle" end
+function M.hasCleanup() return phase=="cleanup" or #retired>0 end
 function M.variantState() return Variants.label(testVariant) end
 function M.cycleVariant(status)
     testVariant=(testVariant or 0)%Variants.count()+1
@@ -40,16 +42,44 @@ function M.reset()
     -- Save/load forgets the previous world. Never delete its old entity IDs.
     phase,label="idle","No cyberpsycho incident"
     id,actor,token,origin,command=nil,nil,nil,nil,nil
-    elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
+    elapsed,poll,cleanupPoll=0,0,0
     finalReason,errorReported=nil,false
     prepareElapsed,searchRadius,assignedDistance=0,0,0
     selected,testVariant,previousVariant=nil,nil,nil
+    retired={}
 end
 function M.diagnostics()
     local ok,result=pcall(function() return native():GetDiagnostics() end)
     return "phase="..phase.." | assigned distance="..tostring(math.floor(assignedDistance)).." m | search radius="..tostring(searchRadius)
-        .." m | entity="..tostring(id and id.hash or "none").." | variant="..tostring(selected and selected.label or "none").." | "
+        .." m | retained scenes="..tostring(#retired).." | entity="..tostring(id and id.hash or "none").." | variant="..tostring(selected and selected.label or "none").." | "
         ..(ok and tostring(result) or tostring(result))
+end
+local function deleteOwned(entityID)
+    local ok,gone=pcall(function()
+        local system=Game.GetDynamicEntitySystem()
+        if not system or not system:IsReady() then return false end
+        if system:IsManaged(entityID)==false then return true end
+        if system:DeleteEntity(entityID)~=true then return false end
+        return system:IsManaged(entityID)==false
+    end)
+    return ok and gone
+end
+local function updateRetired(delta,onDuty,patrol)
+    if delta<=0 or delta>0.5 or (onDuty and patrol and patrol:IsDispatchMenuOpen()) then return end
+    local player=Game.GetPlayer()
+    for i=#retired,1,-1 do
+        local scene=retired[i]
+        scene.age=scene.age+delta
+        if not onDuty or scene.age>=120 or (player and distance(player:GetWorldPosition(),scene.origin)>150) then
+            scene.retry=scene.retry+delta
+            if scene.retry>=1 then
+                scene.retry=0
+                -- Retained bodies own no dispatch, journal token or waypoint.
+                -- Their cleanup cannot cancel a subsequent assignment.
+                if deleteOwned(scene.id) then table.remove(retired,i) end
+            end
+        end
+    end
 end
 local function cleanup(status)
     if not id then
@@ -57,15 +87,7 @@ local function cleanup(status)
         report(finalReason or "Cyberpsycho dispatch cleared",status)
         return true
     end
-    local ok,gone=pcall(function()
-        local system=Game.GetDynamicEntitySystem()
-        if not system then return false end
-        if system:IsManaged(id)==false then return true end
-        -- A rejected or asynchronous deletion keeps the reservation.
-        if system:DeleteEntity(id)~=true then return false end
-        return system:IsManaged(id)==false
-    end)
-    if not ok or not gone then
+    if not deleteOwned(id) then
         phase="cleanup"
         if not errorReported then
             errorReported=true
@@ -103,13 +125,15 @@ local function chooseDestination(player)
     -- Native fast-travel markers supply existing world positions, not guessed
     -- distant navmesh queries. NCART uses a different variant and is excluded.
     for _,pin in ipairs(pins) do
-        local ok,variant,active,phase,point=pcall(function()
-            return pin:GetVariant(),pin:IsActive(),pin:GetPhase(),pin:GetWorldPosition()
+        local ok,variant,phase,point=pcall(function()
+            return pin:GetVariant(),pin:GetPhase(),pin:GetWorldPosition()
         end)
         if ok and finite(point) and (point.x~=0 or point.y~=0 or point.z~=0) then
             if variant==gamedataMappinVariant.FastTravelVariant then
                 local metres=distance(point,start)
-                if active and metres>=500 and metres<=2000 then
+                -- Interaction availability changes while mounted. It does not
+                -- invalidate a known fast-travel location as a scene anchor.
+                if metres>=500 and metres<=2000 then
                     local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
                     if not seen[key] then
                         seen[key]=true
@@ -188,6 +212,7 @@ function M.request(patrol,status,sound,voice)
         if not player or not player:IsAttached() or player:IsDead() then error("Load a save first") end
         if not patrol or not patrol:IsOnDuty() or patrol:HasWantedLevel() then error("An active, non-wanted shift is required") end
         if patrol:IsDispatchMenuOpen() or player:IsInCombat() then error("Leave game menus and combat before testing") end
+        if #retired>=3 then error("Three previous scenes are awaiting cleanup. Leave the previous areas or wait for cleanup.") end
         local journal=native()
         if not journal:IsReady() then error("Cyberpsycho journal resources missing; install the full package and restart") end
         local system=Game.GetDynamicEntitySystem()
@@ -200,7 +225,7 @@ function M.request(patrol,status,sound,voice)
         previousVariant=selected.record
         id,actor,command,finalReason,errorReported=nil,nil,nil,nil,false
         prepareElapsed,searchRadius,assignedDistance=0,radius,site.distance
-        elapsed,poll,resolvedTime,cleanupPoll=0,0,0,0
+        elapsed,poll,cleanupPoll=0,0,0
         M.sound,M.voice=sound==true,voice==true
         patrol:ClearDispatchWaypoints()
         local marker=patrol:PlaceDispatchWaypoint(origin)
@@ -215,6 +240,7 @@ function M.request(patrol,status,sound,voice)
     return ok
 end
 local function update(delta,onDuty,patrol,status,HUD)
+    updateRetired(delta,onDuty,patrol)
     -- Reconcile saved active journal entries even while no Lua incident exists.
     local checked,journal=pcall(native)
     if checked then
@@ -243,8 +269,8 @@ local function update(delta,onDuty,patrol,status,HUD)
     if delta<=0 or delta>0.5 then return true end
     elapsed=elapsed+delta;poll=poll+delta
     local nativeStage=journal:GetStage()
-    if phase~="resolved" and (journal:GetToken()~=token
-        or (nativeStage~=1 and nativeStage~=2 and not (nativeStage==3 and phase=="active"))) then
+    if journal:GetToken()~=token
+        or (nativeStage~=1 and nativeStage~=2 and not (nativeStage==3 and phase=="active")) then
         local reason=journal:GetToken()~=token and "Cyberpsycho session superseded" or journal:GetReason()
         patrol:NotifyDispatch("NCPD DISPATCH CLOSED: "..tostring(reason),8)
         M.finish(patrol,status,tostring(reason))
@@ -296,20 +322,16 @@ local function update(delta,onDuty,patrol,status,HUD)
         if journal:GetToken()~=token then
             M.finish(patrol,status,"Cyberpsycho session superseded")
         elseif stage==3 then
-            phase="resolved";resolvedTime=0
             patrol:ClearDispatchWaypoints()
             patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho neutralized. Incident resolved.",8)
             report("COMPLETED | Cyberpsycho neutralized",status)
+            if id then retired[#retired+1]={id=id,origin=origin,age=0,retry=1} end
+            id,actor,token,origin,command=nil,nil,nil,nil,nil
+            phase="idle"
         elseif stage~=2 then
             local reason=journal:GetReason()
             patrol:NotifyDispatch("NCPD DISPATCH CLOSED: "..tostring(reason),8)
             M.finish(patrol,status,tostring(reason))
-        end
-    elseif phase=="resolved" then
-        resolvedTime=resolvedTime+delta
-        local player=Game.GetPlayer()
-        if resolvedTime>=120 or (player and distance(player:GetWorldPosition(),origin)>150) then
-            M.finish(patrol,status,"Cyberpsycho scene cleared; ready for another test")
         end
     end
     if phase=="responding" then
@@ -322,8 +344,6 @@ local function update(delta,onDuty,patrol,status,HUD)
     elseif phase=="active" then
         local metres=distance(Game.GetPlayer():GetWorldPosition(),journal:GetTargetPosition())
         HUD.set("NCPD DISPATCH\nCyberpsycho response\nNeutralize the cyberpsycho - "..tostring(math.floor(metres+0.5)).." m\nLethal or non-lethal",true)
-    elseif phase=="resolved" then
-        HUD.set("NCPD DISPATCH\nCyberpsycho neutralized\nLeave the scene or clear the test incident",true)
     else HUD.set("",false) end
     return M.isActive()
 end

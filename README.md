@@ -1,6 +1,18 @@
 # NCPD Patrol
 
 
+## v0.16c: patrol fixes
+
+[Download the complete v0.16c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16c_Patrol_Fixes_TEST.zip)
+
+- **Arrest living ragdolls:** before requesting the existing lying handcuff loop, the selected eligible suspect's ragdoll physics are released and a nearby navigation-supported position is checked. Displacement is limited to 2 m and 0.75 m vertically; path/support checks reject unsuitable ground. Death, life state, HP and defeat effects are not changed. EUR$250 still requires the existing acknowledged/stable workspot activation. Physics ownership is released on failure/cleanup, and a native body pickup retains its own physics ownership. Animated downed suspects keep their existing path.
+- **Cyberpsycho dispatch from vehicles:** fast-travel interaction availability no longer filters out scene locations. Existing 500-2000 m distance tiers, NCART exclusion and occupied-scanner checks remain.
+- **Repeat cyberpsycho incidents:** completion frees the dispatch immediately. Neutralized actors are retained for the existing 120-second/150-m aftermath and cleaned independently; their cleanup cannot clear a subsequent assignment's waypoint or journal. Three retained scenes is the resource bound. Failed/asynchronous deletion retains its owned ID for retry.
+- **Bean Bagger inventory icon:** explicitly uses the verified vanilla Tactician icon. The blue-grip 3D appearance, Tier 2 reward and scoped non-lethal policy remain the same.
+- **Partner:** weapon drawing/holstering retains its existing rules and native combat priority. The small follow refresh change cancels the previous owned indefinite follow command, matching backup, instead of accumulating requests.
+
+Install the **entire ZIP** and restart; arrest interface is now **6**. Test a living physical ragdoll and an animated downed enemy, request a cyberpsycho while driving, complete it and request another, and check the inventory icon. Twelve portable suites and local source/API checks with/without optional BEF pass; actual game physics/rendering and compilation against the installed game cache still require confirmation.
+
 ## v0.16b: Bean Bagger blue grips
 
 [Download the complete v0.16b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16b_Bean_Bagger_Blue_Grips_TEST.zip)
@@ -159,7 +171,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16b**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16c**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

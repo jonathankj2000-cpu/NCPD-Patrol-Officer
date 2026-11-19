@@ -246,6 +246,17 @@ boardingBusy=true;player.weapon=nil;for _=1,8 do Partner.update(.25,true,status)
 assert(#gears(p)==count,'boarding was interrupted by readiness')
 boardingBusy=false;p.high=2;for _=1,8 do Partner.update(.25,true,status) end
 assert(#gears(p)==count,'combat partner copied V holster')
+-- Partner follow refresh must retire its prior indefinite request, matching backup.
+p.high=5;player.weapon=nil
+for _=1,80 do Partner.update(.25,true,status) end
+assert(not p.weapon,'calm main partner failed to holster after combat/boarding')
+local follows,stopped={},{}
+for _,cmd in ipairs(p.commands) do if cmd.kind=='follow' then follows[#follows+1]=cmd end end
+for _,cmd in ipairs(p.stops) do stopped[cmd]=true end
+assert(#follows>=3)
+for i=1,#follows-1 do assert(stopped[follows[i]],'old indefinite partner follow remained queued') end
+player.weapon=weapon();for _=1,8 do Partner.update(.25,true,status) end
+assert(p.weapon,'main partner failed to draw again')
 Partner.dismiss(status);assert(f.managed[990] and not f.managed[p.id.hash])
 -- Actual backup deploys, mounts, drives, brakes and exits before readiness sync.
 local Backup=require('backup');player.weapon=weapon();f.backupRequest=true

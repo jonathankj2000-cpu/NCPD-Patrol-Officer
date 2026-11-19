@@ -23,6 +23,7 @@ public native class Event extends IScriptable {}
 public native struct MountingSlotId { public native let id: CName; }
 public native struct MountingInfo { public native let slotId: MountingSlotId; }
 public native class IMountingFacility extends IScriptable {
+ public native func IsMountedToAnything(child: EntityID) -> Bool;
  public native func GetMountingInfoSingleWithObjects(child: ref<GameObject>, opt parent: ref<GameObject>, opt slotId: MountingSlotId) -> MountingInfo;
 }
 @addMethod(GameInstance)

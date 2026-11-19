@@ -27,3 +27,34 @@ python tools/build_arrest_assets.py --wk-cli /path/to/WolvenKit.CLI
 ```
 
 WolvenKit JSON uses numeric `0`/`1` for CBool and requires handle definitions before references. The builder compiles both files, round-trips the PC graph and loop topology, validates the helper reference/name and entry IDs, then packs/unpacks to compare exact bytes. No native `.anims` data or third-party playback entity is shipped. There is no AMM runtime dependency.
+
+
+## v0.16c physical-ragdoll recovery
+
+The loop/archive itself is unchanged. Arrest interface 6 adds a scoped native
+physics lease for the selected eligible living suspect. `IsRagdollEnabled()`
+covers both full ragdoll and animated-ragdoll flags. `CreateDisableRagdollEvent`
+and `NPCPuppet.SetDisableRagdoll(true)` release physics; the controller waits for
+both native flags to clear before placing/starting the workspot. These are the
+same reset primitives used by the game's body-carrying code. NPCPuppet's disable
+notification updates collision/animgraph state without changing health or defeat.
+
+CET checks nearby navigation support, a short footprint and player reachability.
+The native relocation gate independently limits displacement to 2 m, vertical
+change to 0.75 m and player distance to 2.5 m, with NaN/infinite/stale-token guards.
+After placement is observed, the existing activation proof and payment flow run.
+No placement/reset operation can award money. Ineligible/dead/story/civilian/
+police/companion actors and temporary knockdowns remain excluded by the existing
+eligibility rules.
+
+Cleanup confirms deletion of the private helper before releasing its physics
+lease. `CanEnableRagdollComponent` is gated only for leased actors. Native pickup
+or mounting after payment keeps its own disabled-physics ownership; no forced
+ragdoll/drop is requested for a mounted body. World restore forgets old handles.
+
+The expanded arrest scenarios cover ordinary animated-down arrests, full and
+animated ragdoll recovery, nearby relocation, unsupported/unreachable/other-floor
+points, stale/NaN/distant requests, stuck physics, death during recovery, body
+pickup handoff and existing exactly-once payments. Native API signatures are
+recorded in `tests/arrests/recovery-api.reds`. Local source/API compilation with
+and without optional BEF passes. Actual game physics/poses remain manual tests.

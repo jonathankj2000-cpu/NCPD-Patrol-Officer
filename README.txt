@@ -1,4 +1,27 @@
-NCPD PATROL v0.16b - BEAN BAGGER BLUE GRIPS
+NCPD PATROL v0.16c - PATROL FIXES
+
+V0.16C FIXES
+Living physical ragdolls can be prepared for the same lying arrest loop. The
+selected eligible suspect gets a checked nearby ground position, at most 2 m
+away and 0.75 m vertically. No health, death or defeat state is changed. Payment
+still needs stable native workspot activation. Failed recovery/unsafe ground
+pays nothing; cleanup releases only this mod's physics ownership. Native body
+pickup/mounting keeps control if it takes over after payment.
+
+Cyberpsycho scene selection ignores fast-travel interaction availability, which
+can change while mounted. Completed incidents free the dispatch immediately;
+retained actors are cleaned after 120 seconds or leaving 150 m without touching
+later markers/journals. A maximum of three retained scenes bounds resources.
+The Bean Bagger uses the verified vanilla Tactician inventory icon.
+Weapon readiness keeps its existing rules and native combat priority. Partner
+follow refresh now replaces its previous owned indefinite follow request.
+
+Install all files and restart. Arrest module interface: 6. Test physical and
+animated living downed suspects, a cyberpsycho request while driving, another
+request after completion, and the Bean Bagger inventory icon. All checks are
+offline; actual game animation/physics and installed-cache compilation need
+confirmation.
+
 ========================================================
 Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
@@ -72,7 +95,7 @@ needed or bundled. No extra framework dependency is added.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.16b.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.16c.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

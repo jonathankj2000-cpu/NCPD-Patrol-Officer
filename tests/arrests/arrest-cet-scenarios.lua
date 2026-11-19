@@ -44,6 +44,7 @@ function ws:GetWorkspotInstance(id) error('legacy instance lookup must not be re
 function ws:SendDebugCommandFunctionalTests(...) error('functional-test callback registration must not be required') end
 function ws:StopInDevice(...) error('unverified ambient actor stop attempted') end
 function ws:PlayInDeviceSimple(helper,npc,free,actorComp,deviceComp,sync,slideTime,behaviour,recipient)
+ assert(not npc:IsRagdollEnabled(),'workspot requested while physical ragdoll still owns the suspect')
  assert(not free and actorComp=='NCPDPatrolArrestLoop' and slideTime==0 and behaviour==0 and recipient==helper)
  played[#played+1]={helper=helper,npc=npc,time=clock};bound[helper.id.hash]=npc
  inWS[npc.id.hash]=entryMode~='none'
@@ -89,8 +90,18 @@ end
 ResourceHelper=setmetatable({},{__index=function() error('ResourceHelper cannot load the async component field') end})
 CName={new=function(v)return v end};DynamicEntitySpec={new=function()return {} end};WorkspotSlidingBehaviour={DontPlayAtResourcePosition=0}
 local looked
+local navOK,pathOK,navZ,centerBlocked=true,true,0,false
+Vector4.new=function(x,y,z,w)
+ return setmetatable({x=x,y=y,z=z,w=w},{__index=function(t,k)return rawget(t,string.lower(k))end})
+end
+worldNavigationRequestStatus={OK=1}
+AINavigationSystem={HasPathFromAtoB=function()return pathOK end}
 Game={GetPlayer=function()return player end,GetDynamicEntitySystem=function()return dynamic end,
  GetWorkspotSystem=function()return ws end,GetResourceDepot=function()return depot end,
+ GetAINavigationSystem=function()return {FindPointInSphereForCharacter=function(_,point,radius,npc)
+  local denied=centerBlocked and radius==.6 and point.x==npc.position.x and point.y==npc.position.y
+  return {status=navOK and not denied and 1 or 0,point=Vector4.new(point.x,point.y,point.z+navZ,1)}
+ end}end,
  GetScriptableSystemsContainer=function()return {Get=function()return ArrestNative end}end,
  GetTargetingSystem=function()return {GetLookAtObject=function()return looked end}end}
 GameInstance.GetWorkspotSystem=function()return ws end
@@ -263,6 +274,55 @@ for case=1,2 do
  assert(wallet==bank and #played==before and not ArrestNative:IsArrested(npc))
  PrivateLoopTree.initialCanUseExits=false;SourceTree.finalAnimsets=originalBindings
 end
+-- A physical living ragdoll must release physics and reach supported nearby
+-- ground before a workspot request can occur. Health/defeat are never rewritten.
+Module.reset();local rag=arrestSuspect(1170);rag.ragdoll=true
+bank=wallet;before=#played;centerBlocked=true
+local health=rag.health;local defeats=rag.effects;local healBefore=#healCalls;local godBefore=#godCalls
+assert(ArrestNative:StartArrest(rag));step(8)
+assert(rag:IsRagdolling() and #played==before and wallet==bank)
+step(1);assert(rag.physicsDisabled and ArrestNative:OwnsPosePhysics(rag) and #played==before)
+local recoveryToken=ArrestNative:GetToken()
+for _,point in ipairs({Vector4.new(4,0,0,1),Vector4.new(1,0,1,1),Vector4.new(0/0,0,0,1)}) do
+ assert(not ArrestNative:PlaceRecoveredSuspect(rag,recoveryToken,point) and not rag.teleports)
+end
+assert(not ArrestNative:PlaceRecoveredSuspect(rag,recoveryToken-1,Vector4.new(1,0,0,1)))
+step(1);assert(rag.teleports==1 and rag.position.x==1.75 and #played==before)
+step(1);assert(#played==before+1 and wallet==bank and not rag:IsRagdolling())
+step(6);assert(wallet==bank+250 and ArrestNative:IsArrested(rag) and rag.physicsDisabled)
+assert(rag.health==health and rag.effects==defeats and #healCalls==healBefore and #godCalls==godBefore)
+releasePaid();assert(not rag.physicsDisabled and not ArrestNative:OwnsPosePhysics(rag))
+assert(rag.physicsEvents[#rag.physicsEvents].kind=='restore');centerBlocked=false
+-- Animated ragdoll physics uses a separate native flag; it must release too.
+Module.reset();local animatedPhysics=arrestSuspect(1180);animatedPhysics.animatedRagdoll=true
+bank=wallet;assert(ArrestNative:StartArrest(animatedPhysics));step(20)
+assert(wallet==bank+250 and ArrestNative:IsArrested(animatedPhysics) and not animatedPhysics:IsRagdollEnabled())
+assert(animatedPhysics.physicsDisabled and animatedPhysics.health==2);releasePaid()
+-- Unsupported, unreachable or vertically remote points cannot trigger physics,
+-- teleportation, playback or payment. Setup failure releases the reservation.
+for failure=1,3 do
+ Module.reset();local npc=arrestSuspect(1170+failure);npc.ragdoll=true
+ navOK=failure~=1;pathOK=failure~=2;navZ=failure==3 and 2 or 0
+ bank=wallet;before=#played
+ assert(ArrestNative:StartArrest(npc));step(16)
+ assert(wallet==bank and #played==before and not npc.physicsDisabled and not npc.teleports and ArrestNative:GetStage()==0)
+ assert(npc:IsRagdolling() and npc.health==2)
+end
+navOK,pathOK,navZ=true,true,0
+Module.reset();local stuck=arrestSuspect(1175);stuck.ragdoll=true;stuck.stuckRagdoll=true
+bank=wallet;before=#played;assert(ArrestNative:StartArrest(stuck));step(28)
+assert(wallet==bank and #played==before and not stuck.physicsDisabled and not ArrestNative:OwnsPosePhysics(stuck))
+-- Death during recovery cannot turn physics preparation into a paid arrest.
+Module.reset();local dying=arrestSuspect(1176);dying.ragdoll=true
+bank=wallet;before=#played;assert(ArrestNative:StartArrest(dying));step(9);dying.dead=true;step(8)
+assert(wallet==bank and #played==before and not dying.physicsDisabled and not dying.teleports)
+-- A pickup after payment owns the disabled body physics until vanilla unmount.
+Module.reset();local carried=arrestSuspect(1177);carried.ragdoll=true
+assert(ArrestNative:StartArrest(carried));step(20);assert(ArrestNative:IsArrested(carried))
+carried.carried=true;flags[carried.id.hash].exiting=true;bank=wallet;step(4)
+assert(wallet==bank and carried.physicsDisabled and not ArrestNative:OwnsPosePhysics(carried))
+assert(carried.physicsEvents[#carried.physicsEvents].kind=='disable')
+carried.carried=false;carried:SetDisableRagdoll(false)
 -- Duty end releases private helpers without undoing already-paid identities.
 bank=wallet;count=ArrestNative:GetPaidArrests()
 Patrol:FinishShift();Module.finish();step(4)
