@@ -1,0 +1,163 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "gameJournalResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "entry": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "gameJournalRootFolderEntry",
+          "id": "",
+          "journalEntryOverrideDataList": [],
+          "entries": [
+            {
+              "HandleId": "1",
+              "Data": {
+                "$type": "gameJournalFolderEntry",
+                "id": "quests/street_stories",
+                "journalEntryOverrideDataList": [],
+                "entries": [
+                  {
+                    "HandleId": "2",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_marker_reference",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "3",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "4",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "inspect",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "5",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_MarkerReference_Description"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "HandleId": "6",
+                                      "Data": {
+                                        "$type": "gameJournalQuestMapPin",
+                                        "id": "location",
+                                        "journalEntryOverrideDataList": [],
+                                        "entries": [],
+                                        "enableGPS": 1,
+                                        "reference": {
+                                          "$type": "gameEntityReference",
+                                          "type": "EntityRef",
+                                          "reference": {
+                                            "$type": "NodeRef",
+                                            "$storage": "string",
+                                            "$value": "#coyote_performance_test"
+                                          },
+                                          "names": [],
+                                          "slotName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          },
+                                          "sceneActorContextName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          },
+                                          "dynamicEntityUniqueName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          }
+                                        },
+                                        "slotName": {
+                                          "$type": "CName",
+                                          "$storage": "string",
+                                          "$value": "UI_Interaction"
+                                        },
+                                        "mappinData": {
+                                          "$type": "gamemappinsMappinData",
+                                          "mappinType": {
+                                            "$type": "TweakDBID",
+                                            "$value": "Mappins.QuestStaticMappinDefinition",
+                                            "$storage": "string"
+                                          },
+                                          "variant": "QuestGiverVariant",
+                                          "active": 1,
+                                          "visibleThroughWalls": 1,
+                                          "debugCaption": "NCPD QUEST MARKER TEST",
+                                          "localizedCaption": {
+                                            "unk1": "0",
+                                            "value": "NCPDPatrol_MarkerReference_Location"
+                                          },
+                                          "scriptData": null
+                                        },
+                                        "offset": {
+                                          "$type": "Vector3",
+                                          "X": 0.114500001,
+                                          "Y": -0.294,
+                                          "Z": -0.000199999995
+                                        },
+                                        "uiAnimation": {
+                                          "$type": "TweakDBID",
+                                          "$storage": "uint64",
+                                          "$value": "0"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_MarkerReference_Objective"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_MarkerReference_Title"
+                      },
+                      "type": "StreetStory",
+                      "districtID": "Districts.Heywood",
+                      "recommendedLevelID": {
+                        "$type": "TweakDBID",
+                        "$storage": "uint64",
+                        "$value": "0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

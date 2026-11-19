@@ -1,32 +1,39 @@
-NCPD PATROL v0.17d QUEST PHASE MARKER PROBE r4c - COMPLETE BRANCH TEST
+NCPD PATROL v0.17d MIT REFERENCE MARKER PROBE r4d - COMPLETE BRANCH TEST
 
-This test uses a real archived .questphase registered through ArchiveXL.
-The phase starts passive. CET Start signals its private fact; the phase activates
-the private quest/objective/marker, waits for Remove, then closes and re-arms.
-No dynamic entity or loose ExecuteNode call is used.
+The r4c game log showed an active quest/objective and graph stage=1, but ZERO
+native quest pins. This build compares the concrete Negative Balance setup by
+Andrea Olivato, used under MIT. See THIRD_PARTY_NOTICES.txt for full attribution.
 
-The marker has a FIXED position from the last test:
-X -1549.817505, Y -1544.082886, Z 70.155853.
-It is NOT 150 m ahead of V. Inspect the WORLD MAP, alongside your manual waypoint.
+Reference test: a private journal quest uses the same fixed world NodeRef as
+Negative Balance's El Coyote Cojo pin, QuestGiverVariant, an initially active
+pin definition and questJournalNodeDefinition activation. Its private root
+phase starts passive. The original quest/story is not included or required.
+Expected point: X -1259.598, Y -989.166, Z 12.037. This does not follow V.
 
 Install the COMPLETE bin/r6/archive package into the game root and restart.
-Include NCPDPatrol_QuestMarkerProbe.archive AND its .archive.xl. Existing
-dependencies remain; Browser Extension is optional. Native probe interface = 4.
+Include NCPDPatrol_QuestMarkerProbe.archive AND .archive.xl and both new
+NCPDPatrolReferenceMappins/NCPDPatrolReferenceMappinData.reds files.
+Existing dependencies remain; Browser Extension is optional. Probe interface=5.
+The old r4c phase/journal remain available to close a test saved while active.
 
-OFF DUTY > CET > Testing > Quest marker experiment > Start static quest marker.
-Wait five seconds, then Log quest marker test diagnostics:
-- graph ready=4: the archived phase finished initialization
-- graph stage=1: its activation route completed
-- confirmed=true requires an actual QuestMappin, correct position and objective link
-Use Remove and wait for cleanup before another test.
-A journal alone, or graph stage=1 alone, does not establish marker success.
+OFF DUTY > CET > Testing > Quest marker experiment:
+1. Set an ordinary manual waypoint. Start static quest marker.
+2. Wait five seconds; inspect the WORLD MAP near El Coyote Cojo, Heywood.
+3. Log quest marker test diagnostics, then Remove and wait for cleanup.
+4. TEST: Andrea visual marker is a SEPARATE renderer control at the same point.
+   Inspect/log/remove it too. It uses Andrea's small Show/Move/Hide helper,
+   adapted with private ownership checks. It does not establish journal or GPS.
 
-The archive uses ArchiveXL's null-NodeRef / absolute-offset support for this
-static control. Normal dispatch, currency and progression retain their behavior.
-Actual game execution, presentation and GPS require in-game testing.
-Use a test save; the phase/facts are owned by this isolated experiment.
-17 portable suites; 25 Lua modules, 29 native files, 76 installed files.
-See docs/QUEST_MARKER_PROBE.md for sources, install, diagnostics and rollback.
+Reference graph ready=5, stage=1 means activation completed. confirmed=true
+still requires one actual QuestMappin matching our private journal hash,
+position and objective link. A yellow icon or active journal alone is not proof.
+The visual control reports visual confirmed separately; native confirmed stays
+false. Manual waypoint IDs are sampled before/after; neither test tracks them.
+
+Normal dispatch, currency and progression retain their behavior. Real game
+marker creation, presentation, GPS and saved-phase execution need testing.
+17 portable suites; 25 Lua modules, 31 native files, 79 installed files.
+See docs/QUEST_MARKER_PROBE.md for sources, diagnostics and rollback.
 
 PREVIOUS BUILD NOTES
 

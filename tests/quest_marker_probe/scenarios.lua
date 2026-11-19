@@ -1,5 +1,5 @@
-local root='quests/minor_quest/ncpd_patrol_marker_probe'
-local prefix='ncpd_patrol_marker_probe_r4c_'
+local root='quests/street_stories/ncpd_patrol_marker_reference'
+local prefix='ncpd_patrol_marker_reference_r4d_'
 local function tick(n) for _=1,n do F:StepGraph();Native:Tick(.25) end end
 local function begin() assert(Native:Begin());F:StepGraph();Native:Tick(.25) end
 local function stop() Native:Stop('done');tick(2) end
@@ -66,3 +66,48 @@ assert(#F.requests==requests)
 F.noNative=true;local notices={};Probe.reset()
 Probe.update(.25,false,function(s) notices[#notices+1]=s end);assert(#notices==0)
 assert(not Probe.start(function(s) notices[#notices+1]=s end) and #notices==1)
+
+-- MIT visual helper: a separate renderer cannot satisfy journal proof.
+F:Reset();Probe.reset();assert(Probe.startVisual());Probe.update(.25,false)
+assert(Native.m_visualConfirmed and not Native:IsConfirmed())
+assert(Native:GetGraphStage()==0 and ownState()==1 and F.tracked==F.previous and F.manual==700)
+assert(F.lastData.active and F.lastData.visibleThroughWalls)
+assert(F.lastData.mappinType=='Mappins.QuestStaticMappinDefinition')
+assert(Probe.diagnostics():find('VISUAL CONTROL',1,true))
+local ownID=Native.m_visualID
+NCPDPatrolReferenceMappins:Move({},ownID,Vector4.new(0,0,0,1));Probe.update(.25,false)
+assert(not Native.m_visualConfirmed and not Native:IsConfirmed())
+local foreign=F:AddPin(222);foreign.kind='StaticMappin';foreign.data={kind='DispatchData'}
+NCPDPatrolReferenceMappins:Move({},foreign:GetNewMappinID(),Vector4.new(4,4,4,1))
+assert(foreign.pos==F.pos)
+NCPDPatrolReferenceMappins:Hide({},foreign:GetNewMappinID());assert(F.pins.n==2)
+F.failDelete=true;assert(not Probe.finish() and not Probe.startVisual())
+F.failDelete=false;Probe.update(.25,false)
+assert(not Native:HasPendingCleanup() and F.pins.n==1 and F.pins[0]==foreign)
+-- A reused cached ID belonging to another class must never be removed.
+F:Reset();assert(Native:BeginVisual());local originalID=Native.m_visualID
+F.pins[0].data={kind='DispatchData'};Native:Stop('ID reused')
+assert(F.pins.n==1 and F.pins[0].id==originalID.value and #F.removed==0)
+-- Missing renderer creation is never reported as visual/native success.
+F:Reset();F.failCreate=true;assert(Native:BeginVisual());tick(1)
+assert(not Native.m_visualConfirmed and not Native:IsConfirmed());stop()
+-- The independent renderer can run when the reference quest phase is missing.
+F:Reset(false);assert(Native:BeginVisual());tick(1)
+assert(Native.m_visualConfirmed and Native:GetGraphStage()==0);stop()
+F:Reset();assert(Native:BeginVisual());local savedID=Native.m_visualID
+Native:OnRestored(0,0);tick(2)
+assert(not Native:HasRequest() and F.pins.n==0)
+-- Migration waits for the r4c phase to become inactive; fallback is hash-scoped.
+F:Reset();local legacy='quests/minor_quest/ncpd_patrol_marker_probe'
+F.entries[legacy].state=2;F.facts.ncpd_patrol_marker_probe_r4c_stage=1;F.legacyStalled=true
+local legacyPin=F:AddPin(8888);foreign=F:AddPin(222)
+Native:OnRestored(0,0);tick(2)
+assert(not Native:Begin() and not Native:BeginVisual() and #F.removed==0)
+assert(F.facts.ncpd_patrol_marker_probe_r4c_request==0)
+F.legacyStalled=false;F.failDelete=true;tick(2)
+assert(Native.m_legacyPending and not Native:Begin())
+F.failDelete=false;tick(2)
+assert(not Native.m_legacyPending and F.pins.n==1 and F.pins[0]==foreign)
+assert(Native:Begin());F:StepGraph();Native:Tick(.25);stop()
+-- Root tracking selected by the reference graph also restores a prior story.
+F:Reset();begin();F.tracked=F.entries[root];stop();assert(F.tracked==F.previous)

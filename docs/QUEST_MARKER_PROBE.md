@@ -1,87 +1,91 @@
-R4c replaces the direct-node/tagged-entity experiment with a real archived
-quest phase. It is a static control for native quest markers, not a conversion
-of normal scanner/VIP/cyberpsycho navigation.
+R4d: MIT reference comparison for native quest markers
 
-The supplied r4b diagnostics proved an attached entity at the intended position
-but zero QuestMappins. The tag-based position assumption was incorrect for
-ArchiveXL's cooked quest-mappin path: its implementation collects the reference
-NodeRef and offset, not EntityReference tag names.
+The r4c game log proves graph ready=4/stage=1 and an active quest/objective,
+but native pins=0, no objective link and no pin ID. Journal activation worked;
+marker creation did not. The cause is not established by that log alone.
+Normal dispatch navigation, currency and progression are unchanged.
 
-[ArchiveXL Journal Extension](https://github.com/psiberx/cp2077-archive-xl/blob/1bf3bf3a823b3995fbf18285a54a7817c75ecf4d/src/App/Extensions/Journal/Extension.cpp)
-also explicitly supports a null NodeRef: the authored offset becomes an absolute
-cooked position, and the entry offset is cleared to avoid applying it twice.
-R4c uses that static form, removing target-resolution/spawning from this test.
-It does not prove arbitrary runtime destinations can be moved after cooking.
+Reference and attribution
 
-The [Cyberpunk.Codes source](https://github.com/andreaolivato/cyberpunk-codes)
-shows ArchiveXL phase registration with parent cyberpunk2077.quest, authored
-quest/journal resources and native facts conditions. This test's graph and
-private data are newly authored; no third-party quests or game assets are shipped.
-The [WolvenKit Mappin Manager editor](https://github.com/WolvenKit/WolvenKit/blob/c6065b22f70cb0a53913f5440d112ab1b7dd00a4/WolvenKit.App/ViewModels/GraphEditor/Nodes/Quest/questMappinManagerNodeDefinitionWrapper.cs)
-defines Active/Inactive state inputs. The
-[quest authoring reference](https://hlky.github.io/cyberpunk-quest-authoring/journal/mappins.html#activating-and-hiding-a-quest-pin)
-documents the typed journal path and containing quest index.
+[Cyberpunk.Codes](https://github.com/andreaolivato/cyberpunk-codes/tree/a256760bafb625676d13b02ccf49c52b60f41d40)
+is MIT licensed, copyright (c) 2026 Andrea Olivato. THIRD_PARTY_NOTICES.txt ships
+the full license, source paths and adaptation notes. reference-source.json
+records provenance. No original story/quest or dependency on that mod is added.
 
-Implementation:
-- A private 22-node, 21-edge .questphase is injected by the existing ArchiveXL
-  dependency. Its graph owns all test journal and marker state transitions.
-- It initializes into a passive wait. Start changes only the private request
-  fact. Active is followed by a private stage=1 acknowledgement. Remove sets
-  request=0; the graph uses Inactive and returns to the start wait.
-- All three facts start with ncpd_patrol_marker_probe_r4c_. No reward, incident,
-  career, police, conversation or story facts are written.
-- The native controller observes the graph and actual mappins, tracks the test
-  objective once it becomes active, and preserves manual waypoint IDs.
-- Cleanup waits for graph stage=0 and an inactive private quest. It then removes
-  only a current-world QuestMappin with the private journal hash if native
-  Inactive retained its presentation. Restart remains blocked until confirmed.
-- Native probe interface 4 rejects mixed installations. Ordinary mod interfaces
-  are unchanged. The older private anchor template remains packed for package
-  compatibility but is never spawned by r4c.
+Negative Balance's pin_epilogue supplies the concrete reference:
+- EntityRef #coyote_performance_test, original relative offset and UI_Interaction slot;
+- QuestStaticMappinDefinition, QuestGiverVariant, active=1 and GPS enabled;
+- questJournalNodeDefinition + questJournalEntry_NodeType activate the map pin;
+- fileEntryIndex=1, as in that phase, rather than the earlier generic index=2;
+- questJournalQuestEntry_NodeType tracks/notifies the root on activation.
+The expected world point (-1259.598, -989.166, 12.037) comes from
+CCGig01Places.Coyote() in Gig01_Encounter.reds, at El Coyote Cojo, Heywood.
+These changes are a reference comparison, not proven individual causes of the
+r4c failure. Arbitrary runtime/procedural journal positioning remains unproven.
 
-Install the COMPLETE package into the game root and fully restart. Include the
-probe archive AND .archive.xl (the latter now registers the quest phase).
-Existing dependencies remain; Browser Extension stays optional.
-Do not use CET hot reload. Use a test save for this engine-owned phase experiment.
+Implementation and proof
+
+New root: quests/street_stories/ncpd_patrol_marker_reference.
+Facts: ncpd_patrol_marker_reference_r4d_ ready/stage/request.
+The 22-node/21-edge phase starts passive. request=1 activates root, phase,
+objective and pin via Journal nodes; ready=5/stage=1 acknowledges the route.
+request=0 deactivates them, sets stage=0 and loops back. No ExecuteNode or
+dynamic entity is used. Native confirmed=true still requires one actual
+QuestMappin with our hash, position within two meters, objective link and stage=1.
+Color, marker definition and an active objective alone are insufficient.
+
+The independent visual control adapts Andrea's CCSharedMappins Show/Move/Hide.
+It registers a quest-style marker at the same point with private scriptData,
+QuestGiverVariant and active=true. visual confirmed checks ownership, position
+and variant; native confirmed remains false. It proves neither journal binding
+nor GPS. NCPDPatrolReferenceMappinData differs from dispatch-owned data so normal
+dispatch cleanup cannot claim it. Move/Hide check current ownership, including
+a reused ID. Neither test calls TrackMappin or replaces the manual waypoint.
+
+Cleanup and loading
+
+Old r4c resources remain packed unchanged and its phase remains registered.
+Loading sets its request to zero, waits for inactive root/stage=0, then removes
+only retained old private-hash QuestMappins. Legacy cleanup blocks a new test.
+New native cleanup likewise waits for phase acknowledgement before hash-scoped
+fallback removal. Visual cleanup rediscovers current-world private scriptData;
+saved IDs are forgotten. Failed deletion blocks restart. Newer user story
+tracking is respected. Menus pause lifetime; duty/combat/wanted or ten active
+minutes end the test. Reward, incident and story facts stay outside this code.
+
+Installation and game checks
+
+Install the complete ZIP into the game root, including archive/.xl and both
+ReferenceMappins/ReferenceMappinData scripts. Fully restart; do not CET-reload.
+Probe interface=5 rejects mixed files. Browser Extension remains optional.
+Use a test save for these engine-owned phases/facts.
 
 1. Stay OFF DUTY, outside combat/wanted status and game menus.
-2. Set an ordinary manual waypoint.
-3. CET > Testing > Quest marker experiment > Start static quest marker.
-4. Wait five seconds. Inspect the WORLD MAP alongside the ordinary waypoint.
-   The fixed test point is (-1549.817505, -1544.082886, 70.155853), copied from
-   the last reported test destination. It does not follow V or change on start.
-   Its elevation is a display control, not a promise of a drivable GPS endpoint.
-5. Log diagnostics, then Remove. Wait for cleanup before starting again.
+2. Set a manual waypoint. CET > Testing > Quest marker experiment.
+3. Start static quest marker; wait five seconds. Inspect the WORLD MAP near
+   El Coyote Cojo alongside your waypoint. Log quest marker test diagnostics.
+4. Remove and wait for cleanup. Run TEST: Andrea visual marker separately;
+   inspect/log/remove that control too.
+5. Reference graph ready=5/stage=1 shows the route ran. Only confirmed=true
+   with native pins=1, objective link=true and position OK=true proves linkage.
+   ready=0 calls for ArchiveXL resource/phase logs. If stage=1 but pins=0,
+   check ArchiveXL cooked-pin messages using the private journal hash.
+6. visual confirmed=true is renderer evidence only; native confirmed must
+   remain false. Report both tests and the manual before/after IDs.
 
-Interpretation:
-- journal ready=false: journal/archive unavailable.
-- graph ready=0: the registered phase has not completed initialization. Check
-  ArchiveXL phase/resource loading logs, not just whether the journal exists.
-- graph ready=4, stage=0: phase waiting/passive.
-- stage=1: the activation route passed its mappin node, which alone is NOT proof
-  of native marker creation.
-- quest/objective active show whether journal operations took effect.
-- confirmed=true additionally requires exactly one real QuestMappin matching
-  the private hash, near the fixed position, linked to the objective.
-- If stage=1 but pins=0, inspect ArchiveXL messages for cooked mappin #3466779148
-  before inferring UI color, GPS or position problems.
-- Menus pause the test lifetime. Duty/combat/wanted status or ten active minutes
-  signal cleanup. A newer story selection/waypoint is respected.
-- Save load forgets cached handles and signals the phase off. Earned mod rewards
-  and progression remain outside this experiment.
+Rollback: remove the test and wait for cleanup, then restart with the earlier
+complete package. The report lists added files. Never remove another mod's
+files or patch vanilla sectors. A pre-test save avoids retaining test phases.
 
-For rollback, remove the test and wait for its cleanup, then fully restart with
-the earlier complete package. The four installed probe files are listed in the
-verification report. Never delete another mod's files or patch a vanilla sector.
+Validation
 
-Validation executes the actual authored graph data through a small test runner,
-mocking native engine operations. No-pin behavior is the default: graph progress
-alone must fail confirmation. Cases include passive/missing phase, asynchronous
-activation/cleanup, start-stop-start, retained/failed deletion, foreign pins and
-types, hash/position/objective failures, manual waypoint changes, save restore,
-menu, duty and timeout. Source guards preserve existing gameplay, and earlier
-dispatch/VIP/CET comparison suites still run. WolvenKit compile/round-trip and
-archive extraction compare all four resources. Offline redscript compilation is
-checked with and without Browser Extension. Actual game-cache compilation,
-ArchiveXL phase execution, marker appearance, navigation and save behavior still
-require the above in-game checks.
+WolvenKit 9.1.1 converts, round-trips and extracts all seven resources, retaining
+the old four resource bytes. Tests execute actual authored graph data and
+translated native/Lua controllers; engine boundaries are mocked. No-pin behavior
+is the default. Tests cover independent native hash/type/position/link/duplicate
+gates, asynchronous/failed cleanup, foreign markers, reused IDs, legacy saved
+tests, renderer-only false-success rejection, menus/load/duty/timeout, rearming
+and four CET routes. Existing dispatch/VIP/CET comparisons preserve gameplay.
+All 31 scripts pass offline source/API compilation with BEF present and absent.
+Actual game-cache compilation, ArchiveXL execution, map presentation, GPS and
+save behavior still require the above in-game checks.

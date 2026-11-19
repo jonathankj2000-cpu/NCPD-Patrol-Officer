@@ -12,6 +12,9 @@ public final native const func GetEntryHash(entry: wref<JournalEntry>) -> Int32;
 public final native func GetMappinFromObjective(phaseEntry: wref<JournalEntry>, objectiveEntry: wref<JournalEntry>) -> wref<IMappin>;
 @addMethod(MappinSystem)
 public final native func GetManuallyTrackedMappinID() -> NewMappinID;
+// Game orphans.swift MappinSystem:17828; scriptData ownership is private.
+@addMethod(MappinSystem)
+public final native func GetMappin(mappinId: NewMappinID) -> ref<IMappin>;
 @addMethod(IMappin)
 public final native func IsQuestMappin() -> Bool;
 @addMethod(IMappin)

@@ -4,8 +4,8 @@ import argparse,hashlib,json,math,shutil,subprocess,tempfile
 ROOT=Path(__file__).resolve().parents[1]
 TAG='NCPDPatrol_QuestMarkerProbeAnchor'
 
-def validate_phase(doc):
- contract=json.loads((ROOT/'assets/quest_marker_probe/phase-contract.json').read_text())
+def validate_phase(doc,contract=None):
+ if contract is None:contract=json.loads((ROOT/'assets/quest_marker_probe/phase-contract.json').read_text())
  handles={}
  def collect(value):
   if isinstance(value,dict):
@@ -30,13 +30,27 @@ def validate_phase(doc):
    assert [key(x) for x in handles[destination]['connections']].count(ident)==1
    edges.append([owners[source],handles[source]['name']['$value'],owners[destination],handles[destination]['name']['$value']])
   if d['$type']=='gameJournalPath':
-   assert d['fileEntryIndex']==2 and d['realPath'].startswith('quests/minor_quest/ncpd_patrol_marker_probe')
+   assert d['fileEntryIndex']==contract.get('file_entry_index',2) and d['realPath'].startswith(contract.get('quest_root','quests/minor_quest/ncpd_patrol_marker_probe'))
   if d['$type']=='questSetVar_NodeType':assert d['factName'].startswith(contract['fact_prefix']) and d['setExactValue']
   if d['$type']=='questVarComparison_ConditionType':assert d['factName']==contract['fact_prefix']+'request'
   if d['$type']=='questMappinManagerNodeDefinition':assert not d['disablePreviousMappins']
   if d['$type']=='questJournalEntry_NodeType':assert not d['sendNotification']
  assert sorted(edges)==sorted(contract['edges'])
  return contract
+
+def validate_reference(journal,texts,phase):
+ contract=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
+ validate_phase(phase,contract)
+ folder=journal['Data']['RootChunk']['entry']['Data']['entries'][0]['Data']
+ quest=folder['entries'][0]['Data'];assert folder['id']=='quests/street_stories' and quest['id']=='ncpd_patrol_marker_reference' and quest['type']=='StreetStory'
+ objective=quest['entries'][0]['Data']['entries'][0]['Data'];pin=objective['entries'][1]['Data']
+ assert pin['reference']['type']=='EntityRef' and not pin['reference']['names']
+ assert pin['reference']['reference']['$value']==contract['node_reference']
+ assert all(math.isclose(pin['offset'][k],v,abs_tol=.0001) for k,v in contract['offset'].items())
+ assert pin['mappinData']['mappinType']['$value']=='Mappins.QuestStaticMappinDefinition'
+ assert pin['mappinData']['variant']=='QuestGiverVariant' and pin['mappinData']['active'] and pin['enableGPS']
+ rows=texts['Data']['RootChunk']['root']['Data']['entries']
+ assert {r['secondaryKey'] for r in rows}=={'NCPDPatrol_MarkerReference_'+s for s in ['Title','Objective','Description','Location']}
 
 def validate(journal,texts,anchor,quest_phase):
  contract=validate_phase(quest_phase)
@@ -61,16 +75,18 @@ def validate(journal,texts,anchor,quest_phase):
 def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--wk-cli',type=Path,required=True);args=parser.parse_args()
  def run(*a):subprocess.run([str(args.wk_cli),*map(str,a)],check=True)
- names=['probe.journal','probe_onscreens.json','probe_anchor.ent','probe.questphase']
+ names=['probe.journal','probe_onscreens.json','probe_anchor.ent','probe.questphase','reference.journal','reference_onscreens.json','reference.questphase']
  authored={n:ROOT/'assets/quest_marker_probe'/(n+'.json') for n in names}
- validate(*(json.loads(authored[n].read_text()) for n in names))
+ validate(*(json.loads(authored[n].read_text()) for n in names[:4]))
+ validate_reference(*(json.loads(authored[n].read_text()) for n in names[4:]))
  with tempfile.TemporaryDirectory(prefix='ncpd-marker-assets-') as tmp:
   tmp=Path(tmp);packed=tmp/'NCPDPatrol_QuestMarkerProbe';depot=packed/'base/ncpd_patrol/quest_marker_probe';depot.mkdir(parents=True)
   roundtrip=tmp/'roundtrip';roundtrip.mkdir();out=tmp/'packed';out.mkdir()
   for n in names:
    run('convert','deserialize',authored[n],'--outpath',depot)
    run('convert','serialize',depot/n,'--outpath',roundtrip)
-  validate(*(json.loads((roundtrip/(n+'.json')).read_text(encoding='utf-8-sig')) for n in names))
+  validate(*(json.loads((roundtrip/(n+'.json')).read_text(encoding='utf-8-sig')) for n in names[:4]))
+  validate_reference(*(json.loads((roundtrip/(n+'.json')).read_text(encoding='utf-8-sig')) for n in names[4:]))
   expected={n:(depot/n).read_bytes() for n in names};assert all(v[:4]==b'CR2W' for v in expected.values())
   run('pack',packed,'--outpath',out)
   archive=out/'NCPDPatrol_QuestMarkerProbe.archive';extracted=tmp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)

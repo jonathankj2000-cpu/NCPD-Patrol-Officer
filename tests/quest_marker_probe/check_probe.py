@@ -55,9 +55,9 @@ def main():
                       'GiveItem','Items.money','CompleteIncident','m_paidActivities','CreateEntity','ExecuteNode(']:
         assert forbidden not in native+controller,forbidden
     for fact in ['ready','stage','request']:
-        assert 'ncpd_patrol_marker_probe_r4c_'+fact in native
-    phase=json.loads((ROOT/'assets/quest_marker_probe/probe.questphase.json').read_text())
-    contract=json.loads((ROOT/'assets/quest_marker_probe/phase-contract.json').read_text())
+        assert 'ncpd_patrol_marker_reference_r4d_'+fact in native
+    phase=json.loads((ROOT/'assets/quest_marker_probe/reference.questphase.json').read_text())
+    contract=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
     code=translate(src).replace('self:Root() + ', 'self:Root() .. ').replace(
         'self:PhasePath() + ', 'self:PhasePath() .. ').replace('self:ObjectivePath() + ', 'self:ObjectivePath() .. ')
     code=code.replace('pin = pins[i]', 'pin = AsQuestMappin(pins[i])').replace('pin = linked', 'pin = AsQuestMappin(linked)')
@@ -67,12 +67,17 @@ def main():
         if isinstance(x,list):return lua.table_from([convert(v) for v in x])
         return x
     lua.globals().GraphModel=convert(phase_model(phase));lua.globals().PhasePosition=convert(contract['position'])
-    lua.globals().Native=lua.execute(code);lua.globals().MOD_DIR=str(ROOT/PREFIX)
+    lua.globals().Native=lua.execute(code)
+    helper=translate(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds')
+    helper=helper.replace('new NCPDPatrolReferenceMappinData()', 'NewReferenceData()').replace('IsDefined(pin:GetScriptData())', 'IsDefined(AsReferenceData(pin:GetScriptData()))')
+    lua.globals().NCPDPatrolReferenceMappins=lua.execute(helper)
+    lua.globals().MOD_DIR=str(ROOT/PREFIX)
     lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
     lua.execute((HERE/'native-mocks.lua').read_text());lua.execute((HERE/'scenarios.lua').read_text())
     sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime,click
     _,f=runtime(ROOT/PREFIX);f.Frame(f,'Testing',None);assert f.Events(f)==''
     for label,needle in {'TEST: Start static quest marker':'probe.start',
+                         'TEST: Andrea visual marker':'probe.visual',
                          'Log quest marker test diagnostics':'Quest marker test | fixture'}.items():
         assert needle in click(ROOT/PREFIX,False,False,'Testing',label)
     ui,f=runtime(ROOT/PREFIX)
@@ -82,6 +87,7 @@ def main():
     builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
     names=['probe.journal','probe_onscreens.json','probe_anchor.ent','probe.questphase']
     builder.validate(*(json.loads((ROOT/'assets/quest_marker_probe'/(n+'.json')).read_text()) for n in names))
+    builder.validate_reference(*(json.loads((ROOT/'assets/quest_marker_probe'/(n+'.json')).read_text()) for n in ['reference.journal','reference_onscreens.json','reference.questphase']))
     broken=copy.deepcopy(phase)
     def mutate(x):
         if isinstance(x,dict):
@@ -90,7 +96,7 @@ def main():
         elif isinstance(x,list):
             for v in x:mutate(v)
     mutate(broken)
-    try:builder.validate_phase(broken)
+    try:builder.validate_phase(broken,contract)
     except AssertionError:pass
     else:raise AssertionError('Unconfigured phase journal paths accepted')
     broken=copy.deepcopy(phase)
@@ -101,7 +107,7 @@ def main():
         elif isinstance(x,list):
             for v in x:wrong_socket(v)
     wrong_socket(broken)
-    try:builder.validate_phase(broken)
+    try:builder.validate_phase(broken,contract)
     except AssertionError:pass
     else:raise AssertionError('Unsupported activation edge accepted')
     manifest=json.loads((ROOT/'assets/quest_marker_probe/compiled.json').read_text())
@@ -111,7 +117,7 @@ def main():
     assert xl.count('quest:')==1 and 'parent: cyberpunk2077.quest' in xl and 'probe.questphase' in xl
     report={'actual_game_validation':False,'actual_native_creation_proven':False,
       'archived_phase_nodes':len(contract['nodes']),'archived_phase_edges':len(contract['edges']),
-      'phase_ack_alone_is_not_marker_proof':True,'absolute_fixed_position':contract['position'],
+      'phase_ack_alone_is_not_marker_proof':True,'reference_fixed_position':contract['position'],'reference_world_node':contract['node_reference'],'source_commit':'a256760bafb625676d13b02ccf49c52b60f41d40','mit_notice_included':True,'visual_marker_cannot_confirm_native_journal_pin':True,'legacy_saved_test_cleanup':True,
       'manual_waypoint_never_written':True,'objective_hash_position_unique_pin_and_phase_stage_required':True,
       'phase_controls_own_journal_and_mappin_states':True,'private_fact_namespace':contract['fact_prefix'],
       'normal_dispatch_unchanged':True,'no_dynamic_entity_spawning':True,
@@ -119,7 +125,7 @@ def main():
       'phase_is_rearmable_without_restart':True,'save_restore_forgets_old_handles':True,
       'ui_controls':sorted(PROBE_BUTTONS),
       'assets_roundtrip_and_extraction':manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']}
-    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and three CET routes; actual game execution still requires testing')
+    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and four CET routes plus ownership-scoped MIT visual control; actual game execution still requires testing')
     return report
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

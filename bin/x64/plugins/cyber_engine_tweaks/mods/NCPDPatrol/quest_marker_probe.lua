@@ -1,18 +1,18 @@
 -- The archived phase owns the marker. This controller spawns no entities.
 local M={}
-local phase,label='idle','Static quest-phase marker test ready (off duty only)'
+local phase,label='idle','Andrea reference marker test ready (off duty only)'
 local revision=-1
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get('NCPDPatrolQuestMarkerProbeSystem')
-    if not system or system:Version()~=4 then error('Install the complete r4c quest-phase marker package and restart') end
+    if not system or system:Version()~=5 then error('Install the complete r4d quest-phase marker package and restart') end
     return system
 end
 local function report(text,status) label=text;if status then status('Quest marker test | '..text) end end
 function M.state() return label end
-function M.reset() phase,label='idle','Static quest-phase marker test ready (off duty only)';revision=-1 end
+function M.reset() phase,label='idle','Andrea reference marker test ready (off duty only)';revision=-1 end
 function M.diagnostics()
     local ok,text=pcall(function() return native():GetDiagnostics() end)
-    return 'phase='..phase..' | archived phase / fixed position | '..(ok and text or tostring(text))
+    return 'phase='..phase..' | Andrea reference / fixed Coyote position | '..(ok and text or tostring(text))
 end
 function M.finish(status,reason)
     local ok,err=pcall(function()
@@ -24,18 +24,20 @@ function M.finish(status,reason)
     if status then report(ok and (reason or 'Marker phase closing; waiting for confirmed cleanup') or tostring(err),status) end
     return ok and phase=='idle'
 end
-function M.start(status)
+local function start(status,visual)
     if phase~='idle' then report('The current test or its cleanup is still active',status);return false end
     local ok,err=pcall(function()
         local backend=native()
-        if not backend:IsReady() then error('Archived marker phase not ready. Install the complete archive/.xl and restart. '..backend:GetDiagnostics()) end
-        if not backend:Begin() then error(backend:GetDiagnostics()) end
+        if not visual and not backend:IsReady() then error('Archived marker phase not ready. Install the complete archive/.xl and restart. '..backend:GetDiagnostics()) end
+        if not (visual and backend:BeginVisual() or (not visual and backend:Begin())) then error(backend:GetDiagnostics()) end
         phase='active';revision=-1
-        report('Archived marker phase requested at the fixed test position. Inspect the world map after five seconds.',status)
+        report(visual and 'Visual control at El Coyote Cojo. Journal/GPS not verified.' or 'Reference quest requested at El Coyote Cojo. Inspect the map after five seconds.',status)
     end)
     if not ok then report(tostring(err),status);return false end
     return true
 end
+function M.start(status) return start(status,false) end
+function M.startVisual(status) return start(status,true) end
 function M.update(delta,onDuty,status)
     if not Game.GetPlayer() then return end
     local ok,err=pcall(function()
