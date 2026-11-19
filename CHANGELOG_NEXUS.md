@@ -1,6 +1,6 @@
 # Changes since Nexus version 0.8.1
 
-Current development package: **0.17b**. Baseline: the published
+Current development package: **0.17c**. Baseline: the published
 [NCPD Patrol Officer 0.8.1 page](https://www.nexusmods.com/cyberpunk2077/mods/38800?tab=description).
 The career portal, original equipment milestones and first patrol trunk menu
 were already included in that release.
@@ -28,6 +28,11 @@ were already included in that release.
   exit. Routes prefer nearby terminals, include drop-point alternatives and
   expand their search when the local pool is sparse. Distant pickups receive
   additional response time.
+- **VIP waypoint recovery:** checks the registered pickup/delivery marker,
+  restores missing/inactive/displaced pins and removes only its own cached ID.
+  Recovery preserves the running quest. CET includes detailed marker diagnostics
+  and an explicit Rebuild VIP waypoint control. Renderer/GPS limits still need
+  in-game validation.
 - **VIP ambushes:** transports can attract one to three attacker cars, with two
   gang members per car. Cars use recently driven road positions and checks for
   ground support, barriers, camera visibility and spacing. Each car has separate

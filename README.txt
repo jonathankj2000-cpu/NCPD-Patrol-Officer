@@ -1,4 +1,22 @@
-NCPD PATROL v0.17b - AUTOMATIC DISPATCH AFTER VIP DELIVERY
+NCPD PATROL v0.17c - VIP WAYPOINT RECOVERY
+
+V0.17C FIX
+VIP checks its current waypoint ID against the game marker registry every
+gameplay second. Missing pins are re-registered after a two-second grace;
+inactive/displaced pins are activated/repositioned. Failed recovery retries
+at most every five seconds. Healthy markers stay in place. Journal/token,
+witness and rewards are not restarted. Delivery stays hidden until boarding.
+
+VIP changes/cancellation/completion remove only its own current marker ID.
+Load/reset forgets old-world IDs. Log VIP diagnostics includes marker status,
+ID, coordinates and repair count. Rebuild VIP waypoint replaces the current
+pickup/delivery marker explicitly if it is registered but visually missing.
+
+Install the COMPLETE package and restart; CET announces v0.17c. Native scripts,
+assets and v0.17b ambush cleanup are unchanged. Thirteen portable suites cover
+marker disappearance, delayed registration, inactive/wrong-position pins, API
+failure and bounded retries, stage transitions, foreign markers and load reset.
+Registry tests do not emulate game rendering. The known GPS-line limit remains.
 
 V0.17B FIX
 Completed VIP missions release dispatch while neutralized ambush bodies clean

@@ -1,5 +1,31 @@
 # NCPD Patrol
 
+## v0.17c: VIP waypoint recovery
+
+[Download the complete v0.17c ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17c_VIP_Waypoint_Recovery_FIX.zip)
+
+VIP retains its current waypoint ID and checks the game's marker registry once
+per gameplay second. Missing pickup/delivery markers are re-registered after a
+two-second grace period; inactive or displaced markers receive activation or
+position updates. Failed recovery retries at most once every five seconds
+without restarting the journal or spawning another witness. Healthy markers
+stay in place. Delivery stays hidden until actual boarding.
+
+VIP stage changes, cancellation and completion remove only its current cached
+marker ID. Load/reset forgets old-world IDs without unregistering them.
+**Log VIP diagnostics** includes marker status, ID, position and recovery count.
+**Rebuild VIP waypoint** explicitly replaces the active pickup/delivery marker
+without restarting the assignment, including when registry inspection reports
+a valid pin but the renderer does not show it.
+
+Install the **complete package** and restart; CET announces **v0.17c**. Native
+scripts, assets, payouts and v0.17b independent ambush cleanup remain the same.
+Thirteen regression suites cover removed, delayed, inactive and displaced pins,
+temporary API failure/retry limits, both stages, scoped cancellation and world
+reset. Registry tests do not emulate rendering; a game test is still required.
+The known GPS-line limit remains. The earlier diagnostic confirmed a live
+stage-1 VIP, but did not establish what originally removed or hid its marker.
+
 ## v0.17b: automatic dispatch after VIP delivery
 
 [Download the complete v0.17b ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17b_VIP_Dispatch_Standby_FIX.zip)

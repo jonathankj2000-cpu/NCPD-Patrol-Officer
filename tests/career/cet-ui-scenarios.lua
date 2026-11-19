@@ -8,12 +8,14 @@ local function no() return false end
 local function zero() return 0 end
 local vipRequests,ambushRequests,ambushPreferenceClicks=0,0,0
 local mixedRequests,scannerRequests=0,0
+local waypointRefreshes=0
 local backupReleases=0
 package.loaded.partner={state=display,activeProfile=display,vehicleState=display,aidState=display,spawn=function() spawned=spawned+1 end}
 package.loaded.dispatch={isBusy=no,isAutomatic=no,isSoundEnabled=no,isVoiceEnabled=no,isActive=no,
  cyberpsychoState=display,cyberpsychoDiagnostics=display,
  cyberpsychoVariantState=display,
  vipState=display,vipDiagnostics=display,vipAmbushState=display,
+ refreshVIPWaypoint=function() waypointRefreshes=waypointRefreshes+1 end,
  vipAmbushCars=display,cycleVIPAmbushCars=function() ambushPreferenceClicks=ambushPreferenceClicks+1 end,
  mixDescription=display,rewardDiagnostics=display,schedulerStatus=display,schedulerDiagnostics=display,
  requestMixed=function() mixedRequests=mixedRequests+1 end,request=function() scannerRequests=scannerRequests+1 end,
@@ -38,6 +40,7 @@ click('TEST: Request VIP transport');click('TEST: Trigger VIP ambush');click('Lo
 assert(vipRequests==1 and ambushRequests==1)
 click('Request dispatch now');click('TEST: Request scanner dispatch');click('Log incident reward diagnostics')
 click('Log automatic dispatch diagnostics')
+click('Rebuild VIP waypoint');assert(waypointRefreshes==1)
 assert(mixedRequests==1 and scannerRequests==1)
 click('Ambush cars: fixture (change)');assert(ambushPreferenceClicks==1)
 click('10-4: Release backup');assert(backupReleases==1)

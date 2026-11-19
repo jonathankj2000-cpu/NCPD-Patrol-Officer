@@ -1,5 +1,12 @@
 # VIP transport and tyre regression checks
 
+`waypoint-scenarios.lua` removes an accepted pickup marker while the real VIP
+journal remains active, then exercises recovery, delivery-stage switching,
+inactive/wrong-position pins, delayed registry publication, API failure with
+five-second retry limits, foreign markers, menu pauses and loaded-world reset.
+Manual rebuild preserves the journal/token. Production Lua performs the checks;
+mappin registration, visibility and game rendering remain engine boundaries.
+
 v0.17a loads the real incident reward ledger alongside the native escort and
 cyberpsycho systems. Actual living VIP exit credits EUR$2000 and one generated
 career incident; cancel/failure paths retain their previous physical cleanup.

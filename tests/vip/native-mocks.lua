@@ -37,6 +37,52 @@ v.player=player
 function player:GetEntityID() return {hash=5} end
 function player:GetAttitudeAgent() return {player=true,GetAttitudeGroup=function() return 'player' end} end
 local patrol=f.patrol
+-- Real mappin identity/lifetime boundary. A nonzero registration ID does not
+-- guarantee the pin remains in the registry on subsequent game updates.
+local originalPlace=patrol.PlaceDispatchWaypoint
+function patrol:PlaceDispatchWaypoint(point)
+ local stored=Vector4.new(point.x,point.y,point.z,1)
+ local result=originalPlace(self,stored)
+ if result.value==0 then return result end
+ v.nextMarker=(v.nextMarker or 7000)+1
+ local id={value=v.nextMarker}
+ local pin={id=id,point=stored,active=true}
+ function pin:GetNewMappinID() return self.id end
+ function pin:GetWorldPosition() return self.point end
+ function pin:IsActive() return self.active end
+ function pin:GetVariant() return gamedataMappinVariant.CustomPositionVariant end
+ function pin:GetPhase() return gamedataMappinPhase.DefaultPhase end
+ v.pins[id.value]=pin;v.registrations=v.registrations+1
+ return id
+end
+function patrol:ClearDispatchWaypoints() f.markers={};v.pins={} end
+local oldMappins=Game.GetMappinSystem
+Game.GetMappinSystem=function()
+ local original=oldMappins()
+ if not original then return nil end
+ return {
+  GetAllMappins=function()
+   local pins={}
+   for _,pin in ipairs(original:GetAllMappins()) do pins[#pins+1]=pin end
+   for _,pin in pairs(v.pins) do if not pin.hidden then pins[#pins+1]=pin end end
+   return pins
+  end,
+  UnregisterMappin=function(_,id)
+   v.unregistrations[#v.unregistrations+1]=id.value
+   local removed=v.pins[id.value];v.pins[id.value]=nil
+   if removed then
+    local remaining={}
+    for _,point in ipairs(f.markers) do if point~=removed.point then remaining[#remaining+1]=point end end
+    f.markers=remaining
+   end
+  end,
+  SetMappinActive=function(_,id,active) assert(v.pins[id.value]);v.pins[id.value].active=active end,
+  SetMappinPosition=function(_,id,point)
+   assert(v.pins[id.value]);local previous=v.pins[id.value].point;v.pins[id.value].point=point
+   for index,stored in ipairs(f.markers) do if stored==previous then f.markers[index]=point end end
+  end
+ }
+end
 function patrol:IsOwnedPoliceVehicle(car) return car.owned==true end
 function GetMountedVehicle(object) if object then return object.mounted end end
 Game.GetMountedVehicle=GetMountedVehicle
@@ -156,6 +202,7 @@ VehicleComponent={HasSlot=function(car,seat) return car.slots[seat]==true end,
   return car.occupied[seat]==true
  end}
 function v:Reset()
+ self.pins={};self.nextMarker=7000;self.registrations=0;self.unregistrations={}
  f:Reset();self.player.mounted=nil;self.player.seat=nil
  self.ambushCars={};self.car=self:Car();self.ambushCar=nil;self.autoCrewMount=true;self.autoCrewUnmount=false
  self.cameraPresent=true;self.cameraTransformOK=true;self.cameraYaw=0;self.cameraFOV=75;self.cameraAspect=16/9;self.cameraPosition=nil
