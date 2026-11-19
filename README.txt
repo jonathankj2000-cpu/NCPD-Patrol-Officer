@@ -1,4 +1,7 @@
-NCPD PATROL v0.17d QUEST MARKER PROBE r4 - COMPLETE BRANCH TEST
+NCPD PATROL v0.17d QUEST MARKER PROBE r4a - COMPLETE BRANCH TEST
+
+r4a startup fix: the quest node ID now uses an explicit Uint16 conversion.
+This corrects the Int32/Uint16 compilation failure reported by the game.
 
 Optional test: CET > Testing > Quest marker experiment. Remain OFF DUTY.
 Set a manual waypoint first, then Start static quest marker. Wait five seconds.

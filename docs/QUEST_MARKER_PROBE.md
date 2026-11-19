@@ -1,3 +1,8 @@
+r4a corrects the r4 startup compilation error: questNodeDefinition.id now
+receives Cast<Uint16>(0), matching its Codeware field type. Compatibility lint
+rejects the original untyped Int32 assignment. The newer offline compiler had
+accepted it; the supplied game log is the evidence for this correction.
+
 This r4 branch package is an opt-in native quest-marker experiment. It does not
 replace normal scanner/VIP/cyberpsycho navigation. Those destinations are fixed
 when assigned; live tracking of moving actors is outside this experiment.

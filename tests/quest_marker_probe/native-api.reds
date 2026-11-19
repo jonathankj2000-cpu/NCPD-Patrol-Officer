@@ -2,6 +2,8 @@
 // scripts/Quest/QuestsSystem.reds, Base/Imports/quest*NodeDefinition.reds,
 // Base/Addons/gameJournalPath.reds; game orphans.swift and journalManager.swift.
 // These declarations are never installed and do not prove native execution.
+// Game orphans.swift:26718, explicit Int32 -> Uint16 conversion.
+public native func Cast(a: Int32) -> Uint16;
 @addMethod(GameInstance)
 public static native func GetQuestsSystem(game: GameInstance) -> ref<QuestsSystem>;
 @addMethod(JournalManager)

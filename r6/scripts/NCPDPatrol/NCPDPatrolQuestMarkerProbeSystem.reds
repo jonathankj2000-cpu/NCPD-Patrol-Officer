@@ -71,7 +71,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         let path: ref<gameJournalPath> = new gameJournalPath();
         let node: ref<questMappinManagerNodeDefinition> = new questMappinManagerNodeDefinition();
         path.realPath = this.PinPath(); path.className = n"gameJournalQuestMapPin"; path.fileEntryIndex = -1;
-        node.id = 0; node.path = path; node.disablePreviousMappins = false;
+        node.id = Cast<Uint16>(0); node.path = path; node.disablePreviousMappins = false;
         this.m_pathHash = path.GetHash();
         return node;
     }

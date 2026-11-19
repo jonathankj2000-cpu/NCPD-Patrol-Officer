@@ -1,4 +1,4 @@
-"""Verify the isolated marker experiment and package the complete r4 build."""
+"""Verify the marker experiment and package the complete r4a compile fix."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4_TEST.zip'
-REPORT='NCPD_Patrol_Quest_Marker_Probe_r4_verification.json'
+NAME='NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4a_TEST.zip'
+REPORT='NCPD_Patrol_Quest_Marker_Probe_r4a_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -51,7 +51,7 @@ def main():
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17d-quest-marker-probe-r4','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17d-quest-marker-probe-r4a','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
@@ -60,6 +60,7 @@ def main():
         'entrypoint_and_ui_changes':'isolated probe hooks, four Testing controls and build labels',
         'currency_and_progression_unchanged':True,'browser_extension_still_optional':True,
         'actual_game_validation':False,'native_node_activation_requires_in_game_test':True,
+        'observed_r4_startup_error_fixed':'Explicit Cast<Uint16>(0) for questNodeDefinition.id; regression lint rejects the original Int32 assignment',
         'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
     (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k not in ['files','vip_comparison','dispatch_comparison','ui_comparison']},indent=2))
