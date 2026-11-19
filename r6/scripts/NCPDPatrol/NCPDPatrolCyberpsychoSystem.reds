@@ -1,10 +1,11 @@
 // Test incident: exact mod-created target, independent of scanner POI phases.
-// No scanner/career/reward ledger is written by this first encounter prototype.
+// Generated incident rewards/progress use a separate persistent ledger.
 public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     // 0 idle, 1 responding/preparing, 2 target active, 3 succeeded,
     // 4 failed, 5 cancelled, 6 journal error.
     private let m_stage: Int32;
     private let m_token: Int32;
+    private let m_rewardId: Int32;
     private let m_target: wref<NPCPuppet>;
     private let m_record: TweakDBID;
     private let m_origin: Vector4;
@@ -22,11 +23,12 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolCyberpsychoSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolCyberpsychoSystem") as NCPDPatrolCyberpsychoSystem;
     }
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {
         this.m_stage = 0; this.m_token += 1; this.m_target = null;
+        this.m_rewardId = 0;
         this.m_record = t"Character.NCPDPatrol_Cyberpsycho";
         this.m_stable = 0.0; this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 0.0; this.m_preparing = 0.0; this.m_arrived = false;
@@ -148,11 +150,13 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     }
     public func BeginVariant(destination: Vector4, record: TweakDBID) -> Int32 {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         let distance: Float;
         if !this.Eligible() || this.Running() || !this.IsKnownVariant(record) { return 0; };
         distance = Vector4.Distance(player.GetWorldPosition(), destination);
         if distance != distance || distance < 500.0 || distance > 2000.0 { this.m_reason = "Dispatch destination must be 500-2000 m away"; return 0; };
         if !this.IsReady() { this.m_reason = "Install the complete Cyberpsycho archive/.xl and restart"; return 0; };
+        if !IsDefined(rewards) { this.m_reason = "Install the complete v0.17a incident module and restart"; return 0; };
         this.ReconcileLoadedJournal();
         if this.m_restorePending { return 0; };
         this.m_previousTracked = null;
@@ -164,6 +168,8 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
             || !this.Write(this.ResponsePath(), "gameJournalQuestObjective", gameJournalEntryState.Active) {
             this.HideJournal(); this.m_previousTracked = null; this.m_reason = "Cyberpsycho journal activation rejected"; return 0;
         };
+        this.m_rewardId = rewards.Reserve(n"cyberpsycho");
+        if this.m_rewardId == 0 { this.HideJournal(); this.m_reason = "Cyberpsycho reward reservation rejected"; return 0; };
         this.m_token += 1; this.m_target = null; this.m_origin = destination; this.m_record = record;
         this.m_stage = 1; this.m_stable = 0.0; this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 180.0; this.m_preparing = 0.0; this.m_arrived = false;
@@ -196,11 +202,19 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
         let state: gameJournalEntryState = gameJournalEntryState.Succeeded;
         let wasOurs: Bool = this.OursTracked();
         let ok: Bool;
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         if result == 4 { state = gameJournalEntryState.Failed; };
         ok = this.Write(this.ActiveObjectivePath(), "gameJournalQuestObjective", state);
         if !this.Write(this.PhasePath(), "gameJournalQuestPhase", state) { ok = false; };
         if !this.Write(this.QuestPath(), "gameJournalQuest", state, true) { ok = false; };
         this.m_stage = result; this.m_remaining = 0.0; this.m_reason = reason;
+        if IsDefined(rewards) {
+            if ok && result == 3 {
+                if !rewards.CompleteCyberpsycho(this.m_rewardId, !this.m_target.IsDead() && !this.m_target.IsDeadNoStatPool()) { ok = false; };
+            };
+            rewards.Cancel(this.m_rewardId, n"cyberpsycho");
+        } else { if result == 3 { ok = false; }; };
+        this.m_rewardId = 0;
         if !ok { this.m_stage = 6; this.m_reason = "Cyberpsycho journal result rejected"; this.HideJournal(); };
         this.RestoreTracking(wasOurs);
     }
@@ -210,8 +224,11 @@ public class NCPDPatrolCyberpsychoSystem extends ScriptableSystem {
     public func Cancel(token: Int32, reason: String) -> Void {
         let wasOurs: Bool;
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         if token != this.m_token || !this.Running() { return; };
         if IsDefined(patrol) && patrol.HasWantedLevel() { this.Finish(4, "Shift terminated due to criminal activity"); return; };
+        if IsDefined(rewards) { rewards.Cancel(this.m_rewardId, n"cyberpsycho"); };
+        this.m_rewardId = 0;
         wasOurs = this.OursTracked(); this.m_stage = 5; this.m_remaining = 0.0; this.m_reason = reason;
         if !this.HideJournal() { this.m_stage = 6; this.m_reason = "Cyberpsycho journal cancellation rejected"; };
         this.RestoreTracking(wasOurs);

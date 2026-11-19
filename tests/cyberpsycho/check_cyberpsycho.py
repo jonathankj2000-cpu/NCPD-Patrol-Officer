@@ -8,10 +8,11 @@ from translate import translate
 from lupa.luajit21 import LuaRuntime
 lua=LuaRuntime(unpack_returned_tuples=True)
 lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
-for file,name in [('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolDispatchJournalSystem.reds','DispatchJournalNative')]:
+for file,name in [('NCPDPatrolIncidentSystem.reds','IncidentNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolDispatchJournalSystem.reds','DispatchJournalNative')]:
  lua.globals()[name]=lua.execute(translate(ROOT/'r6/scripts/NCPDPatrol'/file))
 lua.execute((HERE.parent/'dispatch_journal/native-mocks.lua').read_text())
 lua.execute((HERE/'native-mocks.lua').read_text())
+lua.execute((HERE.parent/'incidents/engine-mocks.lua').read_text())
 lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'scenarios.lua').read_text())
@@ -32,4 +33,4 @@ rows=json.loads((ROOT/'assets/cyberpsycho/variants.json').read_text())['variants
 assert len(rows)==17 and len({row['base'] for row in rows})==17
 assert len([row for row in rows if row['exo']])==2
 assert all(row['source_path'] and len(row['source_blob'])==40 for row in rows)
-print('PASS: 17 verified private cyberpsycho variants; exact selected native identity, all lethal/non-lethal outcomes, random no-repeat/availability, manual CET selection; vehicle/inactive-marker dispatch; immediate repeat after completion with independent bounded aftermath cleanup; distant arrival/deadline/cancel/load and scanner exclusion; no payment/progress writes (native boundaries mocked)')
+print('PASS: 17 private cyberpsycho variants; exact identity and lethal/non-lethal outcomes; separate generated reward/progress ledger; no-repeat selection, mounted requests, immediate repeat with independent aftermath; arrival/deadline/cancel/load and scanner exclusion (native boundaries mocked)')

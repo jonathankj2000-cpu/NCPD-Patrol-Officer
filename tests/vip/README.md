@@ -1,5 +1,12 @@
 # VIP transport and tyre regression checks
 
+v0.17a loads the real incident reward ledger alongside the native escort and
+cyberpsycho systems. Actual living VIP exit credits EUR$2000 and one generated
+career incident; cancel/failure paths retain their previous physical cleanup.
+`tests/incidents/check_incidents.py` adds mixed-selection, payment retry, saved
+ID and career aggregation cases. The release now has 28 native scripts and
+66 install files. The existing 1-3-car convoy cases remain active.
+
 v0.16e exercises a 28-fast-travel/3-drop-point/19-clear marker pool whose only
 usable pickup is beyond 2 km, staged 250-5000 m pickup/500-5000 m trip fallback,
 local mixed-terminal preference, unchanged scanner exclusion and native

@@ -1,4 +1,4 @@
--- Dispatch selects existing scanner activities; rewards remain in redscript.
+-- Weighted scanner/VIP/cyberpsycho dispatch. Native code owns earned rewards.
 local HUD = require("dispatch_hud")
 local Journal = require("dispatch_journal")
 local Cyberpsycho = require("cyberpsycho")
@@ -16,6 +16,52 @@ local soundEnabled = true
 local voiceEnabled = true
 local navigation = "No active dispatch"
 local lastBriefing = nil
+local incidentBaseline,lastRewardRevision=0,-1
+local seenGenerated={}
+local function observeGenerated(recordOnly)
+    for _,name in ipairs({"NCPDPatrolVIPSystem","NCPDPatrolCyberpsychoSystem"}) do
+        pcall(function()
+            local backend=Game.GetScriptableSystemsContainer():Get(name)
+            if not backend or backend:Version()~=4 then return end
+            local stage=backend:GetStage()
+            if stage<3 or stage>6 then return end
+            local key=name..":"..tostring(backend:GetToken())
+            if seenGenerated[key] then return end
+            seenGenerated[key]=true
+            if recordOnly then return end
+            if stage==3 then lastOutcome="COMPLETED | "..tostring(backend:GetReason())
+            elseif stage==5 then lastOutcome="CANCELLED | "..tostring(backend:GetReason())
+            else
+                failedCalls=failedCalls+1
+                lastOutcome=(stage==6 and "JOURNAL ERROR | " or "FAILED | ")..tostring(backend:GetReason())
+            end
+        end)
+    end
+end
+local function incidentSystem()
+    local container=Game.GetScriptableSystemsContainer()
+    return container and container:Get("NCPDPatrolIncidentSystem") or nil
+end
+local function generatedCount()
+    local ok,count=pcall(function()
+        local system=incidentSystem()
+        return system and system:Version()==1 and system:GetCompletedCount() or 0
+    end)
+    return ok and count or 0
+end
+local function updateRewards(delta,status)
+    local ok,err=pcall(function()
+        local system=incidentSystem()
+        if not system or system:Version()~=1 then return end
+        system:Tick(delta)
+        local revision=system:GetRevision()
+        if revision~=lastRewardRevision then
+            lastRewardRevision=revision
+            if status then status("Incident rewards | "..system:GetDiagnostics()) end
+        end
+    end)
+    if not ok and status then status("Incident reward control | "..tostring(err)) end
+end
 
 local function chooseBriefing()
     if lastBriefing == nil then return math.random(0, 5) end
@@ -76,7 +122,12 @@ function M.isAutomatic() return automatic end
 function M.isBusy() return busy end
 function M.setBusy(value) busy = value == true end
 function M.isActive() return active ~= nil or Cyberpsycho.isActive() or VIP.isActive() end
-function M.completed() return completed end
+function M.completed() return completed+math.max(0,generatedCount()-incidentBaseline) end
+function M.mixDescription() return "50% Scanner / 30% VIP / 20% Cyberpsycho" end
+function M.rewardDiagnostics()
+    local ok,text=pcall(function() return incidentSystem():GetDiagnostics() end)
+    return ok and text or "Install the complete v0.17a incident module and restart"
+end
 function M.failedCount() return failedCalls end
 function M.lastOutcome() return lastOutcome end
 function M.journalDiagnostics() return Journal.diagnostics() end
@@ -133,6 +184,8 @@ function M.start(patrol, status)
     navigation = "No active dispatch"
     poll, completed, candidateCount = 0, 0, 0
     failedCalls, lastOutcome = 0, "No dispatch result this shift"
+    incidentBaseline,lastRewardRevision=generatedCount(),-1
+    seenGenerated={};observeGenerated(true)
     failed, dutySeen = false, true
     cleaned = false
     local ok, err = pcall(clear, patrol)
@@ -173,6 +226,8 @@ function M.reset(keepVIPCleanup)
     countdown, poll, completed, candidateCount = 0, 0, 0, 0
     failed, state = false, "OFF DUTY"
     failedCalls, lastOutcome = 0, "No dispatch result this shift"
+    incidentBaseline,lastRewardRevision=generatedCount(),-1
+    seenGenerated={};observeGenerated(true)
     navigation = "No active dispatch"
     hide()
 end
@@ -297,7 +352,7 @@ end
 
 function M.replace(patrol, status)
     if M.isActive() and not M.cancel(patrol, status) then return false end
-    return M.request(patrol, status)
+    return M.requestMixed(patrol, status)
 end
 
 function M.requestCyberpsycho(patrol, status)
@@ -321,10 +376,58 @@ function M.requestVIP(patrol, status)
 end
 function M.requestVIPAmbush(status) return VIP.requestAmbush(status) end
 
+local function generatedAvailable(name)
+    local ok,ready=pcall(function()
+        local system=Game.GetScriptableSystemsContainer():Get(name)
+        local rewards=incidentSystem()
+        local entities=Game.GetDynamicEntitySystem()
+        return system and system:Version()==4 and system:IsReady()
+            and rewards and rewards:Version()==1 and entities and entities:IsReady()
+    end)
+    return ok and ready==true
+end
+
+-- Draw without replacement, preserving original weights among remaining types.
+-- A failed request with owned actors/cleanup blocks every subsequent attempt.
+function M.requestMixed(patrol,status)
+    local player=Game.GetPlayer()
+    if not patrol or not player or not patrol:IsOnDuty() or patrol:HasWantedLevel() then
+        report("An active, non-wanted shift is required",status);return false
+    end
+    if failed or M.isActive() then report("Finish the active call or its cleanup first",status);return false end
+    if patrol:IsDispatchMenuOpen() or player:IsInCombat() then report("Leave menus and combat before requesting a call",status);return false end
+    local choices={{name="Scanner",weight=50},{name="VIP",weight=30},{name="Cyberpsycho",weight=20}}
+    for _=1,3 do
+        local total=0
+        for _,choice in ipairs(choices) do total=total+choice.weight end
+        local roll,index=math.random(1,total),1
+        for i,choice in ipairs(choices) do
+            roll=roll-choice.weight
+            if roll<=0 then index=i;break end
+        end
+        local choice=table.remove(choices,index)
+        local accepted=false
+        if choice.name=="Scanner" then accepted=M.request(patrol,status)
+        elseif choice.name=="VIP" and generatedAvailable("NCPDPatrolVIPSystem") then accepted=M.requestVIP(patrol,status)
+        elseif choice.name=="Cyberpsycho" and generatedAvailable("NCPDPatrolCyberpsychoSystem") then accepted=M.requestCyberpsycho(patrol,status) end
+        if accepted then
+            if status then status("Dispatch mix | Assigned "..choice.name.." | "..M.mixDescription()) end
+            return true
+        end
+        if M.isActive() or failed then return false end
+        if status then status("Dispatch mix | "..choice.name.." unavailable; trying another type") end
+    end
+    countdown=30
+    report("No suitable scanner, VIP or cyberpsycho call; retrying in 30 seconds",status)
+    return false
+end
+
 function M.update(delta, onDuty, status, getPatrol)
+    updateRewards(delta,status)
     Journal.update(delta, status)
     local cyberBusy = Cyberpsycho.update(delta, onDuty, getPatrol(), status, HUD)
     local vipBusy = VIP.update(delta, onDuty, getPatrol(), status, HUD)
+    observeGenerated(false)
     poll = poll + delta
     if poll < 1 then return end
     local elapsed = math.min(poll, 2)
@@ -389,7 +492,7 @@ function M.update(delta, onDuty, status, getPatrol)
             drawObjective(inMenu)
         elseif automatic and not busy and not inMenu and not Game.GetPlayer():IsInCombat() then
             countdown = countdown - elapsed
-            if countdown <= 0 then M.request(patrol, status) end
+            if countdown <= 0 then M.requestMixed(patrol, status) end
         end
     end)
     if not ok then

@@ -33,6 +33,7 @@ assert(n:GetStage()==2,'unmount request alone completed quest')
 actor.mounted=nil;actor.pos.x=1500;v:Advance(0.25);assert(n:GetStage()==2)
 actor.pos.x=1800;v:Advance(0.25);assert(n:GetStage()==3 and v:State()==3)
 local writes=#JournalFixture.writes;v:Advance(2);assert(#JournalFixture.writes==writes and DispatchRewardFixture.wallet==0)
+assert(IncidentRewardFixture.wallet==2000 and IncidentNative:GetCompletedVIP()==1)
 -- Fresh requests do not inherit a previous target/drop-off or accept stale tokens.
 f.playerPosition.x=0;local fresh=begin();assert(fresh~=token and n.m_arrived==false and n.m_dropStarted==false)
 n:Cancel(token,'stale');assert(n:GetStage()==1);n:Cancel(fresh,'cancel');assert(v:State()==1)

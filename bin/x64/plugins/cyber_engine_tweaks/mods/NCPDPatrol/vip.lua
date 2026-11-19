@@ -12,7 +12,7 @@ local keepResolvedScene=false
 local locationInfo="Not selected"
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
-    if not system or system:Version()~=3 then error("Install the complete v0.16e VIP package and restart") end
+    if not system or system:Version()~=4 then error("Install the complete v0.17a VIP package and restart") end
     return system
 end
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end

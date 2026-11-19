@@ -92,6 +92,7 @@ target=f.actors[1001];assert(math.abs(target.pos.x-800)<=50 and target.pos.x>=50
 assert(target.attitudes.group=='hostile' and target.attitudes.hostile==2 and #target.commands==1)
 target.unconscious=true;update(0.75);assert(c:GetStage()==3 and not Cyber.isActive() and Cyber.hasCleanup())
 assert(Cyber.state():find('COMPLETED',1,true) and #f.deletes==0 and DispatchRewardFixture.wallet==0)
+assert(IncidentRewardFixture.wallet==3500 and IncidentNative:GetCompletedCyberpsychos()==1)
 f.playerPosition.x=951;update(0.25);assert(not Cyber.isActive() and #f.deletes==1 and f.managed[990]=='ambient')
 fresh();request();update(180);assert(not Cyber.isActive() and #f.creates==0 and f:State()==4)
 fresh();request();assert(Cyber.cancel(f.patrol,status) and #f.deletes==0 and f:State()==1)

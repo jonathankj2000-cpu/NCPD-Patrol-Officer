@@ -1,13 +1,13 @@
-name: NCPD Patrol adaptive VIP, convoy and arrest notices
+name: NCPD Patrol mixed dispatch and incident rewards
 on:
   push:
-    branches: [prototype/ncpd-vip-convoy-v016e]
+    branches: [prototype/ncpd-mixed-dispatch-v017a]
     paths-ignore: ['releases/**']
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: ncpd-vip-convoy-v016e
+  group: ncpd-mixed-dispatch-v017a
   cancel-in-progress: true
 jobs:
   verify-and-package:
@@ -21,14 +21,14 @@ jobs:
         run: |
           python3 -m venv .ci-python
           .ci-python/bin/pip install 'lupa==2.6'
-      - name: Verify adaptive VIP routes, convoy ownership, arrest notices and existing gameplay; build full ZIP
+      - name: Verify weighted dispatch, durable rewards, career counts and existing gameplay; build full ZIP
         run: |
           .ci-python/bin/python tools/build_patrol_fixes_release.py
       - name: Commit verified prototype package
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add releases/NCPD_Patrol_v0.16e_VIP_Convoy_Arrest_Notices_TEST.zip releases/NCPD_Patrol_v0.16e_verification.json
+          git add releases/NCPD_Patrol_v0.17a_Mixed_Dispatch_Rewards_TEST.zip releases/NCPD_Patrol_v0.17a_verification.json
           git diff --cached --quiet && exit 0
-          git commit -m "Build verified v0.16e VIP convoy and arrest notices test package"
-          git push origin HEAD:prototype/ncpd-vip-convoy-v016e
+          git commit -m "Build verified v0.17a mixed dispatch and incident rewards package"
+          git push origin HEAD:prototype/ncpd-mixed-dispatch-v017a

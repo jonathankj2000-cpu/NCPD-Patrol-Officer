@@ -59,3 +59,11 @@ This removes the Bloody Ritual no-reaction intro and avoids treating a hostile
 private copy as a police ally by its original affiliation. Engine-only exo/boss
 initialization, navigation clearance, appearance and combat skills still need a
 live test. All existing journal/target ownership/cleanup checks remain in place.
+# v0.17a generated dispatch rewards
+
+This suite now loads the authored generated incident ledger and verifies a
+confirmed non-lethal target earns EUR$3500 and one cyberpsycho completion.
+Existing variant, arrival, cleanup and failure cases still execute the real
+controller. Dedicated `tests/incidents/check_incidents.py` cases cover lethal
+EUR$3000 outcomes, non-lethal classification timing, stale/cancel/load guards,
+failed payments, delayed receipts and 50/30/20 dispatch fallback.

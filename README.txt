@@ -1,4 +1,32 @@
-NCPD PATROL v0.16e - VIP ROUTES, CONVOYS AND ARREST NOTICES
+NCPD PATROL v0.17a - MIXED DISPATCH, REWARDS AND CAREER INCIDENTS
+
+V0.17A TEST
+Automatic calls, Request dispatch now and the trunk's Request new dispatch
+now draw 50% scanner / 30% VIP / 20% cyberpsycho. Unavailable types are removed
+from that draw and another type is tried, once each at most. Pending actor
+cleanup blocks a new call. All-unavailable searches retry after 30 seconds.
+Busy, combat and menu pauses remain. Individual CET test buttons are retained.
+Actual proportions depend on which types have suitable locations/resources.
+
+VIP delivery pays a flat EUR$2000. Cyberpsycho completion pays EUR$3000,
+plus EUR$500 for a confirmed non-lethal neutralization. Both contribute one
+NCPD Career incident. Existing scanner EUR$1000 / active-dispatch EUR$500
+supplements and independent EUR$250 arrest payouts are retained. A scanner
+dispatch still counts only once toward promotions.
+
+Generated completions and payments are saved separately from scanners/arrests.
+Unique persistent IDs and paid records prevent duplicate rewards. Failed
+transactions retry earned money across loading/shift changes. Payment receipts
+follow the completion notice. Existing scanner progress and milestone claim
+records survive. Old prototype generated wins cannot be credited retroactively.
+Active generated missions still close on reload; earned records remain saved.
+
+Install the COMPLETE package and restart, including NCPDPatrolIncidentSystem.reds.
+VIP/cyberpsycho native interfaces: 4. Incident interface: 1. No new dependency.
+Thirteen portable suites and offline API checks cover 18 Lua modules, 28 native
+scripts and 66 install files. Actual game/cache compilation, traffic and
+rendered behavior still require an in-game test. See CHANGELOG_NEXUS.md in the
+GitHub repository for changes since the published Nexus 0.8.1 version.
 
 V0.16E TEST
 VIP searches retain preferred 500-2000 m pickups and 800-2500 m trips. If no
@@ -91,7 +119,7 @@ Full installation package. Fixes active backup holding at the request location,
 adds verified-equipment fallback for partner/backup readiness, and replaces the
 horizontal trunk choices with a two-row numeric game popup. Includes all 17
 cyberpsycho variants, existing VIP ambush/aftermath, tyre repair, career, partner
-revive, backup and arrests. Generated incidents still grant no money/career credit.
+revive, backup and arrests. Generated payouts and career credit are included.
 
 V0.15D HOTFIX
 Fixes the two compilation errors reported in the v0.15c game log:
@@ -159,7 +187,7 @@ needed or bundled. No extra framework dependency is added.
 
 INSTALL
 Exit the game. Extract the ENTIRE ZIP into the Cyberpunk 2077 directory that
-contains bin, r6 and archive. Replace files and restart; CET announces v0.16e.
+contains bin, r6 and archive. Replace files and restart; CET announces v0.17a.
 Include NCPDPatrol_VIP.yaml and BOTH VIP archive/.archive.xl files.
 Keep the Cyberpsycho archive/.xl and all other bundled files.
 Include r6/tweaks/NCPDPatrol_CareerWeapons.yaml. It defines reward-only

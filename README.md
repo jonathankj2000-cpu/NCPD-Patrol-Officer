@@ -1,5 +1,38 @@
 # NCPD Patrol
 
+## v0.17a: mixed dispatch, rewards and career incidents
+
+[Download the complete v0.17a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17a_Mixed_Dispatch_Rewards_TEST.zip)
+
+Automatic calls, **Request dispatch now** and the trunk's **Request new dispatch**
+draw **50% scanner / 30% VIP / 20% cyberpsycho**. If a type is unavailable, its
+weight is removed and another type is tried, at most once each. A pending actor
+cleanup keeps the assignment slot. When nothing is available, retry after 30
+seconds. Existing Busy/menu/combat pauses and individual CET test requests remain.
+These are nominal weights; availability changes observed proportions.
+
+Successful VIP delivery pays a flat **€$2,000**. Cyberpsycho completion pays
+**€$3,000**, plus **€$500** for a confirmed non-lethal outcome. Each records **one
+NCPD Career incident**. Scanner bonuses remain €$1,000 plus the separate €$500
+attended-dispatch supplement; arrests remain an independent €$250. A scanner
+dispatch contributes one career incident, not two.
+
+Generated outcomes use their own saved completion/payment records and persistent
+unique IDs. Failed transactions retry earned payments across loads and shift
+changes; paid receipts appear after the completion notice. Existing scanner
+history and milestone item/vehicle claim IDs are retained. Prototype generated
+wins before this version cannot be backfilled because they stored no history.
+In-flight generated missions still close on loading a save.
+
+Install the **entire ZIP** and restart, including
+`r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds`. Cyberpsycho/VIP native
+interfaces are now **4**, incident rewards **1**. No new external dependency.
+Thirteen portable suites cover the full mix, fallback, outcomes, payment/receipt
+retries and existing gameplay; local source/API compilation covers all 28
+scripts with and without optional BEF. Actual game/cache validation is still
+required. The [Nexus-ready changelog since 0.8.1](CHANGELOG_NEXUS.md) includes
+the intervening features as well as this update.
+
 ## v0.16e: broader VIP routes, 1–3-car ambushes and arrest notices
 
 [Download the complete v0.16e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.16e_VIP_Convoy_Arrest_Notices_TEST.zip)
@@ -193,7 +226,7 @@ Partner access unlocks automatically at 0/20/50/100 incidents. The selected prof
 
 ### Install and test
 
-1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.16e**. Include the bundled career, Cyberpsycho and VIP tweak/archive files.
+1. Exit the game. Extract the **entire ZIP** into the game directory containing `bin`, `r6` and `archive`, replacing files. Restart; CET announces **v0.17a**. Include the incident reward script and bundled career, Cyberpsycho and VIP tweak/archive files.
 2. For the computer page, use the main [Browser Extension Framework 0.9.7](https://www.nexusmods.com/cyberpunk2077/mods/10038) package. At V's apartment computer, open **Net > NCPD Career**. Check all three sidebar sections, text readability, hover feedback and clicks on your screen. Use **Refresh record** after changing progress/test settings. The address remains `NETdir://ncpd.career`.
 3. In CET, under **NCPD CAREER**, press **TEST: Unlock all milestones (session)**. This makes all seven reward bundles and all four partners available. It leaves your real incident count and rank unchanged and grants nothing automatically. Use a test save when collecting rewards: issued equipment/vehicles are saved normally.
 4. Claim rewards on the computer or with **Claim next milestone reward** in CET. Check inventory and the vehicle summon menu. Repeated claims and save/load should retain receipts without issuing duplicates.

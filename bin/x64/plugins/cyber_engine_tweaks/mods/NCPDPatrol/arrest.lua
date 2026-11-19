@@ -220,7 +220,7 @@ end
 local function prepare(system, unit, helper)
     if not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
-        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.16e package") end
+        if not unit.component then error("Arrest helper has no workspot component; install the complete v0.17a package") end
         local name = system:AnimationName(unit.component.name)
         if name ~= "NCPDPatrolArrestLoop" then error("Outdated arrest helper; replace the bundled archive and restart") end
         print("[NCPD Patrol] Arrest setup | helper attached=true | component=" .. name)
@@ -453,7 +453,7 @@ function M.update(delta, onDuty, paused)
     if delta <= 0 or delta > 0.5 then return end
     local ok, err = pcall(function()
         local system = native()
-        if not system or system:Version() ~= 6 then error("Install all v0.16e arrest scripts and restart the game") end
+        if not system or system:Version() ~= 6 then error("Install all v0.17a arrest scripts and restart the game") end
         system:Tick(delta, paused)
         -- Helpers whose cleanup failed retain their IDs for a later retry,
         -- including while off duty. No deletion is ever aimed at the suspect.

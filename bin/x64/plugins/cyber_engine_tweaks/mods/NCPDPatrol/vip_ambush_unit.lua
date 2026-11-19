@@ -177,7 +177,7 @@ local function roadPoint(vehicle)
             local ground=supported(point)
             local ok,hidden=pcall(function()
                 local native=Game.GetScriptableSystemsContainer():Get("NCPDPatrolVIPSystem")
-                return native and native:Version()==3 and native:CanSpawnAmbushAt(point.position)
+                return native and native:Version()==4 and native:CanSpawnAmbushAt(point.position)
             end)
             if ground and ok and hidden==true and (not options.canSpawnAt or options.canSpawnAt(ground)) then
                 return {position=point.position,ground=ground,orientation=point.orientation,forward=point.forward,time=point.time}

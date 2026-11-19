@@ -11,7 +11,7 @@ local retired = {}
 
 local function native()
     local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolCyberpsychoSystem")
-    if not system or system:Version() ~= 3 then error("Install the complete v0.16c package and restart") end
+    if not system or system:Version() ~= 4 then error("Install the complete v0.17a package and restart") end
     return system
 end
 local function distance(a,b)

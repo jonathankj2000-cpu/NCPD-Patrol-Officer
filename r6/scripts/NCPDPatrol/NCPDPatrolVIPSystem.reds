@@ -1,10 +1,11 @@
 // Two-stage escort: progress requires actual mounting and a live VIP drop-off.
-// No scanner/career/reward ledger is written by this first encounter prototype.
+// Completion awards a flat EUR$2000 and one generated career incident.
 public class NCPDPatrolVIPSystem extends ScriptableSystem {
     // 0 idle, 1 pickup, 2 transport, 3 succeeded,
     // 4 failed, 5 cancelled, 6 journal error.
     private let m_stage: Int32;
     private let m_token: Int32;
+    private let m_rewardId: Int32;
     private let m_target: wref<NPCPuppet>;
     private let m_origin: Vector4;
     private let m_destination: Vector4;
@@ -22,7 +23,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     public static func Get(game: GameInstance) -> ref<NCPDPatrolVIPSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolVIPSystem") as NCPDPatrolVIPSystem;
     }
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     // A conservative sphere encloses the Hella and the temporary crew spawn
     // positions. Reject any overlap with the active camera's padded frustum.
     // Native script owns the camera transform's output parameter.
@@ -74,6 +75,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {
         this.m_stage = 0; this.m_token += 1; this.m_target = null;
+        this.m_rewardId = 0;
         this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 0.0; this.m_arrived = false;
         this.m_reason = "VIP transport ready";
@@ -171,7 +173,9 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
         let distance: Float;
         let responseDistance: Float;
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         if !this.Eligible() || this.Running() || !this.IsReady() { return 0; };
+        if !IsDefined(rewards) { this.m_reason = "Install the complete v0.17a incident module and restart"; return 0; };
         distance = Vector4.Distance(player.GetWorldPosition(), pickup);
         if distance != distance || distance < 250.0 || distance > 5000.0 { return 0; };
         responseDistance = distance;
@@ -188,6 +192,8 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
             || !this.Write(this.ResponsePath(), "gameJournalQuestObjective", gameJournalEntryState.Active) {
             this.HideJournal(); this.m_previousTracked = null; this.m_reason = "VIP journal activation rejected"; return 0;
         };
+        this.m_rewardId = rewards.Reserve(n"vip");
+        if this.m_rewardId == 0 { this.HideJournal(); this.m_reason = "VIP reward reservation rejected"; return 0; };
         this.m_token += 1; this.m_target = null; this.m_vehicle = null;
         this.m_origin = pickup; this.m_destination = destination; this.m_dropStarted = false;
         this.m_arrived = false;
@@ -253,11 +259,19 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
         let state: gameJournalEntryState = gameJournalEntryState.Succeeded;
         let wasOurs: Bool = this.OursTracked();
         let ok: Bool;
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         if result == 4 { state = gameJournalEntryState.Failed; };
         ok = this.Write(this.ActiveObjectivePath(), "gameJournalQuestObjective", state);
         if !this.Write(this.PhasePath(), "gameJournalQuestPhase", state) { ok = false; };
         if !this.Write(this.QuestPath(), "gameJournalQuest", state, true) { ok = false; };
         this.m_stage = result; this.m_remaining = 0.0; this.m_reason = reason;
+        if IsDefined(rewards) {
+            if ok && result == 3 {
+                if !rewards.CompleteVIP(this.m_rewardId) { ok = false; };
+            };
+            rewards.Cancel(this.m_rewardId, n"vip");
+        } else { if result == 3 { ok = false; }; };
+        this.m_rewardId = 0;
         if !ok { this.m_stage = 6; this.m_reason = "VIP journal result rejected"; this.HideJournal(); };
         this.RestoreTracking(wasOurs);
     }
@@ -267,8 +281,11 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     public func Cancel(token: Int32, reason: String) -> Void {
         let wasOurs: Bool;
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
+        let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         if token != this.m_token || !this.Running() { return; };
         if IsDefined(patrol) && patrol.HasWantedLevel() { this.Finish(4, "Shift terminated due to criminal activity"); return; };
+        if IsDefined(rewards) { rewards.Cancel(this.m_rewardId, n"vip"); };
+        this.m_rewardId = 0;
         wasOurs = this.OursTracked(); this.m_stage = 5; this.m_remaining = 0.0; this.m_reason = reason;
         if !this.HideJournal() { this.m_stage = 6; this.m_reason = "VIP journal cancellation rejected"; };
         this.RestoreTracking(wasOurs);

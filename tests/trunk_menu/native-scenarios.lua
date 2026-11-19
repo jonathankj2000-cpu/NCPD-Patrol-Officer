@@ -107,6 +107,7 @@ function support:RequestBackupAtTrunk(v) assert(v==vehicle); backupCalls=backupC
 NCPDPatrolSystem={Get=function() return patrol end}
 NCPDPatrolSupportSystem={Get=function() return support end}
 NCPDPatrolCareerSystem={Get=function() return CareerNative end}
+NCPDPatrolIncidentSystem={Get=function() return nil end}
 function CareerNative:GetGameInstance() return {} end
 function Trunk:GetGameInstance() return {} end
 local function reset()

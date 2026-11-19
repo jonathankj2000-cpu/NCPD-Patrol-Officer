@@ -1,5 +1,6 @@
 -- Native contracts only. Reward decisions execute the authored redscript class.
 wallet,notifications,paymentOK,playerPresent,transactionPresent=0,{},true,true,true
+NCPDPatrolIncidentSystem={Get=function() return nil end}
 pins,savedPhases,mappinPresent={n=0},{},true
 inMenu=false
 registered,removed,nextWaypointID={}, {}, 10000

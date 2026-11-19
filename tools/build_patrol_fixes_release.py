@@ -1,31 +1,31 @@
-"""Verify adaptive VIP routes, convoy ownership and arrest notices; package the full mod."""
+"""Verify mixed dispatch, durable rewards and career accounting; package the complete mod."""
 from pathlib import Path
 import hashlib,json,os,subprocess,sys,zipfile
 ROOT=Path(__file__).resolve().parents[1]
-BASE='6ea9949fa4c1b4ba6c03bd22713a2a1001079999'
-NAME='NCPD_Patrol_v0.16e_VIP_Convoy_Arrest_Notices_TEST.zip'
+BASE='bcf15393cd0b6e05618fde95e3688edf534a043d'
+NAME='NCPD_Patrol_v0.17a_Mixed_Dispatch_Rewards_TEST.zip'
 def run(*args):subprocess.run([*map(str,args)],cwd=ROOT,check=True)
 def blob(data):return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  lua=LuaRuntime();modules=sorted((ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol').glob('*.lua'))
  scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==18 and len(scripts)==27
+ assert len(modules)==18 and len(scripts)==28
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  tests=['tests/beanbagger/check_visuals.py','tests/beanbagger/check_beanbagger.py','tests/shift_entry/check_shift.py','tests/compile_compatibility/check_legacy_api.py','tests/arrests/check_arrest.py','tests/arrests/check_arrest_interactions.py','tests/trunk_menu/check_trunk.py',
   'tests/dispatch_journal/check_journal.py','tests/career/check_career.py','tests/cyberpsycho/check_cyberpsycho.py',
-  'tests/vip/check_vip.py','tests/officer_readiness/check_ready.py']
+  'tests/vip/check_vip.py','tests/officer_readiness/check_ready.py','tests/incidents/check_incidents.py']
  for test in tests:run(sys.executable,ROOT/test)
  prefix='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
- changed={prefix+name for name in ['init.lua','arrest.lua','vip.lua','vip_ambush.lua','dispatch.lua']}
- changed|={'r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds','archive/pc/mod/NCPDPatrol_VIP.archive'}
- added={prefix+'vip_ambush_unit.lua'}
+ changed={prefix+name for name in ['init.lua','arrest.lua','vip.lua','cyberpsycho.lua','vip_ambush_unit.lua','dispatch.lua']}
+ changed|={'r6/scripts/NCPDPatrol/'+name for name in ['NCPDPatrolVIPSystem.reds','NCPDPatrolCyberpsychoSystem.reds','NCPDPatrolCareerSystem.reds']}
+ added={'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds'}
  original=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  run('git','diff','--exit-code',BASE,'--','LICENSE',*[path for path in original if path not in changed])
  paths=[]
  for dirname in ['bin','r6','archive']:paths.extend(p for p in (ROOT/dirname).rglob('*') if p.is_file())
  paths.extend(ROOT/name for name in ['LICENSE','README.txt'])
- assert {p.relative_to(ROOT).as_posix() for p in paths}==set(original)|added|{'LICENSE','README.txt'} and len(paths)==65
+ assert {p.relative_to(ROOT).as_posix() for p in paths}==set(original)|added|{'LICENSE','README.txt'} and len(paths)==66
  release=ROOT/'releases'/NAME;release.parent.mkdir(exist_ok=True)
  with zipfile.ZipFile(release,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
   for path in sorted(paths):
@@ -35,17 +35,19 @@ def main():
   assert z.testzip() is None and set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for path in paths:assert z.read(path.relative_to(ROOT).as_posix())==path.read_bytes()
  data=release.read_bytes()
- report={'version':'v0.16e','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
+ report={'version':'v0.17a','source_commit':os.environ.get('GITHUB_SHA'),'base_commit':BASE,
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':tests,
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(data),'zip_sha256':hashlib.sha256(data).hexdigest(),'zip_git_blob':blob(data),
-  'native_arrest_interface':6,'native_trunk_interface':4,'native_officer_equipment_interface':1,'native_cyberpsycho_interface':3,'native_vip_interface':3,
+  'native_arrest_interface':6,'native_trunk_interface':4,'native_officer_equipment_interface':1,'native_cyberpsycho_interface':4,'native_vip_interface':4,'native_incident_interface':1,
   'trunk_menu':'native R hold opens Codeware blocking popup; two rows of four cards; independent 1-7 and 9 actions; numpad/mouse; scoped lifecycle',
   'active_backup':'explicit follow commands replace permanent scene hold; boarding priority; existing 10-4 retains scene and reservation',
   'readiness':'verify actual held slots; stalled command falls back to native equip/unequip with existing tagged-officer inventory; native combat priority',
   'codeware_api_source':'v1.21.4 / 6dfdbceff7882d8ad8632ab1ff8d42bcef20a8ad',
-  'archives_changed':['NCPDPatrol_VIP.archive'],'other_archives_unchanged':True,'redscript_changed':['NCPDPatrolVIPSystem.reds'],'weapon_readiness_rules_unchanged':True,'cyberpsycho_pool_and_tweaks_unchanged':True,
+  'archives_changed':[],'other_archives_unchanged':True,'redscript_changed':['NCPDPatrolVIPSystem.reds','NCPDPatrolCyberpsychoSystem.reds','NCPDPatrolCareerSystem.reds'],'redscript_added':['NCPDPatrolIncidentSystem.reds'],'weapon_readiness_rules_unchanged':True,'cyberpsycho_pool_and_tweaks_unchanged':True,
   'aftermath_rules_and_tyre_repair_unchanged':True,'scanner_arrest_and_dispatch_payments_unchanged':True,
   'shift_entry_fix_included':True,
+  'mixed_dispatch':{'weights':{'scanner':50,'vip':30,'cyberpsycho':20},'weighted_fallback_without_replacement':True,'max_type_attempts':3,'automatic_and_normal_requests':True,'individual_test_buttons_preserved':True,'all_unavailable_retry_seconds':30,'cleanup_blocks_new_assignment':True},
+  'generated_rewards':{'vip_flat':2000,'cyberpsycho_base':3000,'cyberpsycho_non_lethal_extra':500,'career_incidents_per_success':1,'persistent_serial_and_completed_paid_records':True,'payment_retry_survives_load':True,'active_assignments_cancel_on_load':True,'completion_credit_independent_of_payment_retry':True,'paid_notice_delay_seconds':8,'scanner_and_arrest_ledgers_untouched':True,'old_milestone_receipts_preserved':True},
   'arrest_recovery':{'living_ragdolls':True,'max_displacement_metres':2,'max_height_change_metres':0.75,'navigation_and_static_collision_footprint_checked':True,'prefer_flatter_nearby_ground':True,'native_workspot_ground_alignment':True,'position_check_after_native_activation':True,'life_health_and_defeat_unchanged':True,'native_physics_ownership_released_on_cleanup':True,'native_pickup_handoff':True,'native_R_pickup_preserved_before_arrest_and_after_failure':True,'payment_requires_existing_activation_proof':True},
   'arrest_notices':{'player_notice':'Move the suspect to flat, clear ground and try again.','technical_errors_logged_only':True,'fresh_ground_checks':True,'ground_retry_seconds_at_most':2,'navigation_probe_radius_metres':0.9,'displacement_and_surface_limits_unchanged':True,'rejection_counters_in_log':True,'no_fixed_20_second_cooldown':True},
   'vip_locations':{'fast_travel_interaction_availability_ignored':True,'drop_point_fallback':True,'fast_travel_discovery_unchanged':True,'preferred_pickup_metres':[500,2000],'fallback_pickup_metres':[250,5000],'preferred_trip_metres':[800,2500],'fallback_trip_metres':[500,5000],'response_deadline_seconds':[300,600],'unfinished_scanner_clearance_metres':100,'distance_buckets_and_nearest_clear_in_diagnostics':True,'arrival_navigation_check_retained':True,'journal_briefing_updated_for_adaptive_deadline':True},
@@ -56,6 +58,6 @@ def main():
   'compatibility_guard':'observed game compiler forms rejected in CI; negative controls included; not a game-cache compiler',
   'actual_game_validation':False,
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
- (ROOT/'releases/NCPD_Patrol_v0.16e_verification.json').write_text(json.dumps(report,indent=2)+'\n')
+ (ROOT/'releases/NCPD_Patrol_v0.17a_verification.json').write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k!='files'},indent=2))
 if __name__=='__main__':main()

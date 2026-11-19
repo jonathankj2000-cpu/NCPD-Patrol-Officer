@@ -1,4 +1,4 @@
-// Career reads the existing scanner ledger. Test unlocks never fabricate activity
+// Career sums scanner and generated incident ledgers. Test unlocks never fabricate activity
 // records. Each successfully issued reward part has its own save-local receipt.
 public class NCPDPatrolCareerSystem extends ScriptableSystem {
     // Keep the v0.10 cash ledger for save compatibility. Those cash claims must
@@ -255,9 +255,11 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     }
     public func GetRecordedActivities() -> Int32 {
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
+        let incidents: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
         let count: Int32;
         if !IsDefined(patrol) { return 0; };
         count = patrol.GetRecordedScannerCount();
+        if IsDefined(incidents) { count += incidents.GetCompletedCount(); };
         if count < 0 { return 0; };
         return count;
     }
@@ -292,8 +294,12 @@ public class NCPDPatrolCareerSystem extends ScriptableSystem {
     public func GetNextReward() -> String { return this.RewardLabel(this.GetRankIndex()); }
     public func GetRecordedDispatches() -> Int32 {
         let dispatch: ref<NCPDPatrolDispatchJournalSystem> = NCPDPatrolDispatchJournalSystem.Get(this.GetGameInstance());
+        let incidents: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
+        let count: Int32;
         if !IsDefined(dispatch) { return 0; };
-        return dispatch.GetPaidDispatches() + dispatch.GetPendingDispatchRewards();
+        count = dispatch.GetPaidDispatches() + dispatch.GetPendingDispatchRewards();
+        if IsDefined(incidents) { count += incidents.GetCompletedCount(); };
+        return count;
     }
     public func GetRecordedArrests() -> Int32 {
         let arrest: ref<NCPDPatrolArrestSystem> = NCPDPatrolArrestSystem.Get(this.GetGameInstance());

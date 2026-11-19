@@ -12,13 +12,14 @@ from translate import translate
 from lupa.luajit21 import LuaRuntime
 lua=LuaRuntime(unpack_returned_tuples=True)
 lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
-for file,name in [('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolDispatchJournalSystem.reds','DispatchJournalNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
+for file,name in [('NCPDPatrolIncidentSystem.reds','IncidentNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolDispatchJournalSystem.reds','DispatchJournalNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
  lua.globals()[name]=lua.execute(translate(ROOT/'r6/scripts/NCPDPatrol'/file))
 lua.execute((HERE.parent/'dispatch_journal/native-mocks.lua').read_text())
 lua.execute((HERE.parent/'cyberpsycho/native-mocks.lua').read_text())
 lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'native-mocks.lua').read_text())
+lua.execute((HERE.parent/'incidents/engine-mocks.lua').read_text())
 lua.execute((HERE/'scenarios.lua').read_text())
 lua.execute((HERE/'fleet-scenarios.lua').read_text())
 spec=importlib.util.spec_from_file_location('vip_assets',ROOT/'tools/build_vip_assets.py')
@@ -31,4 +32,4 @@ assert compiled['roundtrip_validated'] and compiled['extracted_resource_bytes_co
 assert 'within five minutes' not in (ROOT/'assets/vip/vip_onscreens.json.json').read_text()
 source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds').read_text()
 assert all(v not in source for v in ['SetFact','GiveItem','RecordIncident'])
-print('PASS: two-stage VIP journal; staged local/expanded route bounds and 28-FT/3-drop/19-clear regression; adaptive native deadlines and packed briefing proof; actual boarding/driver/seat/living drop-off; exact 1/2/3 and seeded random convoys, 12 m reservations, independent crew/mount/chase/aftermath, single warning, deferred/partial cleanup and 20-second spawn window; bridge/corridor/camera checks; no scanner/career payout changes (engine boundaries mocked)')
+print('PASS: two-stage VIP journal; local/expanded routes and adaptive deadlines; actual boarding/driver/seat/living drop-off earns separate EUR$2000/career record; 1/2/3 and random convoys, reservations, independent crew/aftermath, warning and cleanup; bridge/corridor/camera checks; scanner/arrest rewards unchanged (engine boundaries mocked)')
