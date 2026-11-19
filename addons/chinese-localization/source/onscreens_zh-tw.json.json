@@ -1,0 +1,234 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title",
+              "femaleVariant": "NCPD派遣：事件應變",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective",
+              "femaleVariant": "前往標記的事件地點並控制局勢。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description",
+              "femaleVariant": "調度中心已在標記地點發現一起事件。你的巡邏小隊奉命前往現場、評估情況並處理仍然存在的威脅。收集現場可取得的證據後，結束本次出勤。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_1",
+              "femaleVariant": "NCPD派遣：警力支援請求",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_1",
+              "femaleVariant": "前往通報的事件地點，處理並結束本次出勤。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_1",
+              "femaleVariant": "標記地點請求一支待命巡邏小隊前往處理。目前尚未確認現場情況。請謹慎接近，查明情況並控制局勢。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_2",
+              "femaleVariant": "NCPD派遣：現場控制",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_2",
+              "femaleVariant": "控制標記地點的現場並處理事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_2",
+              "femaleVariant": "標記地點需要警方介入。前往現場，處理剩餘威脅並收集可取得的證據。在事件解決之前，調度中心將保留本次派遣。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_3",
+              "femaleVariant": "NCPD派遣：巡邏任務",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_3",
+              "femaleVariant": "前往指定地點並處理事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_3",
+              "femaleVariant": "你的巡邏小隊已獲派前往標記地點處理一起事件。抵達現場、評估局勢，並採取必要措施恢復秩序。處理完畢後結束本次出勤。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_4",
+              "femaleVariant": "NCPD派遣：事件查核",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_4",
+              "femaleVariant": "檢查標記地點並處理所通報的事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_4",
+              "femaleVariant": "標記地點發生了一起需要巡邏員警處理的事件。目前資訊有限。前往現場確認情況，處理威脅並收集證據，然後結束本次出勤。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_5",
+              "femaleVariant": "NCPD派遣：區域出勤",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_5",
+              "femaleVariant": "前往標記的現場並控制局勢。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_5",
+              "femaleVariant": "調度中心指派你的小隊處理標記區域內的一起事件。抵達現場、控制該區域並解決問題。完成證據檢查後結束本次任務。\n\n請在3分鐘內抵達現場。抵達現場後，應變時限即解除。完成派遣任務可額外獲得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Title",
+              "femaleVariant": "NCPD派遣：賽博精神病事件",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Objective",
+              "femaleVariant": "制伏賽博精神病患者。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Description",
+              "femaleVariant": "已找到通報中的賽博精神病患者。排除威脅，擊斃或以非致命方式制伏皆可。必要時請求警方增援。\n\n離開該區域或結束執勤將關閉本次事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Name",
+              "femaleVariant": "賽博精神病患者",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseObjective",
+              "femaleVariant": "前往通報中的賽博精神病事件現場。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseDescription",
+              "femaleVariant": "調度中心接獲通報，標記區域內有一名賽博精神病患者。前往現場並找出威脅來源。你仍可請求增援。\n\n請在3分鐘內抵達現場。抵達事件區域後，應變時限即解除。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Title",
+              "femaleVariant": "NCPD派遣：證人保護",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Objective",
+              "femaleVariant": "將證人送到安全地點。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Description",
+              "femaleVariant": "證人已上車。請將證人活著送達標記的安全地點。敵對人員可能試圖攔截你。甩開追兵或保護車輛，然後在目的地停車，讓證人下車。完成任務不需要消滅追兵。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Name",
+              "femaleVariant": "受保護的證人",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_ResponseObjective",
+              "femaleVariant": "接上受保護的證人。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_ResponseDescription",
+              "femaleVariant": "調度中心已在標記地點安排證人接送任務。請在指定時限內駕駛你擁有的警用車輛抵達。保留一個乘客座位，在證人附近停車，讓其上車。證人上車後才會分配送達地點。",
+              "maleVariant": ""
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,234 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title",
+              "femaleVariant": "NCPD派遣：事件响应",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective",
+              "femaleVariant": "前往标记的事件地点并控制局势。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description",
+              "femaleVariant": "调度中心已在标记地点发现一起事件。你的巡逻小队奉命前往现场、评估情况并处理仍然存在的威胁。收集现场可获取的证据后，结束本次出警。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_1",
+              "femaleVariant": "NCPD派遣：警力支援请求",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_1",
+              "femaleVariant": "前往报告中的事件地点，处理并结束本次出警。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_1",
+              "femaleVariant": "标记地点请求一支待命巡逻小队前往处理。目前尚未确认现场情况。请谨慎接近，查明情况并控制局势。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_2",
+              "femaleVariant": "NCPD派遣：现场控制",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_2",
+              "femaleVariant": "控制标记地点的现场并处理事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_2",
+              "femaleVariant": "标记地点需要警方介入。前往现场，处理剩余威胁并收集可获取的证据。在事件解决之前，调度中心将保留本次派遣。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_3",
+              "femaleVariant": "NCPD派遣：巡逻任务",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_3",
+              "femaleVariant": "前往指定地点并处理事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_3",
+              "femaleVariant": "你的巡逻小队已获派前往标记地点处理一起事件。抵达现场、评估局势，并采取必要措施恢复秩序。处理完毕后结束本次出警。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_4",
+              "femaleVariant": "NCPD派遣：事件核查",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_4",
+              "femaleVariant": "检查标记地点并处理所报告的事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_4",
+              "femaleVariant": "标记地点发生了一起需要巡逻警员处理的事件。目前信息有限。前往现场确认情况，处理威胁并收集证据，然后结束本次出警。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Title_5",
+              "femaleVariant": "NCPD派遣：区域出警",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Objective_5",
+              "femaleVariant": "前往标记的现场并控制局势。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Dispatch_Description_5",
+              "femaleVariant": "调度中心指派你的小队处理标记区域内的一起事件。抵达现场、控制该区域并解决问题。完成证据检查后结束本次任务。\n\n请在3分钟内抵达现场。到达现场后，响应时限将解除。完成派遣任务可额外获得€$500。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Title",
+              "femaleVariant": "NCPD派遣：赛博精神病事件",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Objective",
+              "femaleVariant": "制服赛博精神病患者。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Description",
+              "femaleVariant": "已找到报告中的赛博精神病患者。消除威胁，击毙或以非致命方式制服均可。必要时请求警方增援。\n\n离开该区域或结束执勤将关闭本次事件。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_Name",
+              "femaleVariant": "赛博精神病患者",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseObjective",
+              "femaleVariant": "前往报告中的赛博精神病事件现场。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_Cyberpsycho_ResponseDescription",
+              "femaleVariant": "调度中心接到报告，标记区域内有一名赛博精神病患者。前往现场并找到威胁来源。你仍可请求增援。\n\n请在3分钟内抵达现场。到达事件区域后，响应时限将解除。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Title",
+              "femaleVariant": "NCPD派遣：证人保护",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Objective",
+              "femaleVariant": "将证人送到安全地点。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Description",
+              "femaleVariant": "证人已上车。请将证人活着送达标记的安全地点。敌对人员可能试图拦截你。摆脱追兵或保卫车辆，然后在目的地停车，让证人下车。完成任务不要求消灭追兵。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_Name",
+              "femaleVariant": "受保护的证人",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_ResponseObjective",
+              "femaleVariant": "接上受保护的证人。",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_VIP_ResponseDescription",
+              "femaleVariant": "调度中心已在标记地点安排证人接送任务。请在指定时限内驾驶你拥有的警用车辆抵达。保留一个乘客座位，在证人附近停车，让其上车。证人上车后才会分配送达地点。",
+              "maleVariant": ""
+            }
+          ]
+        }
+      }
+    }
+  }
+}

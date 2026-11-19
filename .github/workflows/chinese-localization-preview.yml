@@ -1,0 +1,17 @@
+name: NCPD Patrol Chinese localization preview
+on:
+  push:
+    branches: [prototype/ncpd-chinese-preview-v01a]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Verify optional language keys, archive provenance, ZIP and unchanged main mod
+        run: python3 tools/build_chinese_localization.py --check

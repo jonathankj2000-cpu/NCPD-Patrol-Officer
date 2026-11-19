@@ -1,0 +1,18 @@
+{
+  "version": "0.1a",
+  "compiler": "WolvenKit 9.1.1",
+  "archive_sha256": "b7f9f060a35c3868e56ce2955dc5ec817f00a4e09d903de50c98109a82bdc880",
+  "authored_inputs": {
+    "translations.json": "6d8e6d749f85d8e0c816864c53e19289d003b18c038c667745acf58a3b5c20ba",
+    "source/onscreens_zh-cn.json.json": "b71d0661f4562f325f37d5e0b4dba32925839d2f99a39b48df325706a259ba01",
+    "source/onscreens_zh-tw.json.json": "cebc1058cf77901f9775a88911f80b2726ce48e87d227d7df49ed636c6661a8b",
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": "d45c78b57cb25cbf8a6f4dc56a6ffd9f721ef48cf14b2a2858519d9ce2548118",
+    "archive/pc/mod/NCPDPatrol_Chinese.archive.xl": "3da17555f3447e190ad4eeefe4beef946d1ba05c15a3d7406a2362132346c576"
+  },
+  "resources": {
+    "base/ncpd_patrol/chinese/zh-cn/onscreens.json": "b738219c9e5e5d14ebe31bef2ff9f812abd9e983838efe0b6bac8619eab462bb",
+    "base/ncpd_patrol/chinese/zh-tw/onscreens.json": "24ef73226644d0de77ef90ed1515d1ac5aecbad58854129c6ebe9f649e24ee78"
+  },
+  "roundtrip_entries_verified": true,
+  "extracted_resource_bytes_verified": true
+}

@@ -1,5 +1,21 @@
 # NCPD Patrol
 
+## Optional Chinese localization preview 0.1a
+
+[Download Simplified + Traditional Chinese preview](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_Chinese_Localization_Preview_v0.1a.zip)
+
+Adds **49 translated keys per language**: native interaction/button captions,
+Bean Bagger name/description and scanner/VIP/cyberpsycho journal entries. HUD,
+notifications, career pages, CET controls/logs and hardcoded popup headings/help
+remain English. This is a partial draft for player feedback, not a full translation.
+
+Install **after the main mod**, allowing the optional package to overwrite only
+`r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds`. Select Simplified/Traditional
+Chinese as the game's interface language and restart. Reapply the language pack
+after main-mod updates. Existing English fallback and gameplay are retained.
+See the [add-on instructions and coverage](addons/chinese-localization/README.md).
+The main gameplay package remains **0.17d**.
+
 ## v0.17d: partial ambush cleanup after VIP delivery
 
 [Download the complete v0.17d ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.17d_VIP_Partial_Cleanup_FIX.zip)

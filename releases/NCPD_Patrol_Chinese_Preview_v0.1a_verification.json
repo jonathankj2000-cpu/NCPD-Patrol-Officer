@@ -1,0 +1,56 @@
+{
+  "addon_version": "0.1a",
+  "tested_main_version": "0.17d",
+  "base_commit": "ff0d0024d85d31df783e5f989a1d2cb3d9cefbc1",
+  "languages": [
+    "zh-cn",
+    "zh-tw"
+  ],
+  "interaction_and_item_keys_per_language": 19,
+  "journal_keys_per_language": 30,
+  "total_translations": 98,
+  "main_install_files_overwritten": [
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds"
+  ],
+  "main_gameplay_and_resources_unchanged": true,
+  "zip_path": "releases/NCPD_Patrol_Chinese_Localization_Preview_v0.1a.zip",
+  "zip_bytes": 9591,
+  "zip_sha256": "a79b29eb9c46d6f41b5fbe5acb6b10a7acacc8904d407ff7134cc0f833c0323d",
+  "zip_git_blob": "8388b1b8299101b2e1a3bda990e8bfc5284619c8",
+  "install_files": 5,
+  "archive_sha256": "b7f9f060a35c3868e56ce2955dc5ec817f00a4e09d903de50c98109a82bdc880",
+  "archive_roundtrip_and_extraction_verified": true,
+  "requires_base_mod": true,
+  "english_fallback_preserved": true,
+  "coverage": "interaction/button captions, Bean Bagger name/description, scanner/VIP/cyberpsycho journal entries",
+  "still_english": [
+    "HUD and notifications",
+    "career pages",
+    "CET controls and logs",
+    "hardcoded popup headings/help"
+  ],
+  "actual_game_validation": false,
+  "native_speaker_review_completed": false,
+  "files": {
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": {
+      "sha256": "d45c78b57cb25cbf8a6f4dc56a6ffd9f721ef48cf14b2a2858519d9ce2548118",
+      "git_blob": "ca93050713574172208fbe6804520ac7edf3e672"
+    },
+    "archive/pc/mod/NCPDPatrol_Chinese.archive": {
+      "sha256": "b7f9f060a35c3868e56ce2955dc5ec817f00a4e09d903de50c98109a82bdc880",
+      "git_blob": "bfc25680278ceee2f6f7b2f3cae81efe8e42f6cd"
+    },
+    "archive/pc/mod/NCPDPatrol_Chinese.archive.xl": {
+      "sha256": "3da17555f3447e190ad4eeefe4beef946d1ba05c15a3d7406a2362132346c576",
+      "git_blob": "70d21f6f31ec97b99315405110a54a6c4bf348fb"
+    },
+    "NCPD_Patrol_Chinese_README.txt": {
+      "sha256": "33ea43f996303101d95d84fd7fcf5c78b0a83cdcc99222eda7da70fd1298509f",
+      "git_blob": "369657d07e3a26c5dc712861ac3ca010df99d908"
+    },
+    "NCPD_Patrol_Chinese_LICENSE.txt": {
+      "sha256": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
+      "git_blob": "547869b1c104b5a7680458b19c8e2bca54c9c803"
+    }
+  }
+}

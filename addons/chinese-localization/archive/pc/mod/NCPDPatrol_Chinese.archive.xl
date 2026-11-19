@@ -1,0 +1,4 @@
+localization:
+  onscreens:
+    zh-cn: base\ncpd_patrol\chinese\zh-cn\onscreens.json
+    zh-tw: base\ncpd_patrol\chinese\zh-tw\onscreens.json
