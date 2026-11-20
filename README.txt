@@ -1,3 +1,21 @@
+NCPD PATROL v0.18a1 OFFICER DOWN LOCATOR - COMPLETE BRANCH TEST
+
+CET -> Testing -> Officer Down prototype ->
+TEST: Waypoint to Officer Down intersection
+
+This explicitly requested, normal custom waypoint locates TEST_KRYSS_01 and
+works OFF DUTY. It may replace your current manual waypoint. It starts no
+quest and spawns no actors. Repeated clicks reuse an active locator at the site.
+Open the world map to find/track it; open/close the map if GPS is missing.
+
+All 40 native scripts, seven archives and gameplay modules are byte-identical
+to v0.18a. Existing dispatch/quest-marker creation and cleanup are unchanged.
+Install the complete 99-file package and restart the game to reload the CET UI.
+Stop 100-180 m before the intersection, go ON DUTY and request Officer Down to
+test the actual scene. Change/remove the manual locator on the world map.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18a OFFICER DOWN - COMPLETE BRANCH TEST
 
 Manual-only rescue prototype at TEST_KRYSS_01:

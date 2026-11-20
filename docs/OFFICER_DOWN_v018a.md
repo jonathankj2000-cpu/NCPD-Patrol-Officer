@@ -95,3 +95,17 @@ actor count and native quest/aid/marker state.
 
 Physical layout, traffic collisions, AI combat/cover, F interaction, recovery
 animation and actual marker rendering remain in-game validation tasks.
+
+## v0.18a1: manual test locator
+
+**CET → Testing → Officer Down prototype → TEST: Waypoint to Officer Down
+intersection** places a normal custom waypoint at the shared scene coordinate.
+It works off duty, only registers on the explicit button click, and starts no
+quest or actors. The action may replace the player's current manual waypoint.
+Repeated clicks detect an existing active custom marker at that location.
+Change/remove it on the world map; GPS may require opening/closing the map.
+
+This handler is local to the CET testing panel. Every native script, archive,
+gameplay module, dispatcher and existing quest/waypoint controller remains
+byte-identical to v0.18a. Normal dispatch preserves the manual waypoint; the
+new locator is an explicit user-requested map action.

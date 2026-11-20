@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18a Officer Down | fixed intersection rescue scene
+-- NCPD Patrol v0.18a1 Officer Down locator | manual test waypoint button
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -308,7 +308,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18a Officer Down loaded. Manual fixed-intersection rescue under CET Testing; staged protection, combat and officer revive. VIP routes and arrest fix retained. Install the complete package and fully restart the game.")
+    status("v0.18a1 Officer Down locator loaded. CET Testing includes a manual waypoint to the test intersection. Existing dispatch markers and scene behavior are unchanged. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

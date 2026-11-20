@@ -61,14 +61,49 @@ def main():
  for label,action in {'TEST: Request Officer Down':'requestOfficerDown','TEST: Rotate Officer Down scene 90 degrees':'rotateOfficerDown','Revive scene officer (nearby)':'reviveOfficerDown','Clear Officer Down scene':'clearOfficerDown'}.items():
   f.sceneAction=None;f.Frame(f,'Testing',label);assert f.sceneAction==action and f.clicks==1,label
  f.ClearEvents(f);f.Frame(f,'Testing','Log Officer Down diagnostics');assert 'native scene diagnostics' in f.Events(f)
+ # The locator is a one-shot UI action, independent of all quest/actor owners.
+ # Exercise the real UI handler: passive drawing and rejected clicks cannot
+ # register anything; duplicates and existing native quest pins are preserved.
+ locator,view=runtime(MOD,False)
+ locator.execute('''local f=UIFixture
+ f.locatorCalls=0
+ Vector4={new=function(x,y,z,w) return {x=x,y=y,z=z,w=w} end,
+ Distance=function(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end}
+ MappinData={new=function() return {} end}
+ gamedataMappinVariant={CustomPositionVariant='manual',QuestGiverVariant='quest'}
+ local scene=require('officer_down_scene')
+ f.originalQuest={active=true,GetVariant=function() return 'quest' end,IsActive=function() return true end}
+ f.locatorPins={f.originalQuest}
+ f.locatorMap={GetAllMappins=function() return f.locatorPins end,
+ RegisterMappin=function(_,data,p)
+   assert(data.mappinType=='Mappins.DefaultStaticMappin' and data.variant=='manual' and data.active and data.visibleThroughWalls)
+   assert(data.scriptData==nil and p.x==scene.x and p.y==scene.y and p.z==scene.z)
+   f.locatorCalls=f.locatorCalls+1
+   f.locatorPins[#f.locatorPins+1]={GetVariant=function() return 'manual' end,IsActive=function() return true end,GetWorldPosition=function() return p end}
+   return {value=12345}
+ end,
+ UnregisterMappin=function() error('Locator removed an existing marker') end,
+ SetMappinPosition=function() error('Locator moved an existing marker') end}
+ Game.GetMappinSystem=function() if f.noLocatorMap then return nil end;return f.locatorMap end
+ Game.GetPlayer=function() return f.loaded and {IsAttached=function() return f.locatorAttached~=false end} or nil end''')
+ label='TEST: Waypoint to Officer Down intersection'
+ view.Frame(view,'Testing',None);assert view.locatorCalls==0 and view.Events(view)==''
+ view.loaded=False;view.Frame(view,'Testing',label);assert view.locatorCalls==0
+ view.loaded=True;view.locatorAttached=False;view.Frame(view,'Testing',label);assert view.locatorCalls==0
+ view.locatorAttached=True;view.noLocatorMap=True;view.Frame(view,'Testing',label);assert view.locatorCalls==0
+ view.noLocatorMap=False;view.ClearEvents(view);view.Frame(view,'Testing',label)
+ assert view.locatorCalls==1 and view.clicks==1 and view.originalQuest.active
+ assert 'dispatch.request' not in view.Events(view) and 'partner.' not in view.Events(view)
+ view.Frame(view,'Testing',label);assert view.locatorCalls==1 and view.originalQuest.active
  report={'manual_fixed_scene':True,'position':json.loads((ROOT/'assets/officer_down/scene.json').read_text())['position'],
  'cars':3,'officers':2,'gang_members':5,'arrival_metres':55,'prepare_metres':180,
  'prearrival_protection_and_position_lock':True,'actual_native_aid_and_dual_completion':True,
  'existing_partner_identity_untouched':True,'reward':2000,'one_career_incident':True,
- 'manual_waypoint_preserved':True,'native_marker_never_unregistered':True,
+ 'dispatch_manual_waypoint_preserved':True,'native_marker_never_unregistered':True,
+ 'manual_locator_explicit_click_only':True,'locator_off_duty_no_scene_or_quest_mutation':True,
  'partial_refused_and_delayed_cleanup':True,'automatic_weights_unchanged':True,
- 'ui_controls_routed':5,'actual_game_rendering_combat_traffic_and_layout_validation':False}
- print('PASS: actual Officer Down Lua/native quest, fixed marker, staging protection/position lock, private IDs, 3-second aid and health/recovery proof; lethal/non-lethal/arrest outcomes, dual completion, EUR$2000 once, cancelled/failing/missing actors, scene rotation/ground rejection, partial/deferred cleanup, aftermath/dispatch reservation, world reset/manual waypoint and five CET routes (engine boundaries mocked)')
+ 'ui_controls_routed':6,'actual_game_rendering_combat_traffic_and_layout_validation':False}
+ print('PASS: actual Officer Down Lua/native quest, fixed marker, staging protection/position lock, private IDs, 3-second aid and health/recovery proof; lethal/non-lethal/arrest outcomes, dual completion, EUR$2000 once, cancelled/failing/missing actors, scene rotation/ground rejection, partial/deferred cleanup, aftermath/dispatch reservation, world reset/manual waypoint; six CET routes including explicit off-duty locator with duplicate/passive/invalid-world guards and preserved quest pins (engine boundaries mocked)')
  return report
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

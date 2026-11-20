@@ -235,6 +235,33 @@ function M.new(context)
         -- Officer Down UI begin
         if ImGui.CollapsingHeader("Officer Down prototype") then
             ImGui.TextWrapped("Fixed test intersection: -490.911377, -173.816315, 7.887070. Request from 100-5000 m away while on duty. One injured officer, one defender, two gang cars and five suspects. Both rescue and neutralization are required.")
+            if ImGui.Button("TEST: Waypoint to Officer Down intersection") then
+                local ok, result = pcall(function()
+                    local player = Game.GetPlayer()
+                    if not context.navigation.worldReady() or not player or not player:IsAttached() then error("Load a save before placing the test waypoint") end
+                    local scene = require("officer_down_scene")
+                    local point = Vector4.new(scene.x, scene.y, scene.z, 1)
+                    local map = Game.GetMappinSystem()
+                    if not map then error("Map system unavailable") end
+                    for _, pin in ipairs(map:GetAllMappins()) do
+                        local inspected, exists = pcall(function()
+                            return pin:GetVariant() == gamedataMappinVariant.CustomPositionVariant and pin:IsActive()
+                                and Vector4.Distance(pin:GetWorldPosition(), point) <= 1
+                        end)
+                        if inspected and exists then return "Test waypoint already present at the intersection. Open the world map to locate or track it." end
+                    end
+                    local data = MappinData.new()
+                    data.mappinType = TweakDBID.new("Mappins.DefaultStaticMappin")
+                    data.variant = gamedataMappinVariant.CustomPositionVariant
+                    data.active, data.visibleThroughWalls = true, true
+                    data.debugCaption = "OFFICER DOWN TEST INTERSECTION"
+                    local id = map:RegisterMappin(data, point)
+                    if not id or id.value == nil or id.value == 0 then error("Test waypoint registration rejected") end
+                    return "Test intersection waypoint requested. Open the world map to find it; open/close the map if the GPS line is missing."
+                end)
+                status("Officer Down locator | " .. (ok and tostring(result) or ("Failed: " .. tostring(result))))
+            end
+            ImGui.TextWrapped("The locator places a normal custom waypoint and may replace your current manual waypoint. It works off duty and starts no incident. Change/remove it from the world map.")
             if Dispatch.officerDownState then ImGui.TextWrapped(Dispatch.officerDownState()) end
             if ImGui.Button("TEST: Request Officer Down") then if Dispatch.requestOfficerDown then Dispatch.requestOfficerDown(getPatrolSystem(), status) end end
             if ImGui.Button("TEST: Rotate Officer Down scene 90 degrees") then if Dispatch.rotateOfficerDown then Dispatch.rotateOfficerDown(status) end end
@@ -298,7 +325,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18a Officer Down###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18a1 Officer Down locator###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end
