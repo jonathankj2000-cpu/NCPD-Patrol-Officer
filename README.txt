@@ -1,3 +1,23 @@
+NCPD PATROL v0.18a2 OFFICER DOWN GROUND FIX - COMPLETE BRANCH TEST
+
+Fixes the reported FindPointInSphereForCharacter parameter 1 error. The
+raycast's Vector3 ground hit is explicitly converted to Vector4 before the
+character navigation query. Ground probes now cover +/-1.5 m, matching the
+existing +/-1.3 m accepted height band with a margin. Height, slope, vehicle
+footprint and obstruction limits are retained; no fallback to another floor.
+
+Ground rejection logs now identify a missed hit, invalid hit, slope, height
+or vehicle corner failure. The original unsupported-police-ground message
+did not distinguish these causes, so its exact in-game cause is unconfirmed.
+
+Install the complete 99-file package and fully restart. Retry the scene at
+90 degrees, which previously reached the navigation type error. If ground is
+still rejected, copy the new full error line. All native scripts, seven
+archives, quest markers, combat, revive, rewards and other gameplay modules
+are unchanged from v0.18a1. The manual test locator remains available below.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18a1 OFFICER DOWN LOCATOR - COMPLETE BRANCH TEST
 
 CET -> Testing -> Officer Down prototype ->

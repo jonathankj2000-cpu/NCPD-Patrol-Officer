@@ -10,10 +10,19 @@ function M.build(heading,player)
     local function point(x,y,z) return Vector4.new(Scene.x+fx*x+rx*y,Scene.y+fy*x+ry*y,z or Scene.z,1) end
     local function ray(a,b) return spatial:SyncRaycastByCollisionGroup(a,b,CName.new('Static'),true,false) end
     local function floor(p)
-        local hit,result=ray(Vector4.new(p.x,p.y,p.z+.7,1),Vector4.new(p.x,p.y,p.z-1.5,1))
-        if not hit or not result or not finite(result.position) or not finite(result.normal)
-            or result.normal.z<.85 or math.abs(result.position.z-Scene.z)>1.3 then return nil end
-        return result.position
+        -- Search the full accepted +/-1.3 m height band, with a small margin.
+        -- A ray beginning at +0.7 m cannot hit valid uphill ground above it.
+        local hit,result=ray(Vector4.new(p.x,p.y,p.z+1.5,1),Vector4.new(p.x,p.y,p.z-1.5,1))
+        if not hit then return nil,'no Static surface hit in the +/-1.5 m probe' end
+        if not result or not finite(result.position) or not finite(result.normal) then return nil,'invalid Static hit position/normal' end
+        if result.normal.z<.85 then return nil,string.format('surface normal Z=%.3f; minimum=0.850',result.normal.z) end
+        if math.abs(result.position.z-Scene.z)>1.3 then
+            return nil,string.format('surface Z=%.3f; scene Z=%.3f; height delta=%.3f m; maximum=1.300 m',result.position.z,Scene.z,result.position.z-Scene.z)
+        end
+        -- SpatialQueryResult.position is Vector3. Native character navigation
+        -- requires Vector4; convert once at this boundary instead of forwarding
+        -- the raycast struct to a differently typed engine API.
+        return Vector4.new(result.position.x,result.position.y,result.position.z,1)
     end
     local definitions={
         {'police','Vehicle.NCPDPatrol_OD_Police',-9,0,90},
@@ -29,13 +38,15 @@ function M.build(heading,player)
     }
     local layout={}
     for _,row in ipairs(definitions) do
-        local p=point(row[3],row[4]);local ground=floor(p)
-        if not ground then error('Unsupported scene ground at '..row[1]..'; try another scene rotation') end
+        local p=point(row[3],row[4]);local ground,reason=floor(p)
+        if not ground then error(string.format('Unsupported scene ground at %s | heading=%.0f | probe=%.3f,%.3f,%.3f | %s',row[1],heading,p.x,p.y,p.z,reason)) end
         local car=row[1]=='police' or row[1]=='gangcar'
         if car then
             for _,corner in ipairs({{-1,-2.4},{-1,2.4},{1,-2.4},{1,2.4}}) do
-                local q=floor(point(row[3]+corner[1],row[4]+corner[2]))
-                if not q or math.abs(q.z-ground.z)>.4 then error('Uneven vehicle footprint at '..row[1]) end
+                local probe=point(row[3]+corner[1],row[4]+corner[2])
+                local q,cornerReason=floor(probe)
+                if not q then error(string.format('Unsupported vehicle footprint at %s | heading=%.0f | probe=%.3f,%.3f,%.3f | %s',row[1],heading,probe.x,probe.y,probe.z,cornerReason)) end
+                if math.abs(q.z-ground.z)>.4 then error(string.format('Uneven vehicle footprint at %s | corner height delta=%.3f m; maximum=0.400 m',row[1],q.z-ground.z)) end
             end
             for _,side in ipairs({-.8,0,.8}) do
                 local from=point(row[3]+side,row[4]-2.5,ground.z+.8)

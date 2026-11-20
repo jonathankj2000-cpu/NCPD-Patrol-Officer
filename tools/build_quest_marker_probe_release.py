@@ -1,17 +1,17 @@
 """Verify and package the complete Officer Down branch prototype.
 
-The workflow entrypoint is retained. All installed native scripts, archives and
-gameplay modules remain byte-identical to v0.18a; only CET UI/build labels change.
+The workflow entrypoint is retained. Only the Officer Down ground layout helper
+and CET build labels change from v0.18a1. Native scripts/archives are unchanged.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='fe07eee2e757a08a79801d8d23129232a45f0b13'
+BASE='14d22d3ef13259d23438bb942fb66541117d06ab'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.18a1_Officer_Down_Locator_TEST.zip'
-REPORT='NCPD_Patrol_v0.18a1_Officer_Down_Locator_verification.json'
+NAME='NCPD_Patrol_v0.18a2_Officer_Down_Ground_Fix_TEST.zip'
+REPORT='NCPD_Patrol_v0.18a2_Officer_Down_Ground_Fix_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
@@ -21,7 +21,7 @@ def main():
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua','officer_down_layout.lua']}
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
@@ -50,7 +50,7 @@ def main():
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.18a1-officer-down-locator','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.18a2-officer-down-ground-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'scene':json.loads((ROOT/'assets/officer_down/scene.json').read_text()),
@@ -61,7 +61,10 @@ def main():
   'automatic_weights':{'scanner':50,'vip':30,'cyberpsycho':20},'officer_down_manual_only':True,
   'world_reset_forgets_old_ids':True,'main_partner_registration_reused':False,
   'native_marker_never_unregistered':True,'automatic_dispatch_manual_waypoint_never_written':True,
-  'manual_test_locator_on_explicit_click':True,'all_native_scripts_archives_and_gameplay_modules_unchanged_from_v018a':True,
+  'manual_test_locator_on_explicit_click':True,'all_native_scripts_and_seven_archives_unchanged_from_v018a1':True,
+  'other_gameplay_modules_unchanged_from_v018a1':True,'ground_probe_height_metres':1.5,
+  'ground_height_limit_metres':1.3,'ground_normal_z_minimum':0.85,'vehicle_corner_height_limit_metres':0.4,
+  'raycast_vector3_converted_to_navigation_vector4':True,'ground_rejections_include_specific_reason':True,
   'partial_cleanup_reserves_scene':True,'successful_aftermath_reserves_dispatch':False,
   'browser_extension_still_optional':True,'actual_game_validation':False,
   'game_checks_required':['scene street alignment and orientation','car root placement/traffic collisions','officer down/recovery animation and F interaction','combat AI/cover','native quest marker rendering and reuse'],

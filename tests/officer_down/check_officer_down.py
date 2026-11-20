@@ -1,12 +1,61 @@
 """Execute actual native quest/aid/marker/reward code and CET scene lifecycle."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import argparse,hashlib,importlib.util,json,sys
+import argparse,hashlib,importlib.util,json,subprocess,sys
 from lupa.luajit21 import LuaRuntime
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE.parent/'arrests'));from translate import translate
 sys.path.insert(0,str(HERE.parent/'fixed_markers'));from check_fixed import journal_hash
 MOD=ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
+LAYOUT_BASE='14d22d3ef13259d23438bb942fb66541117d06ab'
+
+def check_layout_boundaries(lua):
+ # The game's raycast result is Vector3, while character navigation requires
+ # Vector4. Reproduce the reported failure with the exact previous layout.
+ old=subprocess.check_output(['git','show',f'{LAYOUT_BASE}:{MOD.relative_to(ROOT).as_posix()}/officer_down_layout.lua'],cwd=ROOT,text=True)
+ lua.globals().OldLayout=lua.execute(old)
+ # Isolate the old +0.7 m probe from the separate native argument type bug.
+ assert old.count('return result.position')==1
+ typed=old.replace('return result.position','return Vector4.new(result.position.x,result.position.y,result.position.z,1)')
+ lua.globals().TypedOldLayout=lua.execute(typed)
+ lua.execute('''local f=F
+ f:Reset()
+ local ok,err=pcall(OldLayout.build,90,f.player)
+ assert(not ok and tostring(err):find('parameter 1 must be Vector4',1,true),tostring(err))
+ f:Reset();f.surfaceOffset=1.1
+ ok,err=pcall(TypedOldLayout.build,0,f.player)
+ assert(not ok and tostring(err):find('Unsupported scene ground at police',1,true),tostring(err))
+ local layout=require('officer_down_layout')
+ for _,heading in ipairs({0,90,180,270}) do
+  for _,offset in ipairs({-1.1,0,1.1}) do
+   f:Reset();f.surfaceOffset=offset
+   local rows=layout.build(heading,f.player)
+   assert(#rows==10 and f.navQueries==7,'Valid scene did not reach all seven typed navigation calls')
+   for _,row in ipairs(rows) do assert(row.position.__vector=='Vector4' and row.position.w==1) end
+  end
+ end
+ local cases={
+  {'noGround',true,'no Static surface hit'},
+  {'lowerFloor',true,'no Static surface hit'},
+  {'surfaceOffset',1.4,'maximum=1.300 m'},
+  {'surfaceOffset',-1.4,'maximum=1.300 m'},
+  {'normalZ',.6,'surface normal Z=0.600'},
+  {'surfaceOffsetAt',function(p) local s=require('officer_down_scene');return math.abs(p.x-s.x)>.5 and .5 or 0 end,'corner height delta=0.500 m'},
+ }
+ for _,case in ipairs(cases) do
+  f:Reset();f[case[1]]=case[2]
+  ok,err=pcall(layout.build,0,f.player)
+  assert(not ok and tostring(err):find(case[3],1,true),tostring(err))
+  if case[1]~='surfaceOffsetAt' then
+   assert(tostring(err):find('heading=0',1,true) and tostring(err):find('probe=',1,true),tostring(err))
+  end
+  assert(f.navQueries==0,'Invalid car support reached NPC navigation')
+ end
+ f:Reset()''')
+ return {'raycast_hit_type':'Vector3','navigation_argument_type':'Vector4',
+ 'previous_layout_reproduces_reported_type_error':True,'previous_probe_rejects_supported_uphill_ground':True,
+ 'accepted_heading_height_combinations':12,'rejected_support_cases':6,
+ 'height_normal_footprint_and_road_level_limits_preserved':True}
 
 def code(path):
  s=translate(path)
@@ -48,6 +97,7 @@ def main():
   p=Path(temp)/'writer.reds';p.write_text('public class Writer extends IScriptable {\n'+source[start:end]+'\n}')
   lua.globals().NCPDPatrolFixedMarkerSystem=lua.execute(translate(p))
  lua.execute((HERE/'engine.lua').read_text())
+ layout_checks=check_layout_boundaries(lua)
  lua.execute((HERE/'scenarios.lua').read_text())
  # New UI controls must route once; historical UI suite covers retained actions.
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime
@@ -102,8 +152,9 @@ def main():
  'dispatch_manual_waypoint_preserved':True,'native_marker_never_unregistered':True,
  'manual_locator_explicit_click_only':True,'locator_off_duty_no_scene_or_quest_mutation':True,
  'partial_refused_and_delayed_cleanup':True,'automatic_weights_unchanged':True,
+ 'typed_ground_and_probe_regressions':layout_checks,
  'ui_controls_routed':6,'actual_game_rendering_combat_traffic_and_layout_validation':False}
- print('PASS: actual Officer Down Lua/native quest, fixed marker, staging protection/position lock, private IDs, 3-second aid and health/recovery proof; lethal/non-lethal/arrest outcomes, dual completion, EUR$2000 once, cancelled/failing/missing actors, scene rotation/ground rejection, partial/deferred cleanup, aftermath/dispatch reservation, world reset/manual waypoint; six CET routes including explicit off-duty locator with duplicate/passive/invalid-world guards and preserved quest pins (engine boundaries mocked)')
+ print('PASS: Officer Down Vector3 raycast / Vector4 navigation regression reproduces the previous type error; full probe-height coverage across four rotations, rejected slopes/height/footprints/lower road levels; actual Lua/native quest, staging protection/position lock, private IDs, 3-second aid/recovery, dual completion, EUR$2000 once, actor cleanup/dispatch reservation, world reset/manual waypoint and six CET routes (engine boundaries mocked)')
  return report
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

@@ -12,7 +12,8 @@ function ArrayPush(a,x) a[a.n]=x;a.n=a.n+1 end
 function ArrayContains(a,x) for i=0,a.n-1 do if a[i]==x then return true end end;return false end
 function ArrayFindFirst(a,x) for i=0,a.n-1 do if a[i]==x then return i end end;return -1 end
 function ArrayErase(a,i) for j=i,a.n-2 do a[j]=a[j+1] end;a[a.n-1]=nil;a.n=a.n-1 end
-Vector4={new=function(x,y,z,w) return {x=x,y=y,z=z,w=w,X=x,Y=y,Z=z,W=w} end}
+Vector4={new=function(x,y,z,w) return {x=x,y=y,z=z,w=w,X=x,Y=y,Z=z,W=w,__vector='Vector4'} end}
+Vector3={new=function(x,y,z) return {x=x,y=y,z=z,X=x,Y=y,Z=z,__vector='Vector3'} end}
 function Vector4:Distance(a,b) return math.sqrt((a.X-b.X)^2+(a.Y-b.Y)^2+(a.Z-b.Z)^2) end
 CName={new=function(x) return x end};TweakDBID={new=function(x) return x end}
 EulerAngles={ToQuat=function(_,rotation) return rotation end}
@@ -118,13 +119,21 @@ function transaction:GiveItem(p,item,amount) F.paymentAttempts=F.paymentAttempts
 ItemID={FromTDBID=function(_,id) return id end}
 local teleport={Teleport=function(_,a,p,r) F.locks=F.locks+1;a.pos=p end}
 local spatial={SyncRaycastByCollisionGroup=function(_,a,b)
+ assert(a.__vector=='Vector4' and b.__vector=='Vector4','Raycast endpoints must be Vector4')
  if a.x==b.x and a.y==b.y and a.z>b.z then
   if F.noGround then return false end
-  return true,{position=Vector4.new(a.x,a.y,require('officer_down_scene').z+(F.lowerFloor and -12 or 0),1),normal=Vector4.new(0,0,1,0)}
+  local offset=F.surfaceOffsetAt and F.surfaceOffsetAt(a) or F.surfaceOffset or 0
+  local z=require('officer_down_scene').z+(F.lowerFloor and -12 or offset)
+  if z>a.z or z<b.z then return false end
+  return true,{position=Vector3.new(a.x,a.y,z),normal=Vector3.new(0,0,F.normalZ or 1)}
  end
  return F.obstruction==true
 end}
-local nav={FindPointInSphereForCharacter=function(_,p) return F.noNav and {status=1} or {status=0,point=p} end}
+local nav={FindPointInSphereForCharacter=function(_,p)
+ assert(p.__vector=='Vector4' and p.w==1,"FindPointInSphereForCharacter parameter 1 must be Vector4")
+ F.navQueries=F.navQueries+1
+ return F.noNav and {status=1} or {status=0,point=p}
+end}
 local container={Get=function(_,name) if name=='NCPDPatrolOfficerDownSystem' then return OfficerNative elseif name=='NCPDPatrolIncidentSystem' then return IncidentNative end end}
 GameInstance={GetJournalManager=function() return journal end,GetMappinSystem=function() return map end,GetQuestsSystem=function() return quests end,GetGodModeSystem=function() return god end,GetStatPoolsSystem=function() return stats end,GetTransactionSystem=function() return transaction end,GetTeleportationFacility=function() return teleport end,GetScriptableSystemsContainer=function() return container end}
 Game={GetPlayer=function() return player end,GetScriptableSystemsContainer=function() return container end,GetDynamicEntitySystem=function() return entities end,GetSpatialQueriesSystem=function() return spatial end,GetAINavigationSystem=function() return nav end}
@@ -144,6 +153,7 @@ function F:Reset()
  self.deleteOK=true;self.deleteDeferred=false;self.failCreateAt=nil;self.wrongPlacement=false;self.failProtection=false;self.missingRecord=false
  self.blockRecovery=false;self.blockHealth=false;self.failJournal=false;self.paymentOK=true
  self.noGround=false;self.lowerFloor=false;self.obstruction=false;self.noNav=false
+ self.surfaceOffset=0;self.surfaceOffsetAt=nil;self.normalZ=1;self.navQueries=0
  self.creates={};self.deletes={};self.managed={[999]=true};self.objects={};self.god={};self.notices={};self.threats={};self.locks=0;self.interactions=0;self.wallet=0;self.paymentAttempts=0;self.receipts={}
  self.pins={n=0};self.manual=654;self.story={path='story',state=2};self.tracked=self.story
  self.playerPoint=self:Point(-350,0,0)

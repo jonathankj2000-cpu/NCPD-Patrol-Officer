@@ -109,3 +109,34 @@ This handler is local to the CET testing panel. Every native script, archive,
 gameplay module, dispatcher and existing quest/waypoint controller remains
 byte-identical to v0.18a. Normal dispatch preserves the manual waypoint; the
 new locator is an explicit user-requested map action.
+
+## v0.18a2: typed ground queries and probe coverage
+
+The first live attempt exposed a native boundary mismatch: a raycast returns
+`SpatialQueryResult.position` as `Vector3`, whereas
+`FindPointInSphereForCharacter` requires a `Vector4` center. The layout now
+constructs a `Vector4` explicitly before querying character navigation. The
+original test fixture incorrectly returned a `Vector4` hit position; it now
+returns `Vector3` and rejects incorrectly typed native arguments. Executing the
+exact v0.18a1 layout against this fixture reproduces the reported type error.
+
+The ground ray now spans +1.5 to -1.5 m around the authored height. The old ray
+started only 0.7 m above it, leaving part of the already accepted +1.3 m uphill
+range unsearchable. A separate negative control changes only the old type
+conversion and confirms that it still misses valid +1.1 m ground. The current
+helper accepts supported ground across all four rotations, including +/-1.1 m.
+
+Height +/-1.3 m, minimum surface-normal Z 0.85, maximum vehicle corner delta
+0.4 m, clearance and navmesh requirements are unchanged. Unsupported geometry
+still refuses the whole layout before any actor creation. Errors distinguish
+missed/invalid hits, slope, height and vehicle footprint failures, with the
+heading and probe coordinate for support failures. The exact cause of the
+original police-ground rejection remains unconfirmed: its old message combined
+all those conditions. No claim is made that the physical scene is calibrated.
+
+This patch changes only the layout helper and CET build labels in the installed
+runtime. All 40 native scripts, seven archives, quest/waypoint controllers,
+scene actors, combat/revive behavior and payment logic remain byte-identical to
+v0.18a1. Install the complete package, fully restart, and first retry the same
+90-degree rotation that previously reached character navigation. If support is
+still rejected, the full new line identifies which check needs investigation.
