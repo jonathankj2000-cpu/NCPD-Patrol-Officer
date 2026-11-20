@@ -17,10 +17,10 @@ local function request(distance)
 end
 local function policeHeading(p)
  local dx,dy=p.x-site.x,p.y-site.y
- if math.abs(dx)<.001 and math.abs(dy+9)<.001 then return 0 end
- if math.abs(dx-9)<.001 and math.abs(dy)<.001 then return 90 end
- if math.abs(dx)<.001 and math.abs(dy-9)<.001 then return 180 end
- if math.abs(dx+9)<.001 and math.abs(dy)<.001 then return 270 end
+ if math.abs(dx)<.001 and math.abs(dy+6)<.001 then return 0 end
+ if math.abs(dx-6)<.001 and math.abs(dy)<.001 then return 90 end
+ if math.abs(dx)<.001 and math.abs(dy-6)<.001 then return 180 end
+ if math.abs(dx+6)<.001 and math.abs(dy)<.001 then return 270 end
 end
 local function tried()
  local result={}
@@ -58,7 +58,7 @@ assert(cars==4 and npcs==7);selected(180)
 -- Even an obstruction at the very last NPC rejects the complete layout before
 -- any entity exists; clearing that position permits exactly one later scene.
 reset();f.noGroundAt=function(p) local h=policeHeading(p);return h~=nil and h~=0 end
-f.vehicleAt=function(p) return math.abs(p.x-site.x-8)<.001 and math.abs(p.y-site.y-11.5)<.001 end
+f.vehicleAt=function(p) return math.abs(p.x-site.x-7)<.001 and math.abs(p.y-site.y-9.5)<.001 end
 request(170);step(.25);assert(#f.creates==0 and #f.overlapQueries==10 and n:GetStage()==1)
 assert(scene.diagnostics():find('Vehicle occupies enemy spawn',1,true))
 f.vehicleAt=nil;step(1);selected(0)

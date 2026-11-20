@@ -3,6 +3,7 @@
 local Site=require('officer_down_scene')
 local Layout=require('officer_down_layout')
 local Crew=require('officer_ai')
+local Actors=require('officer_down_actors')
 local M={}
 local phase,label='idle','Officer Down test ready'
 local heading,token,actors,elapsed,poll,retention=0,nil,{},0,0,0
@@ -20,17 +21,7 @@ local function origin() return Vector4.new(Site.x,Site.y,Site.z,1) end
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
 local function report(text,status) label=text;if status then status('Officer Down | '..text) end end
 local function deleteActors()
-    local system=Game.GetDynamicEntitySystem()
-    if not system or not system:IsReady() then return #actors==0 end
-    local remaining={}
-    for _,row in ipairs(actors) do
-        local ok,gone=pcall(function()
-            if system:IsManaged(row.id)==false then return true end
-            return system:DeleteEntity(row.id)==true and system:IsManaged(row.id)==false
-        end)
-        if not ok or not gone then remaining[#remaining+1]=row end
-    end
-    actors=remaining
+    actors=Actors.remove(actors)
     return #actors==0
 end
 function M.state() return label end
@@ -97,68 +88,19 @@ function M.request(patrol,status,sound,voice)
     return ok
 end
 local function createScene(backend,status)
-    local layout,selected,reason,tries=Layout.choose(heading,Game.GetPlayer())
+    local layout,selected,reason,tries=Layout.choose(heading,Game.GetPlayer(),{variant='compact'})
     placementPasses=placementPasses+1
     placementReason=reason
     if not layout then return false end
-    local entities=Game.GetDynamicEntitySystem()
-    for _,row in ipairs(layout) do
-        if not TweakDB:GetRecord(TweakDBID.new(row.record)) then error('Missing private scene record: '..row.record) end
-    end
+    Actors.create(layout,backend,actors)
     selectedHeading=selected
-    placementReason='Selected '..selected..' degrees after '..tries..' rotation checks'
+    placementReason='Selected '..selected..' degrees after '..tries..' rotation checks | layout=compact'
     report(placementReason,status)
-    for _,row in ipairs(layout) do
-        local spec=DynamicEntitySpec.new()
-        spec.recordID=TweakDBID.new(row.record);spec.position=row.position;spec.orientation=backend:Orientation(row.yaw)
-        spec.persistState,spec.persistSpawn,spec.alwaysSpawned=false,false,false;spec.spawnInView,spec.active=true,true
-        local id=entities:CreateEntity(spec)
-        if not id or not EntityID.IsDefined(id) then error('Scene actor creation rejected: '..row.kind) end
-        row.id=id;actors[#actors+1]=row
-    end
     phase,elapsed='spawning',0
     return true
 end
-local function prepare(backend)
-    local entities=Game.GetDynamicEntitySystem()
-    local ready=true
-    for _,row in ipairs(actors) do
-        if not row.bound then
-            local actor=entities:GetEntity(row.id)
-            if not actor or not actor:IsAttached() then ready=false else
-                if entities:IsManaged(row.id)~=true or actor:GetRecordID()~=TweakDBID.new(row.record) then error('Scene actor identity mismatch') end
-                local p=actor:GetWorldPosition()
-                if distance(p,row.position)>1.5 then error('Scene actor attached at an unexpected road level/position') end
-                if row.car then
-                    if not backend:ProtectVehicle(actor) then ready=false else row.bound=true;actor:ForceBrakesUntilStoppedOrFor(2) end
-                else
-                    if not actor:GetAIControllerComponent() or not actor:GetAttitudeAgent() then ready=false else
-                        Crew.stopFollowing(actor)
-                        if not backend:ProtectNPC(actor) then ready=false else
-                            row.command=AIHoldPositionCommand.new()
-                            row.command.duration=-1;row.command.ignoreInCombat=true;row.command.removeAfterCombat=false;row.command.alwaysUseStealth=false
-                            actor:GetAIControllerComponent():SendCommand(row.command)
-                            row.bound=true
-                        end
-                    end
-                end
-                if row.bound then row.actor=actor end
-            end
-        end
-    end
-    return ready
-end
-local function lock(backend)
-    for _,row in ipairs(actors) do
-        if row.actor and row.actor:IsAttached() then
-            local p=row.actor:GetWorldPosition()
-            if (p.x-row.position.x)^2+(p.y-row.position.y)^2>.25 or math.abs(p.z-row.position.z)>1 then
-                if not backend:LockPosition(row.actor,row.position,row.yaw) then error('Pre-arrival position lock rejected') end
-            end
-            if row.car then row.actor:ForceBrakesUntilStoppedOrFor(1) end
-        end
-    end
-end
+local function prepare(backend) return Actors.prepare(actors,backend) end
+local function lock(backend) return Actors.lock(actors,backend) end
 local function release(backend)
     for _,row in ipairs(actors) do
         if row.command then row.actor:GetAIControllerComponent():StopExecutingCommand(row.command,false);row.command=nil end

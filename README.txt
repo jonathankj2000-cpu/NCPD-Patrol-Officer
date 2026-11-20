@@ -1,3 +1,62 @@
+NCPD PATROL v0.18b COMPACT OFFICER DOWN AND SCENE SURVEY - COMPLETE BRANCH TEST
+
+Officer Down now uses a compact layout: 12 m between the police/gang car lines.
+Gang cars retain +/-5.5 m lateral offsets, so their centers remain 11 m apart.
+The injured/defending officers move from -12.5 to -9.5 m; gunmen move inward to
+9.5/10 m and lateral positions +/-7, +/-3.5 and 0 m. The original standard
+layout remains available as a reference in the survey tool.
+
+SCENE SURVEY - AUTOMATIC PLACEMENT TESTS
+
+The supplied document contains Kryss_02 through Kryss_17 (16 new locations).
+Including the original TEST_KRYSS_01 gives 17 candidates. Coverage is currently
+City Center (Central) and Watson only. These are candidates, not approved quests.
+
+Install all 104 files and fully restart the game. Load a MANUAL TEST SAVE,
+go OFF DUTY, leave combat/wanted status and exit your vehicle. Clear existing
+dispatch/backup actors. Open CET -> Testing -> Scene survey: 17 recorded sites ->
+TEST: Survey all 17 sites (compact). Close CET and leave the game running;
+avoid moving V while the tour is testing. Allow several minutes.
+
+The tool moves V to each recorded center and waits for actual ground/navmesh.
+It tries the captured heading and quarter-turn alternatives, creates one full
+protected ten-actor scene, checks at least three seconds of actual placement
+stability, and confirms both Codeware deletion and physical detachment before
+moving on. It never corrects test actors' positions to manufacture a pass.
+The original player position/yaw is restored at the end or on cancellation.
+
+Results persist in the CET mod folder:
+  scene_survey_results.jsonl - append-only evidence, preferred proven headings
+  scene_survey_report.json  - shareable report from Export scene survey report
+
+Use Load saved survey results after a restart to read earlier results.
+TEST: Retry unverified survey sites retries compact sites whose latest outcome
+was unsuccessful/missing. Temporary blockage is eligible for another test.
+Previously proven rotations are tried first; full placement is always rechecked.
+Standard-layout tests are available for comparison. Reports include actual and
+expected actor coordinates, chosen yaw, failures and catalog/layout revisions.
+
+Stop survey and return waits for confirmed cleanup. If deletion is pending,
+the tool stays reserved and does not teleport into another scene. After a CET
+reload in the same running game, use Recover survey cleanup and return. A save
+reload forgets old-world IDs and never resumes the tour automatically.
+
+The tour runs OFF DUTY and starts no quest, awards no credits/career progress,
+and writes no waypoint. It validates placement/spawn/stability; combat, cover,
+revive animations and actual locations still need game testing. A return teleport
+is not a save rollback; reload the manual test save before ordinary play.
+
+Transfers use controlled coordinate teleportation and readiness/cleanup waits.
+No memory-purging loading screen is claimed. Only one test scene is retained;
+actual world streaming and memory behavior must be observed in game.
+
+Existing 40 native scripts, seven archives, native marker banks/controllers,
+dispatch scheduling, VIP/cyberpsycho behavior and rewards remain unchanged.
+The package adds one private survey native owner and four shared/survey Lua
+modules. Browser Extension remains optional. See docs/SCENE_SURVEY_v018b.md.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18a3 OFFICER DOWN PLACEMENT - COMPLETE BRANCH TEST
 
 Officer Down automatically checks 0, 90, 180 and 270 degrees before rejecting

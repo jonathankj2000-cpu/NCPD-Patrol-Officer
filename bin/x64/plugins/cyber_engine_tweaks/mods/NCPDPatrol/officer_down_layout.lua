@@ -2,14 +2,45 @@
 -- any entity; no road level or navmesh fallback to another floor.
 local Scene=require('officer_down_scene')
 local M={}
+M.revision='od-layout-v2'
 local function finite(p) return p and p.x==p.x and p.y==p.y and p.z==p.z and math.abs(p.x)<100000 and math.abs(p.y)<100000 and math.abs(p.z)<100000 end
 local REJECTION='Scene placement: '
 local function reject(reason) error(REJECTION..reason,0) end
-function M.build(heading,player)
+local function surface(spatial,p,site)
+    local hit,result=spatial:SyncRaycastByCollisionGroup(Vector4.new(p.x,p.y,p.z+1.5,1),Vector4.new(p.x,p.y,p.z-1.5,1),CName.new('Static'),true,false)
+    if not hit then return nil,'no Static surface hit in the +/-1.5 m probe' end
+    if not result or not finite(result.position) or not finite(result.normal) then return nil,'invalid Static hit position/normal' end
+    if result.normal.z<.85 then return nil,string.format('surface normal Z=%.3f; minimum=0.850',result.normal.z) end
+    if math.abs(result.position.z-site.z)>1.3 then
+        return nil,string.format('surface Z=%.3f; scene Z=%.3f; height delta=%.3f m; maximum=1.300 m',result.position.z,site.z,result.position.z-site.z)
+    end
+    -- The native ray hit is Vector3; all navigation arguments are Vector4.
+    return Vector4.new(result.position.x,result.position.y,result.position.z,1)
+end
+function M.landing(site,player)
+    if not finite(site) then error('Invalid landing origin') end
+    local spatial,nav=Game.GetSpatialQueriesSystem(),Game.GetAINavigationSystem()
+    if not spatial or not nav then return nil,'Landing services not ready' end
+    local ground,reason=surface(spatial,site,site)
+    if not ground then return nil,reason end
+    local result=nav:FindPointInSphereForCharacter(ground,.5,player)
+    if not result or result.status~=worldNavigationRequestStatus.OK or not finite(result.point)
+        or math.abs(result.point.z-ground.z)>.5 or (result.point.x-ground.x)^2+(result.point.y-ground.y)^2>.25 then return nil,'Landing navmesh not ready/too far from recorded center' end
+    local p=Vector4.new(result.point.x,result.point.y,result.point.z,1)
+    if spatial:SyncRaycastByCollisionGroup(Vector4.new(p.x,p.y,p.z+.15,1),Vector4.new(p.x,p.y,p.z+1.9,1),CName.new('Static'),true,false) then return nil,'Landing center has a static obstruction' end
+    if spatial:Overlap(Vector4.new(.4,.4,.8,0),Vector4.new(p.x,p.y,p.z+.95,1),EulerAngles.new(0,0,0),CName.new('Vehicle')) then return nil,'Landing center occupied by a vehicle' end
+    return Vector4.new(p.x,p.y,p.z+.1,1)
+end
+function M.build(heading,player,options)
+    options=options or {}
+    local site=options.site or Scene
+    if not finite(site) then error('Invalid scene origin') end
+    local variant=options.variant or 'standard'
+    if variant~='standard' and variant~='compact' then error('Unknown scene layout: '..tostring(variant)) end
     local spatial,nav=Game.GetSpatialQueriesSystem(),Game.GetAINavigationSystem()
     if not spatial or not nav then error('Scene ground/navigation services unavailable') end
     local a=math.rad(heading);local fx,fy=-math.sin(a),math.cos(a);local rx,ry=math.cos(a),math.sin(a)
-    local function point(x,y,z) return Vector4.new(Scene.x+fx*x+rx*y,Scene.y+fy*x+ry*y,z or Scene.z,1) end
+    local function point(x,y,z) return Vector4.new(site.x+fx*x+rx*y,site.y+fy*x+ry*y,z or site.z,1) end
     local function ray(a,b) return spatial:SyncRaycastByCollisionGroup(a,b,CName.new('Static'),true,false) end
     local function occupied(ground,car,yaw)
         -- Match the game's SpatialQueriesHelper: dimensions are half-extents;
@@ -18,21 +49,7 @@ function M.build(heading,player)
         local center=Vector4.new(ground.x,ground.y,ground.z+(car and .9 or .95),1)
         return spatial:Overlap(box,center,EulerAngles.new(0,0,yaw),CName.new('Vehicle'))
     end
-    local function floor(p)
-        -- Search the full accepted +/-1.3 m height band, with a small margin.
-        -- A ray beginning at +0.7 m cannot hit valid uphill ground above it.
-        local hit,result=ray(Vector4.new(p.x,p.y,p.z+1.5,1),Vector4.new(p.x,p.y,p.z-1.5,1))
-        if not hit then return nil,'no Static surface hit in the +/-1.5 m probe' end
-        if not result or not finite(result.position) or not finite(result.normal) then return nil,'invalid Static hit position/normal' end
-        if result.normal.z<.85 then return nil,string.format('surface normal Z=%.3f; minimum=0.850',result.normal.z) end
-        if math.abs(result.position.z-Scene.z)>1.3 then
-            return nil,string.format('surface Z=%.3f; scene Z=%.3f; height delta=%.3f m; maximum=1.300 m',result.position.z,Scene.z,result.position.z-Scene.z)
-        end
-        -- SpatialQueryResult.position is Vector3. Native character navigation
-        -- requires Vector4; convert once at this boundary instead of forwarding
-        -- the raycast struct to a differently typed engine API.
-        return Vector4.new(result.position.x,result.position.y,result.position.z,1)
-    end
+    local function floor(p) return surface(spatial,p,site) end
     local definitions={
         {'police','Vehicle.NCPDPatrol_OD_Police',-9,0,90},
         {'gangcar','Vehicle.NCPDPatrol_OD_GangCar',8,-5.5,90},
@@ -45,6 +62,20 @@ function M.build(heading,player)
         {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,4,180},
         {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,8,180},
     }
+    if variant=='compact' then
+        definitions={
+            {'police','Vehicle.NCPDPatrol_OD_Police',-6,0,90},
+            {'gangcar','Vehicle.NCPDPatrol_OD_GangCar',6,-5.5,90},
+            {'gangcar','Vehicle.NCPDPatrol_OD_GangCar',6,5.5,90},
+            {'injured','Character.NCPDPatrol_OD_Injured',-9.5,-1.5,0},
+            {'defender','Character.NCPDPatrol_OD_Defender',-9.5,2.5,0},
+            {'enemy','Character.NCPDPatrol_OD_Ganger',9.5,-7,180},
+            {'enemy','Character.NCPDPatrol_OD_Ganger',9.5,-3.5,180},
+            {'enemy','Character.NCPDPatrol_OD_Ganger',10,0,180},
+            {'enemy','Character.NCPDPatrol_OD_Ganger',9.5,3.5,180},
+            {'enemy','Character.NCPDPatrol_OD_Ganger',9.5,7,180},
+        }
+    end
     local layout={}
     for _,row in ipairs(definitions) do
         local p=point(row[3],row[4]);local ground,reason=floor(p)
@@ -77,11 +108,11 @@ function M.build(heading,player)
     end
     return layout
 end
-function M.choose(heading,player)
+function M.choose(heading,player,options)
     local failures={}
     for step=0,3 do
         local candidate=(heading+90*step)%360
-        local ok,result=pcall(M.build,candidate,player)
+        local ok,result=pcall(M.build,candidate,player,options)
         if ok then return result,candidate,table.concat(failures,' || '),step+1 end
         -- A bad API argument or missing service must remain a real error; only
         -- a known geometric/occupancy rejection permits another rotation.
@@ -89,5 +120,8 @@ function M.choose(heading,player)
         failures[#failures+1]=string.format('%d deg: %s',candidate,result:sub(#REJECTION+1))
     end
     return nil,nil,table.concat(failures,' || '),4
+end
+function M.isRejection(reason)
+    return type(reason)=='string' and reason:sub(1,#REJECTION)==REJECTION
 end
 return M

@@ -67,6 +67,21 @@ def code(path):
  s=s.replace('local linkedID = {}','local linkedID = {value=0}').replace('local rotation = nil','local rotation = {Roll=0,Pitch=0,Yaw=0}')
  return s
 
+def engine_runtime():
+ lua=LuaRuntime(unpack_returned_tuples=True);lua.globals().PathHash=journal_hash;lua.globals().MOD_DIR=str(MOD)
+ lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path;math.randomseed(20261120)')
+ lua.globals().SceneMarker=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds'))
+ lua.globals().OfficerNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'))
+ lua.globals().SiteNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds'))
+ lua.globals().IncidentNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds'))
+ # Execute the actual shared journal write helper, not a second implementation.
+ source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds').read_text();start=source.index('    public static func WriteNavigationState(');end=source.index('    // Called by',start)
+ with TemporaryDirectory(prefix='ncpd-scene-writer-') as temp:
+  p=Path(temp)/'writer.reds';p.write_text('public class Writer extends IScriptable {\n'+source[start:end]+'\n}')
+  lua.globals().NCPDPatrolFixedMarkerSystem=lua.execute(translate(p))
+ lua.execute((HERE/'engine.lua').read_text())
+ return lua
+
 def main():
  spec=importlib.util.spec_from_file_location('officer_assets',ROOT/'tools/build_officer_down_assets.py');builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
  for name,body in builder.outputs().items():assert (ROOT/name).read_text()==body,name
@@ -85,18 +100,7 @@ def main():
  assert hashlib.sha256((ROOT/manifest['archive_path']).read_bytes()).hexdigest()==manifest['archive_sha256']
  for path,sha in manifest['authored_inputs'].items():assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==sha,path
  assert manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']
- lua=LuaRuntime(unpack_returned_tuples=True);lua.globals().PathHash=journal_hash;lua.globals().MOD_DIR=str(MOD)
- lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path;math.randomseed(20261120)')
- lua.globals().SceneMarker=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds'))
- lua.globals().OfficerNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'))
- lua.globals().SiteNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds'))
- lua.globals().IncidentNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds'))
- # Execute the actual shared journal write helper, not a second implementation.
- source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds').read_text();start=source.index('    public static func WriteNavigationState(');end=source.index('    // Called by',start)
- with TemporaryDirectory(prefix='ncpd-scene-writer-') as temp:
-  p=Path(temp)/'writer.reds';p.write_text('public class Writer extends IScriptable {\n'+source[start:end]+'\n}')
-  lua.globals().NCPDPatrolFixedMarkerSystem=lua.execute(translate(p))
- lua.execute((HERE/'engine.lua').read_text())
+ lua=engine_runtime()
  layout_checks=check_layout_boundaries(lua)
  lua.execute((HERE/'placement_scenarios.lua').read_text())
  lua.execute((HERE/'scenarios.lua').read_text())
@@ -148,6 +152,7 @@ def main():
  view.Frame(view,'Testing',label);assert view.locatorCalls==1 and view.originalQuest.active
  report={'manual_fixed_scene':True,'position':json.loads((ROOT/'assets/officer_down/scene.json').read_text())['position'],
  'cars':3,'officers':2,'gang_members':5,'arrival_metres':55,'prepare_metres':250,
+ 'production_layout':'compact','compact_line_gap_metres':12,'gang_lateral_offset_metres':5.5,'gang_center_gap_metres':11,
  'automatic_rotation_order':[0,90,180,270],'manual_preferred_heading_retained':True,
  'vehicle_overlap_queries_typed':True,'all_ten_positions_checked_before_creation':True,
  'prepare_near_metres':180,'prepare_interval_seconds':1,'prepare_near_grace_seconds':8,

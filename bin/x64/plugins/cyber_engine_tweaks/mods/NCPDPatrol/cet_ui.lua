@@ -268,7 +268,23 @@ function M.new(context)
             if ImGui.Button("Revive scene officer (nearby)") then if Dispatch.reviveOfficerDown then Dispatch.reviveOfficerDown(status) end end
             if ImGui.Button("Clear Officer Down scene") then if Dispatch.clearOfficerDown then Dispatch.clearOfficerDown(getPatrolSystem(), status) end end
             if ImGui.Button("Log Officer Down diagnostics") then if Dispatch.officerDownDiagnostics then status("Officer Down | "..Dispatch.officerDownDiagnostics()) end end
-            ImGui.TextWrapped("Preparation starts within 250 m and checks four rotations automatically. Occupied or unsupported layouts retry once per second; within 180 m they have 8 active seconds. The scene unlocks at 55 m. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Change the preferred rotation only after clearing this scene. Automatic dispatch weights remain 50/30/20.")
+            ImGui.TextWrapped("Compact scene: 12 m between police/gang lines; gang cars remain at +/-5.5 m (11 m apart). NPCs are pulled inward. Preparation starts within 250 m and checks four rotations automatically. Occupied or unsupported layouts retry once per second; within 180 m they have 8 active seconds. The scene unlocks at 55 m. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Change the preferred rotation only after clearing this scene. Automatic dispatch weights remain 50/30/20.")
+        end
+        if ImGui.CollapsingHeader("Scene survey: 17 recorded sites") then
+            local survey=context.sceneSurvey
+            ImGui.TextWrapped("Coverage: City Center (Central) and Watson only. The document's 16 sites plus TEST_KRYSS_01 make 17. Use a manual test save, go OFF DUTY and exit your vehicle. The test moves V between recorded centers, spawns one protected scene, checks stability, confirms cleanup and returns to your start. Close CET and leave the game running. Combat, quest markers and rewards are outside this placement test.")
+            if survey then
+                ImGui.TextWrapped(survey.summary())
+                if ImGui.Button("TEST: Survey all 17 sites (compact)") then survey.start('compact',false,status) end
+                if ImGui.Button("TEST: Survey all 17 sites (standard)") then survey.start('standard',false,status) end
+                if ImGui.Button("TEST: Retry unverified survey sites") then survey.start('compact',true,status) end
+                if ImGui.Button("Stop survey and return") then survey.cancel(status) end
+                if ImGui.Button("Recover survey cleanup and return") then survey.recover(status) end
+                if ImGui.Button("Load saved survey results") then survey.loadResults(status) end
+                if ImGui.Button("Export scene survey report") then survey.export(status) end
+                if ImGui.Button("Log scene survey diagnostics") then status('Scene survey | '..survey.diagnostics()) end
+                ImGui.TextWrapped("Evidence: scene_survey_results.jsonl. Export: scene_survey_report.json. Both are inside the NCPDPatrol CET folder. Proven rotations are reused first on later tests. Temporary blockage remains eligible for retry. Cleanup must finish before another teleport. After a CET reload, use recovery; a saved-game reload never resumes the tour automatically. Transfers use controlled teleport and ground/navmesh checks; a memory-purging loading screen is not claimed.")
+            end
         end
         -- Officer Down UI end
         -- r4 probe UI begin
@@ -325,7 +341,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18a3 Officer Down placement###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18b Scene Survey###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

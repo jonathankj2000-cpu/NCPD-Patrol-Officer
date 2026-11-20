@@ -12,6 +12,12 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18b Scene Survey | compact layout and 17-site off-duty tour','-- NCPD Patrol v0.18a3 Officer Down placement | automatic rotations and vehicle clearance')
+    source=source.replace('v0.18b Scene Survey loaded. Compact Officer Down layout and an explicit off-duty 17-site test tour. City Center and Watson only. Use a manual test save; survey evidence is stored in the CET mod folder. Install the complete package and fully restart the game.','v0.18a3 Officer Down placement loaded. Automatic rotations, vehicle clearance and early preparation with bounded retry. Combat, revive, rewards and dispatch markers are unchanged. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18b Scene Survey###','NCPD Patrol - v0.18a3 Officer Down placement###')
+    source=re.sub(r'^.* -- scene survey hook[^\n]*\n','',source,flags=re.M)
+    source=re.sub(r'^    -- scene survey guard begin\n.*?^    -- scene survey guard end\n','',source,flags=re.M|re.S)
+    source=re.sub(r'^-- scene survey setup begin\n.*?^-- scene survey setup end\n\n','',source,flags=re.M|re.S)
     source=source.replace('-- NCPD Patrol v0.18a3 Officer Down placement | automatic rotations and vehicle clearance','-- NCPD Patrol v0.18a2 Officer Down ground fix | typed navigation and full probe height')
     source=source.replace('v0.18a3 Officer Down placement loaded. Automatic rotations, vehicle clearance and early preparation with bounded retry. Combat, revive, rewards and dispatch markers are unchanged. Install the complete package and fully restart the game.','v0.18a2 Officer Down ground fix loaded. Character navigation receives Vector4 ground; probes cover the accepted height range. Other scene behavior and dispatch markers are unchanged. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18a3 Officer Down placement###','NCPD Patrol - v0.18a2 Officer Down ground fix###')
@@ -66,4 +72,5 @@ def without_probe(source):
         'NCPD Patrol - v0.17d quest marker test r4###','NCPD Patrol - v0.17d VIP refactor r3###')
 
 PROBE_BUTTONS={'Log active dispatch marker diagnostics','Log legacy Coyote test diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test'}
+PROBE_BUTTONS.update({'TEST: Survey all 17 sites (compact)','TEST: Survey all 17 sites (standard)','TEST: Retry unverified survey sites','Stop survey and return','Recover survey cleanup and return','Load saved survey results','Export scene survey report','Log scene survey diagnostics'})
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})

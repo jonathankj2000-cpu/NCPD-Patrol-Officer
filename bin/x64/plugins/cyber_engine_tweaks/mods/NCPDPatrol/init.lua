@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18a3 Officer Down placement | automatic rotations and vehicle clearance
+-- NCPD Patrol v0.18b Scene Survey | compact layout and 17-site off-duty tour
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -11,6 +11,7 @@ local Backup = require("backup")
 local Arrest = require("arrest")
 local Navigation = require("marker_navigation") -- r5 marker hook
 local MarkerProbe = require("quest_marker_probe") -- r4 probe hook
+local Survey = require("scene_survey") -- scene survey hook
 local Trunk = require("trunk")
 local onDuty = false
 local overlayOpen = false
@@ -220,6 +221,9 @@ local function ensurePoliceOutfit()
 end
 
 local function startShift()
+    -- scene survey guard begin
+    if Survey.blocksDuty() then status("Finish survey cleanup/return before starting a shift.");return end
+    -- scene survey guard end
     if not isInGame() then
         status("Load a save before starting a shift.")
         return
@@ -290,6 +294,7 @@ local function toggleDuty()
 end
 
 local function forgetLoadedWorld()
+    Survey.reset() -- scene survey hook
     Navigation.reset() -- r5 marker hook
     MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
     -- Also forget failed cleanup IDs when the previous shift was already over.
@@ -305,10 +310,21 @@ local function forgetLoadedWorld()
     dutyPoll, bonusPoll = 0, 0
 end
 
+-- scene survey setup begin
+Survey.configure({status=status,worldReady=Navigation.worldReady,canStart=function()
+    if onDuty then return false,"Go OFF DUTY before testing scene locations" end
+    local life=Dispatch.lifecycle()
+    if life.reserved or life.foregroundCleanup or life.backgroundCleanup or Backup.isActive() then
+        return false,"Clear existing dispatch/backup actors before starting the survey"
+    end
+    return true
+end})
+-- scene survey setup end
+
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18a3 Officer Down placement loaded. Automatic rotations, vehicle clearance and early preparation with bounded retry. Combat, revive, rewards and dispatch markers are unchanged. Install the complete package and fully restart the game.")
+    status("v0.18b Scene Survey loaded. Compact Officer Down layout and an explicit off-duty 17-site test tour. City Center and Watson only. Use a manual test save; survey evidence is stored in the CET mod folder. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -320,6 +336,7 @@ registerForEvent("onOverlayOpen", function() overlayOpen = true end)
 registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
+    Survey.update(delta) -- scene survey hook
     if not isInGame() then
         Navigation.reset() -- r5 marker hook
         MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
@@ -390,6 +407,7 @@ registerForEvent("onUpdate", function(delta)
 end)
 
 registerForEvent("onShutdown", function()
+    Survey.shutdown() -- scene survey hook
     pcall(Navigation.finish) -- r5 marker hook
     MarkerProbe.finish(nil, "CET shutdown") -- r4 probe hook
     Trunk.finish()
@@ -410,6 +428,7 @@ local menu = require("cet_ui").new({
     trunk=Trunk, vehicleRadio=VehicleRadio,
     navigation=Navigation, -- r5 marker hook
     markerProbe=MarkerProbe, -- r4 probe hook
+    sceneSurvey=Survey, -- scene survey hook
     isOnDuty=function() return onDuty end,
     getLastMessage=function() return lastMessage end,
     status=status, toggleDuty=toggleDuty, requestBackup=requestBackup,
