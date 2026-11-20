@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "coordinates": {
+    "repository": "cozzbp/cyberpunk-2077.atlasforge.gg",
+    "commit": "fcccba705287737799d66d77437e5cdc8cabc971",
+    "path": "src/data/mapmarkers.json",
+    "selection": "Only scanner/terminal identifiers and numeric XYZ facts. No descriptions, story text, website code, images or geometry copied."
+  },
+  "node_refs": {
+    "repository": "Deweh/CyberCAT-SimpleGUI",
+    "commit": "c1fd00305e7db905a4e7de8cfa360d4f4efee3b2",
+    "path": "CP2077SaveEditor/Resources/FastTravel.json",
+    "license": "MIT; Copyright (c) 2021 DeweySalt",
+    "selection": "MarkerRef/PointRecord identifier pairs joined by exact FastTravelPoints record suffix."
+  },
+  "site_counts": {
+    "scanner": 132,
+    "terminal": 191,
+    "named_terminal_refs": 191
+  },
+  "validation": "Runtime target must match a catalog coordinate within 2 m. Native confirmation additionally requires actual pin/hash/position/objective link; unknown or changed sites use a separately owned quest-style fallback. No game-build completeness claim."
+}

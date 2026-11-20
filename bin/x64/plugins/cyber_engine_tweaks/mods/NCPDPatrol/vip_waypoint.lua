@@ -1,3 +1,4 @@
+local Navigation = require("marker_navigation") -- r5 marker hook
 -- One VIP transport's marker registry state. No journal, actor or reward APIs.
 -- clear removes the owned current-world marker; reset only forgets old handles.
 local M = {}
@@ -7,6 +8,7 @@ function M.new()
     local waypointKind,waypointStatus="Pickup","No active VIP waypoint"
     local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
     local function releaseWaypointID()
+        if Navigation.isBank(waypointID) then Navigation.release(waypointID);waypointID=nil;return end -- r5 marker hook
         if waypointID then
             local system=Game.GetMappinSystem()
             if not system then error("Mappin system unavailable for VIP marker removal") end
@@ -22,7 +24,7 @@ function M.new()
     local function waypoint(patrol,point,kind)
         releaseWaypointID()
         waypointPoint=Vector4.new(point.x,point.y,point.z,1)
-        local marker=patrol:PlaceDispatchWaypoint(point)
+        local marker=Navigation.place(patrol,point,"vip")
         if not marker or marker.value==nil or marker.value==0 then error("VIP waypoint creation failed") end
         waypointID,waypointKind=marker,kind
         waypointPoll,waypointMissing,waypointCooldown=0,0,0
@@ -30,6 +32,7 @@ function M.new()
     end
     local function checkWaypoint(delta,patrol,status)
         if not waypointPoint then return end
+        if Navigation.isBank(waypointID) then waypointStatus=Navigation.describe(waypointID,waypointStatus);return end -- r5 marker hook
         waypointPoll=waypointPoll+delta
         waypointCooldown=math.max(0,waypointCooldown-delta)
         if waypointPoll<1 then return end
@@ -64,7 +67,7 @@ function M.new()
             -- Only this assignment's cached ID is removed. Retired scenes and
             -- other dispatch types cannot lose their marker to a VIP repair.
             releaseWaypointID()
-            local marker=patrol:PlaceDispatchWaypoint(waypointPoint)
+            local marker=Navigation.place(patrol,waypointPoint,"vip")
             if not marker or marker.value==nil or marker.value==0 then error("VIP marker re-registration rejected") end
             waypointID=marker;waypointRepairs=waypointRepairs+1;waypointMissing=0
             waypointStatus=waypointKind.." marker re-registered; awaiting registry verification"

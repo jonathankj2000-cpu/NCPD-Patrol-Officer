@@ -1,3 +1,4 @@
+local Navigation = require("marker_navigation") -- r5 marker hook
 -- Scanner assignment ownership: candidate history, journal token, marker and HUD.
 -- Global request guards remain in dispatch.lua. Native code owns all payments.
 local HUD = require("dispatch_hud")
@@ -29,6 +30,7 @@ end
 local function clear(patrol)
     -- The native tag identifies our markers even if a save regenerated their IDs.
     patrol:ClearDispatchWaypoints()
+    Navigation.clear("scanner") -- r5 marker hook
     active = nil
     navigation = "No active dispatch"
     hide()
@@ -51,7 +53,7 @@ function M.isActive() return active ~= nil end
 function M.isFailed() return faulted end
 function M.token() return active and active.journalToken or 0 end
 function M.candidates() return candidateCount end
-function M.navigationState() return navigation end
+function M.navigationState() return Navigation.describe(active and active.waypoint, navigation) end
 function M.clear(patrol) clear(patrol) end
 -- Shift end clears assignment/history; the last diagnostic counts remain until
 -- the next shift. Briefing variation intentionally survives resets, as before.
@@ -117,7 +119,8 @@ function M.request(patrol, status, soundEnabled, voiceEnabled, report)
     lastBriefing = briefing
     active.journalToken = token
     patrol:ClearDispatchWaypoints()
-    local id = patrol:PlaceDispatchWaypoint(chosen.position)
+    Navigation.clear("scanner") -- r5 marker hook
+    local id = Navigation.place(patrol, chosen.position, "scanner")
     if not id or not id.value or id.value == 0 then error("Game did not return a dispatch waypoint ID") end
     used[chosen.key] = true
     active.arrived = false

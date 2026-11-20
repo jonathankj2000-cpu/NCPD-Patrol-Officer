@@ -29,7 +29,7 @@ def verify(root):
     mods=root/PREFIX
     old=original(root,'vip.lua')
     locations=(mods/'vip_locations.lua').read_text()
-    waypoint=(mods/'vip_waypoint.lua').read_text()
+    waypoint=without_probe((mods/'vip_waypoint.lua').read_text())
     distance=between(old,'local function distance(','local function finite(')
     finite=between(old,'local function finite(','local function same(')
     choose=between(old,'local function chooseLocations(player)','local function spawnVIP(player)')

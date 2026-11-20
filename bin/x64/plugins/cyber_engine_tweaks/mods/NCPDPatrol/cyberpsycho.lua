@@ -1,3 +1,4 @@
+local Navigation = require("marker_navigation") -- r5 marker hook
 -- Manual encounter prototype. IDs originate only in this module's CreateEntity.
 local M = {}
 local Variants = require("cyberpsycho_variants")
@@ -114,6 +115,7 @@ function M.finish(patrol,status,reason,failed)
         if not ok and status then status("Cyberpsycho journal | "..tostring(err)) end
     end
     if patrol then pcall(function() patrol:ClearDispatchWaypoints() end) end
+    Navigation.clear("cyberpsycho") -- r5 marker hook
     phase="cleanup";finalReason=reason or "Test incident cleared";cleanupPoll=0
     return cleanup(status)
 end
@@ -233,7 +235,8 @@ function M.request(patrol,status,sound,voice)
         elapsed,poll,cleanupPoll=0,0,0
         M.sound,M.voice=sound==true,voice==true
         patrol:ClearDispatchWaypoints()
-        local marker=patrol:PlaceDispatchWaypoint(origin)
+        Navigation.clear("cyberpsycho") -- r5 marker hook
+        local marker=Navigation.place(patrol,origin,"cyberpsycho")
         if not marker or not marker.value or marker.value==0 then error("Scene waypoint creation failed") end
         patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho reported. Respond to the marked area within 3 minutes. Backup may be requested.",8,M.sound,M.voice)
         report("Assigned: cyberpsycho response | variant="..selected.label.." | distance="..tostring(math.floor(site.distance)).." m | search radius="..tostring(radius).." m",status)
@@ -328,6 +331,7 @@ local function update(delta,onDuty,patrol,status,HUD)
             M.finish(patrol,status,"Cyberpsycho session superseded")
         elseif stage==3 then
             patrol:ClearDispatchWaypoints()
+            Navigation.clear("cyberpsycho") -- r5 marker hook
             patrol:NotifyDispatch("NCPD DISPATCH: Cyberpsycho neutralized. Incident resolved.",8)
             report("COMPLETED | Cyberpsycho neutralized",status)
             if id then retired[#retired+1]={id=id,origin=origin,age=0,retry=1} end

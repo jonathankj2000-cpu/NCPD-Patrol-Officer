@@ -157,6 +157,8 @@ def main():
         # A valid but incorrect target must be caught by the old/new recorder.
         broken=Path(tmp)/'negative';broken.mkdir()
         (broken/'init.lua').write_text((current/'init.lua').read_text())
+        for name in ['marker_navigation.lua','marker_catalog.lua']:
+            (broken/name).write_text((current/name).read_text())
         source=(current/'cet_ui.lua').read_text();needle='Dispatch.requestMixed(getPatrolSystem(), status)'
         assert source.count(needle)==1
         (broken/'cet_ui.lua').write_text(source.replace(needle,'Dispatch.requestVIP(getPatrolSystem(), status)'))

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.17d quest marker test r4e | isolated opt-in experiment
+-- NCPD Patrol v0.17d fixed quest markers r5 | finite journal marker bank
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -9,6 +9,7 @@ local Dispatch = require("dispatch")
 local VehicleRadio = require("vehicle_radio")
 local Backup = require("backup")
 local Arrest = require("arrest")
+local Navigation = require("marker_navigation") -- r5 marker hook
 local MarkerProbe = require("quest_marker_probe") -- r4 probe hook
 local Trunk = require("trunk")
 local onDuty = false
@@ -288,6 +289,7 @@ local function toggleDuty()
 end
 
 local function forgetLoadedWorld()
+    Navigation.reset() -- r5 marker hook
     MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
     -- Also forget failed cleanup IDs when the previous shift was already over.
     -- This callback must never delete entities or unregister old native handles.
@@ -305,7 +307,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.17d quest marker test r4e loaded. Opt-in fixed-position quest marker under CET Testing. Normal dispatch retains its existing waypoint. Install the complete package and restart.")
+    status("v0.17d fixed quest markers r5 loaded. Scanner, VIP and cyberpsycho activate fixed journal pins. Unmapped sites use independent quest-style markers. Install the complete package and restart.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -318,6 +320,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     if not isInGame() then
+        Navigation.reset() -- r5 marker hook
         MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
         Trunk.reset()
         Arrest.reset()
@@ -381,10 +384,12 @@ registerForEvent("onUpdate", function(delta)
     local arrestPaused = true
     pcall(function() arrestPaused = getPatrolSystem():IsDispatchMenuOpen() end)
     Arrest.update(delta, onDuty, arrestPaused)
+    Navigation.update(delta,status) -- r5 marker hook
     MarkerProbe.update(delta, onDuty, status) -- r4 probe hook
 end)
 
 registerForEvent("onShutdown", function()
+    pcall(Navigation.finish) -- r5 marker hook
     MarkerProbe.finish(nil, "CET shutdown") -- r4 probe hook
     Trunk.finish()
     Backup.finish(getSupportSystem(), nil)
@@ -402,6 +407,7 @@ end)
 local menu = require("cet_ui").new({
     partner=Partner, dispatch=Dispatch, backup=Backup, arrest=Arrest,
     trunk=Trunk, vehicleRadio=VehicleRadio,
+    navigation=Navigation, -- r5 marker hook
     markerProbe=MarkerProbe, -- r4 probe hook
     isOnDuty=function() return onDuty end,
     getLastMessage=function() return lastMessage end,

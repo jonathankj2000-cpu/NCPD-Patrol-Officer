@@ -160,6 +160,12 @@ function M.new(context)
     end
 
     local function drawDiagnostics()
+        -- r5 marker UI begin
+        if ImGui.CollapsingHeader("Fixed quest markers") then
+            ImGui.TextWrapped(context.navigation.diagnostics())
+            if ImGui.Button("Log fixed quest marker diagnostics") then status("Fixed markers | " .. context.navigation.diagnostics()) end
+        end
+        -- r5 marker UI end
         ImGui.TextWrapped("Diagnostic buttons write details to the CET log. Recovery controls use the existing feature guards.")
         if ImGui.CollapsingHeader("Dispatch, journal and navigation") then
             ImGui.TextWrapped("Journal: " .. Dispatch.journalDiagnostics())
@@ -224,7 +230,7 @@ function M.new(context)
         -- r4 probe UI begin
         if ImGui.CollapsingHeader("Quest marker experiment") then
             local probe = context.markerProbe
-            ImGui.TextWrapped("OFF DUTY test: the MIT reference quest uses the El Coyote Cojo world anchor (-1259.60, -989.17, 12.04). Inspect the world map alongside your manual waypoint. This does not replace dispatch markers or award credits.")
+            ImGui.TextWrapped("Legacy controls: r4d static passed; r4e relocation failed in game. Normal dispatch uses fixed site pins. OFF DUTY test: the MIT reference quest uses the El Coyote Cojo world anchor (-1259.60, -989.17, 12.04). Inspect the world map alongside your manual waypoint. This does not replace dispatch markers or award credits.")
             ImGui.TextWrapped(probe.state())
             if ImGui.Button("TEST: Start static quest marker") then probe.start(status) end
             if ImGui.Button("TEST: Relocate native marker near V") then probe.relocate(status) end
@@ -275,7 +281,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4e###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d fixed quest markers r5###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end
