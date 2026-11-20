@@ -1,3 +1,43 @@
+NCPD PATROL v0.17d NATIVE MARKER RELOCATION PROBE r4e - COMPLETE BRANCH TEST
+
+R4d's fixed Coyote marker is CONFIRMED IN GAME by the user's log: one native
+QuestMappin, objective link, correct position, unchanged manual waypoint ID.
+This does not establish runtime relocation or GPS. The exact archived resources
+and phase/fact namespace from that successful control are retained unchanged.
+
+New CET control: TEST: Relocate native marker near V.
+1. OFF DUTY, outside combat/wanted status. Set a normal manual waypoint.
+2. Start static quest marker and wait for native confirmed=true at Coyote.
+3. Press Relocate native marker near V. The target is 150 m east of V's position
+   at the button press, with the same elevation. This is a marker test only.
+4. Wait five UNPAUSED gameplay seconds before opening the world map.
+5. Inspect the new location on the map and the quest-log Show on Map location.
+   Log diagnostics, then Remove and wait for cleanup.
+
+The controller discovers the live private QuestMappin again, checks its hash
+and objective link, and issues SetMappinPosition ONCE. It does not spawn a new
+marker, force its position every frame, or write the manual waypoint.
+relocation confirmed=true additionally requires the same native pin ID,
+runtime position AND GetQuestMappinPosition readback within 2 m of the target,
+and 3 observed active seconds of stability. Manual before/after move must match.
+The quest-position API is also used by the game's quest-log location control.
+
+Runtime position OK with quest position OK=false exposes a partial result;
+an ignored call, snap-back, missing pin or changed identity cannot pass.
+Position reads are listed in diagnostics even when confirmation fails.
+Basic native confirmed refers to current pin/link/target; relocation confirmed
+is the stricter result. This build's relocation remains UNTESTED IN GAME.
+
+Install the COMPLETE bin/r6/archive ZIP and fully restart; no CET hot reload.
+Probe interface=6; archived graph ready=5 remains correct. Browser Extension
+is optional. Five Testing controls, including the prior independent visual
+control. Normal dispatch, rewards and progression retain existing behavior.
+17 portable suites; 25 Lua modules, 31 native files, 79 installed files.
+Offline source/API compile and tests mock engine boundaries. Use a test save.
+See docs/QUEST_MARKER_PROBE.md and the verification report for scope/evidence.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d MIT REFERENCE MARKER PROBE r4d - COMPLETE BRANCH TEST
 
 The r4c game log showed an active quest/objective and graph stage=1, but ZERO

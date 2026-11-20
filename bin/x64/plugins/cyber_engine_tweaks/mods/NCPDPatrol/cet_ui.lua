@@ -227,10 +227,11 @@ function M.new(context)
             ImGui.TextWrapped("OFF DUTY test: the MIT reference quest uses the El Coyote Cojo world anchor (-1259.60, -989.17, 12.04). Inspect the world map alongside your manual waypoint. This does not replace dispatch markers or award credits.")
             ImGui.TextWrapped(probe.state())
             if ImGui.Button("TEST: Start static quest marker") then probe.start(status) end
+            if ImGui.Button("TEST: Relocate native marker near V") then probe.relocate(status) end
             if ImGui.Button("TEST: Andrea visual marker") then probe.startVisual(status) end
             if ImGui.Button("Remove quest marker test") then probe.finish(status) end
             if ImGui.Button("Log quest marker test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
-            ImGui.TextWrapped("Remove between tests. The static test requires journal proof. The Andrea visual control only checks rendering; it does not prove a journal link or GPS. If not confirmed after five seconds, log graph ready/stage and native pin count, then remove the test. No game-engine success is assumed.")
+            ImGui.TextWrapped("After static confirmation, Relocate moves that same native pin 150 m east of V. Wait 5 active seconds and inspect the world map plus quest-log location. Remove between independent tests. The static test requires journal proof. The Andrea visual control only checks rendering; it does not prove a journal link or GPS. If not confirmed after five seconds, log graph ready/stage and native pin count, then remove the test. No game-engine success is assumed.")
         end
         -- r4 probe UI end
         ImGui.TextWrapped("Use a test save. Test grants and claimed rewards remain if you save. Session unlocks leave your real incident count unchanged.")
@@ -274,7 +275,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4d###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d quest marker test r4e###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

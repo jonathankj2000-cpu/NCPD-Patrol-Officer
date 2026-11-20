@@ -1,4 +1,4 @@
-"""Verify the archived phase control and package the complete r4d MIT-reference test."""
+"""Verify the archived phase control and package the complete r4e native relocation test."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4d_TEST.zip'
-REPORT='NCPD_Patrol_Quest_Marker_Probe_r4d_verification.json'
+NAME='NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4e_TEST.zip'
+REPORT='NCPD_Patrol_Quest_Marker_Probe_r4e_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -17,6 +17,9 @@ def main():
     from lupa.luajit21 import LuaRuntime
     lua=LuaRuntime();modules=sorted((ROOT/PREFIX).glob('*.lua'))
     scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
+    static_base='63a6100602de836dd4f670fa8022f87fc1acfe99'
+    for name in ['archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl']:
+        assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{static_base}:{name}'],cwd=ROOT),name
     assert len(modules)==25 and len(scripts)==31
     for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
     previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
@@ -53,16 +56,17 @@ def main():
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17d-quest-marker-probe-r4d','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17d-quest-marker-probe-r4e','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
         'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),
         'zip_git_blob':blob(body),'new_payload':sorted(added),'existing_dispatch_and_native_scripts_unchanged':True,
-        'entrypoint_and_ui_changes':'isolated probe hooks, four Testing controls and build labels',
+        'entrypoint_and_ui_changes':'isolated probe hooks, five Testing controls and build labels',
         'currency_and_progression_unchanged':True,'browser_extension_still_optional':True,
-        'actual_game_validation':False,'native_node_activation_requires_in_game_test':True,
+        'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_in_game_validation':False,'native_node_activation_requires_in_game_test':True,
         'activation_contract_corrected':'MIT-attributed Negative Balance reference: JournalNode Active/Inactive, fileEntryIndex=1, Coyote NodeRef, QuestGiverVariant and active pin; separate non-journal renderer control',
+        'relocation_contract':'One scoped SetMappinPosition call; runtime and quest-log position readbacks, same native ID/link and 3 active observed seconds required; no manual tracking write',
         'observed_r4_startup_error_fixed':'Direct runtime node constructor removed; quest node IDs are typed in the compiled resource',
         'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
     (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')

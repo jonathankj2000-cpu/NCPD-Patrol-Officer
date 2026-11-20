@@ -1,0 +1,27 @@
+{
+  "build": "v0.17d-quest-marker-probe-r4d",
+  "commit": "63a6100602de836dd4f670fa8022f87fc1acfe99",
+  "source": "User in-game report and screenshot, 2026-11-20",
+  "scope": "Fixed Coyote native quest marker only; no relocation or GPS proof",
+  "confirmed": true,
+  "native_quest_pins": 1,
+  "objective_link": true,
+  "position_ok": true,
+  "graph_ready": 5,
+  "graph_stage": 1,
+  "quest_active": true,
+  "objective_active": true,
+  "pin_id": "12735365055256526636",
+  "journal_hash": 3616667126,
+  "target": {
+    "X": -1259.598022,
+    "Y": -989.166016,
+    "Z": 12.037
+  },
+  "manual_before_create": "15838451572341647800",
+  "manual_after_create": "15838451572341647800",
+  "manual_current": "15838451572341647800",
+  "manual_waypoint_unchanged": true,
+  "relocation_tested": false,
+  "gps_routing_tested": false
+}

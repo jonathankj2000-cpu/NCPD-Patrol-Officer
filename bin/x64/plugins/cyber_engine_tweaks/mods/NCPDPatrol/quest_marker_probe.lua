@@ -4,7 +4,7 @@ local phase,label='idle','Andrea reference marker test ready (off duty only)'
 local revision=-1
 local function native()
     local system=Game.GetScriptableSystemsContainer():Get('NCPDPatrolQuestMarkerProbeSystem')
-    if not system or system:Version()~=5 then error('Install the complete r4d quest-phase marker package and restart') end
+    if not system or system:Version()~=6 then error('Install the complete r4e quest-phase marker package and restart') end
     return system
 end
 local function report(text,status) label=text;if status then status('Quest marker test | '..text) end end
@@ -12,7 +12,7 @@ function M.state() return label end
 function M.reset() phase,label='idle','Andrea reference marker test ready (off duty only)';revision=-1 end
 function M.diagnostics()
     local ok,text=pcall(function() return native():GetDiagnostics() end)
-    return 'phase='..phase..' | Andrea reference / fixed Coyote position | '..(ok and text or tostring(text))
+    return 'phase='..phase..' | native Coyote reference / optional relocation | '..(ok and text or tostring(text))
 end
 function M.finish(status,reason)
     local ok,err=pcall(function()
@@ -38,6 +38,15 @@ local function start(status,visual)
 end
 function M.start(status) return start(status,false) end
 function M.startVisual(status) return start(status,true) end
+function M.relocate(status)
+    local ok,err=pcall(function()
+        local backend=native()
+        if not backend:RelocateNearPlayer() then error(backend:GetDiagnostics()) end
+        report(backend:GetDiagnostics(),status)
+    end)
+    if not ok then report(tostring(err),status);return false end
+    return true
+end
 function M.update(delta,onDuty,status)
     if not Game.GetPlayer() then return end
     local ok,err=pcall(function()

@@ -15,6 +15,14 @@ public final native func GetManuallyTrackedMappinID() -> NewMappinID;
 // Game orphans.swift MappinSystem:17828; scriptData ownership is private.
 @addMethod(MappinSystem)
 public final native func GetMappin(mappinId: NewMappinID) -> ref<IMappin>;
+// Game orphans.swift:17846; used by questLogDetailsPanel.swift:263.
+@addMethod(MappinSystem)
+public final native func GetQuestMappinPosition(mappinHash: Uint32, out position: Vector3) -> Bool;
+public native struct Vector3 {
+ public native let X: Float;
+ public native let Y: Float;
+ public native let Z: Float;
+}
 @addMethod(IMappin)
 public final native func IsQuestMappin() -> Bool;
 @addMethod(IMappin)

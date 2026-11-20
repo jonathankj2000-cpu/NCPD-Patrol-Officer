@@ -34,8 +34,11 @@ function F:Reset(boot)
  self.pos=Vector4.new(PhasePosition.X,PhasePosition.Y,PhasePosition.Z,1);self.writes={}
  self.facts={};self.pc=0;self.incoming=nil;self.graphStalled=false;self.phasePresent=true
  self.retainNativePin=true;self.noNative=false;self.factWrites={}
+ self.nativeMoves={};self.allowNativeMove=false;self.moveQuestPosition=false;self.moveChangesManual=false
+ self.questPosition=self.pos;self.questPositionKnown=true
+ self.playerPosition=Vector4.new(0,0,0,1)
  Native:OnAttach();Native.m_target=Vector4.new(0,0,0,0)
- for _,name in ipairs({'m_beforeCreate','m_afterCreate','m_beforeRemove','m_afterRemove','m_lastMarker','m_visualID'}) do Native[name]={value=0} end
+ for _,name in ipairs({'m_beforeCreate','m_afterCreate','m_beforeRemove','m_afterRemove','m_lastMarker','m_visualID','m_relocationID','m_beforeMove','m_afterMove'}) do Native[name]={value=0} end
  if boot~=false then self:StepGraph() end
  Native:Tick(.1);self.requests={};self.writes={};self.factWrites={}
 end
@@ -63,7 +66,17 @@ function map:RegisterMappin(data,spot)
  return pin:GetNewMappinID()
 end
 function map:SetMappinPosition(id,spot)
- local pin=self:GetMappin(id);assert(pin);pin.pos=spot
+ local pin=self:GetMappin(id);assert(pin)
+ if pin.kind=='QuestMappin' then
+  F.nativeMoves[#F.nativeMoves+1]={id=id.value,spot=spot}
+  if F.allowNativeMove then pin.pos=spot end
+  if F.moveQuestPosition then F.questPosition=spot end
+  if F.moveChangesManual then F.manual=987 end
+ else pin.pos=spot end
+end
+function map:GetQuestMappinPosition(hash)
+ assert(hash==7654,'quest lookup outside private reference')
+ return F.questPositionKnown,F.questPosition
 end
 function map:GetMappinFromObjective(phase,objective)
  assert(phase.path==root..'/main' and objective.path==root..'/main/inspect')
@@ -129,7 +142,9 @@ end
 function player:IsAttached() return F.loaded end
 function player:IsDead() return false end
 function player:IsInCombat() return F.combat end
-function player:GetWorldPosition() return Vector4.new(0,0,0,1) end
+function player:GetWorldPosition()
+ local p=F.playerPosition;return Vector4.new(p.X,p.Y,p.Z,p.W)
+end
 function patrol:IsOnDuty() return F.duty end
 function patrol:HasWantedLevel() return F.wanted end
 function patrol:IsDispatchMenuOpen() return F.menu end

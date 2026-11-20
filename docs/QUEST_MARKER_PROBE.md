@@ -1,3 +1,60 @@
+R4e: runtime relocation of the in-game-confirmed r4d quest marker
+
+User evidence: assets/quest_marker_probe/r4d-game-evidence.json. The supplied
+r4d log proves one native QuestMappin, correct fixed Coyote position, objective
+link and unchanged manual waypoint. It does not establish relocation or GPS.
+The archived resources/.xl, original phase and private fact namespace remain
+byte-identical to r4d. Native interface advances to 6; graph ready stays 5.
+
+The new opt-in control relocates the existing confirmed native marker 150 m
+east of V's position at the button press. The point is not ground/navmesh
+validated: no actor or mission is spawned. Existing dispatch is not converted.
+
+Before writing, the controller rediscovers the current private pin and validates
+its unique hash/type, active phase, position and objective link. It checks the
+live ID again and issues one SetMappinPosition call. There is no forcing loop,
+fallback renderer, replacement marker or manual-waypoint write. Move requests
+are rejected for an idle/visual test, incomplete proof, combat/duty/wanted,
+menus, wrong identity or a target within 25 m of the current target.
+
+Readback compares:
+- IMappin.GetWorldPosition(), for the actual live marker;
+- GetQuestMappinPosition(privateHash, out Vector3), also used by the game's
+  questLogDetailsPanel.swift Show on Map action;
+- objective link and the same original native pin ID;
+- manual tracked ID sampled immediately before/after the single write.
+
+SetMappinPosition is declared in game orphans.swift:17804.
+GetQuestMappinPosition is declared at :17846 and called by
+cyberpunk/UI/fullscreen/quest_log/questLogDetailsPanel.swift:263.
+Offline contracts declare the latter but are never installed.
+
+Basic native confirmed retains its pin/hash/current-target/link meaning.
+relocation confirmed requires all of the above readbacks within two meters,
+plus three observed active seconds of stability and unchanged manual ID across
+the move. Menus pause observation. Any failed sample resets stability; a
+snap-back revokes confirmation without reapplying the position. Stop clears confirmation; load forgets move requests/IDs. A new start resets
+the move state and restores the static control target.
+A newer user-selected story or manual waypoint between operations is respected.
+
+Test: OFF DUTY, set a manual waypoint, Start static quest marker, wait for
+confirmation, then TEST: Relocate native marker near V. Wait five UNPAUSED
+gameplay seconds before checking the world map and quest-log Show on Map.
+Log diagnostics, including runtime/quest coordinates, quest position OK,
+relocation confirmed, stable seconds, moved pin ID and manual before/after move.
+Remove afterward. Repeat elsewhere only after a stable result or after
+remove/start. Native confirmation without relocation confirmation is partial.
+
+Portable tests default to IGNORING native position writes; a void return must
+not imply success. Explicit positive fixtures separately enable runtime and
+quest-registry updates. Cases cover renderer-only movement, delayed/unknown
+quest positions, snap-back, stability windows, menus, missing/type/duplicate/
+reused pins, stale cached IDs, changed manual ID, user selections, save/stop/
+rearm and the real Lua/CET route. Actual native relocation, map rendering and
+GPS still need in-game testing. No further gameplay integration is assumed.
+
+R4d reference control and attribution details follow.
+
 R4d: MIT reference comparison for native quest markers
 
 The r4c game log proves graph ready=4/stage=1 and an active quest/objective,

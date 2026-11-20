@@ -51,7 +51,7 @@ def main():
         assert without_probe((ROOT/PREFIX/name).read_text())==old,name
     src=ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds'
     native=src.read_text();controller=(ROOT/PREFIX/'quest_marker_probe.lua').read_text()
-    for forbidden in ['RegisterMappin','CustomPositionVariant','TrackMappin','SetMappinPosition',
+    for forbidden in ['RegisterMappin','CustomPositionVariant','TrackMappin',
                       'GiveItem','Items.money','CompleteIncident','m_paidActivities','CreateEntity','ExecuteNode(']:
         assert forbidden not in native+controller,forbidden
     for fact in ['ready','stage','request']:
@@ -60,6 +60,9 @@ def main():
     contract=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
     code=translate(src).replace('self:Root() + ', 'self:Root() .. ').replace(
         'self:PhasePath() + ', 'self:PhasePath() .. ').replace('self:ObjectivePath() + ', 'self:ObjectivePath() .. ')
+    code=code.replace('pin = map:GetMappin(self.m_lastMarker)', 'pin = AsQuestMappin(map:GetMappin(self.m_lastMarker))')
+    code=code.replace('local point = nil', 'local point = Vector4.new(0,0,0,0)').replace('local questPoint = nil', 'local questPoint = Vector4.new(0,0,0,0)').replace('local journalPoint = nil', 'local journalPoint = Vector4.new(0,0,0,0)')
+    code=code.replace('self.m_questPositionKnown = map:GetQuestMappinPosition(expected, journalPoint)', 'self.m_questPositionKnown, journalPoint = map:GetQuestMappinPosition(expected)')
     code=code.replace('pin = pins[i]', 'pin = AsQuestMappin(pins[i])').replace('pin = linked', 'pin = AsQuestMappin(linked)')
     lua=LuaRuntime(unpack_returned_tuples=True)
     def convert(x):
@@ -78,6 +81,7 @@ def main():
     _,f=runtime(ROOT/PREFIX);f.Frame(f,'Testing',None);assert f.Events(f)==''
     for label,needle in {'TEST: Start static quest marker':'probe.start',
                          'TEST: Andrea visual marker':'probe.visual',
+                         'TEST: Relocate native marker near V':'probe.relocate',
                          'Log quest marker test diagnostics':'Quest marker test | fixture'}.items():
         assert needle in click(ROOT/PREFIX,False,False,'Testing',label)
     ui,f=runtime(ROOT/PREFIX)
@@ -115,7 +119,7 @@ def main():
     assert hashlib.sha256((ROOT/manifest['archive_path']).read_bytes()).hexdigest()==manifest['archive_sha256']
     xl=(ROOT/'archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl').read_text()
     assert xl.count('quest:')==1 and 'parent: cyberpunk2077.quest' in xl and 'probe.questphase' in xl
-    report={'actual_game_validation':False,'actual_native_creation_proven':False,
+    report={'actual_game_validation':False,'actual_native_creation_proven':False,'prior_static_r4d_confirmed_by_user':True,'relocation_requires_game_test':True,'runtime_and_quest_location_readback':True,'three_seconds_observed_stability_and_same_id':True,'single_scoped_position_write_no_retry_loop':True,
       'archived_phase_nodes':len(contract['nodes']),'archived_phase_edges':len(contract['edges']),
       'phase_ack_alone_is_not_marker_proof':True,'reference_fixed_position':contract['position'],'reference_world_node':contract['node_reference'],'source_commit':'a256760bafb625676d13b02ccf49c52b60f41d40','mit_notice_included':True,'visual_marker_cannot_confirm_native_journal_pin':True,'legacy_saved_test_cleanup':True,
       'manual_waypoint_never_written':True,'objective_hash_position_unique_pin_and_phase_stage_required':True,
@@ -125,7 +129,7 @@ def main():
       'phase_is_rearmable_without_restart':True,'save_restore_forgets_old_handles':True,
       'ui_controls':sorted(PROBE_BUTTONS),
       'assets_roundtrip_and_extraction':manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']}
-    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and four CET routes plus ownership-scoped MIT visual control; actual game execution still requires testing')
+    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and five CET routes plus ownership-scoped MIT visual control; actual game execution still requires testing')
     return report
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

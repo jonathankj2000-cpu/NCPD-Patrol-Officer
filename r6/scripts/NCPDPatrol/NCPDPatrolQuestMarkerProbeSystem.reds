@@ -25,6 +25,16 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     private let m_elapsed: Float;
     private let m_revision: Int32;
     private let m_reason: String;
+    private let m_relocationRequested: Bool;
+    private let m_relocationConfirmed: Bool;
+    private let m_relocationStable: Float;
+    private let m_relocationID: NewMappinID;
+    private let m_beforeMove: NewMappinID;
+    private let m_afterMove: NewMappinID;
+    private let m_runtimePosition: Vector4;
+    private let m_questPosition: Vector3;
+    private let m_questPositionKnown: Bool;
+    private let m_questPositionOK: Bool;
 
     protected cb func OnAttach() -> Bool { this.ForgetWorld(); return true; }
     protected cb func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Bool { this.ForgetWorld(); return true; }
@@ -33,6 +43,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         this.m_visualID = empty; this.m_lastMarker = empty;
         this.m_beforeCreate = empty; this.m_afterCreate = empty;
         this.m_beforeRemove = empty; this.m_afterRemove = empty;
+        this.ResetRelocation();
         this.m_requested = false; this.m_cleanup = false; this.m_confirmed = false;
         this.m_visualMode = false; this.m_visualConfirmed = false; this.m_legacyPending = true;
         this.m_trackPending = false; this.m_activationSampled = false; this.m_previousTracked = null;
@@ -40,7 +51,17 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         this.m_poll = 0.0; this.m_elapsed = 0.0; this.m_restorePending = true;
         this.Report("Andrea reference experiment ready (off duty only)");
     }
-    public func Version() -> Int32 { return 5; }
+    public func Version() -> Int32 { return 6; }
+    private func ResetRelocation() -> Void {
+        let empty: NewMappinID;
+        let point: Vector4;
+        let journalPoint: Vector3;
+        this.m_relocationRequested = false; this.m_relocationConfirmed = false;
+        this.m_relocationStable = 0.0; this.m_relocationID = empty;
+        this.m_beforeMove = empty; this.m_afterMove = empty;
+        this.m_runtimePosition = point; this.m_questPosition = journalPoint;
+        this.m_questPositionKnown = false; this.m_questPositionOK = false;
+    }
     private func Root() -> String { return "quests/street_stories/ncpd_patrol_marker_reference"; }
     private func PhasePath() -> String { return this.Root() + "/main"; }
     private func ObjectivePath() -> String { return this.PhasePath() + "/inspect"; }
@@ -104,6 +125,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         if !this.RuntimeAllowed() || !IsDefined(map) { this.Report("Run this visual control off duty, outside combat/wanted status"); return false; };
         if NCPDPatrolSystem.Get(this.GetGameInstance()).IsDispatchMenuOpen() { this.Report("Close game menus before starting the test"); return false; };
         if !this.CleanupVisual() { this.Report("Previous visual marker cleanup is pending"); return false; };
+        this.ResetRelocation();
         this.m_target = GetPlayer(this.GetGameInstance()).GetWorldPosition();
         this.m_target.X = -1259.598; this.m_target.Y = -989.166; this.m_target.Z = 12.037; this.m_target.W = 1.0;
         this.m_beforeCreate = map.GetManuallyTrackedMappinID();
@@ -153,8 +175,9 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         if this.m_requested || this.m_cleanup { this.Report("Remove the current test and wait for phase cleanup"); return false; };
         if !this.RuntimeAllowed() { this.Report("Run this experiment off duty, outside combat/wanted status"); return false; };
         if NCPDPatrolSystem.Get(this.GetGameInstance()).IsDispatchMenuOpen() { this.Report("Close game menus before starting the test"); return false; };
-        if !this.IsReady() || !IsDefined(map) { this.Report("Archived probe phase not ready: install the complete r4d archive/.xl and restart"); return false; };
+        if !this.IsReady() || !IsDefined(map) { this.Report("Archived probe phase not ready: install the complete r4e package and restart"); return false; };
         if this.GetGraphStage() != 0 { this.Report("The archived phase is still closing a previous test"); return false; };
+        this.ResetRelocation();
         this.m_restorePending = false; this.m_requested = true; this.m_confirmed = false;
         this.m_visualMode = false; this.m_visualConfirmed = false;
         this.m_trackPending = true; this.m_activationSampled = false;
@@ -170,7 +193,44 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         this.Report("Requested reference quest phase; waiting for its marker and stage acknowledgement");
         return true;
     }
-    private func Inspect() -> Void {
+    public func RelocateNearPlayer() -> Bool {
+        let map: ref<MappinSystem> = this.Map();
+        let pin: ref<QuestMappin>;
+        let destination: Vector4;
+        if !this.m_requested || this.m_visualMode || this.m_cleanup {
+            this.Report("Start and confirm the static native quest marker first"); return false;
+        };
+        if !this.RuntimeAllowed() || NCPDPatrolSystem.Get(this.GetGameInstance()).IsDispatchMenuOpen() {
+            this.Report("Relocate off duty, outside combat/wanted status and game menus"); return false;
+        };
+        // Rediscover the live private pin before trusting its cached ID.
+        this.Inspect(0.0);
+        if !this.m_confirmed || !IsDefined(map) {
+            this.Report("Native pin/link/position is not confirmed; log diagnostics before relocating"); return false;
+        };
+        pin = map.GetMappin(this.m_lastMarker) as QuestMappin;
+        if !IsDefined(pin) || !pin.IsQuestMappin() || pin.GetJournalPathHash() != this.PinHash() {
+            this.Report("Current marker identity changed; no position write was made"); return false;
+        };
+        destination = GetPlayer(this.GetGameInstance()).GetWorldPosition();
+        destination.X += 150.0; destination.W = 1.0;
+        if Vector4.Distance(destination, this.m_target) < 25.0 {
+            this.Report("New test point is too close to the current one; move V at least 25 m and retry"); return false;
+        };
+        this.m_target = destination;
+        this.m_relocationID = pin.GetNewMappinID();
+        this.m_relocationRequested = true; this.m_relocationConfirmed = false;
+        this.m_relocationStable = 0.0; this.m_confirmed = false;
+        this.m_positionOK = false; this.m_questPositionOK = false;
+        this.m_beforeMove = map.GetManuallyTrackedMappinID();
+        // One write only. Observations must detect ignored calls or snap-back.
+        map.SetMappinPosition(this.m_relocationID, destination);
+        this.m_afterMove = map.GetManuallyTrackedMappinID();
+        this.m_poll = 0.0;
+        this.Report("Relocation requested 150 m east of V; waiting for runtime AND journal positions to remain correct for 3 active seconds");
+        return true;
+    }
+    private func Inspect(sampleSeconds: Float) -> Void {
         let map: ref<MappinSystem> = this.Map();
         let journal: ref<JournalManager> = this.Journal();
         let pins: array<ref<IMappin>>;
@@ -178,8 +238,14 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         let linked: wref<IMappin>;
         let objective: wref<JournalEntry> = this.Entry(this.ObjectivePath(), "gameJournalQuestObjective");
         let expected: Uint32 = this.PinHash();
+        let journalPoint: Vector3;
+        let questPoint: Vector4;
         let i: Int32 = 0;
-        if !IsDefined(map) || expected == 0u { return; };
+        this.m_relocationConfirmed = false;
+        if !IsDefined(map) || expected == 0u {
+            this.m_confirmed = false; this.m_relocationStable = 0.0;
+            this.m_questPositionKnown = false; this.m_questPositionOK = false; return;
+        };
         if this.m_trackPending && IsDefined(objective) && Equals(journal.GetEntryState(objective), gameJournalEntryState.Active) {
             journal.TrackEntry(objective); this.m_trackPending = false;
         };
@@ -191,6 +257,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
             pin = pins[i] as QuestMappin;
             if IsDefined(pin) && pin.IsQuestMappin() && pin.GetJournalPathHash() == expected {
                 this.m_pinCount += 1; this.m_lastMarker = pin.GetNewMappinID();
+                this.m_runtimePosition = pin.GetWorldPosition();
                 this.m_positionOK = Vector4.Distance(pin.GetWorldPosition(), this.m_target) <= 2.0;
             };
             i += 1;
@@ -199,6 +266,26 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         pin = linked as QuestMappin;
         this.m_linked = IsDefined(pin) && pin.GetJournalPathHash() == expected;
         this.m_confirmed = this.GetGraphStage() == 1 && this.m_pinCount == 1 && this.m_positionOK && this.m_linked;
+        // This is the lookup used by the game's quest-log location control.
+        this.m_questPositionKnown = map.GetQuestMappinPosition(expected, journalPoint);
+        this.m_questPosition = journalPoint;
+        questPoint.X = journalPoint.X; questPoint.Y = journalPoint.Y; questPoint.Z = journalPoint.Z; questPoint.W = 1.0;
+        this.m_questPositionOK = this.m_questPositionKnown && Vector4.Distance(questPoint, this.m_target) <= 2.0;
+        if this.m_relocationRequested {
+            if this.m_confirmed && this.m_questPositionOK && this.m_lastMarker.value == this.m_relocationID.value
+                && this.m_beforeMove.value == this.m_afterMove.value {
+                this.m_relocationStable += sampleSeconds;
+            } else {
+                this.m_relocationStable = 0.0;
+            };
+            this.m_relocationConfirmed = this.m_relocationStable >= 3.0;
+            if this.m_relocationConfirmed {
+                this.Report("RELOCATION CONFIRMED: same native quest pin/link, runtime and journal positions stable for 3 active seconds; manual ID unchanged across move");
+            } else {
+                this.Report("Relocation NOT CONFIRMED yet: inspect runtime/journal positions, same pin ID and stable seconds; position write is not proof");
+            };
+            return;
+        };
         if this.m_confirmed {
             if this.m_beforeCreate.value == this.m_afterCreate.value {
                 this.Report("CONFIRMED native quest pin, objective link and Coyote position; manual ID unchanged across activation");
@@ -261,6 +348,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         };
         if IsDefined(map) { this.m_beforeRemove = map.GetManuallyTrackedMappinID(); };
         this.SetRequest(0);
+        this.m_relocationConfirmed = false; this.m_relocationStable = 0.0;
         this.m_requested = false; this.m_confirmed = false; this.m_visualConfirmed = false; this.m_trackPending = false; this.m_cleanup = true;
         if wasOurs && IsDefined(this.m_previousTracked) && Equals(journal.GetEntryState(this.m_previousTracked), gameJournalEntryState.Active) { journal.TrackEntry(this.m_previousTracked); };
         this.m_previousTracked = null; this.Report(reason);
@@ -268,6 +356,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     }
     public func Tick(delta: Float) -> Void {
         let entry: wref<JournalEntry>;
+        let sampleSeconds: Float;
         if this.m_legacyPending { this.CloseLegacy(); };
         if this.m_restorePending {
             if !IsDefined(this.Journal()) || !IsDefined(this.Facts()) || !IsDefined(this.Map()) { return; };
@@ -287,15 +376,17 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         };
         this.m_poll += delta;
         if this.m_poll < 0.25 { return; };
+        sampleSeconds = this.m_poll;
         this.m_poll = 0.0;
         if this.m_requested {
-            if this.m_visualMode { this.InspectVisual(); } else { this.Inspect(); };
+            if this.m_visualMode { this.InspectVisual(); } else { this.Inspect(sampleSeconds); };
         };
         if this.m_cleanup { this.TryCleanup(); };
     }
     public func HasRequest() -> Bool { return this.m_requested; }
     public func HasPendingCleanup() -> Bool { return this.m_cleanup; }
     public func IsConfirmed() -> Bool { return this.m_confirmed; }
+    public func IsRelocationConfirmed() -> Bool { return this.m_relocationConfirmed; }
     public func GetRevision() -> Int32 { return this.m_revision; }
     public func GetDiagnostics() -> String {
         let current: NewMappinID;
@@ -306,6 +397,6 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
             objectiveActive = Equals(this.Journal().GetEntryState(this.Entry(this.ObjectivePath(), "gameJournalQuestObjective")), gameJournalEntryState.Active);
         };
         if IsDefined(this.Map()) { current = this.Map().GetManuallyTrackedMappinID(); };
-        return s"mode visual=\(this.m_visualMode) | visual confirmed=\(this.m_visualConfirmed) | visual ID=\(this.m_visualID.value) | legacy cleanup=\(this.m_legacyPending) | journal ready=\(this.JournalReady()) | graph ready=\(this.GetGraphReady()) | graph stage=\(this.GetGraphStage()) | quest active=\(questActive) | objective active=\(objectiveActive) | requested=\(this.m_requested) | confirmed=\(this.m_confirmed) | pending cleanup=\(this.m_cleanup) | native quest pins=\(this.m_pinCount) | objective link=\(this.m_linked) | position OK=\(this.m_positionOK) | pin ID=\(this.m_lastMarker.value) | journal hash=\(this.PinHash()) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | activation sampled=\(this.m_activationSampled) | manual before/after create=\(this.m_beforeCreate.value)/\(this.m_afterCreate.value) | manual current=\(current.value) | manual before/after remove=\(this.m_beforeRemove.value)/\(this.m_afterRemove.value) | \(this.m_reason)";
+        return s"mode visual=\(this.m_visualMode) | visual confirmed=\(this.m_visualConfirmed) | visual ID=\(this.m_visualID.value) | legacy cleanup=\(this.m_legacyPending) | journal ready=\(this.JournalReady()) | graph ready=\(this.GetGraphReady()) | graph stage=\(this.GetGraphStage()) | quest active=\(questActive) | objective active=\(objectiveActive) | requested=\(this.m_requested) | confirmed=\(this.m_confirmed) | pending cleanup=\(this.m_cleanup) | native quest pins=\(this.m_pinCount) | objective link=\(this.m_linked) | position OK=\(this.m_positionOK) | pin ID=\(this.m_lastMarker.value) | journal hash=\(this.PinHash()) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | runtime position=\(this.m_runtimePosition.X),\(this.m_runtimePosition.Y),\(this.m_runtimePosition.Z) | quest position known=\(this.m_questPositionKnown) | quest position OK=\(this.m_questPositionOK) | quest position=\(this.m_questPosition.X),\(this.m_questPosition.Y),\(this.m_questPosition.Z) | relocation requested=\(this.m_relocationRequested) | relocation confirmed=\(this.m_relocationConfirmed) | stable seconds=\(this.m_relocationStable) | moved pin ID=\(this.m_relocationID.value) | manual before/after move=\(this.m_beforeMove.value)/\(this.m_afterMove.value) | activation sampled=\(this.m_activationSampled) | manual before/after create=\(this.m_beforeCreate.value)/\(this.m_afterCreate.value) | manual current=\(current.value) | manual before/after remove=\(this.m_beforeRemove.value)/\(this.m_afterRemove.value) | \(this.m_reason)";
     }
 }

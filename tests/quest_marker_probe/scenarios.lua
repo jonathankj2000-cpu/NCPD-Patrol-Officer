@@ -111,3 +111,70 @@ assert(not Native.m_legacyPending and F.pins.n==1 and F.pins[0]==foreign)
 assert(Native:Begin());F:StepGraph();Native:Tick(.25);stop()
 -- Root tracking selected by the reference graph also restores a prior story.
 F:Reset();begin();F.tracked=F.entries[root];stop();assert(F.tracked==F.previous)
+
+-- Runtime relocation is unproven by default: a void API call is not success.
+F:Reset();assert(not Native:RelocateNearPlayer() and #F.nativeMoves==0)
+F.materialize=true;begin();assert(Native:RelocateNearPlayer());tick(24)
+assert(#F.nativeMoves==1 and not Native:IsConfirmed() and not Native:IsRelocationConfirmed())
+assert(Native.m_runtimePosition==F.pos and Native.m_questPosition==F.pos);stop()
+-- A moved renderer alone cannot prove the quest-log location changed.
+F:Reset();F.materialize=true;F.allowNativeMove=true;begin()
+assert(Native:RelocateNearPlayer());tick(24)
+assert(Native:IsConfirmed() and not Native:IsRelocationConfirmed())
+assert(not Native.m_questPositionOK and Native.m_relocationStable==0 and #F.nativeMoves==1);stop()
+-- Both positions, same live pin, objective link and 3 observed seconds required.
+F:Reset();F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true;begin()
+local pinID=Native.m_lastMarker.value
+assert(Native:RelocateNearPlayer());tick(11)
+assert(Native:IsConfirmed() and not Native:IsRelocationConfirmed())
+tick(1);assert(Native:IsRelocationConfirmed() and Native.m_relocationStable==3)
+assert(Native.m_lastMarker.value==pinID and #F.nativeMoves==1 and F.manual==700)
+assert(F.nativeMoves[1].spot.X==150 and F.nativeMoves[1].spot.Y==0)
+assert(F.nativeMoves[1].spot.Z==F.playerPosition.Z and F.tracked==F.entries[root..'/main/inspect'])
+-- No ongoing position forcing: a snap-back is detected and clears proof.
+F.pins[0].pos=F.pos;tick(1)
+assert(not Native:IsRelocationConfirmed() and Native.m_relocationStable==0 and #F.nativeMoves==1)
+F.pins[0].pos=Native.m_target;F.questPositionKnown=false;tick(16)
+assert(not Native:IsRelocationConfirmed() and not Native.m_questPositionKnown)
+F.questPositionKnown=true;tick(12);assert(Native:IsRelocationConfirmed())
+-- Menu inspection pauses observed stability; a later move restarts the window.
+F.playerPosition=Vector4.new(300,100,4,1);assert(Native:RelocateNearPlayer());tick(4)
+local stable=Native.m_relocationStable;F.menu=true;tick(24)
+assert(Native.m_relocationStable==stable and not Native:IsRelocationConfirmed())
+assert(not Native:RelocateNearPlayer() and #F.nativeMoves==2)
+F.menu=false;tick(8);assert(Native:IsRelocationConfirmed())
+-- Query and objective linkage are independent of runtime position.
+F.linked=false;tick(1);assert(not Native:IsRelocationConfirmed())
+F.linked=true;tick(12);assert(Native:IsRelocationConfirmed())
+F.questPosition=F.pos;tick(1);assert(not Native:IsRelocationConfirmed())
+F.questPosition=Native.m_target;tick(12);assert(Native:IsRelocationConfirmed())
+-- User waypoint/story changes between operations are respected.
+local newerStory={state=2,path='newer-after-move'};F.tracked=newerStory;F.manual=800
+F.playerPosition=Vector4.new(600,100,4,1);assert(Native:RelocateNearPlayer());tick(12)
+assert(Native:IsRelocationConfirmed() and Native.m_beforeMove.value==800 and F.manual==800)
+assert(#F.nativeMoves==3);stop();assert(F.tracked==newerStory and not Native:IsRelocationConfirmed())
+-- Cached IDs, duplicates and foreign types cannot redirect position writes.
+F:Reset();F.materialize=true;F.allowNativeMove=true;begin()
+Native.m_lastMarker={value=99999};assert(Native:RelocateNearPlayer() and F.nativeMoves[1].id~=99999);stop()
+F:Reset();F.materialize=true;begin();F:AddPin()
+assert(not Native:RelocateNearPlayer() and #F.nativeMoves==0);stop()
+F:Reset();F.materialize=true;begin();F.pins[0].kind='StaticMappin'
+assert(not Native:RelocateNearPlayer() and #F.nativeMoves==0);stop()
+-- Same hash at a new ID after relocation is insufficient for stability proof.
+F:Reset();F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true;begin()
+assert(Native:RelocateNearPlayer());F.pins[0].id=10000;tick(16)
+assert(Native:IsConfirmed() and not Native:IsRelocationConfirmed());stop()
+F:Reset();F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true;F.moveChangesManual=true;begin()
+assert(Native:RelocateNearPlayer());tick(16)
+assert(Native:IsConfirmed() and not Native:IsRelocationConfirmed() and F.manual==987);stop()
+-- Save restore forgets move requests/IDs; a new activation uses static Coyote.
+F:Reset();F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true;begin()
+assert(Native:RelocateNearPlayer());tick(12);Native:OnRestored(0,0);tick(3)
+assert(not Native:IsRelocationConfirmed() and not Native.m_relocationRequested and F.pins.n==0)
+F.questPosition=F.pos;begin();assert(Native:IsConfirmed() and Native.m_target.X==PhasePosition.X);stop()
+-- Actual CET controller rejects visual/idle moves and routes a native move.
+F:Reset();Probe.reset();assert(not Probe.relocate())
+assert(Probe.startVisual());assert(not Probe.relocate());Probe.finish()
+F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true
+assert(Probe.start());F:StepGraph();Probe.update(.25,false)
+assert(Probe.relocate());tick(12);assert(Native:IsRelocationConfirmed());Probe.finish();tick(2)
