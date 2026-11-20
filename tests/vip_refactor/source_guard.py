@@ -28,7 +28,10 @@ def between(text,start,end):
 def verify(root):
     mods=root/PREFIX
     old=original(root,'vip.lua')
-    locations=without_location_exclusion((mods/'vip_locations.lua').read_text())
+    sys.path.insert(0,str(root/'tests/vip'))
+    from legacy_locations import source as legacy_source
+    locations=without_location_exclusion(legacy_source(root))
+    current_locations=(mods/'vip_locations.lua').read_text()
     waypoint=without_probe((mods/'vip_waypoint.lua').read_text())
     distance=between(old,'local function distance(','local function finite(')
     finite=between(old,'local function finite(','local function same(')
@@ -39,7 +42,7 @@ def verify(root):
     actual_marker=textwrap.dedent(between(waypoint,'    local waypointID,waypointPoint=','    local marker ='))
     assert actual_locations==distance+finite+choose,'VIP geographic policy/RNG order changed'
     assert actual_marker==fields+distance+marker,'VIP registry/recovery policy changed'
-    for source in [locations,waypoint]:
+    for source in [current_locations,locations,waypoint]:
         for forbidden in ['GetDynamicEntitySystem','CreateEntity','DeleteEntity','GetScriptableSystemsContainer','Game.GetPlayer','GiveItem','NCPDPatrolVIPSystem']:
             assert forbidden not in source,forbidden
     # Reinsert only the extracted source/call sites. Everything else, including

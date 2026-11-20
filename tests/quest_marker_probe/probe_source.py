@@ -12,6 +12,10 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    # Reviewed VIP route release labels; coordinator/session code is unchanged.
+    source=source.replace('-- NCPD Patrol v0.17f VIP route catalogue | fixed endpoint pairs from the native marker bank','-- NCPD Patrol v0.17e2 arrest initialization | prepare private bindings before helper attachment')
+    source=source.replace('v0.17f VIP route catalogue loaded. 360 baked routes use 60 canonical native-marker endpoints. Includes the arrest initialization fix. Install the complete package and fully restart the game.','v0.17e2 arrest initialization loaded. Private animation bindings are prepared before helper attachment. Includes the H10 dispatch exclusion. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.17f VIP route catalogue###','NCPD Patrol - v0.17e2 arrest initialization###')
     # Reviewed arrest-initialization build labels only.
     source=source.replace('-- NCPD Patrol v0.17e2 arrest initialization | prepare private bindings before helper attachment','-- NCPD Patrol v0.17e1 H10 location fix | excludes indoor H10 Atrium from generated dispatch')
     source=source.replace('v0.17e2 arrest initialization loaded. Private animation bindings are prepared before helper attachment. Includes the H10 dispatch exclusion. Install the complete package and fully restart the game.','v0.17e1 H10 location fix loaded. Indoor H10 Atrium excluded from VIP pickup/delivery and cyberpsycho dispatch. Install the complete package and restart.')

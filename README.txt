@@ -1,3 +1,31 @@
+NCPD PATROL v0.17f VIP ROUTE CATALOGUE - COMPLETE BRANCH TEST
+
+VIP transport now selects from 360 pre-generated endpoint pairs at 60 fixed
+catalogue locations. Pickup, witness arrival and delivery use the exact XYZ
+associated with their existing native quest-marker sites. Live fast travel or
+drop-point markers no longer supply VIP endpoints; unlocked terminal counts
+do not limit the route pool. Indoor H10 Atrium remains excluded.
+
+Routes are still selected randomly near V. Active scanner incidents exclude
+both endpoints within 100 m. Existing local/expanded distance bounds remain;
+the last 12 selections are avoided when the local eligible pool permits it.
+Diagnostics include the route ID and both native marker site IDs.
+
+The VIP coordinator, boarding, ambush, EUR$2000 reward, career record, cleanup,
+native scripts, archives, arrest and manual waypoint handling are unchanged.
+No new dependency. Browser Extension remains optional.
+
+Install all 89 files and FULLY EXIT AND RESTART THE GAME. Use CET -> Dispatch
+to request a VIP transport. Check pickup visibility, drive to the witness,
+confirm the marker changes only after boarding, deliver, then request another
+dispatch. Repeat at different locations and with an existing manual waypoint.
+If a marker fails, Log active dispatch marker diagnostics plus Log VIP diagnostics
+identify the selected route/site. Test physical pickup/parking in game: data
+validation cannot establish road access or actual rendering at every endpoint.
+See docs/VIP_ROUTE_CATALOGUE_v017f.md in the repository.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17e2 ARREST INITIALIZATION - COMPLETE BRANCH TEST
 
 Private animation bindings are loaded, configured and read back BEFORE the

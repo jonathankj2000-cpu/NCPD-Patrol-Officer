@@ -17,7 +17,7 @@ from translate import translate
 
 SCENARIOS=[HERE.parent/'incidents'/name for name in ['native-scenarios.lua','mixed-scenarios.lua','background-scenarios.lua','partial-cleanup-scenarios.lua']] + [HERE/'scanner-contracts.lua']
 
-def runtime(modules, trace, observe_lifecycle=False, install_trace=True):
+def runtime(modules, trace, observe_lifecycle=False, install_trace=True, legacy_vip_locations=False):
     lua=LuaRuntime(unpack_returned_tuples=True)
     lua.execute('math.randomseed(20261119)')
     lua.execute((HERE.parent/'arrests/mappin-native-mocks.lua').read_text())
@@ -29,6 +29,10 @@ def runtime(modules, trace, observe_lifecycle=False, install_trace=True):
     lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
     for path in ['vip/native-mocks.lua','incidents/engine-mocks.lua']:
         lua.execute((HERE.parent/path).read_text())
+    if legacy_vip_locations:
+        sys.path.insert(0,str(HERE.parent/'vip'))
+        from legacy_locations import install
+        install(lua,ROOT)
     def record(row):
         # Moving a throwing statement necessarily changes its source location.
         trace.append(re.sub(r'[^\s|]*\.lua:\d+', '<lua>', row))
@@ -40,7 +44,7 @@ def runtime(modules, trace, observe_lifecycle=False, install_trace=True):
 
 def execute(modules, observe_lifecycle=False):
     trace=[]
-    lua=runtime(modules,trace,observe_lifecycle)
+    lua=runtime(modules,trace,observe_lifecycle,legacy_vip_locations=True)
     for scenario in SCENARIOS:
         trace.append('scenario|'+scenario.name)
         lua.execute(scenario.read_text())
@@ -78,10 +82,11 @@ def main():
         control.execute("require('dispatch').start(CyberFixture.patrol)")
         assert negative!=positive,'negative control failed to detect a one-second timer change'
     digest=hashlib.sha256('\n'.join(actual).encode()).hexdigest()
-    print(f'PASS: v0.17d comparison: {len(actual)} identical trace rows; random draws, facade, timers, results, native tokens, money, notices, markers, actor ownership and cleanup; lifecycle invariants; timing-regression negative control. SHA256={digest}')
+    print(f'PASS: v0.17d actor/scheduler comparison with pinned legacy VIP geography: {len(actual)} identical trace rows; facade, timers, results, native tokens, money, notices, markers, actor ownership and cleanup; lifecycle invariants; timing-regression negative control. SHA256={digest}')
     return {'base_commit':BASE,'identical_trace_rows':len(actual),'trace_sha256':digest,
             'scenario_files':[p.relative_to(ROOT).as_posix() for p in SCENARIOS],
-            'lifecycle_invariants':True,'timing_regression_negative_control':True}
+            'lifecycle_invariants':True,'timing_regression_negative_control':True,
+            'geography_scope':'Pinned v0.17e2 location provider for historical synthetic actor/scheduler fixtures; actual baked routes tested separately'}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)

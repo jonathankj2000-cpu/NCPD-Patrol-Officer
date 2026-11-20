@@ -17,8 +17,17 @@ permits only the three build-label edits in the entrypoint/UI. Helper contracts
 exercise independent marker/location instances, failed deletion/placement,
 repair counters, read/reset side effects and numeric marker ID reuse after load.
 
-Two temporary mutants change scanner clearance from 100 to 120 m and recovery
-cooldown from five to six seconds. Actual VIP request/update probes must detect
-both changes. They never modify production source.
+The recovery mutant changes the cooldown from five to six seconds. Actual
+VIP request/update probes must detect it; production source is never modified.
+
+Since v0.17f intentionally replaces geographic selection, historical synthetic
+actor/dispatch scenarios inject the actual v0.17e2 location provider from Git
+at that helper boundary. The old coordinator remains unchanged and the current
+coordinator is still reconstructed byte for byte. Thus identical historical
+traces describe actor/scheduler behavior with legacy geography, not unchanged
+new route selection. `tests/vip_routes/check_routes.py` exercises the real
+baked selector, an empty live-terminal pool, history, canonical positions and a
+100-to-120 m scanner-clearance mutant. The native marker suite executes all
+360 pairs through both actual native stages. No legacy selector ships in the mod.
 
 This is a contract/regression suite, not a game emulator or a traffic/GPS fix.

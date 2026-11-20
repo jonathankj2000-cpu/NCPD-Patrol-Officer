@@ -92,6 +92,7 @@ def main():
         lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
     lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
     lua.execute((HERE/'engine.lua').read_text());lua.execute((HERE/'scenarios.lua').read_text())
+    lua.execute((HERE.parent/'vip_routes/native-markers.lua').read_text())
     # Mechanical extraction oracle: execute the actual r5c controller and the
     # current controller against the same boundary fixture and full observations.
     r5c_source=subprocess.check_output(['git','show','a51dabfe91c9c90856b29ecd10e086c3977d8224:r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds'],cwd=ROOT,text=True)

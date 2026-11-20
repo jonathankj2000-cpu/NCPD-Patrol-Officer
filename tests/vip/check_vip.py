@@ -20,6 +20,8 @@ lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPat
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'native-mocks.lua').read_text())
 lua.execute((HERE.parent/'incidents/engine-mocks.lua').read_text())
+from legacy_locations import install
+install(lua,ROOT)
 lua.execute((HERE/'scenarios.lua').read_text())
 lua.execute((HERE/'fleet-scenarios.lua').read_text())
 lua.execute((HERE/'waypoint-scenarios.lua').read_text())
@@ -34,4 +36,4 @@ assert compiled['roundtrip_validated'] and compiled['extracted_resource_bytes_co
 assert 'within five minutes' not in (ROOT/'assets/vip/vip_onscreens.json.json').read_text()
 source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds').read_text()
 assert all(v not in source for v in ['SetFact','GiveItem','RecordIncident'])
-print('PASS: two-stage VIP journal; local/expanded routes and adaptive deadlines; actual boarding/driver/seat/living drop-off earns separate EUR$2000/career record; pickup/delivery waypoint recovery, scoped identity, delayed/failed registration and bounded retries; 1/2/3 and random convoys, reservations, independent crew/aftermath, warning and cleanup; bridge/corridor/camera checks; scanner/arrest rewards unchanged (engine boundaries mocked)')
+print('PASS: VIP actor flow with pinned legacy location provider: two-stage journal and adaptive deadlines; actual boarding/driver/seat/living drop-off earns separate EUR$2000/career record; waypoint recovery and bounded retries; 1/2/3 and random convoys, reservations, independent aftermath and cleanup; bridge/corridor/camera checks; scanner/arrest rewards unchanged (engine boundaries mocked; actual baked geography tested separately)')

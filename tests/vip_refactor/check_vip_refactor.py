@@ -12,7 +12,7 @@ GROUPS={
 }
 
 def boot(modules,trace):
-    lua=runtime(modules,trace,install_trace=False)
+    lua=runtime(modules,trace,install_trace=False,legacy_vip_locations=True)
     lua.execute((HERE/'trace.lua').read_text())
     return lua
 
@@ -54,7 +54,6 @@ def main():
                 if old!=new:raise AssertionError(f'VIP behavior changed at row {index}:\nOLD: {old}\nNEW: {new}')
             raise AssertionError(f'VIP trace lengths differ: {len(expected)} vs {len(actual)}')
         for kind,name,needle,replacement in [
-            ('clearance','vip_locations.lua','distance(site.position,point)<100','distance(site.position,point)<120'),
             ('cooldown','vip_waypoint.lua','waypointCooldown=5','waypointCooldown=6')]:
             broken=Path(tmp)/kind;broken.mkdir()
             for path in current.glob('*.lua'):shutil.copyfile(path,broken/path.name)
@@ -62,15 +61,16 @@ def main():
             assert probe(reference,kind)!=probe(broken,kind),kind+' negative control missed policy regression'
         # Independent marker/location owners are tested only for the new API;
         # the public VIP facade above stays the oracle for behavior.
-        helper=runtime(current,[],install_trace=False)
+        helper=runtime(current,[],install_trace=False,legacy_vip_locations=True)
         helper.execute((HERE/'helper-contracts.lua').read_text())
     digest=hashlib.sha256('\n'.join(actual).encode()).hexdigest()
     report={'base_commit':BASE,'identical_trace_rows':len(actual),'trace_sha256':digest,
         'scenario_files':[p.relative_to(ROOT).as_posix() for group in GROUPS.values() for p in group],
         'extracted_policies_and_remaining_actor_flow_source_guard':True,
-        'clearance_negative_control':True,'recovery_cooldown_negative_control':True,
+        'geography_scope':'Pinned v0.17e2 location provider; new baked selection and scanner clearance negative control tested separately',
+        'recovery_cooldown_negative_control':True,
         'independent_helpers_and_old_world_reset':True,'actual_game_validation':False}
-    print(f'PASS: VIP r3 extraction: {len(actual)} identical r2 trace rows; route/RNG/registry/quest/actor/reward/cleanup outcomes; source guards, independent helper ownership, world reset and two policy-regression negative controls. SHA256={digest}')
+    print(f'PASS: VIP actor extraction with pinned legacy geography: {len(actual)} identical r2 trace rows; registry/quest/actor/reward/cleanup outcomes; source guards, independent helper ownership, world reset and recovery-cooldown negative control. SHA256={digest}')
     return report
 
 if __name__=='__main__':
