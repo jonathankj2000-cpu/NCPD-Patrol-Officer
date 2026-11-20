@@ -1,0 +1,77 @@
+{
+  "reported_build": "v0.17e-patrol-improvements",
+  "all_attempted_suspects_affected": true,
+  "immediate_t_pose": true,
+  "arrest_registered_and_eur250_received": true,
+  "individual_physics_flags_provided": false,
+  "native_active_success_does_not_prove_rendered_clip": true,
+  "initialization_order_weakness_predates_reported_regression": true,
+  "initialization_order_proven_to_be_rendered_t_pose_cause": false,
+  "version_comparison": [
+    {
+      "version": "v0.7f",
+      "commit": "a552592fa062e73bd35572a496ee4bfdb8940cd0",
+      "lua_sha256": "d4b6d0118287af6760706c95b9f52db5d10acf410784b1cb57683e65cfe776f5",
+      "ragdoll_recovery": false,
+      "conditional_sliding": false,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    },
+    {
+      "version": "v0.16b",
+      "commit": "c0b7f5f8903a2ab5b1aa9b82d67589112fd5f1dd",
+      "lua_sha256": "d4b6d0118287af6760706c95b9f52db5d10acf410784b1cb57683e65cfe776f5",
+      "ragdoll_recovery": false,
+      "conditional_sliding": false,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    },
+    {
+      "version": "v0.16c",
+      "commit": "25d5d79c6c82aee5a8aea23ad68c88b202d2a28c",
+      "lua_sha256": "7edf0c4169d09fc65d095d3848e573cacef1616985564ca3fc57ba8745706355",
+      "ragdoll_recovery": true,
+      "conditional_sliding": false,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    },
+    {
+      "version": "v0.16d",
+      "commit": "6ea9949fa4c1b4ba6c03bd22713a2a1001079999",
+      "lua_sha256": "b390248c15d544f25ad0d27a900930c416a8f736dfd1ec48bb905a8cb0d53e33",
+      "ragdoll_recovery": true,
+      "conditional_sliding": true,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    },
+    {
+      "version": "v0.16e",
+      "commit": "bcf15393cd0b6e05618fde95e3688edf534a043d",
+      "lua_sha256": "ccb5427afec3353a6c4313abd264b8fdae66ca1a10c214478167c6b25e60934d",
+      "ragdoll_recovery": true,
+      "conditional_sliding": true,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    },
+    {
+      "version": "v0.17e",
+      "commit": "07cd4ba3b674b496c12cf69cd58f160d662354b7",
+      "lua_sha256": "0d74300ed6910f2734a4a6166a3941d98003b35f2c66a4a582fa4006f712ed98",
+      "ragdoll_recovery": true,
+      "conditional_sliding": true,
+      "resource_binding_before_helper_creation": false,
+      "playback_sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "archive_sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3"
+    }
+  ],
+  "game_ragdoll_predicate": {
+    "source": "career-reference@81d996b584a693e8b0f0b20526a9fa38b5c83fe7:DecompiledGameScripts/cyberpunk/NPC/NPCPuppet.swift",
+    "IsRagdolling": "m_isRagdolling",
+    "IsRagdollEnabled": "m_isRagdolling || m_hasAnimatedRagdoll"
+  }
+}

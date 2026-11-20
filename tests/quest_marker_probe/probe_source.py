@@ -12,6 +12,10 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    # Reviewed arrest-initialization build labels only.
+    source=source.replace('-- NCPD Patrol v0.17e2 arrest initialization | prepare private bindings before helper attachment','-- NCPD Patrol v0.17e1 H10 location fix | excludes indoor H10 Atrium from generated dispatch')
+    source=source.replace('v0.17e2 arrest initialization loaded. Private animation bindings are prepared before helper attachment. Includes the H10 dispatch exclusion. Install the complete package and fully restart the game.','v0.17e1 H10 location fix loaded. Indoor H10 Atrium excluded from VIP pickup/delivery and cyberpsycho dispatch. Install the complete package and restart.')
+    source=source.replace('NCPD Patrol - v0.17e2 arrest initialization###','NCPD Patrol - v0.17e1 H10 location fix###')
     # Reviewed H10 hotfix build labels.
     source=source.replace('-- NCPD Patrol v0.17e1 H10 location fix | excludes indoor H10 Atrium from generated dispatch','-- NCPD Patrol v0.17e patrol improvements | catalogue/diagnostics, career duty entry and road-checked backup')
     source=source.replace('v0.17e1 H10 location fix loaded. Indoor H10 Atrium excluded from VIP pickup/delivery and cyberpsycho dispatch. Install the complete package and restart.','v0.17e patrol improvements loaded. Marker catalogue/diagnostics refactored; Start Shift in NCPD Career; backup uses checked off-camera road approaches. Install the complete package and restart.')

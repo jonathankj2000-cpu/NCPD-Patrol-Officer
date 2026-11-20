@@ -1,3 +1,22 @@
+NCPD PATROL v0.17e2 ARREST INITIALIZATION - COMPLETE BRANCH TEST
+
+Private animation bindings are loaded, configured and read back BEFORE the
+arrest helper can attach. Later resource instances/empty caches are rechecked;
+pending assets create no helper. The prior code created the helper before these
+bindings were copied, which may explain an active workspot with a T-pose.
+
+The actual v0.17e code fails the new attachment-order invariant. Rendering is
+still unverified: native playback acceptance does not prove the visible clip.
+Native scripts, arrest archive, loop topology, health/physics and payment rules
+are unchanged. Includes the H10 exclusion and all v0.17e improvements.
+
+Install all 88 files. FULLY EXIT AND RESTART THE GAME to discard old resource
+instances, then try a new living downed enemy not already credited as arrested.
+The log should show private binding readback before the helper-attached line.
+See docs/ARREST_BINDING_INITIALIZATION_v017e2.md in the repository.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17e1 H10 LOCATION FIX - COMPLETE BRANCH TEST
 
 Megabuilding H10: Atrium is excluded from generated dispatch locations:

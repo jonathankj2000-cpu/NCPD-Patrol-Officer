@@ -12,12 +12,18 @@ local loopAvailable,loopReady=true,true
 local loadFailure,rejectToken=false,false
 local tokens,loopTokens,loadCount={},{},0
 local dynamic={IsReady=function() return true end}
+local function copy(value)
+ if type(value)~='table' then return value end
+ local result={};for k,v in pairs(value) do result[k]=copy(v) end;return result
+end
+local emptyLoopTree=copy(PrivateLoopTree)
 function dynamic:CreateEntity(spec)
  assert(spec.recordID==nil and spec.templatePath=='base\\ncpd_patrol\\arrest_workspot.ent')
  assert(not spec.persistState and not spec.persistSpawn and not spec.alwaysSpawned and spec.spawnInView and spec.active)
  nextID=nextID+1
  local helper=supportActor(nextID,'private helper',spec.position.x,spec.position.y,spec.position.z)
  helper.orientation=spec.orientation
+ helper.bindingsAtAttach=PrivateLoopTree.finalAnimsets and #PrivateLoopTree.finalAnimsets or 0
  function helper:FindComponentByType(kind)
   assert(kind=='workWorkspotResourceComponent')
   if not missingComponent then return {name='NCPDPatrolArrestLoop'} end
@@ -130,8 +136,12 @@ local function step(count,paused)
   Module.update(0.25,Patrol:IsOnDuty(),paused==true)
  end
 end
-local function secure(npc)
- assert(ArrestNative:StartArrest(npc));step(8);assert(ArrestNative:GetStage()==2);step(1)
+local function secure(npc,allowRefusal)
+ assert(ArrestNative:StartArrest(npc));step(8)
+ assert(ArrestNative:GetStage()==2 or (allowRefusal and ArrestNative:GetStage()==0));step(1)
+ if helpers[nextID] then
+  assert(helpers[nextID].bindingsAtAttach>0,'Arrest helper attached before private animation bindings were ready')
+ end
  return helpers[nextID],ArrestNative.m_playback
 end
 local function releasePaid()
@@ -287,7 +297,7 @@ for case=1,2 do
  Module.reset();bank=wallet;before=#played
  local originalBindings=SourceTree.finalAnimsets
  if case==1 then PrivateLoopTree.initialCanUseExits=true else SourceTree.finalAnimsets={} end
- local npc=arrestSuspect(1161+case);secure(npc);step(20)
+ local npc=arrestSuspect(1161+case);secure(npc,true);step(20)
  assert(wallet==bank and #played==before and not ArrestNative:IsArrested(npc))
  PrivateLoopTree.initialCanUseExits=false;SourceTree.finalAnimsets=originalBindings
 end
@@ -384,6 +394,17 @@ carried.carried=true;flags[carried.id.hash].exiting=true;bank=wallet;step(4)
 assert(wallet==bank and carried.physicsDisabled and not ArrestNative:OwnsPosePhysics(carried))
 assert(carried.physicsEvents[#carried.physicsEvents].kind=='disable')
 carried.carried=false;carried:SetDisableRagdoll(false)
+-- A later resource instance or emptied binding cache must be initialized before
+-- the next helper attaches, without requiring Module.reset or another save.
+local previousTree,previousResource=PrivateLoopTree,PrivateResource
+PrivateLoopTree=copy(emptyLoopTree);PrivateResource={workspotTree=PrivateLoopTree}
+for case=1,2 do
+ if case==2 then PrivateLoopTree.finalAnimsets={} end
+ local streamed=arrestSuspect(1200+case);local value=wallet
+ local h=secure(streamed);assert(h and h.bindingsAtAttach==2)
+ step(6);assert(wallet==value+250 and ArrestNative:IsArrested(streamed));releasePaid()
+end
+PrivateLoopTree,PrivateResource=previousTree,previousResource
 -- Duty end releases private helpers without undoing already-paid identities.
 bank=wallet;count=ArrestNative:GetPaidArrests()
 Patrol:FinishShift();Module.finish();step(4)

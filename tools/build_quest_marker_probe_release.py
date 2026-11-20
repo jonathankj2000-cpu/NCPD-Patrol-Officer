@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17e1_H10_Location_Fix_TEST.zip'
-REPORT='NCPD_Patrol_v0.17e1_H10_Location_Fix_verification.json'
+NAME='NCPD_Patrol_v0.17e2_Arrest_Initialization_TEST.zip'
+REPORT='NCPD_Patrol_v0.17e2_Arrest_Initialization_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -30,6 +30,7 @@ def main():
     changed.update('archive/pc/mod/NCPDPatrol_'+n+'.archive' for n in ['Dispatch','VIP','Cyberpsycho'])
     changed.update([PREFIX+'backup.lua','r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds','r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds'])
     changed.add(PREFIX+'vip_locations.lua')
+    changed.add(PREFIX+'arrest.lua')
     added={PREFIX+'quest_marker_probe.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds',
            'archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl',
            'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds',
@@ -67,7 +68,7 @@ def main():
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17e1-h10-location-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17e2-arrest-initialization','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'fixed_markers':comparisons[compared[4]],'fixed_marker_sources':json.loads((ROOT/'assets/fixed_markers/sources.json').read_text()),'fixed_marker_resources':json.loads((ROOT/'assets/fixed_markers/compiled.json').read_text()),'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
@@ -93,6 +94,11 @@ def main():
         'actual_backup_driving_and_appearance_validation':False,
         'dispatch_location_exclusions':json.loads((ROOT/'assets/fixed_markers/location-exclusions.json').read_text()),
         'native_scripts_unchanged_from_v017e':True,
+        'arrest_initialization':'Private metadata/bindings prepared and read back before helper creation; actual resource identity/count checked; pending assets create no helper; v0.17e fails the new attachment-order invariant',
+        'arrest_native_activation_payment_and_physics_unchanged':True,
+        'arrest_archive_and_loop_topology_unchanged':True,
+        'reported_arrest_t_pose_resolved_in_game':False,
+        'arrest_user_and_source_evidence':json.loads((ROOT/'assets/arrest/initialization-evidence.json').read_text()),
     })
     (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k not in ['files','vip_comparison','dispatch_comparison','ui_comparison']},indent=2))

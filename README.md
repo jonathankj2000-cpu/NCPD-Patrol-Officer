@@ -1,5 +1,18 @@
 # NCPD Patrol
 
+## v0.17e2 — arrest initialization test
+
+Prepares and reads back the private arrest animation bindings **before helper
+attachment**, checks later resource instances/caches, and waits for pending
+assets without creating an unbound helper. Native scripts, the infinite lying
+loop/archive, physics and payment are unchanged. Includes the H10 exclusion.
+
+[Download the complete v0.17e2 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e2_Arrest_Initialization_TEST.zip)
+
+Install all 88 files and fully restart. Test a newly downed, uncredited suspect.
+The old code fails the new attachment-order test; whether this resolves the
+reported T-pose still needs game confirmation. [Evidence and test](docs/ARREST_BINDING_INITIALIZATION_v017e2.md).
+
 ## v0.17e1 — H10 location fix
 
 Excludes **Megabuilding H10: Atrium** from VIP pickup/delivery and cyberpsycho

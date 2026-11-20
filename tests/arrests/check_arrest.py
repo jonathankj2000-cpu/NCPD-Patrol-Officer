@@ -1,5 +1,5 @@
 from pathlib import Path
-import sys
+import sys,os,subprocess
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE))
@@ -27,6 +27,10 @@ with tempfile.TemporaryDirectory(prefix='ncpd-result-wrapper-') as scratch:
     lua.globals().ResultReceiver=lua.execute(translate(wrapper))
 lua.globals().MOD_DIR=str(Path(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol').resolve())
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
+override=os.environ.get('NCPD_ARREST_MODULE_TEST')
+if override:
+    lua.globals().ARREST_MODULE_TEST=override
+    lua.execute('package.preload.arrest=function() return dofile(ARREST_MODULE_TEST) end')
 import json
 asset=json.loads(Path(ROOT/'assets/arrest/arrest_lying_loop.workspot.json').read_text())
 handles={}
@@ -65,4 +69,13 @@ assert any('observed clip=unavailable' in line for line in logs)
 assert any('Arrest loop | private bindings configured' in line for line in logs)
 assert any('Arrest ground | ready after' in line for line in logs)
 assert any('NCPD_GROUND_UNSUITABLE' in line and 'ray misses=' in line and 'nav=' in line for line in logs)
-print('PASS: bounded fresh ground retries after carry/drop, short player notices with technical reasons only in CET; supported ragdoll placement, native workspot alignment and unsafe-ground rejection; unchanged health/defeat, rollback/carry handoff; stable activation/exactly-once payment; stale/failed results, death/range/wanted/load guards; infinite loop and async failures; separate scanner/arrest 1000/250 payments (native APIs mocked)')
+assert any('prepared before helper creation=true' in line for line in logs)
+if not override:
+    with tempfile.TemporaryDirectory(prefix='ncpd-arrest-order-control-') as scratch:
+        baseline=Path(scratch)/'arrest.lua'
+        baseline.write_bytes(subprocess.check_output(['git','show','07cd4ba3b674b496c12cf69cd58f160d662354b7:bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua'],cwd=ROOT))
+        control=subprocess.run([sys.executable,str(Path(__file__).resolve())],cwd=ROOT,
+            env={**os.environ,'NCPD_ARREST_MODULE_TEST':str(baseline)},capture_output=True,text=True)
+        assert control.returncode!=0 and 'Arrest helper attached before private animation bindings were ready' in control.stderr,(control.stdout,control.stderr)
+    print('Arrest initialization control: actual v0.17e fails pre-attachment binding invariant; this is not a rendered-animation test')
+print('PASS: arrest bindings prepared/read back before helper attachment, fresh/empty resource cache and actual v0.17e negative control; bounded fresh ground retries after carry/drop, native alignment and unsafe-ground rejection; unchanged health/defeat, rollback/carry handoff; stable activation/exactly-once payment; stale/failed results, death/range/wanted/load guards; infinite loop and async failures; separate scanner/arrest 1000/250 payments (native APIs mocked; game rendering unverified)')
