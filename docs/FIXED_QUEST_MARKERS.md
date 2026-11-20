@@ -1,3 +1,11 @@
+Catalogue/diagnostics extraction in v0.17e
+
+The r5c controller below remains the behavioral reference. v0.17e extracts pure
+catalogue work and value-only formatting into two helpers. All 3161 comparison
+rows match r5c, including diagnostics and mutation counters. The user reports
+working marker creation/completion/next assignment in initial r5c game tests;
+long-term/reload-crash resolution is unproven. See PATROL_IMPROVEMENTS_v017e.md.
+
 Fixed quest markers r5c
 
 The r5b game snapshot proves a premature rejection: one active selected native

@@ -2,6 +2,8 @@
 -- All entity IDs below originate in this module's own CreateEntity calls.
 local Crew = require("officer_ai")
 local Ready = require("officer_ready")
+local Approach = require("backup_approach")
+local Road = Approach.new()
 local M = {}
 local CAR = "Vehicle.v_standard2_archer_hella_police"
 local OFFICER = "Character.cvi_ncpd_police_ranged2_copperhead_ma"
@@ -11,6 +13,10 @@ local phase, label = "idle", "Available on duty"
 local elapsed, poll, away, retry = 0, 0, 0, 0
 local notified, failed = false, false
 local releaseNotice, releaseBraked = false, false
+local spawnPoint, requestPosition = nil, nil
+local attempts, settling, searchPoll = 0, 0, 0
+local retryAfterCleanup = false
+local rejectedPoints = {}
 
 local function distance(a, b)
     local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
@@ -65,8 +71,16 @@ local function cleanup(support, status)
         report("Cleanup pending; another patrol stays blocked", support, status)
         return false
     end
-    units, car, anchor, target = {}, nil, nil, nil
+    units, car = {}, nil
     carID = nil
+    spawnPoint, settling = nil, 0
+    if retryAfterCleanup and attempts < 3 then
+        retryAfterCleanup = false
+        phase, elapsed, poll, searchPoll = "searching", 0, 0, 0
+        report("Road placement rejected; waiting for another checked approach (attempt " .. attempts .. "/3)", support, status)
+        return false
+    end
+    anchor, target, requestPosition = nil, nil, nil
     phase, away = "idle", 0
     releaseNotice, releaseBraked = false, false
     if support then support:ReleaseBackup() end
@@ -74,32 +88,12 @@ local function cleanup(support, status)
     return true
 end
 
--- Navmesh projection helps avoid voids and upper floors. It does not identify a
--- traffic lane: this first driving test needs a clear roadside location.
-local function spawnPoint(origin, heading, player)
-    local nav = Game.GetAINavigationSystem()
-    if not nav then error("Navigation system unavailable") end
-    local forward = heading:GetWorldForward()
-    for _, metres in ipairs({38, -38, 50, -50}) do
-        local probe = Vector4.new(origin.x - forward.x*metres, origin.y - forward.y*metres, origin.z, 1)
-        local result = nav:FindPointInSphereForCharacter(probe, 3, player)
-        if result and result.status == worldNavigationRequestStatus.OK then
-            local point = result.point
-            if math.abs(point.z-origin.z) <= 2 and distance(point, origin) >= 25
-                and AINavigationSystem.HasPathFromAtoB(player, point, origin) then
-                return Vector4.new(point.x, point.y, point.z + 0.3, 1)
-            end
-        end
-    end
-    error("No suitable approach point. Request backup at a clear roadside location.")
-end
-
 local function create(system, record, position, orientation)
     if not TweakDB:GetRecord(TweakDBID.new(record)) then error("Backup record unavailable: " .. record) end
     local spec = DynamicEntitySpec.new()
     spec.recordID, spec.position, spec.orientation = TweakDBID.new(record), position, orientation
     spec.persistState, spec.persistSpawn, spec.alwaysSpawned = false, false, false
-    spec.spawnInView, spec.active = true, true
+    spec.spawnInView, spec.active = false, true
     if record:sub(1,10) == "Character." then spec.tags = {"NCPDPatrolOfficer"} end
     local id = system:CreateEntity(spec)
     if not id or not EntityID.IsDefined(id) then error("Backup entity creation failed") end
@@ -117,9 +111,14 @@ function M.reset()
     phase, label = "idle", "Available on duty"
     elapsed, poll, away, retry, notified, failed = 0, 0, 0, 0, false, false
     releaseNotice, releaseBraked = false, false
+    spawnPoint, requestPosition = nil, nil
+    attempts, settling, searchPoll, retryAfterCleanup = 0, 0, 0, false
+    rejectedPoints = {}
+    Road.reset()
 end
 
 function M.finish(support, status)
+    retryAfterCleanup = false
     if #ids > 0 then return cleanup(support, status) end
     M.reset()
     if support then support:ReleaseBackup() end
@@ -130,21 +129,37 @@ local function deploy(support, patrol, status)
     local player = Game.GetPlayer()
     local system = Game.GetDynamicEntitySystem()
     if not player or not system or not system:IsReady() then error("Entity system not ready") end
+    if support:SpawnSafetyVersion() ~= 1 then error("Install the complete patrol improvements package and restart") end
     target = support:GetBackupVehicle() or Game.GetMountedVehicle(player) or player
     if target ~= player and math.abs(target:GetCurrentSpeed()) > 1 then error("Stop your vehicle before requesting backup") end
-    anchor = player:GetWorldPosition()
-    local point = spawnPoint(target:GetWorldPosition(), target, player)
-    local orientation = target:GetWorldOrientation()
-    carID = create(system, CAR, point, orientation)
-    local forward = target:GetWorldForward()
-    local first = create(system, OFFICER, Vector4.new(point.x+forward.y*4, point.y-forward.x*4, point.z, 1), orientation)
-    local second = create(system, OFFICER, Vector4.new(point.x-forward.y*4, point.y+forward.x*4, point.z, 1), orientation)
-    units = {{id=first,seat="seat_front_left"},{id=second,seat="seat_front_right"}}
-    -- Store car ID separately without trusting any vehicle from the world.
-    car = nil
-    phase, elapsed, poll, away, notified, failed = "spawning", 0, 0, 0, false, false
-    report("One patrol requested: car and two officers", support, status)
+    local position = player:GetWorldPosition()
+    anchor = Vector4.new(position.x, position.y, position.z, 1)
+    position = target:GetWorldPosition()
+    requestPosition = Vector4.new(position.x, position.y, position.z, 1)
+    spawnPoint, attempts, settling, searchPoll, retryAfterCleanup = nil, 0, 0, 0, false
+    rejectedPoints = {}
+    phase, elapsed, poll, away, notified, failed = "searching", 0, 0, 0, false, false
+    report("One patrol assigned; looking for a checked off-camera road approach", support, status)
     notice(patrol, "Backup responding. One patrol car assigned.")
+end
+
+local function spawnCar(point, support, status)
+    local system = Game.GetDynamicEntitySystem()
+    if not system or not system:IsReady() then error("Entity system not ready") end
+    spawnPoint = point
+    attempts, settling = attempts + 1, 0
+    local p = point.ground
+    carID = create(system, CAR, Vector4.new(p.x, p.y, p.z + 0.15, 1), point.orientation)
+    car, units = nil, {}
+    phase, elapsed = "spawning", 0
+    report("Patrol car requested from " .. point.source .. "; checking actual placement before crew deployment", support, status)
+end
+
+local function spawnCrew(system)
+    local first = create(system, OFFICER, spawnPoint.crew[1], spawnPoint.orientation)
+    units = {{id=first,seat="seat_front_left"}}
+    local second = create(system, OFFICER, spawnPoint.crew[2], spawnPoint.orientation)
+    units[2] = {id=second,seat="seat_front_right"}
 end
 
 local function mount(unit, unmount)
@@ -261,6 +276,12 @@ function M.release(support, patrol, status)
         notice(patrol, "10-4 already requested. Allow seated officers to exit; the patrol remains on scene.")
         return true
     end
+    if phase == "searching" and #ids == 0 then
+        cleanup(support, status)
+        notice(patrol, "10-4. Pending backup approach cancelled.")
+        return true
+    end
+    retryAfterCleanup = false
     phase, elapsed, away, failed, releaseNotice, releaseBraked = "released", 0, 0, false, false, false
     anchor = Game.GetPlayer():GetWorldPosition()
     report("10-4: Standing down; releasing officers from follower duty", support, status)
@@ -305,10 +326,44 @@ local function updateActive(delta, support, patrol, status)
         return
     end
     if phase == "released" then updateReleased(delta, support, patrol, status); return end
-    if phase == "spawning" then
+    if phase == "searching" then
+        if not target or not target:IsAttached() or distance(target:GetWorldPosition(), requestPosition) > 8 then
+            error("The request position moved before a safe approach was found")
+        end
+        searchPoll = searchPoll + delta
+        if searchPoll >= 0.5 then
+            searchPoll = 0
+            local point = Road.find(target, support, rejectedPoints)
+            if point then spawnCar(point, support, status); return end
+        end
+        if elapsed >= 20 then error("No checked off-camera road approach found within 20 seconds") end
+    elseif phase == "spawning" then
         local system = Game.GetDynamicEntitySystem()
         car = system:GetEntity(carID)
-        local ready = car and car:IsAttached()
+        if car and car:IsAttached() then
+            if not Approach.positioned(car, spawnPoint) then
+                settling = 0
+                if elapsed >= 1 then
+                    rejectedPoints[#rejectedPoints+1] = spawnPoint.ground
+                    retryAfterCleanup = attempts < 3
+                    report("Patrol appeared off the requested road position; removing it before another attempt", support, status)
+                    cleanup(support, status)
+                end
+                return
+            end
+            if #units == 0 then
+                -- Recheck the camera: attachment may complete after V turns.
+                if support:CanSpawnBackupAt(spawnPoint.position) ~= true then
+                    if elapsed >= 12 then error("Patrol crew could not deploy outside the camera view") end
+                    return
+                end
+                if settling == 0 then car:ForceBrakesUntilStoppedOrFor(1.0) end
+                settling = settling + delta
+                if settling < 0.75 then return end
+                spawnCrew(system)
+            end
+        end
+        local ready = car and car:IsAttached() and #units == 2
         for _, unit in ipairs(units) do
             unit.actor = system:GetEntity(unit.id)
             ready = ready and unit.actor and unit.actor:IsAttached()
@@ -392,7 +447,12 @@ end
 
 function M.update(delta, onDuty, support, patrol, status)
     if not support or not patrol or not Game.GetPlayer() then return end
+    if onDuty and delta > 0 and delta <= 0.5 and not patrol:IsDispatchMenuOpen() then
+        local recorded = pcall(function() Road.record(delta, Game.GetMountedVehicle(Game.GetPlayer())) end)
+        if not recorded then Road.reset() end
+    end
     if phase == "cleanup" then
+        if not onDuty then retryAfterCleanup = false end
         retry = retry + delta
         if retry >= 3 then cleanup(support, nil) end
         return
@@ -406,7 +466,7 @@ function M.update(delta, onDuty, support, patrol, status)
             local ok, err = pcall(deploy, support, patrol, status)
             if not ok then
                 report("Request failed: " .. tostring(err), support, status)
-                notice(patrol, "Backup unavailable. Try a clear roadside location.")
+                notice(patrol, "Backup unavailable. Stop at a clear roadside location and try again.")
                 cleanup(support, nil)
             end
         end
@@ -425,7 +485,11 @@ function M.update(delta, onDuty, support, patrol, status)
     if not ok and not failed then
         failed = true
         report("Patrol failed: " .. tostring(err), support, status)
-        notice(patrol, "Backup could not complete its response. Unit standing down.")
+        if phase == "searching" then
+            notice(patrol, "No safe backup approach found. Try a clear roadside location and look away from the approach road.")
+        else
+            notice(patrol, "Backup could not complete its response. Unit standing down.")
+        end
         cleanup(support, nil)
     end
 end

@@ -1,5 +1,27 @@
 # NCPD Patrol
 
+## v0.17e — patrol improvements branch test
+
+Extracts the working r5c marker catalogue and diagnostic formatting with **3161
+identical observation rows** against the actual r5c controller. Marker activation,
+confirmation, fallback timing, cleanup and session gating keep their behavior.
+
+NCPD Career now has **Start Shift** in its sidebar, using the existing shift
+controller. Backup prefers V's recently driven route, checks ground, corridor
+and camera visibility, and confirms the car's actual placement before deploying
+its two officers. Placement retries are bounded and retain the one-unit limit.
+
+[Download the complete v0.17e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e_Patrol_Improvements_TEST.zip)
+
+Install all 87 files and fully restart. Browser Extension is optional; the
+career website needs it. VIP/ambush and all six archives are unchanged. No clear
+Bean Bagger pump-colour regression was found; materials and runtime diagnostics
+are unchanged. [Findings](docs/BEAN_BAGGER_BLUE_PUMP_REVIEW.md).
+
+[Scope, checks and game-test steps](docs/PATROL_IMPROVEMENTS_v017e.md).
+Backup driving and long-term marker/load reliability still need game testing.
+
+
 ## Fixed quest markers r5c — branch test
 
 Corrects r5b's false rejection of a valid native marker: deterministic private

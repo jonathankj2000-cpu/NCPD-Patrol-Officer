@@ -1,0 +1,12 @@
+{
+  "build": "v0.17d-fixed-quest-markers-r5c",
+  "source": "User report, 2026-11-20",
+  "marker_visible": true,
+  "marker_removed_on_completion": true,
+  "marker_appeared_on_next_dispatch": true,
+  "initial_tests_positive": true,
+  "long_term_reliability_tested": false,
+  "native_confirmation_log_provided": false,
+  "reload_crash_resolution_proven": false,
+  "use": "Preserved baseline for the catalogue/diagnostics extraction; no new engine-rendering claim."
+}

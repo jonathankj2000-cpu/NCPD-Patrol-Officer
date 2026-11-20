@@ -1,3 +1,46 @@
+NCPD PATROL v0.17e PATROL IMPROVEMENTS - COMPLETE BRANCH TEST
+
+Install the entire bin/r6/archive package and fully restart the game.
+87 install files; 28 Lua modules; 36 REDscript files. Existing dependencies and
+keys remain. Browser Extension is optional for the mod; the career page needs it.
+
+CHANGES
+- Marker catalogue and diagnostic formatting are separate helpers. The existing
+  marker controller still owns timing, native proof, fallback and cleanup.
+  3161 observation rows, including diagnostic strings, match the actual r5c code.
+- NCPD Career: Start Shift in the sidebar of every section. Uses the same shift
+  controller as CET/fast travel. SHIFT REQUESTED gives feedback until the normal
+  controller consumes the request; refresh permits retry, SHIFT ACTIVE is shown
+  on duty. No direct rewards or partner spawning from the browser handler.
+- Backup prefers your recent driven route and retains it while you walk to the
+  trunk. It checks road support, static clearance and the active camera. With no
+  route history it checks a straight approach behind your stationary position.
+- The backup car must attach at the requested road level and settle before the
+  two officers are created. Misplaced cars are removed before retrying elsewhere;
+  three attempts maximum. Requests search for up to 20 active seconds per try.
+- One-patrol reservation, fixed request destination, braking/exit, following,
+  boarding, 10-4 and distance cleanup remain. World reset forgets old IDs.
+- Bean Bagger review: no clear source regression found. Its archive and private
+  pump/grip resources are identical to the original blue-grip release. No asset
+  edits or new runtime diagnostics. Possible causes and comparisons are recorded
+  in docs/BEAN_BAGGER_BLUE_PUMP_REVIEW.md in the repository.
+
+TEST
+Repeat marker completion/new dispatch and loading. Start a shift from Career.
+For backup, drive to a roadside stop and request it after exiting, then try a
+stationary request without recent driving. Test camera angles and bridges.
+Unsafe approaches can refuse instead of spawning on uncertain ground.
+The existing CET Bean Bagger test-copy control can compare a fresh gun after
+restart with your existing gun; no new diagnostic control is required.
+
+All six archives and the VIP/ambush code are unchanged. Money/progression and
+scanner/VIP/cyberpsycho quest outcomes are unchanged. Portable tests and offline
+source/API checks are separate from actual game rendering/driving. Long-term
+marker stability and earlier reload-crash attribution remain open.
+See docs/PATROL_IMPROVEMENTS_v017e.md in the repository for implementation scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d FIXED QUEST MARKERS r5c - COMPLETE BRANCH TEST
 
 Fixes the r5b rejection where an active native pin had the correct hash,

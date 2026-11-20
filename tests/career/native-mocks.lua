@@ -16,6 +16,8 @@ NCPDPatrolCareerBrowserState={Get=function() return BrowserState end}
 function Core:NotifyCareerReward(amount,threshold) CareerFixture.notices[#CareerFixture.notices+1]={amount=amount,threshold=threshold} end
 function Core:NotifyDispatch(text,duration) CareerFixture.notices[#CareerFixture.notices+1]={text=text,duration=duration} end
 NCPDPatrolSystem={Get=function() return Core end}
+NCPDPatrolMarkerSession={WorldReady=function() return CareerFixture.sessionReady~=false end}
+function Core:ShowPriorityMessage(text,duration) CareerFixture.notices[#CareerFixture.notices+1]={text=text,duration=duration} end
 NCPDPatrolDispatchJournalSystem={Get=function() return Dispatch end}
 NCPDPatrolArrestSystem={Get=function() return Arrests end}
 NCPDPatrolCareerSystem={Get=function() return Career end}
@@ -34,10 +36,11 @@ function FrameworkSystem:ShouldBypassBrowserExtension() return CareerFixture.bef
 
 function CareerFixture:SetCount(n) Core.m_paidActivities={n=n} end
 function CareerFixture:Reset(n)
- self:SetCount(n or 0);self.wanted=false;self.ready=true;self.notices={}
+ self:SetCount(n or 0);self.wanted=false;self.ready=true;self.sessionReady=true;self.notices={}
  player.attached=true;player.dead=false;player.combat=false
  wallet=0;paymentOK=true;transactionPresent=true
  Core.m_onDuty=false
+ Core.m_requestedDuty=0
  Career.m_claimedMilestones={n=0};Career.m_issuedRewards={n=0};Career.m_selectedPartner=0;Career:OnAttach()
  self.inventory={};self.itemCalls={};self.vehicleCalls={};self.unlockedVehicles={};self.failItems={};self.missingRecords={}
  self.vehiclePresent=true;self.enableAccepted=true;self.unlockConfirmed=true

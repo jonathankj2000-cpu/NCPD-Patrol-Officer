@@ -28,10 +28,10 @@ def translate(path):
     fields=[]
     def field(m):
         name,typ=m.groups(); fields.append((name,typ)); return ''
-    source=re.sub(r'private\s+(?:persistent\s+)?let\s+(\w+)\s*:\s*([^;]+);',field,source)
+    source=re.sub(r'(?:private|public)\s+(?:persistent\s+)?let\s+(\w+)\s*:\s*([^;]+);',field,source)
     def function(m):
         name,params=m.groups()
-        names=','.join(p.split(':')[0].strip().removeprefix('opt ').removeprefix('const ') for p in params.split(',') if p.strip())
+        names=','.join(p.split(':')[0].strip().removeprefix('opt ').removeprefix('const ').removeprefix('out ') for p in params.split(',') if p.strip())
         defaults=[]
         for p in params.split(','):
             if p.strip().startswith('opt '):

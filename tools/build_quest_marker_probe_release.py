@@ -1,4 +1,4 @@
-"""Verify the archived phase control and package the complete r5c fixed marker dispatch test."""
+"""Verify preserved markers and package complete v0.17e patrol improvements."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5c_TEST.zip'
-REPORT='NCPD_Patrol_Fixed_Quest_Markers_r5c_verification.json'
+NAME='NCPD_Patrol_v0.17e_Patrol_Improvements_TEST.zip'
+REPORT='NCPD_Patrol_v0.17e_Patrol_Improvements_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -20,7 +20,7 @@ def main():
     static_base='63a6100602de836dd4f670fa8022f87fc1acfe99'
     for name in ['archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl']:
         assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{static_base}:{name}'],cwd=ROOT),name
-    assert len(modules)==27 and len(scripts)==34
+    assert len(modules)==28 and len(scripts)==36
     for archive in sorted((ROOT/'archive/pc/mod').glob('*.archive')):
         assert archive.read_bytes()==subprocess.check_output(['git','show',f'19e8b82ea1b42f4fbbdca031ea9e9365b82d6af5:{archive.relative_to(ROOT).as_posix()}'],cwd=ROOT),archive
     for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
@@ -28,9 +28,12 @@ def main():
     changed={PREFIX+n for n in ['init.lua','cet_ui.lua','dispatch_scanner.lua','cyberpsycho.lua','vip_waypoint.lua']}
     changed.update('r6/scripts/NCPDPatrol/NCPDPatrol'+n+'System.reds' for n in ['DispatchJournal','VIP','Cyberpsycho'])
     changed.update('archive/pc/mod/NCPDPatrol_'+n+'.archive' for n in ['Dispatch','VIP','Cyberpsycho'])
+    changed.update([PREFIX+'backup.lua','r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds','r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds'])
     added={PREFIX+'quest_marker_probe.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds',
            'archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl',
            'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds',
+           'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds',
+           'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds',PREFIX+'backup_approach.lua',
            'r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds',
            'r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappinData.reds','THIRD_PARTY_NOTICES.txt',
            PREFIX+'marker_catalog.lua',PREFIX+'marker_navigation.lua',
@@ -42,7 +45,7 @@ def main():
     paths=[p for d in ['bin','r6','archive'] for p in (ROOT/d).rglob('*') if p.is_file()]
     paths.extend(ROOT/n for n in ['README.txt','LICENSE','THIRD_PARTY_NOTICES.txt'])
     assert {p.relative_to(ROOT).as_posix() for p in paths}==set(previous)|added|{'README.txt','LICENSE'}
-    assert len(paths)==84
+    assert len(paths)==87
     compared=['tests/dispatch_refactor/check_refactor.py','tests/cet_ui/check_cet_ui.py',
               'tests/vip_refactor/check_vip_refactor.py','tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
     with TemporaryDirectory(prefix='ncpd-marker-r4-check-') as tmp:
@@ -59,23 +62,35 @@ def main():
             info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
             z.writestr(info,p.read_bytes(),compresslevel=9)
     with zipfile.ZipFile(release) as z:
-        assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==84
+        assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==87
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17d-fixed-quest-markers-r5c','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17e-patrol-improvements','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'fixed_markers':comparisons[compared[4]],'fixed_marker_sources':json.loads((ROOT/'assets/fixed_markers/sources.json').read_text()),'fixed_marker_resources':json.loads((ROOT/'assets/fixed_markers/compiled.json').read_text()),'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
         'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),
-        'zip_git_blob':blob(body),'new_payload':sorted(added),'changed_payload':sorted(changed),'existing_actor_reward_and_result_methods_unchanged':True,'native_owner_changes':'Transient navigation site, objective path helpers and guarded site selection only; source-guarded against r5','legacy_behavior_comparison_scope':'Unavailable-bank compatibility; bank-present behavior is covered by the fixed marker suite',
-        'entrypoint_and_ui_changes':'Session/Ready gate around existing CET update consumers, read-only diagnostics and build labels; original actor/reward/result owners retained',
+        'zip_git_blob':blob(body),'new_payload':sorted(added),'changed_payload':sorted(changed),'existing_actor_reward_and_result_methods_unchanged':False,'dispatch_actor_reward_and_result_methods_unchanged':True,'native_owner_changes':'Dispatch/VIP/cyberpsycho owners retain the reviewed navigation-only changes; backup adds camera capability and revised car/crew deployment','legacy_behavior_comparison_scope':'Unavailable-bank compatibility; bank-present behavior is covered by the fixed marker suite',
+        'entrypoint_and_ui_changes':'Three build labels relative to r5c; career Start Shift queues the existing desired-state request, guarded page callbacks and requested/active feedback',
         'currency_and_progression_unchanged':True,'browser_extension_still_optional':True,
         'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_used_by_dispatch':False,'all_six_archives_unchanged_from_r5a':True,'fixed_marker_bank_in_game_validation':False,'prior_r5_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5-game-evidence.json').read_text()),'fixed_journal_activation_requires_in_game_test':True,'prior_r5a_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5a-game-evidence.json').read_text()),'engine_owned_native_pins_unregistered':False,'valid_native_retained_without_claiming_full_journal_proof':True,'pre_cleanup_diagnostics_retained':True,'detached_player_blocks_native_marker_mutations':True,'reported_animation_crash_resolved':False,'reported_reload_crash_resolved':False,'r5b_native_rejection_evidence':json.loads((ROOT/'assets/fixed_markers/r5b-game-evidence.json').read_text()),'deterministic_ownership_catalog':3112,'session_readiness':'Codeware Session/BeforeStart/BeforeEnd/End/Ready; callbacks change flags only','restore_objectives_per_tick_maximum':48,
         'activation_contract_corrected':'Deterministic 3112-path ownership catalogue independent of journal availability, direct selected private-entry identity, full proof requires catalogue membership; Codeware session readiness gates native and CET work, bounded 48-objective restore slices; fallback status tracks latest observation. All six archives unchanged; no runtime relocation',
         'legacy_relocation_probe_contract':'One scoped SetMappinPosition call; runtime and quest-log position readbacks, same native ID/link and 3 active observed seconds required; no manual tracking write',
         'observed_r4_startup_error_fixed':'Direct runtime node constructor removed; quest node IDs are typed in the compiled resource',
         'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
+    report.update({
+        'marker_baseline_commit':'a51dabfe91c9c90856b29ecd10e086c3977d8224',
+        'prior_r5c_user_test':json.loads((ROOT/'assets/fixed_markers/r5c-game-evidence.json').read_text()),
+        'marker_refactor':'Pure catalogue and value-only diagnostic formatting; 3161 identical r5c observation rows; lifecycle/proof/timers remain with the controller',
+        'career_start_shift':'Existing RequestDuty(false) -> CET controller, duplicate/stale/session/death/wanted guards; all three pages, five viewport sizes',
+        'backup_spawn':'Recent vehicle route, checked stationary corridor, exact ambush camera formula in backup context, actual road-level placement and settling before crew; three separated attempts with confirmed deletion before retry',
+        'backup_spawn_safety_interface':1,'backup_search_seconds':20,'backup_car_placement_attempts':3,
+        'vip_ambush_modules_unchanged_from_r5c':True,
+        'bean_bagger_archive_unchanged':True,'bean_bagger_clear_colour_regression_found':False,
+        'bean_bagger_new_runtime_diagnostics':False,'bean_bagger_review':'docs/BEAN_BAGGER_BLUE_PUMP_REVIEW.md',
+        'actual_backup_driving_and_appearance_validation':False,
+    })
     (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k not in ['files','vip_comparison','dispatch_comparison','ui_comparison']},indent=2))
 if __name__=='__main__':main()

@@ -2,6 +2,10 @@
 import re
 
 def without_probe(source):
+    # Reviewed v0.17e build labels only; session behavior is still compared.
+    source=source.replace('-- NCPD Patrol v0.17e patrol improvements | catalogue/diagnostics, career duty entry and road-checked backup','-- NCPD Patrol v0.17d fixed quest markers r5c | finite journal marker bank')
+    source=source.replace('v0.17e patrol improvements loaded. Marker catalogue/diagnostics refactored; Start Shift in NCPD Career; backup uses checked off-camera road approaches. Install the complete package and restart.','v0.17d fixed quest markers r5c loaded. Scanner, VIP and cyberpsycho activate fixed journal pins. Unmapped sites use independent quest-style markers. Install the complete package and restart.')
+    source=source.replace('NCPD Patrol - v0.17e patrol improvements###','NCPD Patrol - v0.17d fixed quest markers r5c###')
     source=re.sub(r"fixed quest markers r5[abc]", "fixed quest markers r5", source)
     # Exact navigation adapters only. Bank-present behavior has its own suite;
     # historical oracles exercise the unavailable-bank compatibility boundary.

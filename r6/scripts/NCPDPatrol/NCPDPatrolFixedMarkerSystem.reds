@@ -145,27 +145,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
     }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Map() -> ref<MappinSystem> { return GameInstance.GetMappinSystem(this.GetGameInstance()); }
-    private func Root(scope: Int32) -> String {
-        if scope < 0 || scope > 9 { return ""; };
-        if scope == 0 { return "quests/minor_quest/ncpd_patrol_dispatch"; };
-        if scope < 6 { return s"quests/minor_quest/ncpd_patrol_dispatch_\(scope)"; };
-        if scope < 8 { return "quests/minor_quest/ncpd_patrol_cyberpsycho"; };
-        return "quests/minor_quest/ncpd_patrol_vip";
-    }
-    private func Phase(scope: Int32) -> String { return this.Root(scope) + "/main"; }
-    private func BaseObjective(scope: Int32) -> String {
-        let phase: String = this.Phase(scope);
-        if scope < 6 { return s"\(phase)/resolve"; };
-        if scope == 6 { return s"\(phase)/respond"; };
-        if scope == 7 { return s"\(phase)/neutralize"; };
-        if scope == 8 { return s"\(phase)/pickup"; };
-        return s"\(phase)/deliver";
-    }
-    private func SiteObjective(scope: Int32, site: Int32) -> String {
-        let base: String = this.BaseObjective(scope);
-        if site > 0 { return s"\(base)_bank_\(site)"; };
-        return base;
-    }
+
     private func CurrentSite(scope: Int32) -> Int32 {
         let scanner: ref<NCPDPatrolDispatchJournalSystem>;
         let cyber: ref<NCPDPatrolCyberpsychoSystem>;
@@ -187,7 +167,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         };
         return 0;
     }
-    private func Objective(scope: Int32) -> String { return this.SiteObjective(scope, this.CurrentSite(scope)); }
+    private func Objective(scope: Int32) -> String { return NCPDPatrolFixedMarkerCatalog.SiteObjective(scope, this.CurrentSite(scope)); }
     private func SelectSite(scope: Int32, site: Int32) -> Bool {
         let scanner: ref<NCPDPatrolDispatchJournalSystem>;
         let cyber: ref<NCPDPatrolCyberpsychoSystem>;
@@ -203,70 +183,19 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         vip = NCPDPatrolVIPSystem.Get(this.GetGameInstance());
         return IsDefined(vip) && vip.SelectNavigationSite(site);
     }
-    private func PinPath(scope: Int32, site: Int32) -> String {
-        let objective: String = this.SiteObjective(scope, site);
-        return s"\(objective)/location";
-    }
-    private func LegacyPath(scope: Int32, site: Int32) -> String {
-        let objective: String = this.BaseObjective(scope);
-        return s"\(objective)/bank_\(site)";
-    }
-    private func PathHash(path: String) -> Uint32 {
-        // ArchiveXL/RED4ext journal path hashing, explicit standard seed.
-        // Pure identity: independent of entry availability during restoration.
-        return Murmur3(path, 1592638046u);
-    }
+
     private func BuildOwnershipCatalog() -> Void {
-        let scope: Int32 = 0;
-        let site: Int32;
-        let last: Int32;
-        let path: String;
-        ArrayClear(this.m_ownHashes); ArrayClear(this.m_ownPaths); ArrayClear(this.m_ownObjectives);
-        while scope < 10 {
-            site = 1; last = 132;
-            if scope >= 6 { site = 133; last = 323; };
-            while site <= last {
-                path = this.PinPath(scope, site);
-                this.AddOwnershipPath(path);
-                ArrayPush(this.m_ownObjectives, this.SiteObjective(scope, site));
-                path = this.LegacyPath(scope, site);
-                this.AddOwnershipPath(path);
-                site += 1;
-            };
-            scope += 1;
-        };
+        NCPDPatrolFixedMarkerCatalog.Build(this.m_ownHashes, this.m_ownPaths, this.m_ownObjectives);
         this.m_catalogBuilds += 1;
     }
-    private func AddOwnershipPath(path: String) -> Void {
-        let hash: Uint32 = this.PathHash(path);
-        let left: Int32 = 0;
-        let right: Int32 = ArraySize(this.m_ownHashes);
-        let middle: Int32;
-        while left < right {
-            middle = (left + right) / 2;
-            if this.m_ownHashes[middle] < hash { left = middle + 1; } else { right = middle; };
-        };
-        if left < ArraySize(this.m_ownHashes) && this.m_ownHashes[left] == hash { return; };
-        ArrayInsert(this.m_ownHashes, left, hash); ArrayInsert(this.m_ownPaths, left, path);
-    }
-    private func CatalogIndex(hash: Uint32) -> Int32 {
-        let left: Int32 = 0;
-        let right: Int32 = ArraySize(this.m_ownHashes) - 1;
-        let middle: Int32;
-        while left <= right {
-            middle = (left + right) / 2;
-            if this.m_ownHashes[middle] == hash { return middle; };
-            if this.m_ownHashes[middle] < hash { left = middle + 1; } else { right = middle - 1; };
-        };
-        return -1;
-    }
+
     private func OwnsHash(hash: Uint32) -> Bool {
         if hash == 0u { return false; };
         // The selected hash was read from this exact private journal entry.
         // A stale/incomplete catalogue must not override that direct identity.
         if hash == this.m_hash && NotEquals(this.m_currentPath, "") && this.m_site > 0
-            && Equals(this.m_currentPath, this.PinPath(this.m_scope, this.m_site)) { return true; };
-        return this.CatalogIndex(hash) >= 0;
+            && Equals(this.m_currentPath, NCPDPatrolFixedMarkerCatalog.PinPath(this.m_scope, this.m_site)) { return true; };
+        return NCPDPatrolFixedMarkerCatalog.Index(this.m_ownHashes, hash) >= 0;
     }
     private func SyncSession() -> Bool {
         let session: ref<NCPDPatrolMarkerSession> = NCPDPatrolMarkerSession.Get();
@@ -292,7 +221,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         if active { system.ExecuteNode(node, n"Active"); } else { system.ExecuteNode(node, n"Inactive"); };
     }
     private func KnownPath(hash: Uint32) -> String {
-        let index: Int32 = this.CatalogIndex(hash);
+        let index: Int32 = NCPDPatrolFixedMarkerCatalog.Index(this.m_ownHashes, hash);
         if index >= 0 { return this.m_ownPaths[index]; };
         if hash == this.m_hash { return this.m_currentPath; };
         return "";
@@ -316,7 +245,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         let selected: Int32 = -1;
         if !NCPDPatrolMarkerSession.WorldReady() { return -1; };
         while scope < 10 {
-            if this.Active(this.Root(scope), "gameJournalQuest") && this.Active(this.Phase(scope), "gameJournalQuestPhase")
+            if this.Active(NCPDPatrolFixedMarkerCatalog.Root(scope), "gameJournalQuest") && this.Active(NCPDPatrolFixedMarkerCatalog.Phase(scope), "gameJournalQuestPhase")
                 && this.Active(this.Objective(scope), "gameJournalQuestObjective") {
                 if selected >= 0 { return -1; };
                 selected = scope;
@@ -464,7 +393,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         if this.m_site == 0 {
             this.m_fallbackPending = true; this.Report("Fallback queued", "Selected location has no matching fixed catalog entry"); return;
         };
-        this.m_currentPath = this.PinPath(this.m_scope, this.m_site);
+        this.m_currentPath = NCPDPatrolFixedMarkerCatalog.PinPath(this.m_scope, this.m_site);
         entry = this.Entry(this.m_currentPath, "gameJournalQuestMapPin");
         if !IsDefined(entry) {
             this.m_currentPath = ""; this.m_fallbackPending = true;
@@ -505,13 +434,60 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         this.m_cachedActivationTried = true; this.m_cachedActivations += 1;
         map.SetMappinActive(candidate.GetNewMappinID(), true);
     }
-    private func NativeEvidence() -> String {
-        let objective: String = this.SiteObjective(this.m_scope, this.m_site);
-        let expectedHash: Uint32 = this.PathHash(this.PinPath(this.m_scope, this.m_site));
-        let selectedInCatalog: Bool = this.CatalogIndex(this.m_hash) >= 0;
-        let ownershipEntries: Int32 = ArraySize(this.m_ownHashes);
-        return s"token=\(this.m_token) | scope=\(this.m_scope) | site=\(this.m_site) | objective=\(objective) | hash=\(this.m_hash) | ownership entries=\(ownershipEntries) | expected path hash=\(expectedHash) | selected in catalog=\(selectedInCatalog) | active matches=\(this.m_pinCount) | registered matches=\(this.m_registeredMatches) | registered bank pins=\(this.m_registeredBankPins) | active bank pins=\(this.m_activeBankPins) | other ACTIVE bank pins=\(this.m_otherBankPins) | native confirmed=\(this.m_confirmed) | retained=\(this.m_retained) | target active=\(this.m_targetActive) | link hash=\(this.m_linkHash) | link ID=\(this.m_linkID.value) | objective link=\(this.m_linked) | runtime position OK=\(this.m_positionOK) | quest position OK=\(this.m_questPositionOK) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | runtime=\(this.m_runtimePoint.X),\(this.m_runtimePoint.Y),\(this.m_runtimePoint.Z) | quest position=\(this.m_questPoint.X),\(this.m_questPoint.Y),\(this.m_questPoint.Z)";
+    // Copy values only. The controller remains the sole owner of marker state.
+    private func DiagnosticSnapshot() -> ref<NCPDPatrolFixedMarkerDiagnostics> {
+        let data: ref<NCPDPatrolFixedMarkerDiagnostics> = new NCPDPatrolFixedMarkerDiagnostics();
+        data.token = this.m_token;
+        data.wanted = this.m_wanted;
+        data.switch = this.m_switch;
+        data.restorePending = this.m_restorePending;
+        data.scope = this.m_scope;
+        data.site = this.m_site;
+        data.target = this.m_target;
+        data.currentPath = this.m_currentPath;
+        data.hash = this.m_hash;
+        data.nativeID = this.m_nativeID;
+        data.fallbackID = this.m_fallbackID;
+        data.fallback = this.m_fallback;
+        data.pinCount = this.m_pinCount;
+        data.confirmed = this.m_confirmed;
+        data.linked = this.m_linked;
+        data.positionOK = this.m_positionOK;
+        data.questPositionOK = this.m_questPositionOK;
+        data.runtimePoint = this.m_runtimePoint;
+        data.questPoint = this.m_questPoint;
+        data.manualBefore = this.m_manualBefore;
+        data.manualAfter = this.m_manualAfter;
+        data.status = this.m_status;
+        data.detail = this.m_detail;
+        data.catalogBuilds = this.m_catalogBuilds;
+        data.restoreCursor = this.m_restoreCursor;
+        data.sessionGeneration = this.m_sessionGeneration;
+        data.activeBankPins = this.m_activeBankPins;
+        data.otherBankPins = this.m_otherBankPins;
+        data.targetActive = this.m_targetActive;
+        data.linkHash = this.m_linkHash;
+        data.linkID = this.m_linkID;
+        data.pruned = this.m_pruned;
+        data.registeredBankPins = this.m_registeredBankPins;
+        data.registeredMatches = this.m_registeredMatches;
+        data.retained = this.m_retained;
+        data.lastNativeReason = this.m_lastNativeReason;
+        data.fallbackRegistered = this.m_fallbackRegistered;
+        data.fallbackActive = this.m_fallbackActive;
+        data.fallbackVisible = this.m_fallbackVisible;
+        data.fallbackPositionOK = this.m_fallbackPositionOK;
+        data.fallbackAttempts = this.m_fallbackAttempts;
+        data.cachedActivations = this.m_cachedActivations;
+        data.siteObjective = NCPDPatrolFixedMarkerCatalog.SiteObjective(this.m_scope, this.m_site);
+        data.objective = NCPDPatrolFixedMarkerCatalog.SiteObjective(this.m_scope, 0);
+        if !this.m_fallback && NotEquals(this.m_currentPath, "") { data.objective = data.siteObjective; };
+        data.expectedHash = NCPDPatrolFixedMarkerCatalog.PathHash(NCPDPatrolFixedMarkerCatalog.PinPath(this.m_scope, this.m_site));
+        data.selectedInCatalog = NCPDPatrolFixedMarkerCatalog.Index(this.m_ownHashes, this.m_hash) >= 0;
+        data.ownershipEntries = ArraySize(this.m_ownHashes);
+        return data;
     }
+    private func NativeEvidence() -> String { return this.DiagnosticSnapshot().Evidence(); }
     private func CaptureNative(reason: String) -> Void {
         this.m_lastNativeReason = reason;
         this.m_lastNativeProbe = s"\(reason) | " + this.NativeEvidence();
@@ -580,7 +556,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
             };
             i += 1;
         };
-        linked = map.GetMappinFromObjective(this.Entry(this.Phase(this.m_scope), "gameJournalQuestPhase"), this.Entry(this.Objective(this.m_scope), "gameJournalQuestObjective"));
+        linked = map.GetMappinFromObjective(this.Entry(NCPDPatrolFixedMarkerCatalog.Phase(this.m_scope), "gameJournalQuestPhase"), this.Entry(this.Objective(this.m_scope), "gameJournalQuestObjective"));
         pin = linked as QuestMappin;
         if IsDefined(pin) { this.m_linkID = pin.GetNewMappinID(); this.m_linkHash = pin.GetJournalPathHash(); };
         this.m_linked = IsDefined(pin) && this.m_linkHash == this.m_hash && this.m_linkID.value == this.m_nativeID.value;
@@ -589,7 +565,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         this.m_questPositionOK = known && Vector4.Distance(questPoint, this.m_target) <= 2.0;
         this.m_retained = this.m_pinCount == 1 && this.m_activeBankPins == 1 && this.m_otherBankPins == 0
             && this.m_targetActive && this.m_positionOK;
-        this.m_confirmed = ArraySize(this.m_ownHashes) == 3112 && this.CatalogIndex(this.m_hash) >= 0 && this.m_pinCount == 1 && this.m_activeBankPins == 1 && this.m_otherBankPins == 0
+        this.m_confirmed = ArraySize(this.m_ownHashes) == 3112 && NCPDPatrolFixedMarkerCatalog.Index(this.m_ownHashes, this.m_hash) >= 0 && this.m_pinCount == 1 && this.m_activeBankPins == 1 && this.m_otherBankPins == 0
             && this.m_targetActive && this.m_positionOK && this.m_questPositionOK && this.m_linked
             && this.Active(this.Objective(this.m_scope), "gameJournalQuestObjective") && this.m_manualBefore.value == this.m_manualAfter.value;
         if this.m_confirmed { this.Report("Native quest marker confirmed", "Exactly one active bank pin; selected objective, native hash/ID and both positions match; manual ID unchanged across activation"); };
@@ -613,7 +589,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
             scope = this.GetScope();
             if !this.Eligible() || scope < 0 { this.Stop(this.m_token); } else {
                 if scope != this.m_scope {
-                    if Equals(this.Root(scope), this.Root(this.m_scope)) { this.m_scope = scope; this.m_switch = true; } else { this.Stop(this.m_token); };
+                    if Equals(NCPDPatrolFixedMarkerCatalog.Root(scope), NCPDPatrolFixedMarkerCatalog.Root(this.m_scope)) { this.m_scope = scope; this.m_switch = true; } else { this.Stop(this.m_token); };
                 };
             };
         };
@@ -675,13 +651,9 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
     public func GetRevision() -> Int32 { return this.m_revision; }
     public func GetDiagnostics() -> String {
         let current: NewMappinID;
-        let objective: String = this.SiteObjective(this.m_scope, 0);
-        let expectedHash: Uint32 = this.PathHash(this.PinPath(this.m_scope, this.m_site));
-        let selectedInCatalog: Bool = this.CatalogIndex(this.m_hash) >= 0;
-        let ownershipEntries: Int32 = ArraySize(this.m_ownHashes);
+        let data: ref<NCPDPatrolFixedMarkerDiagnostics> = this.DiagnosticSnapshot();
         let sessionReady: Bool = NCPDPatrolMarkerSession.WorldReady();
-        if !this.m_fallback && NotEquals(this.m_currentPath, "") { objective = this.SiteObjective(this.m_scope, this.m_site); };
         if NCPDPatrolMarkerSession.WorldReady() && IsDefined(this.Map()) { current = this.Map().GetManuallyTrackedMappinID(); };
-        return s"\(this.m_status) | token=\(this.m_token) | scope=\(this.m_scope) | site=\(this.m_site) | active=\(this.m_wanted) | cleanup/switch=\(this.m_switch) | restore cleanup=\(this.m_restorePending) | restore cursor=\(this.m_restoreCursor)/1556 | session ready=\(sessionReady) | session generation=\(this.m_sessionGeneration) | ownership entries=\(ownershipEntries) | ownership builds=\(this.m_catalogBuilds) | expected path hash=\(expectedHash) | selected in catalog=\(selectedInCatalog) | native confirmed=\(this.m_confirmed) | native pins=\(this.m_pinCount) | registered bank pins=\(this.m_registeredBankPins) | registered matches=\(this.m_registeredMatches) | retained=\(this.m_retained) | cached activations=\(this.m_cachedActivations) | active bank pins=\(this.m_activeBankPins) | other bank pins=\(this.m_otherBankPins) | target active=\(this.m_targetActive) | pruned=\(this.m_pruned) | objective=\(objective) | link hash=\(this.m_linkHash) | link ID=\(this.m_linkID.value) | objective link=\(this.m_linked) | runtime position OK=\(this.m_positionOK) | quest position OK=\(this.m_questPositionOK) | pin ID=\(this.m_nativeID.value) | hash=\(this.m_hash) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | runtime=\(this.m_runtimePoint.X),\(this.m_runtimePoint.Y),\(this.m_runtimePoint.Z) | quest position=\(this.m_questPoint.X),\(this.m_questPoint.Y),\(this.m_questPoint.Z) | fallback=\(this.m_fallback) | fallback ID=\(this.m_fallbackID.value) | fallback registered=\(this.m_fallbackRegistered) | fallback active=\(this.m_fallbackActive) | fallback visible flag=\(this.m_fallbackVisible) | fallback position OK=\(this.m_fallbackPositionOK) | fallback attempts=\(this.m_fallbackAttempts) | last native reason=\(this.m_lastNativeReason) | manual before/after=\(this.m_manualBefore.value)/\(this.m_manualAfter.value) | manual current=\(current.value) | \(this.m_detail)";
+        return data.Current(sessionReady, current);
     }
 }

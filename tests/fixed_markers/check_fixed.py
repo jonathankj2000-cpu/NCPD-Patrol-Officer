@@ -66,6 +66,8 @@ def main():
         code=code.replace('middle = (left + right) / 2','middle = math.floor((left + right) / 2)')
         # RED structs zero-initialize; Lua tables do not.
         code=code.replace('local empty = {}','local empty = {value=0}')
+        code=code.replace('new NCPDPatrolFixedMarkerDiagnostics()', 'NewMarkerDiagnostics()')
+        code=code.replace('NCPDPatrolFixedMarkerCatalog:Root(scope) + ', 'NCPDPatrolFixedMarkerCatalog:Root(scope) .. ')
         code=code.replace('known = map:GetQuestMappinPosition(self.m_hash, point)','known, point = map:GetQuestMappinPosition(self.m_hash)')
         return code
     lua=LuaRuntime(unpack_returned_tuples=True)
@@ -83,11 +85,35 @@ def main():
     assert len({journal_hash(p) for p in owned})==3112,'Private bank hash collision'
     lua.globals().PathHash=journal_hash
     lua.globals().SessionNative=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds'))
+    lua.globals().NCPDPatrolFixedMarkerCatalog=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds'))
+    lua.globals().MarkerDiagnostics=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds'))
     lua.globals().Native=lua.execute(executable(src));lua.globals().MOD_DIR=str(PREFIX)
     for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
         lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
     lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
     lua.execute((HERE/'engine.lua').read_text());lua.execute((HERE/'scenarios.lua').read_text())
+    # Mechanical extraction oracle: execute the actual r5c controller and the
+    # current controller against the same boundary fixture and full observations.
+    r5c_source=subprocess.check_output(['git','show','a51dabfe91c9c90856b29ecd10e086c3977d8224:r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds'],cwd=ROOT,text=True)
+    traces=[]
+    with tempfile.TemporaryDirectory(prefix='ncpd-marker-refactor-') as scratch:
+        baseline=Path(scratch)/'r5c.reds';baseline.write_text(r5c_source)
+        for controller in (baseline,src):
+            lua=LuaRuntime(unpack_returned_tuples=True)
+            lua.globals().Definitions=convert(definitions);lua.globals().Entries=convert(entries);lua.globals().Sites=convert(catalog['sites'])
+            lua.globals().PathHash=journal_hash
+            for file,name in [('NCPDPatrolMarkerSession.reds','SessionNative'),('NCPDPatrolFixedMarkerCatalog.reds','NCPDPatrolFixedMarkerCatalog'),('NCPDPatrolFixedMarkerDiagnostics.reds','MarkerDiagnostics')]:
+                lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
+            lua.globals().Native=lua.execute(executable(controller))
+            for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
+                lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
+            lua.execute((HERE/'engine.lua').read_text())
+            # Native Vector structs default to zero, including before a request.
+            lua.execute('Native.m_target=Vector4.new(0,0,0,0);Native.m_runtimePoint=Vector4.new(0,0,0,0);Native.m_questPoint=Vector4.new(0,0,0,0)')
+            rows=lua.execute((HERE/'refactor-comparison.lua').read_text())
+            traces.append([rows[i] for i in range(1,len(rows)+1)])
+    assert traces[0]==traces[1],next(((i,a,b) for i,(a,b) in enumerate(zip(*traces)) if a!=b),'marker trace lengths differ')
+    print('Marker catalogue/diagnostics extraction: '+str(len(traces[1]))+' identical r5c observation rows; diagnostic reads leave native state untouched')
     # Known r5a implementation must fail both new regressions. These are
     # alternative documented engine states, not claims about this game dump.
     old_source=subprocess.check_output(['git','show','19e8b82ea1b42f4fbbdca031ea9e9365b82d6af5:r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds'],cwd=ROOT,text=True)

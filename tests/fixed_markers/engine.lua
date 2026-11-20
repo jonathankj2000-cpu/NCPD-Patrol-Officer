@@ -18,6 +18,7 @@ function MaxF(a,b) return math.max(a,b) end
 function CeilF(x) return math.ceil(x) end
 function StringToName(x) return x end
 function AsQuestMappin(pin) if pin and pin.kind=='quest' then return pin end end
+function NewMarkerDiagnostics() return setmetatable({}, {__index=MarkerDiagnostics}) end
 function NewFixedData() return {fixed=true} end
 function AsFixedData(x) if x and x.fixed then return x end end
 Vector4={new=function(x,y,z,w) return {X=x,Y=y,Z=z,W=w,x=x,y=y,z=z,w=w} end}

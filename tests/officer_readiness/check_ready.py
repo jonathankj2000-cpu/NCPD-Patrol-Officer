@@ -19,4 +19,14 @@ with tempfile.TemporaryDirectory(prefix='ncpd-equipment-') as d:
  path=Path(d)/'equipment.reds';path.write_text(source)
  lua.globals().EquipmentNative=lua.execute(translate(path))
 lua.execute((HERE/'scenarios.lua').read_text())
-print('PASS: actual equipment controller + partner/backup integration: accepted-but-stalled command fallback, held-slot confirmation, owned inventory filtering, combat/alert/mount/down guards, bounded failures; active backup follows instead of holding, native boarding priority; 10-4 stand-down and distance/async cleanup (engine boundaries mocked)')
+lua.globals().SupportNative=lua.execute(translate(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds'))
+lua.execute((HERE/'backup-approach-scenarios.lua').read_text())
+# The backup context uses the exact existing ambush frustum formula; no VIP
+# quest/stage dependency is imported into the backup request.
+support_source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds').read_text()
+vip_source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds').read_text()
+def camera_formula(text,name):
+ fragment=text.split('public func '+name+'(',1)[1]
+ return fragment[fragment.index('        camera ='):fragment.index('\n    }')]
+assert camera_formula(support_source,'CanSpawnBackupAt')==camera_formula(vip_source,'CanSpawnAmbushAt')
+print('PASS: actual equipment/partner/backup integration and road selector: preserved readiness/follow/boarding/10-4; recent-route identity/expiry, stationary corridor, bridge/edge/slope/barrier/camera rejection, actual native frustum parity, car-before-crew settling, finite wait, three separated placement attempts, async/refused/partial cleanup, reservation/end-shift/world reset (engine boundaries mocked)')
