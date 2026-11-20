@@ -1,4 +1,4 @@
-"""Verify the archived phase control and package the complete r5 fixed marker dispatch test."""
+"""Verify the archived phase control and package the complete r5a fixed marker dispatch test."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5_TEST.zip'
-REPORT='NCPD_Patrol_Fixed_Quest_Markers_r5_verification.json'
+NAME='NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5a_TEST.zip'
+REPORT='NCPD_Patrol_Fixed_Quest_Markers_r5a_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -24,6 +24,7 @@ def main():
     for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
     previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
     changed={PREFIX+n for n in ['init.lua','cet_ui.lua','dispatch_scanner.lua','cyberpsycho.lua','vip_waypoint.lua']}
+    changed.update('r6/scripts/NCPDPatrol/NCPDPatrol'+n+'System.reds' for n in ['DispatchJournal','VIP','Cyberpsycho'])
     changed.update('archive/pc/mod/NCPDPatrol_'+n+'.archive' for n in ['Dispatch','VIP','Cyberpsycho'])
     added={PREFIX+'quest_marker_probe.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds',
            'archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl',
@@ -51,7 +52,7 @@ def main():
     release=ROOT/'releases'/NAME
     with zipfile.ZipFile(release,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
         for p in sorted(paths):
-            info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,19,0,0,0))
+            info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,20,0,0,0))
             info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
             z.writestr(info,p.read_bytes(),compresslevel=9)
     with zipfile.ZipFile(release) as z:
@@ -59,16 +60,16 @@ def main():
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17d-fixed-quest-markers-r5','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17d-fixed-quest-markers-r5a','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'fixed_markers':comparisons[compared[4]],'fixed_marker_sources':json.loads((ROOT/'assets/fixed_markers/sources.json').read_text()),'fixed_marker_resources':json.loads((ROOT/'assets/fixed_markers/compiled.json').read_text()),'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
         'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),
-        'zip_git_blob':blob(body),'new_payload':sorted(added),'changed_payload':sorted(changed),'existing_gameplay_native_scripts_unchanged':True,'legacy_behavior_comparison_scope':'Unavailable-bank compatibility; bank-present behavior is covered by the fixed marker suite',
+        'zip_git_blob':blob(body),'new_payload':sorted(added),'changed_payload':sorted(changed),'existing_actor_reward_and_result_methods_unchanged':True,'native_owner_changes':'Transient navigation site, objective path helpers and guarded site selection only; source-guarded against r5','legacy_behavior_comparison_scope':'Unavailable-bank compatibility; bank-present behavior is covered by the fixed marker suite',
         'entrypoint_and_ui_changes':'Fixed navigation adapters, one Diagnostics control and build labels; original actor/quest/reward owners retained',
         'currency_and_progression_unchanged':True,'browser_extension_still_optional':True,
-        'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_used_by_dispatch':False,'fixed_marker_bank_in_game_validation':False,'fixed_journal_activation_requires_in_game_test':True,
-        'activation_contract_corrected':'Fixed bank_<site> journal children activate within existing dispatch/VIP/cyberpsycho objectives; native hash, runtime/journal position and objective link required; no relocation',
+        'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_used_by_dispatch':False,'fixed_marker_bank_in_game_validation':False,'prior_r5_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5-game-evidence.json').read_text()),'fixed_journal_activation_requires_in_game_test':True,
+        'activation_contract_corrected':'One single-pin objective per site; all definitions inactive; explicit MappinManager Active/Inactive with disablePreviousMappins=false. Original quest owner selects the site objective; exactly one active private bank pin and matching native hash/ID, positions and objective link required; legacy/unexpected pins pruned; no relocation',
         'legacy_relocation_probe_contract':'One scoped SetMappinPosition call; runtime and quest-log position readbacks, same native ID/link and 3 active observed seconds required; no manual tracking write',
         'observed_r4_startup_error_fixed':'Direct runtime node constructor removed; quest node IDs are typed in the compiled resource',
         'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}

@@ -1,107 +1,124 @@
-Fixed quest markers r5
+Fixed quest markers r5a
 
-This feature replaces dispatch presentation with selection from a finite bank.
-R4d proved one native journal-linked Coyote marker with an unchanged manual
-waypoint. R4e showed SetMappinPosition left both runtime and quest-log positions
-at Coyote. R5 does not relocate pins or introduce moving-target support.
+R5 failed in game: VIP/cyberpsycho exposed the terminal pool, and scanner
+selection found a catalog entry without producing a linked native pin.
+The supplied scanner log also retained an old runtime position. Evidence is
+recorded in assets/fixed_markers/r5-game-evidence.json. R5a changes the journal
+layout and activation boundary; its game rendering remains unverified.
 
-Catalog and resources
+Layout and activation
 
-assets/fixed_markers/catalog.json contains only identifiers, numeric positions
-and exact terminal NodeRefs, with pinned provenance in sources.json. It covers
-132 scanner sites (114 GangWatch, 18 Outpost) and 191 terminals. It is not a
-claim of complete current-build coverage. Existing location selection, RNG,
-radius expansion and scanner exclusion are unchanged. Unknown or shifted sites
-stay eligible and get an independent quest-style marker.
+The catalog still contains 132 scanner sites (114 GangWatch, 18 Outpost) and
+191 named world terminals. Pinned provenance and licensing are unchanged.
+Existing location selection, dispatch mix, radius expansion, RNG order and
+scanner exclusions stay with their existing owners. Unknown/shifted sites
+receive an independent quest-style fallback without replacing a manual pin.
 
-build_fixed_marker_assets.py appends bank_<site> JournalQuestMapPin children to
-the existing six scanner /resolve objectives, both VIP objectives and both
-cyberpsycho objectives. There are 1556 fixed pins. It preserves all original
-quest/phase/objective/description content and localization. Terminal pins use
-the exact CyberCAT world NodeRef (zero relative offset). Scanner pins have null
-NodeRef plus their authored absolute XYZ, using ArchiveXL's static-offset path.
-Definitions use active=1, QuestGiverVariant, GPS enabled, no dynamic entity name.
-An inactive journal child is activated only for the selected site/objective.
+Each existing quest phase now contains private site objectives named, for
+example, resolve_bank_42, pickup_bank_204 or deliver_bank_205. Every such
+objective contains its original briefing and exactly ONE map pin, location.
+Original common objectives remain intact for fallback. There are 1556 private
+objectives/pins across six scanner briefings and the two stages of VIP and
+cyberpsycho. There is no additional quest root or moving-target support.
 
-The generated compact journals live in assets/fixed_markers. Original authored
-journals stay available as baseline inputs. Build with:
+All authored map-pin definitions start INACTIVE. Journal map-pin entry state is
+not used as a visibility control: game quest-log code includes map-pin children
+regardless of ordinary journal-entry state and resolves the first declared pin.
+That invalidated r5's model of many sibling pins under one active objective.
+
+NCPDPatrolFixedMarkerSystem (interface 2) asks the original native quest owner
+to select its site objective. The switch hides the previous objective, selects
+one new objective and briefing, and moves tracking only when the previous
+NCPD objective was tracked. A newer story choice is respected. Rejected writes
+restore the previous objective; fallback recovers the original common path.
+
+The bank requests questMappinManagerNodeDefinition Active/Inactive explicitly
+through Codeware QuestsSystem.ExecuteNode, with a typed Uint16 node ID,
+gameJournalPath.fileEntryIndex=1 and disablePreviousMappins=false. It never
+uses global marker disabling. Calling the node is not confirmation.
+
+Terminal pins retain their named world NodeRef and zero relative offset.
+Scanner pins use fixed authored offsets relative to #coyote_performance_test,
+the anchor confirmed by the user's r4d test. The null-NodeRef absolute-position
+path from r5 is removed. No runtime pin movement is requested.
+
+Proof and cleanup
+
+Native confirmation requires exactly one active private bank pin overall,
+exactly one selected native QuestMappin, no other retained private pins, correct
+selected-objective hash/ID link, and runtime AND quest-log position within 2 m
+of the actual dispatch target. Manual waypoint ID must remain unchanged across
+activation. Evidence/positions are cleared before each new observation and on
+fallback/closure; missing pins cannot inherit another site's coordinates.
+
+Other private bank pins are pruned on a bounded poll, including while idle.
+Save/load rediscovers current hashes rather than trusting old handles. Cleanup
+recognizes both new site paths and legacy r5 paths, so cached pool markers can
+be removed after upgrading. Fallback data has its own private script class.
+Foreign, story, manual and legacy Coyote experiment markers are not owned by
+this cleanup. A replacement or fallback waits for owned registry removal;
+refused deletion retries before another presentation is created.
+
+Five consecutive active seconds without proof trigger native cleanup and
+common-objective recovery before an independent fallback. Menus pause the
+timer. Fallback is explicitly reported as native confirmed=false; its visual
+presence does not prove journal binding or GPS. Lost/failed fallback rendering
+retries at most once per five active seconds.
+
+Original gameplay ownership
+
+Scanner, VIP and cyberpsycho native owners gain transient site fields and
+objective-path helpers. Their original attendance, timer, boarding, target,
+result, reward and progression methods are preserved. Only the selected path
+flows through those methods. Source guards compare these methods to r5, and
+the bank-present suite executes the actual owner transitions and rewards.
+
+marker_navigation.lua still returns logical generation tokens, never engine
+IDs. Stale scanner/cyberpsycho cleanup cannot stop a newer owner; VIP releases
+its own token. The compatibility path for an unavailable bank is retained for
+the historical comparison fixtures. A complete r5a install uses interface 2.
+
+Building and verification
+
 DOTNET_ROOT=<runtime> python tools/build_fixed_marker_assets.py --wk-cli <WolvenKit.CLI>
-This replaces the three normal archives with extended resources, preserving
-their depot paths and .xl registrations. It round-trips extended AND baseline
-journals, removes only bank children for the semantic preservation comparison,
-then extracts archives and compares compiled resource bytes exactly.
-Use this builder after any edit to original journals/localization; the older
-standalone builders produce the earlier journals without the bank.
 
-Runtime ownership
+The builder extends the original authored journal inputs, round-trips both
+baseline and extended resources, removes only added site objectives for the
+semantic comparison, and extracts each archive to compare compiled bytes.
+The three installed archive paths and their .xl registration files are retained.
+Use this builder after journal/localization changes; standalone older builders
+produce journals without the site bank.
 
-marker_navigation.lua matches the selected runtime coordinate to the relevant
-catalog kind within 2 m. Its logical handle contains a generation token, not an
-engine mappin ID. Such handles are never passed to UnregisterMappin/SetPosition.
-Scanner and cyberpsycho adapters release only their current named owner; VIP
-releases only its token. Older cleanup cannot cancel a newer token/owner.
-Missing native backend retains the historical compatibility path; the complete
-r5 package uses the new backend and never registers CustomPositionVariant.
+18 portable suites cover existing dispatch/VIP/CET comparisons plus explicit
+bank-present tests. The latter execute production native/Lua code with engine
+boundaries mocked. No-pin creation is the default. The positive fixture models
+the FIRST DECLARED child behavior and explicit MappinManager activation; it
+does not turn a map-pin journal state write into a successful engine spawn.
+Checks cover one-pin layout, inactive definitions, scanner site 42 in all six
+briefings, selection rollback, duplicate/wrong pins, legacy/flood cleanup,
+actual VIP/CP stage changes and success, scanner timeout/payment/reuse, story
+tracking, manual waypoints, stale tokens, load and refused deletion.
+Offline source/API compilation runs with Browser Extension present and absent;
+it is not the actual installed game script cache.
 
-NCPDPatrolFixedMarkerSystem owns presentation only. It requires exactly one
-active known NCPD objective, observes a private bank child, and activates it
-through JournalManager.ChangeEntryState. It does not change quest results,
-timers, tracked stories, actors, payments or progression. The archived R4d
-control used Journal nodes; the direct state call inside actual dispatch
-journals is a new engine boundary and must be confirmed in game.
+In-game check
 
-Native confirmation requires one real QuestMappin with the child hash, its
-objective link and same ID, runtime and GetQuestMappinPosition readback within
-2 m of the selected target, active map-pin state and unchanged manual ID across
-activation. Inactive/absent/wrong/multiple pins are not success. Five consecutive
-active seconds without proof trigger cleanup before fallback. Menus pause that
-timer. Confirmation revokes immediately on a failed observation.
+Install the complete r5a ZIP and restart the game. Start a shift, set a manual
+waypoint and use the existing scanner/VIP/cyberpsycho request controls. After
+five unpaused gameplay seconds use:
+CET > Diagnostics > Fixed quest markers > Log active dispatch marker diagnostics
 
-On VIP delivery or cyberpsycho arrival, the old child is deactivated and its
-retained presentation removed before the next fixed child is activated. Actor
-and reward controllers retain their transitions. Replacements keep old cleanup
-owned while queuing the new token. Failed deletion retries and cannot create a
-second bank presentation. Root/objective completion, cancellation, off duty and
-wanted termination close presentation without modifying the outcome.
+Expected native proof: native confirmed=true, native pins=1, active bank pins=1,
+other bank pins=0, target active=true, objective link=true, both positions OK,
+fallback=false. Confirm only the chosen location is visible. Check scanner
+completion/next dispatch, VIP pickup-to-delivery, cyberpsycho arrival/completion,
+cancel/replace, wanted/end shift and load. GPS still requires a game check.
 
-Load forgets IDs/tokens and discovers active bank children from current journal
-paths, builds their current hashes and removes only those quest pins plus the
-private NCPDPatrolFixedMarkerData fallback class. Other mods, manual waypoints,
-story markers and the legacy test marker namespace are not cleanup targets.
+The separate Testing > Legacy Coyote marker experiment controls are the r4d
+static / r4e relocation experiments, not active dispatch diagnostics. Their
+archived resources remain byte-identical. R4d static passed in game; r4e
+relocation failed. Neither result proves r5a activation works in game.
 
-Fallback
-
-Unmapped sites, missing bank resources or unconfirmed native creation use
-QuestStaticMappinDefinition/QuestGiverVariant with NCPDPatrolFixedMarkerData.
-This is an independent renderer, not evidence of journal binding or GPS.
-It is labeled fallback in status/diagnostics; native confirmed stays false.
-Failed/missing fallback registration retries at most once per five active
-seconds. It never takes over the manual waypoint. Existing journal completion,
-dispatch bonuses and career ledgers continue through their original owners.
-
-Test and limits
-
-Install the complete ZIP and fully restart. Start a shift and use existing
-manual dispatch buttons. Record a manual waypoint. After five active seconds,
-log CET > Diagnostics > Fixed quest markers. Check native confirmed, pins,
-objective link, runtime/quest position, fallback, site/scope and manual IDs.
-Verify scanner completion; VIP pickup-to-delivery; cyberpsycho response-to-
-neutralize; timeout/cancel/replace; wanted/end shift; load and next assignment.
-GPS still needs an actual game check. Do not infer it from icon color.
-
-Automated verification runs actual translated native and Lua production code
-with engine boundaries mocked. Native creation is disabled by default: state
-activation alone must reach an honest fallback. Positive fixtures separately
-exercise exact position/hash/link, duplicate and wrong pins, stage switching,
-tokens, foreign data preservation, refused deletion, menu timing and save/load.
-Old dispatch/VIP/CET comparisons cover the unavailable-bank compatibility path;
-the bank-present path has its own new suite. Narrow source guards preserve
-unrelated actor/selection/scheduler/reward behavior. All previously installed
-native files remain byte-identical. Offline source/API compile runs with BEF
-present and absent, not the real game script cache.
-
-Rollback: end/clear the active assignment and wait for marker cleanup, then
-exit and reinstall the complete r4e (or earlier) package, including its three
-journal archives. Remove the four new payload files listed in the r5 report
-if fully rolling back. Use a pre-test save to discard added journal presentation
-state. Reward/progression receipts are never migrated by this feature.
+Rollback uses the entire earlier package including its three journal archives.
+Use a pre-test save to discard added journal presentation state. Reward and
+progression receipts are not migrated by this feature.

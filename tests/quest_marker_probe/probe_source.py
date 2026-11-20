@@ -2,6 +2,7 @@
 import re
 
 def without_probe(source):
+    source=source.replace("fixed quest markers r5a", "fixed quest markers r5")
     # Exact navigation adapters only. Bank-present behavior has its own suite;
     # historical oracles exercise the unavailable-bank compatibility boundary.
     source=re.sub(r'^.* -- r5 marker hook[^\n]*\n','',source,flags=re.M)
@@ -23,5 +24,4 @@ def without_probe(source):
         'v0.17d VIP refactor r3 loaded. VIP locations and waypoint ownership are separate modules. Transport, ambush, rewards and the CET menu retain their existing behavior. Install the complete package and restart.').replace(
         'NCPD Patrol - v0.17d quest marker test r4###','NCPD Patrol - v0.17d VIP refactor r3###')
 
-PROBE_BUTTONS={'Log fixed quest marker diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test',
-               'Log quest marker test diagnostics'}
+PROBE_BUTTONS={'Log active dispatch marker diagnostics','Log legacy Coyote test diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test'}

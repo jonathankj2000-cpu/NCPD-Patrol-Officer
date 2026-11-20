@@ -30,8 +30,76 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
     private let m_status: String;
     private let m_detail: String;
     private let m_ownHashes: array<Uint32>;
+    private let m_ownPaths: array<String>;
+    private let m_activeBankPins: Int32;
+    private let m_otherBankPins: Int32;
+    private let m_targetActive: Bool;
+    private let m_linkHash: Uint32;
+    private let m_linkID: NewMappinID;
+    private let m_sweepPoll: Float;
+    private let m_pruned: Int32;
 
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
+    public static func WriteNavigationState(journal: ref<JournalManager>, path: String, kind: String, state: gameJournalEntryState) -> Bool {
+        let entry: wref<JournalEntry> = journal.GetEntryByString(path, kind);
+        if !IsDefined(entry) { return false; };
+        if Equals(journal.GetEntryState(entry), state) { return true; };
+        journal.ChangeEntryState(path, kind, state, JournalNotifyOption.DoNotNotify);
+        return Equals(journal.GetEntryState(entry), state);
+    }
+    // Called by the original quest owner. Its stage, token, timers, actor and
+    // reward state stay with that owner; only its active objective path changes.
+    public static func SwitchNavigationObjective(game: GameInstance, basePath: String, oldPath: String, newPath: String, first: Int32, last: Int32) -> Bool {
+        let journal: ref<JournalManager> = GameInstance.GetJournalManager(game);
+        let oldEntry: wref<JournalEntry>;
+        let newEntry: wref<JournalEntry>;
+        let tracked: Bool;
+        let oldDescription: String = s"\(oldPath)/briefing";
+        let newDescription: String = s"\(newPath)/briefing";
+        let candidate: String;
+        let description: String;
+        let entry: wref<JournalEntry>;
+        let site: Int32 = first;
+        let ok: Bool = true;
+        if !IsDefined(journal) { return false; };
+        oldEntry = journal.GetEntryByString(oldPath, "gameJournalQuestObjective");
+        newEntry = journal.GetEntryByString(newPath, "gameJournalQuestObjective");
+        if !IsDefined(oldEntry) || !IsDefined(newEntry) || !IsDefined(journal.GetEntryByString(newDescription, "gameJournalQuestDescription")) { return false; };
+        tracked = journal.GetTrackedEntry() == oldEntry;
+        // Reused quest templates must not retain older site objectives.
+        while site <= last {
+            candidate = s"\(basePath)_bank_\(site)";
+            if NotEquals(candidate, oldPath) && NotEquals(candidate, newPath) {
+                entry = journal.GetEntryByString(candidate, "gameJournalQuestObjective");
+                if IsDefined(entry) && NotEquals(journal.GetEntryState(entry), gameJournalEntryState.Inactive) {
+                    description = s"\(candidate)/briefing";
+                    if !NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, description, "gameJournalQuestDescription", gameJournalEntryState.Inactive)
+                        || !NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, candidate, "gameJournalQuestObjective", gameJournalEntryState.Inactive) { return false; };
+                };
+            };
+            site += 1;
+        };
+        if NotEquals(oldPath, newPath) {
+            ok = NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, oldDescription, "gameJournalQuestDescription", gameJournalEntryState.Inactive)
+                && NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, oldPath, "gameJournalQuestObjective", gameJournalEntryState.Inactive);
+        };
+        if ok {
+            ok = NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, newDescription, "gameJournalQuestDescription", gameJournalEntryState.Active)
+                && NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, newPath, "gameJournalQuestObjective", gameJournalEntryState.Active);
+        };
+        if !ok {
+            if NotEquals(oldPath, newPath) {
+                NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, newDescription, "gameJournalQuestDescription", gameJournalEntryState.Inactive);
+                NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, newPath, "gameJournalQuestObjective", gameJournalEntryState.Inactive);
+                NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, oldDescription, "gameJournalQuestDescription", gameJournalEntryState.Active);
+                NCPDPatrolFixedMarkerSystem.WriteNavigationState(journal, oldPath, "gameJournalQuestObjective", gameJournalEntryState.Active);
+            };
+            return false;
+        };
+        // A newer player-selected story is respected.
+        if tracked && NotEquals(oldPath, newPath) { journal.TrackEntry(newEntry); };
+        return true;
+    }
     protected cb func OnAttach() -> Bool { this.Forget(); return true; }
     protected cb func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Bool { this.Forget(); return true; }
     private func Forget() -> Void {
@@ -45,6 +113,10 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         this.m_linked = false; this.m_positionOK = false; this.m_questPositionOK = false;
         this.m_age = 0.0; this.m_poll = 0.0; this.m_fallbackRetry = 0.0;
         ArrayClear(this.m_ownHashes);
+        ArrayClear(this.m_ownPaths);
+        this.m_activeBankPins = 0; this.m_otherBankPins = 0;
+        this.m_targetActive = false; this.m_linkHash = 0u; this.m_linkID = empty;
+        this.m_sweepPoll = 0.0; this.m_pruned = 0;
         this.Report("Idle", "Fixed marker bank ready; old world handles forgotten");
     }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
@@ -57,7 +129,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         return "quests/minor_quest/ncpd_patrol_vip";
     }
     private func Phase(scope: Int32) -> String { return this.Root(scope) + "/main"; }
-    private func Objective(scope: Int32) -> String {
+    private func BaseObjective(scope: Int32) -> String {
         let phase: String = this.Phase(scope);
         if scope < 6 { return s"\(phase)/resolve"; };
         if scope == 6 { return s"\(phase)/respond"; };
@@ -65,9 +137,80 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         if scope == 8 { return s"\(phase)/pickup"; };
         return s"\(phase)/deliver";
     }
+    private func SiteObjective(scope: Int32, site: Int32) -> String {
+        let base: String = this.BaseObjective(scope);
+        if site > 0 { return s"\(base)_bank_\(site)"; };
+        return base;
+    }
+    private func CurrentSite(scope: Int32) -> Int32 {
+        let scanner: ref<NCPDPatrolDispatchJournalSystem>;
+        let cyber: ref<NCPDPatrolCyberpsychoSystem>;
+        let vip: ref<NCPDPatrolVIPSystem>;
+        if scope < 6 {
+            scanner = NCPDPatrolDispatchJournalSystem.Get(this.GetGameInstance());
+            if IsDefined(scanner) { return scanner.GetNavigationSite(); };
+        } else {
+            if scope < 8 {
+                cyber = NCPDPatrolCyberpsychoSystem.Get(this.GetGameInstance());
+                if IsDefined(cyber) { return cyber.GetNavigationSite(); };
+            } else {
+                vip = NCPDPatrolVIPSystem.Get(this.GetGameInstance());
+                if IsDefined(vip) {
+                    if scope == 8 { return vip.GetNavigationSite(1); };
+                    return vip.GetNavigationSite(2);
+                };
+            };
+        };
+        return 0;
+    }
+    private func Objective(scope: Int32) -> String { return this.SiteObjective(scope, this.CurrentSite(scope)); }
+    private func SelectSite(scope: Int32, site: Int32) -> Bool {
+        let scanner: ref<NCPDPatrolDispatchJournalSystem>;
+        let cyber: ref<NCPDPatrolCyberpsychoSystem>;
+        let vip: ref<NCPDPatrolVIPSystem>;
+        if scope < 6 {
+            scanner = NCPDPatrolDispatchJournalSystem.Get(this.GetGameInstance());
+            return IsDefined(scanner) && scanner.SelectNavigationSite(site);
+        };
+        if scope < 8 {
+            cyber = NCPDPatrolCyberpsychoSystem.Get(this.GetGameInstance());
+            return IsDefined(cyber) && cyber.SelectNavigationSite(site);
+        };
+        vip = NCPDPatrolVIPSystem.Get(this.GetGameInstance());
+        return IsDefined(vip) && vip.SelectNavigationSite(site);
+    }
     private func PinPath(scope: Int32, site: Int32) -> String {
-        let objective: String = this.Objective(scope);
+        let objective: String = this.SiteObjective(scope, site);
+        return s"\(objective)/location";
+    }
+    private func LegacyPath(scope: Int32, site: Int32) -> String {
+        let objective: String = this.BaseObjective(scope);
         return s"\(objective)/bank_\(site)";
+    }
+    private func PathHash(path: String) -> Uint32 {
+        let journalPath: ref<gameJournalPath> = new gameJournalPath();
+        journalPath.realPath = path; journalPath.fileEntryIndex = 1;
+        journalPath.className = n"gameJournalQuestMapPin";
+        return journalPath.GetHash();
+    }
+    private func WriteMarker(path: String, active: Bool) -> Void {
+        let system: ref<QuestsSystem> = GameInstance.GetQuestsSystem(this.GetGameInstance());
+        let journalPath: ref<gameJournalPath>;
+        let node: ref<questMappinManagerNodeDefinition>;
+        if Equals(path, "") || !IsDefined(system) || !IsDefined(this.Entry(path, "gameJournalQuestMapPin")) { return; };
+        journalPath = new gameJournalPath();
+        journalPath.realPath = path; journalPath.fileEntryIndex = 1; journalPath.className = n"gameJournalQuestMapPin";
+        node = new questMappinManagerNodeDefinition(); node.id = Cast<Uint16>(0);
+        node.path = journalPath; node.disablePreviousMappins = false;
+        if active { system.ExecuteNode(node, n"Active"); } else { system.ExecuteNode(node, n"Inactive"); };
+    }
+    private func KnownPath(hash: Uint32) -> String {
+        let i: Int32 = 0;
+        while i < ArraySize(this.m_ownHashes) {
+            if this.m_ownHashes[i] == hash { return this.m_ownPaths[i]; };
+            i += 1;
+        };
+        return "";
     }
     private func Entry(path: String, kind: String) -> wref<JournalEntry> {
         if IsDefined(this.Journal()) { return this.Journal().GetEntryByString(path, kind); };
@@ -117,12 +260,9 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         this.Report("Closing marker", "Waiting for owned marker removal");
     }
     private func Hide(path: String) -> Bool {
-        let entry: wref<JournalEntry> = this.Entry(path, "gameJournalQuestMapPin");
-        if !IsDefined(entry) { return true; };
-        if NotEquals(this.Journal().GetEntryState(entry), gameJournalEntryState.Inactive) {
-            this.Journal().ChangeEntryState(path, "gameJournalQuestMapPin", gameJournalEntryState.Inactive, JournalNotifyOption.DoNotNotify);
-        };
-        return Equals(this.Journal().GetEntryState(entry), gameJournalEntryState.Inactive);
+        this.WriteMarker(path, false);
+        // Node calls have no success return. RemoveOwned verifies the registry.
+        return true;
     }
     private func RemoveOwned(hash: Uint32, allBankPins: Bool) -> Bool {
         let map: ref<MappinSystem> = this.Map();
@@ -141,7 +281,11 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
                 if (hash != 0u && pin.GetJournalPathHash() == hash)
                     || (allBankPins && ArrayContains(this.m_ownHashes, pin.GetJournalPathHash())) { matches = true; };
             };
-            if matches { map.UnregisterMappin(pins[i].GetNewMappinID()); };
+            if matches {
+                if IsDefined(pin) { this.WriteMarker(this.KnownPath(pin.GetJournalPathHash()), false); };
+                map.SetMappinActive(pins[i].GetNewMappinID(), false);
+                map.UnregisterMappin(pins[i].GetNewMappinID());
+            };
             i += 1;
         };
         pins = map.GetAllMappins(); i = 0;
@@ -159,17 +303,29 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         let site: Int32;
         let path: String;
         let entry: wref<JournalEntry>;
+        let objective: String;
+        let description: String;
+        let last: Int32;
         let ok: Bool = true;
         if !IsDefined(this.Map()) || !IsDefined(this.Journal()) { return false; };
         ArrayClear(this.m_ownHashes);
+        ArrayClear(this.m_ownPaths);
         while scope < 10 {
-            site = 1;
-            while site <= 323 {
+            site = 1; last = 132;
+            if scope >= 6 { site = 133; last = 323; };
+            while site <= last {
                 path = this.PinPath(scope, site); entry = this.Entry(path, "gameJournalQuestMapPin");
                 if IsDefined(entry) {
                     ArrayPush(this.m_ownHashes, Cast<Uint32>(this.Journal().GetEntryHash(entry)));
-                    if !this.Hide(path) { ok = false; };
+                    ArrayPush(this.m_ownPaths, path);
+                    objective = this.SiteObjective(scope, site); description = s"\(objective)/briefing";
+                    if this.Active(objective, "gameJournalQuestObjective") {
+                        if !NCPDPatrolFixedMarkerSystem.WriteNavigationState(this.Journal(), description, "gameJournalQuestDescription", gameJournalEntryState.Inactive)
+                            || !NCPDPatrolFixedMarkerSystem.WriteNavigationState(this.Journal(), objective, "gameJournalQuestObjective", gameJournalEntryState.Inactive) { ok = false; };
+                    };
                 };
+                path = this.LegacyPath(scope, site);
+                ArrayPush(this.m_ownHashes, this.PathHash(path)); ArrayPush(this.m_ownPaths, path);
                 site += 1;
             };
             scope += 1;
@@ -179,16 +335,46 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
     }
     private func CleanupCurrent() -> Bool {
         if NotEquals(this.m_currentPath, "") && !this.Hide(this.m_currentPath) { return false; };
-        if !this.RemoveOwned(this.m_hash, false) { return false; };
+        if !this.RemoveOwned(this.m_hash, true) { return false; };
         this.m_currentPath = "";
         return true;
+    }
+    // Enumerate our private hashes, never cached IDs or other quests. This also
+    // catches a legacy r5 pin that the engine recreates after initial cleanup.
+    private func PruneOtherPins() -> Void {
+        let map: ref<MappinSystem> = this.Map();
+        let pins: array<ref<IMappin>> = map.GetAllMappins();
+        let pin: ref<QuestMappin>;
+        let keep: Uint32 = 0u;
+        let i: Int32 = 0;
+        if this.m_wanted && !this.m_switch && !this.m_fallback && !this.m_fallbackPending { keep = this.m_hash; };
+        while i < ArraySize(pins) {
+            pin = pins[i] as QuestMappin;
+            if IsDefined(pin) && ArrayContains(this.m_ownHashes, pin.GetJournalPathHash()) && pin.GetJournalPathHash() != keep {
+                this.WriteMarker(this.KnownPath(pin.GetJournalPathHash()), false);
+                map.SetMappinActive(pin.GetNewMappinID(), false);
+                map.UnregisterMappin(pin.GetNewMappinID());
+                this.m_pruned += 1;
+            };
+            i += 1;
+        };
+    }
+    private func ClearProof() -> Void {
+        let empty: NewMappinID;
+        let runtimePoint: Vector4;
+        let questPoint: Vector3;
+        this.m_nativeID = empty; this.m_pinCount = 0; this.m_confirmed = false;
+        this.m_linked = false; this.m_targetActive = false;
+        this.m_positionOK = false; this.m_questPositionOK = false;
+        this.m_linkHash = 0u; this.m_linkID = empty;
+        this.m_runtimePoint = runtimePoint; this.m_questPoint = questPoint;
+        this.m_activeBankPins = 0; this.m_otherBankPins = 0;
     }
     private func StartCurrent() -> Void {
         let empty: NewMappinID;
         let entry: wref<JournalEntry>;
-        this.m_hash = 0u; this.m_age = 0.0; this.m_pinCount = 0;
-        this.m_nativeID = empty; this.m_fallbackID = empty;
-        this.m_confirmed = false; this.m_linked = false; this.m_positionOK = false; this.m_questPositionOK = false;
+        this.ClearProof(); this.m_hash = 0u; this.m_age = 0.0;
+        this.m_fallbackID = empty;
         this.m_fallback = false; this.m_fallbackPending = false;
         this.m_manualBefore = this.Map().GetManuallyTrackedMappinID();
         if this.m_site == 0 {
@@ -198,15 +384,23 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         entry = this.Entry(this.m_currentPath, "gameJournalQuestMapPin");
         if !IsDefined(entry) {
             this.m_currentPath = ""; this.m_fallbackPending = true;
-            this.Report("Fallback queued", "Fixed journal pin resource unavailable; install complete r5 package"); return;
+            this.Report("Fallback queued", "Fixed journal pin resource unavailable; install complete r5a package"); return;
+        };
+        if !this.SelectSite(this.m_scope, this.m_site) {
+            this.m_currentPath = ""; this.m_fallbackPending = true;
+            this.Report("Fallback queued", "Selected site objective could not activate; attempting common-objective recovery"); return;
         };
         this.m_hash = Cast<Uint32>(this.Journal().GetEntryHash(entry));
-        this.Journal().ChangeEntryState(this.m_currentPath, "gameJournalQuestMapPin", gameJournalEntryState.Active, JournalNotifyOption.DoNotNotify);
+        this.WriteMarker(this.m_currentPath, true);
         this.m_manualAfter = this.Map().GetManuallyTrackedMappinID();
-        this.Report("Fixed quest marker requested", "Entry activation is not confirmation; waiting for native pin and objective link");
+        this.Report("Fixed quest marker requested", "One site objective selected and MappinManager Active requested; waiting for registry and objective-link proof");
     }
     private func ShowFallback() -> Void {
         let data: MappinData;
+        if !this.SelectSite(this.m_scope, 0) {
+            this.Report("Fallback pending", "Common objective recovery not confirmed; no second marker created"); return;
+        };
+        this.ClearProof();
         data.mappinType = t"Mappins.QuestStaticMappinDefinition";
         data.variant = gamedataMappinVariant.QuestGiverVariant;
         data.active = true; data.visibleThroughWalls = true;
@@ -225,27 +419,32 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         let point: Vector3;
         let questPoint: Vector4;
         let known: Bool;
-        let linkedID: NewMappinID;
         let i: Int32 = 0;
-        this.m_pinCount = 0; this.m_positionOK = false; this.m_linked = false; this.m_questPositionOK = false;
+        this.ClearProof();
         while i < ArraySize(pins) {
             pin = pins[i] as QuestMappin;
+            if IsDefined(pin) && ArrayContains(this.m_ownHashes, pin.GetJournalPathHash()) {
+                if pin.IsActive() { this.m_activeBankPins += 1; };
+                if pin.GetJournalPathHash() != this.m_hash { this.m_otherBankPins += 1; };
+            };
             if IsDefined(pin) && pin.IsQuestMappin() && pin.GetJournalPathHash() == this.m_hash {
                 this.m_pinCount += 1; this.m_nativeID = pin.GetNewMappinID(); this.m_runtimePoint = pin.GetWorldPosition();
                 this.m_positionOK = Vector4.Distance(this.m_runtimePoint, this.m_target) <= 2.0;
+                this.m_targetActive = pin.IsActive();
             };
             i += 1;
         };
         linked = map.GetMappinFromObjective(this.Entry(this.Phase(this.m_scope), "gameJournalQuestPhase"), this.Entry(this.Objective(this.m_scope), "gameJournalQuestObjective"));
         pin = linked as QuestMappin;
-        if IsDefined(pin) { linkedID = pin.GetNewMappinID(); };
-        this.m_linked = IsDefined(pin) && pin.GetJournalPathHash() == this.m_hash && linkedID.value == this.m_nativeID.value;
+        if IsDefined(pin) { this.m_linkID = pin.GetNewMappinID(); this.m_linkHash = pin.GetJournalPathHash(); };
+        this.m_linked = IsDefined(pin) && this.m_linkHash == this.m_hash && this.m_linkID.value == this.m_nativeID.value;
         known = map.GetQuestMappinPosition(this.m_hash, point); this.m_questPoint = point;
         questPoint.X = point.X; questPoint.Y = point.Y; questPoint.Z = point.Z; questPoint.W = 1.0;
         this.m_questPositionOK = known && Vector4.Distance(questPoint, this.m_target) <= 2.0;
-        this.m_confirmed = this.m_pinCount == 1 && this.m_positionOK && this.m_questPositionOK && this.m_linked
-            && this.Active(this.m_currentPath, "gameJournalQuestMapPin") && this.m_manualBefore.value == this.m_manualAfter.value;
-        if this.m_confirmed { this.Report("Native quest marker confirmed", "Fixed site, correct native hash/ID, journal position and objective link; manual ID unchanged across activation"); };
+        this.m_confirmed = this.m_pinCount == 1 && this.m_activeBankPins == 1 && this.m_otherBankPins == 0
+            && this.m_targetActive && this.m_positionOK && this.m_questPositionOK && this.m_linked
+            && this.Active(this.Objective(this.m_scope), "gameJournalQuestObjective") && this.m_manualBefore.value == this.m_manualAfter.value;
+        if this.m_confirmed { this.Report("Native quest marker confirmed", "Exactly one active bank pin; selected objective, native hash/ID and both positions match; manual ID unchanged across activation"); };
     }
     public func Tick(delta: Float) -> Void {
         let scope: Int32;
@@ -255,6 +454,10 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         if this.m_restorePending {
             if !this.RestoreCleanup() { return; };
             this.m_restorePending = false;
+        };
+        if delta > 0.0 && delta <= 0.5 { this.m_sweepPoll += delta; };
+        if this.m_sweepPoll >= 1.0 {
+            this.PruneOtherPins(); this.m_sweepPoll = 0.0;
         };
         if this.m_wanted {
             scope = this.GetScope();
@@ -267,7 +470,7 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
         if this.m_switch {
             if !this.CleanupCurrent() { return; };
             this.m_switch = false;
-            if !this.m_wanted { this.m_hash = 0u; this.Report("Idle", "Owned marker cleanup confirmed"); return; };
+            if !this.m_wanted { this.ClearProof(); this.m_hash = 0u; this.Report("Idle", "Owned marker cleanup confirmed"); return; };
             this.StartCurrent();
         };
         if !this.m_wanted { return; };
@@ -305,6 +508,6 @@ public class NCPDPatrolFixedMarkerSystem extends ScriptableSystem {
     public func GetDiagnostics() -> String {
         let current: NewMappinID;
         if IsDefined(this.Map()) { current = this.Map().GetManuallyTrackedMappinID(); };
-        return s"\(this.m_status) | token=\(this.m_token) | scope=\(this.m_scope) | site=\(this.m_site) | active=\(this.m_wanted) | cleanup/switch=\(this.m_switch) | restore cleanup=\(this.m_restorePending) | native confirmed=\(this.m_confirmed) | native pins=\(this.m_pinCount) | objective link=\(this.m_linked) | runtime position OK=\(this.m_positionOK) | quest position OK=\(this.m_questPositionOK) | pin ID=\(this.m_nativeID.value) | hash=\(this.m_hash) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | runtime=\(this.m_runtimePoint.X),\(this.m_runtimePoint.Y),\(this.m_runtimePoint.Z) | quest position=\(this.m_questPoint.X),\(this.m_questPoint.Y),\(this.m_questPoint.Z) | fallback=\(this.m_fallback) | manual before/after=\(this.m_manualBefore.value)/\(this.m_manualAfter.value) | manual current=\(current.value) | \(this.m_detail)";
+        return s"\(this.m_status) | token=\(this.m_token) | scope=\(this.m_scope) | site=\(this.m_site) | active=\(this.m_wanted) | cleanup/switch=\(this.m_switch) | restore cleanup=\(this.m_restorePending) | native confirmed=\(this.m_confirmed) | native pins=\(this.m_pinCount) | active bank pins=\(this.m_activeBankPins) | other bank pins=\(this.m_otherBankPins) | target active=\(this.m_targetActive) | pruned=\(this.m_pruned) | objective=\(this.Objective(this.m_scope)) | link hash=\(this.m_linkHash) | link ID=\(this.m_linkID.value) | objective link=\(this.m_linked) | runtime position OK=\(this.m_positionOK) | quest position OK=\(this.m_questPositionOK) | pin ID=\(this.m_nativeID.value) | hash=\(this.m_hash) | target=\(this.m_target.X),\(this.m_target.Y),\(this.m_target.Z) | runtime=\(this.m_runtimePoint.X),\(this.m_runtimePoint.Y),\(this.m_runtimePoint.Z) | quest position=\(this.m_questPoint.X),\(this.m_questPoint.Y),\(this.m_questPoint.Z) | fallback=\(this.m_fallback) | manual before/after=\(this.m_manualBefore.value)/\(this.m_manualAfter.value) | manual current=\(current.value) | \(this.m_detail)";
     }
 }

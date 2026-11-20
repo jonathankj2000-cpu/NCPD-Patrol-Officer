@@ -162,8 +162,9 @@ function M.new(context)
     local function drawDiagnostics()
         -- r5 marker UI begin
         if ImGui.CollapsingHeader("Fixed quest markers") then
+            ImGui.TextWrapped("Scanner / VIP / Cyberpsycho: use this diagnostics control while a dispatch is active.")
             ImGui.TextWrapped(context.navigation.diagnostics())
-            if ImGui.Button("Log fixed quest marker diagnostics") then status("Fixed markers | " .. context.navigation.diagnostics()) end
+            if ImGui.Button("Log active dispatch marker diagnostics") then status("Fixed markers | " .. context.navigation.diagnostics()) end
         end
         -- r5 marker UI end
         ImGui.TextWrapped("Diagnostic buttons write details to the CET log. Recovery controls use the existing feature guards.")
@@ -228,7 +229,7 @@ function M.new(context)
 
     local function drawTesting()
         -- r4 probe UI begin
-        if ImGui.CollapsingHeader("Quest marker experiment") then
+        if ImGui.CollapsingHeader("Legacy Coyote marker experiment") then
             local probe = context.markerProbe
             ImGui.TextWrapped("Legacy controls: r4d static passed; r4e relocation failed in game. Normal dispatch uses fixed site pins. OFF DUTY test: the MIT reference quest uses the El Coyote Cojo world anchor (-1259.60, -989.17, 12.04). Inspect the world map alongside your manual waypoint. This does not replace dispatch markers or award credits.")
             ImGui.TextWrapped(probe.state())
@@ -236,7 +237,7 @@ function M.new(context)
             if ImGui.Button("TEST: Relocate native marker near V") then probe.relocate(status) end
             if ImGui.Button("TEST: Andrea visual marker") then probe.startVisual(status) end
             if ImGui.Button("Remove quest marker test") then probe.finish(status) end
-            if ImGui.Button("Log quest marker test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
+            if ImGui.Button("Log legacy Coyote test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
             ImGui.TextWrapped("After static confirmation, Relocate moves that same native pin 150 m east of V. Wait 5 active seconds and inspect the world map plus quest-log location. Remove between independent tests. The static test requires journal proof. The Andrea visual control only checks rendering; it does not prove a journal link or GPS. If not confirmed after five seconds, log graph ready/stage and native pin count, then remove the test. No game-engine success is assumed.")
         end
         -- r4 probe UI end
@@ -281,7 +282,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d fixed quest markers r5###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d fixed quest markers r5a###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

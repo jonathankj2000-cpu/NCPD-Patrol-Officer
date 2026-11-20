@@ -1,12 +1,12 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_VIP.archive",
-  "archive_sha256": "8f73280354168791e21cee3b0dc963025a044187a64e380e2da3376aef8f8dc4",
+  "archive_sha256": "54a8fca9629317494f216d5137537a71434f50d2fd065a52eae4647b70bcfbed",
   "resource_sha256": {
-    "vip.journal": "e00156ec880159d624ef25047a86ec57df7248af0c93cb9e5ddcfce8c972059d",
+    "vip.journal": "7c925db3bf4401b878ba320af9bf45cdb7e86d7265b17be9c0c8c4e44149981a",
     "vip_onscreens.json": "0be4350b0a90ddcfd36112300b4f2c7da6ee17f86d5a69ad0efb3a28f571ef9b"
   },
   "authored_inputs": {
-    "assets/fixed_markers/vip.journal.json": "7add87b21a46a2b093a3099c05715920200f752569156f1e038dcd98236eed44",
+    "assets/fixed_markers/vip.journal.json": "46a9d8ea60e123710b7aedb8f3095dab071259a1f3f50903b9f329642bb1a2ea",
     "assets/vip/vip_onscreens.json.json": "a3bdc5d08852f5104f2b2e7728ab5478f2e6e77a30e6dcbece36a76b0f8eb85e",
     "assets/vip/vip.journal.json": "513ab0a81c2e0ce0637abb4393978b45c0c7b074b6b528dc8b10ef7d765d690f",
     "assets/fixed_markers/catalog.json": "de4ef3ebdf02ebc4df3c78eebeae355793742a62fb3773820e6760fe38379c41"
@@ -14,5 +14,8 @@
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "fixed_map_pins": 382,
-  "original_journal_topology_and_text_retained": true
+  "original_objectives_and_text_retained": true,
+  "one_pin_per_site_objective": true,
+  "all_pin_definitions_inactive": true,
+  "scanner_reference": "confirmed Coyote anchor plus fixed authored relative offsets"
 }

@@ -1,53 +1,46 @@
-NCPD PATROL v0.17d FIXED QUEST MARKERS r5 - COMPLETE BRANCH TEST
+NCPD PATROL v0.17d FIXED QUEST MARKERS r5a - COMPLETE BRANCH TEST
 
-Scanner, VIP and cyberpsycho dispatches now select pre-authored journal pins.
-Markers are activated/deactivated for each selected site and objective. They
-are not moved. The normal journal, deadlines, payments and career owners stay
-in place. No extra quest entry is created for navigation.
+Fixes the r5 journal layout that exposed all terminal locations. Every selected
+site now has its own objective with one map pin; all pin definitions start
+inactive. Only the selected pin receives MappinManager Active. Scanner sites
+use authored relative offsets from the game-confirmed Coyote world anchor.
 
-CATALOG
-132 scanner sites and 191 fast travel sites; 1556 fixed journal map-pin entries
-across six scanner briefings, VIP pickup/delivery and cyberpsycho response/combat.
-Catalog coordinates are matched within 2 m against the actually selected
-runtime site. Fast travel pins use named world NodeRefs. Scanner pins use
-authored absolute positions through ArchiveXL. Source revisions and attribution
-are recorded in assets/fixed_markers/sources.json and THIRD_PARTY_NOTICES.txt.
-
-The location selector is unchanged: nearby calls, range expansion and existing
-fast-travel/drop-point availability still apply. Unknown/changed sites, including
-drop points outside this catalog, receive an independently owned quest-style
-fallback. That renderer is explicitly NOT reported as a native journal pin.
-It does not track or replace the player's manual waypoint.
+The existing scanner/VIP/cyberpsycho owners select the site objective and retain
+their attendance, deadlines, actors, results, rewards and career logic. Unknown
+locations or unconfirmed native pins recover the common objective and use an
+independent quest-style fallback. Your manual waypoint remains yours.
 
 INSTALL AND TEST
 Install the COMPLETE bin/r6/archive ZIP in the game root and fully restart.
-All three dispatch/VIP/cyberpsycho archives are required. No CET hot reload.
-Start a shift, then request scanner, VIP and cyberpsycho dispatches using the
-existing CET buttons or normal dispatch controls. No new hotkey is required.
-Set a manual waypoint before testing and check that it remains available.
+All three dispatch/VIP/cyberpsycho archives and updated native scripts are
+required. No CET hot reload. This version requires bank interface 2.
 
-CET > Diagnostics > Fixed quest markers > Log fixed quest marker diagnostics.
-After five unpaused gameplay seconds, inspect native confirmed, native pins,
-objective link, both position checks, site/scope, fallback and manual IDs.
-A visible yellow marker alone is not proof: native confirmed=true requires a
-real QuestMappin with the expected private hash/ID, matching runtime AND journal
-positions, and the active objective link. Fallback is explicitly distinguished.
+Start a shift, set a manual waypoint and request a scanner, VIP or cyberpsycho
+using the existing controls. After five unpaused gameplay seconds use:
+CET > Diagnostics > Fixed quest markers > Log active dispatch marker diagnostics
 
-For VIP, verify the pickup pin disappears and delivery pin appears after actual
-boarding. For cyberpsycho, verify arrival switches the marker's objective link
-to neutralize, then completion removes it. Test cancellation/replacement, end
-shift, load and the next dispatch. Older actor cleanup must not remove a newer
-assignment's marker. GPS behavior still needs in-game verification.
+Expected native result: native confirmed=true, native pins=1,
+active bank pins=1, other bank pins=0, target active=true, objective link=true,
+both position checks=true, fallback=false. Confirm only the selected location
+is shown and the manual waypoint is still available. If fallback=true, the
+independent marker is present but native journal binding was not confirmed.
 
-Existing R4d fixed Coyote control passed in game. R4e runtime relocation did
-not move that pin. Those legacy controls/resources remain for saved-test
-cleanup, but the r5 dispatch implementation never requests runtime relocation.
-This build's bank activation inside the real journals is UNTESTED IN GAME.
+Check VIP pickup -> delivery, cyberpsycho response -> neutralize -> completion,
+scanner completion and next dispatch, cancellation/replacement, end shift and
+save/load. Old or unexpected PRIVATE bank pins are pruned; story/manual and
+other mods' markers are outside this cleanup. Stale runtime-position evidence
+is reset. Refused cleanup must finish before a replacement/fallback is created.
 
-18 portable suites; 27 Lua modules; 33 native files; 83 installed files.
-All 31 previously installed native scripts and saved reward/progression data
-retain their code. Browser Extension remains optional.
-See docs/FIXED_QUEST_MARKERS.md for ownership, building, scope and rollback.
+Testing > Legacy Coyote marker experiment is a separate older experiment.
+Its static r4d marker passed in game; r4e relocation failed. R5 also failed in
+game (terminal pool visible; no scanner native pin). R5a's rendering and GPS
+still require an IN-GAME TEST. Automated API checks do not prove that result.
+
+323 catalog sites; 1556 single-pin site objectives. 18 portable suites,
+27 Lua modules, 33 native scripts, 83 installed files. Original actor/reward/
+result methods are source-guarded; native owners gain only navigation paths
+and transient site selection. Browser Extension remains optional.
+See docs/FIXED_QUEST_MARKERS.md for ownership, evidence and building.
 
 PREVIOUS BUILD NOTES
 

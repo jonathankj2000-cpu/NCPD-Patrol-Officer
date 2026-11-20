@@ -19,8 +19,8 @@ def walk(x):
 def strip_bank(doc):
     doc=copy.deepcopy(doc)
     for row in walk(doc):
-        if row.get('$type')=='gameJournalQuestObjective':
-            row['entries']=[h for h in row['entries'] if not h['Data']['id'].startswith('bank_')]
+        if row.get('$type')=='gameJournalQuestPhase':
+            row['entries']=[h for h in row['entries'] if '_bank_' not in h['Data']['id']]
     return doc
 
 def generate():
@@ -32,18 +32,33 @@ def generate():
         original=json.loads((ROOT/f'assets/{kind}/{kind}.journal.json').read_text())
         doc=copy.deepcopy(original)
         next_id=max(int(x['HandleId']) for x in walk(doc) if 'HandleId' in x)+1
-        for objective in list(walk(doc)):
-            if objective.get('$type')!='gameJournalQuestObjective':continue
-            for site in sites:
-                if site['kind']!=('scanner' if kind=='dispatch' else 'terminal'):continue
-                entry=copy.deepcopy(pin);entry['id']=f"bank_{site['index']}"
-                entry['slotName']['$value']='None'
-                entry['reference']['reference']['$value']=site['node_ref']
-                xyz={'X':0.0,'Y':0.0,'Z':0.0} if site['node_ref'] else {k.upper():v for k,v in site['position'].items()}
-                entry['offset']={'$type':'Vector3',**xyz}
-                entry['mappinData']['debugCaption']='NCPD DISPATCH'
-                entry['mappinData']['localizedCaption']=copy.deepcopy(objective['description'])
-                objective['entries'].append({'HandleId':str(next_id),'Data':entry});next_id+=1
+        reference=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
+        for phase in list(walk(doc)):
+            if phase.get('$type')!='gameJournalQuestPhase':continue
+            originals=list(phase['entries'])
+            for handle in originals:
+                objective=handle['Data']
+                for site in sites:
+                    if site['kind']!=('scanner' if kind=='dispatch' else 'terminal'):continue
+                    selected=copy.deepcopy(objective);selected['id']=f"{objective['id']}_bank_{site['index']}"
+                    selected_handle=str(next_id);next_id+=1
+                    for child in selected['entries']:
+                        child['HandleId']=str(next_id);next_id+=1
+                    entry=copy.deepcopy(pin);entry['id']='location'
+                    entry['slotName']['$value']='None'
+                    # Avoid the null-NodeRef path that failed for scanner sites.
+                    # Scanner XYZ is a fixed, authored offset from the proven
+                    # Coyote world anchor; nothing is moved at runtime.
+                    entry['reference']['reference']['$value']=site['node_ref'] or reference['node_reference']
+                    xyz={'X':0.0,'Y':0.0,'Z':0.0} if site['node_ref'] else {
+                        k.upper():v-reference['position'][k.upper()]+reference['offset'][k.upper()]
+                        for k,v in site['position'].items()}
+                    entry['offset']={'$type':'Vector3',**xyz}
+                    entry['mappinData']['active']=0
+                    entry['mappinData']['debugCaption']='NCPD DISPATCH'
+                    entry['mappinData']['localizedCaption']=copy.deepcopy(objective['description'])
+                    selected['entries'].append({'HandleId':str(next_id),'Data':entry});next_id+=1
+                    phase['entries'].append({'HandleId':selected_handle,'Data':selected})
         assert strip_bank(doc)==original
         path=DIR/f'{kind}.journal.json';path.write_text(json.dumps(doc,separators=(',',':'))+'\n');inputs[kind]=path
     # Runtime coordinate matching does not rely on decoded marker ID strings.
@@ -67,17 +82,22 @@ def validate(doc,kind,baseline=None):
     count=0
     for objective in walk(doc):
         if objective.get('$type')!='gameJournalQuestObjective':continue
-        entries=[h['Data'] for h in objective['entries'] if h['Data']['id'].startswith('bank_')]
-        assert len(entries)==(132 if kind=='dispatch' else 191)
-        assert len({p['id'] for p in entries})==len(entries)
+        entries=[h['Data'] for h in objective['entries'] if h['Data']['$type']=='gameJournalQuestMapPin']
+        assert len(entries)<=1,'An objective must never expose a pool of pins'
+        if '_bank_' not in objective['id']:
+            assert not entries
+            continue
+        assert len(entries)==1 and entries[0]['id']=='location'
         for pin in entries:
-            site=sites[int(pin['id'][5:])];assert site['kind']==('scanner' if kind=='dispatch' else 'terminal')
+            site=sites[int(objective['id'].rsplit('_bank_',1)[1])];assert site['kind']==('scanner' if kind=='dispatch' else 'terminal')
             assert pin['$type']=='gameJournalQuestMapPin' and pin['enableGPS']
+            anchor=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
             reference=pin['reference']['reference']['$value']
-            assert reference==site['node_ref'] or (not site['node_ref'] and reference in ['', '0']), (kind,site['index'],reference)
-            expected={'X':0.0,'Y':0.0,'Z':0.0} if site['node_ref'] else {k.upper():v for k,v in site['position'].items()}
+            assert reference==(site['node_ref'] or anchor['node_reference'])
+            expected={'X':0.0,'Y':0.0,'Z':0.0} if site['node_ref'] else {
+                k.upper():v-anchor['position'][k.upper()]+anchor['offset'][k.upper()] for k,v in site['position'].items()}
             assert all(abs(pin['offset'][k]-v)<.001 for k,v in expected.items())
-            assert pin['mappinData']['active'] and pin['mappinData']['variant']=='QuestGiverVariant'
+            assert not pin['mappinData']['active'] and pin['mappinData']['variant']=='QuestGiverVariant'
             count+=1
     return count
 
@@ -115,7 +135,7 @@ def main():
             manifest={'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),
                 'resource_sha256':{k:hashlib.sha256(v).hexdigest() for k,v in expected.items()},
                 'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in [inputs[kind],texts,ROOT/f'assets/{kind}/{kind}.journal.json',DIR/'catalog.json']},
-                'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'fixed_map_pins':count,'original_journal_topology_and_text_retained':True}
+                'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'fixed_map_pins':count,'original_objectives_and_text_retained':True,'one_pin_per_site_objective':True,'all_pin_definitions_inactive':True,'scanner_reference':'confirmed Coyote anchor plus fixed authored relative offsets'}
             manifests[kind]=manifest
             if kind=='vip':(ROOT/'assets/vip/compiled.json').write_text(json.dumps(manifest,indent=2)+'\n')
     (DIR/'compiled.json').write_text(json.dumps(manifests,indent=2)+'\n')

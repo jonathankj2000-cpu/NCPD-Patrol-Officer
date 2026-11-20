@@ -13,6 +13,7 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
     private let m_restorePending: Bool;
     private let m_previousTracked: wref<JournalEntry>;
     private let m_briefing: Int32;
+    private let m_navigationSite: Int32;
     private persistent let m_paidDispatches: array<CName>;
     private persistent let m_pendingDispatchRewards: array<CName>;
     private let m_rewardPoll: Float;
@@ -26,7 +27,7 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {
         // Resolve the journal afresh on a loaded-world Tick; never use old refs.
-        this.m_stage = 0;
+        this.m_stage = 0; this.m_navigationSite = 0;
         this.m_token += 1;
         this.m_hash = 0u;
         this.m_remaining = 0.0;
@@ -53,9 +54,12 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
     }
     private func ObjectivePath() -> String {
         let root: String = this.QuestPath();
+        if this.m_navigationSite > 0 { return s"\(root)/main/resolve_bank_\(this.m_navigationSite)"; };
         return s"\(root)/main/resolve";
     }
     private func DescriptionPath() -> String {
+        let objective: String;
+        if this.m_navigationSite > 0 { objective = this.ObjectivePath(); return s"\(objective)/briefing"; };
         let root: String = this.QuestPath();
         return s"\(root)/main/resolve/briefing";
     }
@@ -84,6 +88,17 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
             i += 1;
         };
         return true;
+    }
+    public func GetNavigationSite() -> Int32 { return this.m_navigationSite; }
+    public func SelectNavigationSite(site: Int32) -> Bool {
+        let base: String;
+        let root: String = this.QuestPath();
+        let selected: String;
+        if !this.Running() || site < 0 || site > 132 { return false; };
+        base = s"\(root)/main/resolve"; selected = base;
+        if site > 0 { selected = s"\(base)_bank_\(site)"; };
+        if !NCPDPatrolFixedMarkerSystem.SwitchNavigationObjective(this.GetGameInstance(), base, this.ObjectivePath(), selected, 1, 132) { return false; };
+        this.m_navigationSite = site; return true;
     }
     public func GetStage() -> Int32 { return this.m_stage; }
     public func GetToken() -> Int32 { return this.m_token; }
@@ -121,6 +136,7 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
         let objective: String;
         if !IsDefined(journal) { return false; };
         entry = journal.GetTrackedEntry();
+        if this.m_navigationSite > 0 && entry == journal.GetEntryByString(this.ObjectivePath(), "gameJournalQuestObjective") { return true; };
         if !IsDefined(entry) { return false; };
         while i < 6 {
             root = this.VariantPath(i);
@@ -200,6 +216,7 @@ public class NCPDPatrolDispatchJournalSystem extends ScriptableSystem {
             this.m_previousTracked = null;
             return 0;
         };
+        this.m_navigationSite = 0;
         if !this.Write(this.QuestPath(), "gameJournalQuest", gameJournalEntryState.Active, true)
             || !this.Write(this.PhasePath(), "gameJournalQuestPhase", gameJournalEntryState.Active)
             || !this.Write(this.DescriptionPath(), "gameJournalQuestDescription", gameJournalEntryState.Active)

@@ -1,13 +1,13 @@
 {
   "dispatch": {
     "archive_path": "archive/pc/mod/NCPDPatrol_Dispatch.archive",
-    "archive_sha256": "e43f33ff93ff7c32ff67a0a8c68cbd9925c19be922df3ffea4a6821c1d5c12d6",
+    "archive_sha256": "51855a3e56512ef64a3137ad4aa10d5b7742d3db52105a4122691a4c1f263826",
     "resource_sha256": {
-      "dispatch.journal": "93db66c189a5736de097e24250bc5ef82c95a66f2ca609d9e87a6511282b2825",
+      "dispatch.journal": "b8c2f32928bd3586f072949e0faa1ed75d4491d3817ebd5521aa7a2f311ab71e",
       "dispatch_onscreens.json": "250e8346011a2564ba377f06843cd2c3972f1ef3b35faa1e022a6f8e7fec2a1e"
     },
     "authored_inputs": {
-      "assets/fixed_markers/dispatch.journal.json": "c2a549b82b33818964d351c23b70c54b6d6c626c1962cd868f701dd18b0dad45",
+      "assets/fixed_markers/dispatch.journal.json": "80e1bc64cfded969ff97f76483d73885d09cb6693ed1c2c2b32f679a7d363567",
       "assets/dispatch/dispatch_onscreens.json.json": "09b1562937840ce829f52b4bc7a488889955c4c071ca0d594f6cafec838867af",
       "assets/dispatch/dispatch.journal.json": "688e4cb8b86c47ad5c390a65e1a17cc6adc3d6559bb0c96e42b8048d6bc30cc0",
       "assets/fixed_markers/catalog.json": "de4ef3ebdf02ebc4df3c78eebeae355793742a62fb3773820e6760fe38379c41"
@@ -15,17 +15,20 @@
     "roundtrip_validated": true,
     "extracted_resource_bytes_compared": true,
     "fixed_map_pins": 792,
-    "original_journal_topology_and_text_retained": true
+    "original_objectives_and_text_retained": true,
+    "one_pin_per_site_objective": true,
+    "all_pin_definitions_inactive": true,
+    "scanner_reference": "confirmed Coyote anchor plus fixed authored relative offsets"
   },
   "vip": {
     "archive_path": "archive/pc/mod/NCPDPatrol_VIP.archive",
-    "archive_sha256": "8f73280354168791e21cee3b0dc963025a044187a64e380e2da3376aef8f8dc4",
+    "archive_sha256": "54a8fca9629317494f216d5137537a71434f50d2fd065a52eae4647b70bcfbed",
     "resource_sha256": {
-      "vip.journal": "e00156ec880159d624ef25047a86ec57df7248af0c93cb9e5ddcfce8c972059d",
+      "vip.journal": "7c925db3bf4401b878ba320af9bf45cdb7e86d7265b17be9c0c8c4e44149981a",
       "vip_onscreens.json": "0be4350b0a90ddcfd36112300b4f2c7da6ee17f86d5a69ad0efb3a28f571ef9b"
     },
     "authored_inputs": {
-      "assets/fixed_markers/vip.journal.json": "7add87b21a46a2b093a3099c05715920200f752569156f1e038dcd98236eed44",
+      "assets/fixed_markers/vip.journal.json": "46a9d8ea60e123710b7aedb8f3095dab071259a1f3f50903b9f329642bb1a2ea",
       "assets/vip/vip_onscreens.json.json": "a3bdc5d08852f5104f2b2e7728ab5478f2e6e77a30e6dcbece36a76b0f8eb85e",
       "assets/vip/vip.journal.json": "513ab0a81c2e0ce0637abb4393978b45c0c7b074b6b528dc8b10ef7d765d690f",
       "assets/fixed_markers/catalog.json": "de4ef3ebdf02ebc4df3c78eebeae355793742a62fb3773820e6760fe38379c41"
@@ -33,17 +36,20 @@
     "roundtrip_validated": true,
     "extracted_resource_bytes_compared": true,
     "fixed_map_pins": 382,
-    "original_journal_topology_and_text_retained": true
+    "original_objectives_and_text_retained": true,
+    "one_pin_per_site_objective": true,
+    "all_pin_definitions_inactive": true,
+    "scanner_reference": "confirmed Coyote anchor plus fixed authored relative offsets"
   },
   "cyberpsycho": {
     "archive_path": "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive",
-    "archive_sha256": "1c848ed79296ddecbb0b61cbee07314b3085b318dc56a51a391dce03e5fc36fc",
+    "archive_sha256": "930ac746ca49c65ed17f0a994adb224141e6b0d6210f669e905ddc36b0aca470",
     "resource_sha256": {
-      "cyberpsycho.journal": "97e02b62474f08d90c45a36700516efe1cc19e1d7b7e3f76cc9cb88606d51c3d",
+      "cyberpsycho.journal": "9e90f1d4a7c436b84f0fb1aa31d3e553e10b86e4d2dc4143072ccb0f0352c7d4",
       "cyberpsycho_onscreens.json": "2ab2f771a61777c8979e7b232e1b40bb7eeb23cb81bc891b912c0d992e2979d3"
     },
     "authored_inputs": {
-      "assets/fixed_markers/cyberpsycho.journal.json": "d47e973b7a5c3d3122d5f1f01ebbdf1e9e826ccb9c67956a7f1045a6b7a3a3f6",
+      "assets/fixed_markers/cyberpsycho.journal.json": "d944028b9332566c44c4dcc6cb43e664bf823218742d6631934e990bb101030b",
       "assets/cyberpsycho/cyberpsycho_onscreens.json.json": "05b6cfea9fc804498ec460fe05ea3feb19f29d5981ac6de9e2c08e505fdbb1ce",
       "assets/cyberpsycho/cyberpsycho.journal.json": "c19d30320ac7ba635ac215e8e127e217b263868a2df44a64190356e408bdf4a8",
       "assets/fixed_markers/catalog.json": "de4ef3ebdf02ebc4df3c78eebeae355793742a62fb3773820e6760fe38379c41"
@@ -51,6 +57,9 @@
     "roundtrip_validated": true,
     "extracted_resource_bytes_compared": true,
     "fixed_map_pins": 382,
-    "original_journal_topology_and_text_retained": true
+    "original_objectives_and_text_retained": true,
+    "one_pin_per_site_objective": true,
+    "all_pin_definitions_inactive": true,
+    "scanner_reference": "confirmed Coyote anchor plus fixed authored relative offsets"
   }
 }

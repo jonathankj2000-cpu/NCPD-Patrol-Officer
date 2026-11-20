@@ -1,5 +1,26 @@
 # NCPD Patrol
 
+## Fixed quest markers r5a — branch test
+
+Corrects r5's all-location marker pool with **one site objective and one pin**,
+inactive definitions and explicit selected-pin activation. Scanner sites now
+use fixed offsets from the game-confirmed Coyote anchor. Native confirmation
+requires exactly one active bank pin, correct objective link and both positions.
+Old/private pool markers and stale diagnostic positions are cleaned up.
+
+[Download the complete r5a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5a_TEST.zip)
+
+Install the entire package and restart. Use **Diagnostics → Fixed quest markers
+→ Log active dispatch marker diagnostics** while the assignment is active.
+The separate legacy Coyote experiment does not diagnose active dispatches.
+Original attendance, actors, results, payments and progression remain with
+their existing owners; they select the matching site objective. Manual
+waypoints stay independent. Browser Extension remains optional.
+
+18 portable suites, source guards and offline API compilation pass; **r5a still
+needs in-game validation**. R5's observed failure is recorded with the fix.
+[Implementation, evidence and test steps](docs/FIXED_QUEST_MARKERS.md).
+
 ## VIP refactor r3 — branch test
 
 VIP location selection and waypoint ownership now live in separate modules.

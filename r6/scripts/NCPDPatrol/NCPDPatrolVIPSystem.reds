@@ -4,6 +4,8 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     // 0 idle, 1 pickup, 2 transport, 3 succeeded,
     // 4 failed, 5 cancelled, 6 journal error.
     private let m_stage: Int32;
+    private let m_pickupSite: Int32;
+    private let m_deliverySite: Int32;
     private let m_token: Int32;
     private let m_rewardId: Int32;
     private let m_target: wref<NPCPuppet>;
@@ -74,7 +76,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     private func OnAttach() -> Void { this.ForgetWorld(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.ForgetWorld(); }
     private func ForgetWorld() -> Void {
-        this.m_stage = 0; this.m_token += 1; this.m_target = null;
+        this.m_stage = 0; this.m_pickupSite = 0; this.m_deliverySite = 0; this.m_token += 1; this.m_target = null;
         this.m_rewardId = 0;
         this.m_missing = 0.0; this.m_away = 0.0; this.m_age = 0.0;
         this.m_remaining = 0.0; this.m_arrived = false;
@@ -87,10 +89,22 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
     }
     private func QuestPath() -> String { return "quests/minor_quest/ncpd_patrol_vip"; }
     private func PhasePath() -> String { return "quests/minor_quest/ncpd_patrol_vip/main"; }
-    private func ObjectivePath() -> String { return "quests/minor_quest/ncpd_patrol_vip/main/deliver"; }
-    private func DescriptionPath() -> String { return "quests/minor_quest/ncpd_patrol_vip/main/deliver/briefing"; }
-    private func ResponsePath() -> String { return "quests/minor_quest/ncpd_patrol_vip/main/pickup"; }
-    private func ResponseDescriptionPath() -> String { return "quests/minor_quest/ncpd_patrol_vip/main/pickup/briefing"; }
+    private func ObjectivePath() -> String {
+        if this.m_deliverySite > 0 { return s"quests/minor_quest/ncpd_patrol_vip/main/deliver_bank_\(this.m_deliverySite)"; };
+        return "quests/minor_quest/ncpd_patrol_vip/main/deliver";
+    }
+    private func DescriptionPath() -> String {
+        let objective: String;
+        if this.m_deliverySite > 0 { objective = this.ObjectivePath(); return s"\(objective)/briefing"; };
+        return "quests/minor_quest/ncpd_patrol_vip/main/deliver/briefing"; }
+    private func ResponsePath() -> String {
+        if this.m_pickupSite > 0 { return s"quests/minor_quest/ncpd_patrol_vip/main/pickup_bank_\(this.m_pickupSite)"; };
+        return "quests/minor_quest/ncpd_patrol_vip/main/pickup";
+    }
+    private func ResponseDescriptionPath() -> String {
+        let objective: String;
+        if this.m_pickupSite > 0 { objective = this.ResponsePath(); return s"\(objective)/briefing"; };
+        return "quests/minor_quest/ncpd_patrol_vip/main/pickup/briefing"; }
     private func Running() -> Bool { return this.m_stage == 1 || this.m_stage == 2; }
     private func ActiveObjectivePath() -> String {
         if this.m_stage == 1 { return this.ResponsePath(); };
@@ -186,6 +200,7 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
         this.m_previousTracked = null;
         if !this.OursTracked() { this.m_previousTracked = this.Journal().GetTrackedEntry(); };
         if !this.HideJournal() { this.m_reason = "VIP journal reset rejected"; this.m_previousTracked = null; return 0; };
+        this.m_pickupSite = 0; this.m_deliverySite = 0;
         if !this.Write(this.QuestPath(), "gameJournalQuest", gameJournalEntryState.Active, true)
             || !this.Write(this.PhasePath(), "gameJournalQuestPhase", gameJournalEntryState.Active)
             || !this.Write(this.ResponseDescriptionPath(), "gameJournalQuestDescription", gameJournalEntryState.Active)
@@ -337,6 +352,21 @@ public class NCPDPatrolVIPSystem extends ScriptableSystem {
             && Vector4.Distance(player.GetWorldPosition(), this.m_destination) <= 50.0 {
             this.Finish(3, "Protected witness delivered safely");
         };
+    }
+    public func GetNavigationSite(stage: Int32) -> Int32 {
+        if stage == 1 { return this.m_pickupSite; }; return this.m_deliverySite;
+    }
+    public func SelectNavigationSite(site: Int32) -> Bool {
+        let base: String;
+        let selected: String;
+        if !this.Running() || site < 0 || (site > 0 && site < 133) || site > 323 { return false; };
+        base = "quests/minor_quest/ncpd_patrol_vip/main/pickup";
+        if this.m_stage == 2 { base = "quests/minor_quest/ncpd_patrol_vip/main/deliver"; };
+        selected = base;
+        if site > 0 { selected = s"\(base)_bank_\(site)"; };
+        if !NCPDPatrolFixedMarkerSystem.SwitchNavigationObjective(this.GetGameInstance(), base, this.ActiveObjectivePath(), selected, 133, 323) { return false; };
+        if this.m_stage == 1 { this.m_pickupSite = site; } else { this.m_deliverySite = site; };
+        return true;
     }
     public func GetStage() -> Int32 { return this.m_stage; }
     public func GetToken() -> Int32 { return this.m_token; }

@@ -82,8 +82,9 @@ def main():
     for label,needle in {'TEST: Start static quest marker':'probe.start',
                          'TEST: Andrea visual marker':'probe.visual',
                          'TEST: Relocate native marker near V':'probe.relocate',
-                         'Log quest marker test diagnostics':'Quest marker test | fixture'}.items():
+                         'Log legacy Coyote test diagnostics':'Quest marker test | fixture'}.items():
         assert needle in click(ROOT/PREFIX,False,False,'Testing',label)
+    assert 'Fixed markers | Fixed marker backend unavailable' in click(ROOT/PREFIX,False,False,'Diagnostics','Log active dispatch marker diagnostics')
     ui,f=runtime(ROOT/PREFIX)
     ui.execute('package.loaded.quest_marker_probe.finish=function() UIFixture.probeRemoved=true end')
     f.Frame(f,'Testing','Remove quest marker test');assert f.clicks==1 and f.probeRemoved
