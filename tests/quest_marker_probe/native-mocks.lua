@@ -29,7 +29,7 @@ function F:Reset(boot)
  self.entries[legacy..'/main/inspect/location']={path=legacy..'/main/inspect/location',kind='gameJournalQuestMapPin',state=1,hash=8888}
  self.legacyStalled=false
  self.ready=true;self.pins={n=0};self.manual=700;self.requests={};self.removed={}
- self.menu=false;self.duty=false;self.wanted=false;self.combat=false;self.loaded=true
+ self.menu=false;self.duty=false;self.wanted=false;self.combat=false;self.loaded=true;self.attached=true
  self.failCreate=false;self.failDelete=false;self.linked=true;self.materialize=false;self.changeManual=false
  self.pos=Vector4.new(PhasePosition.X,PhasePosition.Y,PhasePosition.Z,1);self.writes={}
  self.facts={};self.pc=0;self.incoming=nil;self.graphStalled=false;self.phasePresent=true
@@ -139,7 +139,7 @@ function F:StepGraph()
  end
  error('phase failed to reach a waiting boundary')
 end
-function player:IsAttached() return F.loaded end
+function player:IsAttached() return F.attached end
 function player:IsDead() return false end
 function player:IsInCombat() return F.combat end
 function player:GetWorldPosition()

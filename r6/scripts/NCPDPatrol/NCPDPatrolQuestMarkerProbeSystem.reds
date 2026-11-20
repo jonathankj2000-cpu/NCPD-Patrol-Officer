@@ -357,6 +357,8 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     public func Tick(delta: Float) -> Void {
         let entry: wref<JournalEntry>;
         let sampleSeconds: Float;
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        if !IsDefined(player) || !player.IsAttached() { return; };
         if this.m_legacyPending { this.CloseLegacy(); };
         if this.m_restorePending {
             if !IsDefined(this.Journal()) || !IsDefined(this.Facts()) || !IsDefined(this.Map()) { return; };

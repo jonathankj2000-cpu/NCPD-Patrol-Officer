@@ -5,7 +5,7 @@ local owner,token,revision=nil,nil,-1
 local function native()
     local container=Game.GetScriptableSystemsContainer()
     local system=container and container:Get('NCPDPatrolFixedMarkerSystem')
-    if system and system:Version()~=2 then error('Install the complete r5a fixed marker package and restart') end
+    if system and system:Version()~=3 then error('Install the complete r5b fixed marker package and restart') end
     return system
 end
 function M.isBank(handle) return type(handle)=='table' and handle.fixedMarker==true end
@@ -57,7 +57,14 @@ end
 function M.diagnostics()
     local ok,text=pcall(function()
         local backend=native()
-        return backend and backend:GetDiagnostics() or 'Fixed marker backend unavailable; install complete r5a package'
+        return backend and backend:GetDiagnostics() or 'Fixed marker backend unavailable; install complete r5b package'
+    end)
+    return ok and text or tostring(text)
+end
+function M.lastNative()
+    local ok,text=pcall(function()
+        local backend=native()
+        return backend and backend:GetLastNativeProbe() or 'Fixed marker backend unavailable'
     end)
     return ok and text or tostring(text)
 end

@@ -1,3 +1,41 @@
+NCPD PATROL v0.17d FIXED QUEST MARKERS r5b - COMPLETE BRANCH TEST
+
+This build changes marker lifetime and recovery after r5a's disappearing pins.
+Native quest instances are DEACTIVATED and retained for engine reuse. Only
+our script-created fallback is unregistered. Inactive cached native pins no
+longer fail the one-active-marker check. A correctly positioned active native
+pin remains visible even if journal proof is missing; it is reported as
+retained=true, native confirmed=false. Full native proof stays separate.
+
+The marker bank and legacy Coyote test wait for an ATTACHED player before
+mutating native state. This addresses a loading guard defect. The reported
+PoolAnimBuffers/513-GiB assertion is NOT attributed or confirmed fixed by this
+build; the crash report does not identify its responsible mod.
+
+INSTALL AND TEST
+Install the entire bin/r6/archive package and fully restart the game.
+Native bank interface 3 is required. All six archives are identical to r5a.
+First check loading, then request/cancel several scanner/VIP/cyberpsycho calls,
+and reload after playing. Check the marker beyond five seconds and on stage
+changes/completion. Your manual waypoint remains independent.
+
+CET > Diagnostics > Fixed quest markers > Log active dispatch marker diagnostics
+
+The button now prints current state AND "Fixed markers before cleanup".
+The retained snapshot survives fallback; no quick five-second capture is needed.
+Fallback diagnostics show its actual ID, registration, active/visible engine
+flags, position and attempt count. A request is not reported as confirmed
+registration. A valid native marker can remain while journal link=false.
+
+18 portable suites, including 1556 cached native instances, same-ID reuse,
+partial-proof retention, detached-player guards and two negative controls
+against r5a; 27 Lua modules, 33 native scripts, 83 installed files. Offline API
+compilation runs with Browser Extension present and absent. Actual marker/GPS
+rendering and the reported crash still require game validation.
+See docs/FIXED_QUEST_MARKERS.md for evidence, ownership and test scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d FIXED QUEST MARKERS r5a - COMPLETE BRANCH TEST
 
 Fixes the r5 journal layout that exposed all terminal locations. Every selected

@@ -1,5 +1,22 @@
 # NCPD Patrol
 
+## Fixed quest markers r5b — branch test
+
+Native quest pins now survive deactivation for engine reuse. The check counts
+active pins separately from cached instances; a correctly positioned active pin
+is retained when journal proof is incomplete. Both marker controllers wait for
+an attached player before native cleanup. Pre-cleanup diagnostics survive fallback,
+and fallback registration/activation is measured explicitly.
+
+[Download the complete r5b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5b_TEST.zip)
+
+Install the complete package and fully restart. Check save loading first, then
+repeat dispatch/cancel/completion and reload. The existing **Log active dispatch
+marker diagnostics** button prints current state and a retained pre-cleanup
+snapshot. The reported animation-buffer crash is **not attributed or confirmed
+fixed**; these changes address verified source defects. All six archives stay
+byte-identical to r5a. [Evidence, checks and limits](docs/FIXED_QUEST_MARKERS.md).
+
 ## Fixed quest markers r5a — branch test
 
 Corrects r5's all-location marker pool with **one site objective and one pin**,

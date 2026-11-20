@@ -164,7 +164,11 @@ function M.new(context)
         if ImGui.CollapsingHeader("Fixed quest markers") then
             ImGui.TextWrapped("Scanner / VIP / Cyberpsycho: use this diagnostics control while a dispatch is active.")
             ImGui.TextWrapped(context.navigation.diagnostics())
-            if ImGui.Button("Log active dispatch marker diagnostics") then status("Fixed markers | " .. context.navigation.diagnostics()) end
+            ImGui.TextWrapped("Before cleanup: " .. context.navigation.lastNative())
+            if ImGui.Button("Log active dispatch marker diagnostics") then
+                status("Fixed markers | " .. context.navigation.diagnostics())
+                status("Fixed markers before cleanup | " .. context.navigation.lastNative())
+            end
         end
         -- r5 marker UI end
         ImGui.TextWrapped("Diagnostic buttons write details to the CET log. Recovery controls use the existing feature guards.")
@@ -282,7 +286,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17d fixed quest markers r5a###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.17d fixed quest markers r5b###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

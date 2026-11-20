@@ -1,4 +1,4 @@
-"""Verify the archived phase control and package the complete r5a fixed marker dispatch test."""
+"""Verify the archived phase control and package the complete r5b fixed marker dispatch test."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5a_TEST.zip'
-REPORT='NCPD_Patrol_Fixed_Quest_Markers_r5a_verification.json'
+NAME='NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5b_TEST.zip'
+REPORT='NCPD_Patrol_Fixed_Quest_Markers_r5b_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -21,6 +21,8 @@ def main():
     for name in ['archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl']:
         assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{static_base}:{name}'],cwd=ROOT),name
     assert len(modules)==27 and len(scripts)==33
+    for archive in sorted((ROOT/'archive/pc/mod').glob('*.archive')):
+        assert archive.read_bytes()==subprocess.check_output(['git','show',f'19e8b82ea1b42f4fbbdca031ea9e9365b82d6af5:{archive.relative_to(ROOT).as_posix()}'],cwd=ROOT),archive
     for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
     previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
     changed={PREFIX+n for n in ['init.lua','cet_ui.lua','dispatch_scanner.lua','cyberpsycho.lua','vip_waypoint.lua']}
@@ -60,7 +62,7 @@ def main():
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17d-fixed-quest-markers-r5a','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17d-fixed-quest-markers-r5b','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'fixed_markers':comparisons[compared[4]],'fixed_marker_sources':json.loads((ROOT/'assets/fixed_markers/sources.json').read_text()),'fixed_marker_resources':json.loads((ROOT/'assets/fixed_markers/compiled.json').read_text()),'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
@@ -68,8 +70,8 @@ def main():
         'zip_git_blob':blob(body),'new_payload':sorted(added),'changed_payload':sorted(changed),'existing_actor_reward_and_result_methods_unchanged':True,'native_owner_changes':'Transient navigation site, objective path helpers and guarded site selection only; source-guarded against r5','legacy_behavior_comparison_scope':'Unavailable-bank compatibility; bank-present behavior is covered by the fixed marker suite',
         'entrypoint_and_ui_changes':'Fixed navigation adapters, one Diagnostics control and build labels; original actor/quest/reward owners retained',
         'currency_and_progression_unchanged':True,'browser_extension_still_optional':True,
-        'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_used_by_dispatch':False,'fixed_marker_bank_in_game_validation':False,'prior_r5_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5-game-evidence.json').read_text()),'fixed_journal_activation_requires_in_game_test':True,
-        'activation_contract_corrected':'One single-pin objective per site; all definitions inactive; explicit MappinManager Active/Inactive with disablePreviousMappins=false. Original quest owner selects the site objective; exactly one active private bank pin and matching native hash/ID, positions and objective link required; legacy/unexpected pins pruned; no relocation',
+        'actual_game_validation':False,'prior_static_control_in_game_evidence':json.loads((ROOT/'assets/quest_marker_probe/r4d-game-evidence.json').read_text()),'confirmed_static_resources_unchanged':True,'runtime_relocation_used_by_dispatch':False,'all_six_archives_unchanged_from_r5a':True,'fixed_marker_bank_in_game_validation':False,'prior_r5_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5-game-evidence.json').read_text()),'fixed_journal_activation_requires_in_game_test':True,'prior_r5a_failure_evidence':json.loads((ROOT/'assets/fixed_markers/r5a-game-evidence.json').read_text()),'engine_owned_native_pins_unregistered':False,'valid_native_retained_without_claiming_full_journal_proof':True,'pre_cleanup_diagnostics_retained':True,'detached_player_blocks_native_marker_mutations':True,'reported_animation_crash_resolved':False,
+        'activation_contract_corrected':'r5a single-pin resources retained byte-identically. Native cache survives deactivation, active pins counted separately; exact cached target may be re-enabled once; valid positioned native pin retained with explicit unconfirmed journal state; preserved handover snapshot and measured fallback liveness; detached-player guard in dispatch and legacy probe; no runtime relocation',
         'legacy_relocation_probe_contract':'One scoped SetMappinPosition call; runtime and quest-log position readbacks, same native ID/link and 3 active observed seconds required; no manual tracking write',
         'observed_r4_startup_error_fixed':'Direct runtime node constructor removed; quest node IDs are typed in the compiled resource',
         'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}

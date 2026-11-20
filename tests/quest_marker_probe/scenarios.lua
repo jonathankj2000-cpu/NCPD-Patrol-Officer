@@ -178,3 +178,12 @@ assert(Probe.startVisual());assert(not Probe.relocate());Probe.finish()
 F.materialize=true;F.allowNativeMove=true;F.moveQuestPosition=true
 assert(Probe.start());F:StepGraph();Probe.update(.25,false)
 assert(Probe.relocate());tick(12);assert(Native:IsRelocationConfirmed());Probe.finish();tick(2)
+
+-- A non-null player during reload is insufficient: do not write quest facts,
+-- hide legacy entries or remove markers until the player has reattached.
+F:Reset(false);Native:OnRestored(0,0);F.attached=false
+local previousWrites,previousFacts,previousDeletes=#F.writes,#F.factWrites,#F.removed
+for _=1,20 do Native:Tick(.25) end
+assert(#F.writes==previousWrites and #F.factWrites==previousFacts and #F.removed==previousDeletes)
+assert(Native.m_restorePending)
+F.attached=true;Native:Tick(.25);assert(not Native.m_restorePending)

@@ -1,6 +1,6 @@
 """Execute the real finite-bank controller and Lua navigation, mock engine APIs."""
 from pathlib import Path
-import argparse,hashlib,importlib.util,json,subprocess,sys
+import argparse,hashlib,importlib.util,json,subprocess,sys,tempfile
 from lupa.luajit21 import LuaRuntime
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE.parent/'arrests'))
@@ -59,6 +59,7 @@ def main():
         code=code.replace('pin = pins[i]', 'pin = AsQuestMappin(pins[i])').replace('pin = linked', 'pin = AsQuestMappin(linked)')
         code=code.replace('tag = pins[i]:GetScriptData()', 'tag = AsFixedData(pins[i]:GetScriptData())')
         code=code.replace('IsDefined(live:GetScriptData())','IsDefined(AsFixedData(live:GetScriptData()))')
+        code=code.replace('IsDefined(pin:GetScriptData())','IsDefined(AsFixedData(pin:GetScriptData()))')
         code=code.replace('new NCPDPatrolFixedMarkerData()', 'NewFixedData()').replace('new gameJournalPath()', 'NewJournalPath()').replace('new questMappinManagerNodeDefinition()', 'NewManagerNode()')
         for name in ['point','runtimePoint','questPoint']:code=code.replace('local '+name+' = nil','local '+name+' = Vector4.new(0,0,0,0)')
         # RED structs zero-initialize; Lua tables do not.
@@ -83,6 +84,25 @@ def main():
         lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
     lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
     lua.execute((HERE/'engine.lua').read_text());lua.execute((HERE/'scenarios.lua').read_text())
+    # Known r5a implementation must fail both new regressions. These are
+    # alternative documented engine states, not claims about this game dump.
+    old_source=subprocess.check_output(['git','show','19e8b82ea1b42f4fbbdca031ea9e9365b82d6af5:r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds'],cwd=ROOT,text=True)
+    negatives=[
+        ("F:Reset();for _,d in ipairs(Definitions) do F:AddPin(F.entries[d.path].hash).active=false end;Native:OnRestored(0,0);Native:Tick(.25)", 'Engine-managed quest pins must not be unregistered'),
+        ("F:Reset();F.entries[F.objective..'_bank_42'].state=2;F.entries[F.objective..'_bank_42/briefing'].state=2;F.attached=false;Native:OnRestored(0,0);local writes=#F.writes;Native:Tick(.25);assert(#F.writes==writes,'Detached player mutation')",'Detached player mutation'),
+    ]
+    with tempfile.TemporaryDirectory(prefix='ncpd-bank-r5a-regression-') as temp:
+        old_path=Path(temp)/'r5a.reds';old_path.write_text(old_source)
+        for scenario,expected in negatives:
+            lua=LuaRuntime(unpack_returned_tuples=True)
+            lua.globals().Definitions=convert(definitions);lua.globals().Entries=convert(entries);lua.globals().Sites=convert(catalog['sites'])
+            lua.globals().PathHash=journal_hash;lua.globals().Native=lua.execute(executable(old_path))
+            for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
+                lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
+            lua.execute((HERE/'engine.lua').read_text())
+            try:lua.execute(scenario)
+            except Exception as error:assert expected in str(error),str(error)
+            else:raise AssertionError('r5a negative regression was not detected: '+expected)
     sys.path.insert(0,str(HERE.parent/'quest_marker_probe'));from probe_source import without_probe
     for name in ['dispatch_scanner.lua','cyberpsycho.lua','vip_waypoint.lua']:
         base=subprocess.check_output(['git','show',f'a15e4ea35eb738050f45fccf42360b86f96fa4fc:bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/{name}'],cwd=ROOT,text=True)
@@ -98,8 +118,8 @@ def main():
         'original_objectives_and_text_retained':True,'same_target_native_hash_position_objective_proof':True,
         'default_no_native_pin_falls_back_honestly':True,'manual_waypoint_never_written':True,
         'stale_tokens_and_background_owner_cleanup_scoped':True,'vip_pickup_delivery_and_cyberpsycho_stage_switch':True,
-        'load_rediscovery_and_refused_deletion_retry':True,'gameplay_actor_reward_and_result_methods_unchanged':True,'one_pin_per_site_objective':True,'all_pin_definitions_inactive':True,'mappin_manager_activation_explicit':True,'unexpected_and_legacy_bank_pins_pruned':True,'actual_native_owner_transitions_executed':True}
-    print('PASS: actual finite journal bank/native and Lua adapter: 323 sites/1556 fixed pins, same-position native proof, inactive definitions/single-pin objectives, explicit MappinManager activation, legacy/flood cleanup, default no-pin fallback, actual VIP/CP/scanner owner transitions, stale token/owner isolation, load/refused cleanup, manual waypoint preservation and preserved gameplay owners (engine boundaries mocked)')
+        'load_rediscovery_and_refused_deletion_retry':True,'gameplay_actor_reward_and_result_methods_unchanged':True,'one_pin_per_site_objective':True,'all_pin_definitions_inactive':True,'mappin_manager_activation_explicit':True,'unexpected_and_legacy_bank_pins_pruned':True,'actual_native_owner_transitions_executed':True,'inactive_native_cache_retained':True,'same_id_native_reuse':True,'valid_native_retained_without_false_journal_confirmation':True,'pre_cleanup_snapshot_retained':True,'fallback_registration_liveness_observed':True,'detached_player_blocks_mutations':True,'r5a_negative_controls_detected':2}
+    print('PASS: actual finite journal bank/native and Lua adapter: 323 sites/1556 fixed pins, same-position native proof, inactive definitions/single-pin objectives, explicit MappinManager activation, legacy/flood cleanup, default no-pin fallback, actual VIP/CP/scanner owner transitions, stale token/owner isolation, 1556 cached native instances/reuse without native unregistration, retained partial proof, preserved snapshot/fallback liveness, detached-world guards, two r5a negative controls, manual waypoint preservation and preserved gameplay owners (engine boundaries mocked)')
     return report
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--report',type=Path);args=parser.parse_args();report=main()

@@ -23,6 +23,9 @@ public native struct Vector3 {
  public native let Y: Float;
  public native let Z: Float;
 }
+// Game orphans.swift IMappin:37439, engine flag only; not proof of rendered pixels.
+@addMethod(IMappin)
+public final native func IsVisible() -> Bool;
 @addMethod(IMappin)
 public final native func IsQuestMappin() -> Bool;
 @addMethod(IMappin)

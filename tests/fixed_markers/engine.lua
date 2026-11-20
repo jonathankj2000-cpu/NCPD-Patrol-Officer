@@ -52,7 +52,7 @@ end
 function F:Reset(scope)
  self.entries={};self.hashes={};self.pins={n=0};self.writes={};self.nodes={};self.deleted={};self.fallbackCreates=0;self.nextID=9000
  self.materialize=false;self.failDelete=false;self.failHide=false;self.failRegister=false;self.rejectPath=nil
- self.menu=false;self.duty=true;self.wanted=false;self.loaded=true;self.nativeMissing=false
+ self.menu=false;self.duty=true;self.wanted=false;self.loaded=true;self.attached=true;self.nativeMissing=false;self.failActivate=false;self.activationWrites=0
  self.manual=700;self.story={path='story',state=2};self.tracked=self.story;self.tracks={};self.lookupKnown=true;self.linked=true;self.changeManual=false
  self.wallet=0;self.reserved=0;self.paidVIP=0;self.paidCyber=0;self.completed=false;self.paymentOK=true
  self.playerPoint=Vector4.new(0,0,0,1);self.mount={};self.driver=true
@@ -85,7 +85,11 @@ function quests:ExecuteNode(node,input)
  assert(input=='Active' or input=='Inactive')
  F.nodes[#F.nodes+1]={path=node.path.realPath,input=input}
  local e=journal:GetEntryByString(node.path.realPath,'gameJournalQuestMapPin');assert(e)
- if input=='Active' and F.materialize then F:AddPin(e.hash) end
+ if input=='Active' and F.materialize then
+  local found=false
+  for i=0,F.pins.n-1 do if F.pins[i].hash==e.hash then F.pins[i].active=true;found=true end end
+  if not found then F:AddPin(e.hash) end
+ end
  if input=='Inactive' and not F.failHide then for i=0,F.pins.n-1 do if F.pins[i].hash==e.hash then F.pins[i].active=false end end end
  if F.changeManual then F.manual=701 end
 end
@@ -98,9 +102,17 @@ function F:AddPin(hash,point)
  function pin:GetJournalPathHash() return self.hash end
  function pin:IsQuestMappin() return self.kind=='quest' end
  function pin:IsActive() return self.active end
+ function pin:IsVisible() return self.active and not self.hidden end
  function pin:GetScriptData() return self.data end
  self.pins[self.pins.n]=pin;self.pins.n=self.pins.n+1
  return pin
+end
+function F:OwnedActive()
+ local count=0
+ for i=0,self.pins.n-1 do local p=self.pins[i]
+  if p.active and ((p.kind=='quest' and ArrayContains(Native.m_ownHashes,p.hash)) or AsFixedData(p.data)) then count=count+1 end
+ end
+ return count
 end
 function map:GetAllMappins() return F.pins end
 function map:GetMappin(id)
@@ -126,9 +138,12 @@ function map:GetQuestMappinPosition(hash)
 end
 function map:GetManuallyTrackedMappinID() return {value=F.manual} end
 function map:SetMappinActive(id,active)
- local pin=self:GetMappin(id);if pin and not F.failHide then pin.active=active end
+ local pin=self:GetMappin(id)
+ if active then F.activationWrites=F.activationWrites+1 end
+ if pin and not F.failHide and not (active and F.failActivate) then pin.active=active end
 end
 function map:UnregisterMappin(id)
+ local pin=self:GetMappin(id);assert(not pin or pin.kind~='quest','Engine-managed quest pins must not be unregistered')
  F.deleted[#F.deleted+1]=id.value
  if F.failDelete then return end
  local pins={n=0};for i=0,F.pins.n-1 do local p=F.pins[i];if p.id~=id.value then pins[pins.n]=p;pins.n=pins.n+1 end end;F.pins=pins
@@ -147,7 +162,7 @@ function patrol:PlaceDispatchWaypoint(point) F.legacyPoint=point;return {value=9
 function patrol:IsOwnedPoliceVehicle(v) return v==F.vehicle end
 function patrol:GetScannerPhase() return F.completed and 9 or 1 end
 function patrol:NotifyDispatchReward(amount) assert(amount==500) end
-function player:IsAttached() return F.loaded end
+function player:IsAttached() return F.attached end
 function player:IsDead() return false end
 function player:GetWorldPosition() return F.playerPoint end
 function GetMountedVehicle(x) return F.mount[x] end
