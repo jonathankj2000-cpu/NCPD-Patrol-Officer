@@ -62,6 +62,9 @@ for _, name in ipairs(commands) do
 end
 -- Useful when updating the facade: each pre-refactor public entry must survive.
 local exports = {}
-for name, fn in pairs(D) do if type(fn)=='function' and name~='lifecycle' then exports[#exports+1]=name end end
+-- Explicit additive prototype API is checked by the Officer Down integration
+-- suite; this historical observer still verifies every original public entry.
+local sceneAPI={requestOfficerDown=true,officerDownState=true,officerDownDiagnostics=true,rotateOfficerDown=true,reviveOfficerDown=true,clearOfficerDown=true}
+for name, fn in pairs(D) do if type(fn)=='function' and name~='lifecycle' and not sceneAPI[name] then exports[#exports+1]=name end end
 table.sort(exports)
 Trace('exports|'..table.concat(exports, ','))

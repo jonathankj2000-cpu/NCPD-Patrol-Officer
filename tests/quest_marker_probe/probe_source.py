@@ -12,6 +12,11 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18a Officer Down | fixed intersection rescue scene','-- NCPD Patrol v0.17f VIP route catalogue | fixed endpoint pairs from the native marker bank')
+    source=source.replace('v0.18a Officer Down loaded. Manual fixed-intersection rescue under CET Testing; staged protection, combat and officer revive. VIP routes and arrest fix retained. Install the complete package and fully restart the game.','v0.17f VIP route catalogue loaded. 360 baked routes use 60 canonical native-marker endpoints. Includes the arrest initialization fix. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18a Officer Down###','NCPD Patrol - v0.17f VIP route catalogue###')
+    # Reviewed additive manual Officer Down controls; old menu routes remain.
+    source=re.sub(r'^        -- Officer Down UI begin\n.*?^        -- Officer Down UI end\n','',source,flags=re.M|re.S)
     # Reviewed VIP route release labels; coordinator/session code is unchanged.
     source=source.replace('-- NCPD Patrol v0.17f VIP route catalogue | fixed endpoint pairs from the native marker bank','-- NCPD Patrol v0.17e2 arrest initialization | prepare private bindings before helper attachment')
     source=source.replace('v0.17f VIP route catalogue loaded. 360 baked routes use 60 canonical native-marker endpoints. Includes the arrest initialization fix. Install the complete package and fully restart the game.','v0.17e2 arrest initialization loaded. Private animation bindings are prepared before helper attachment. Includes the H10 dispatch exclusion. Install the complete package and fully restart the game.')
@@ -52,3 +57,4 @@ def without_probe(source):
         'NCPD Patrol - v0.17d quest marker test r4###','NCPD Patrol - v0.17d VIP refactor r3###')
 
 PROBE_BUTTONS={'Log active dispatch marker diagnostics','Log legacy Coyote test diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test'}
+PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics'})

@@ -232,6 +232,18 @@ function M.new(context)
     end
 
     local function drawTesting()
+        -- Officer Down UI begin
+        if ImGui.CollapsingHeader("Officer Down prototype") then
+            ImGui.TextWrapped("Fixed test intersection: -490.911377, -173.816315, 7.887070. Request from 100-5000 m away while on duty. One injured officer, one defender, two gang cars and five suspects. Both rescue and neutralization are required.")
+            if Dispatch.officerDownState then ImGui.TextWrapped(Dispatch.officerDownState()) end
+            if ImGui.Button("TEST: Request Officer Down") then if Dispatch.requestOfficerDown then Dispatch.requestOfficerDown(getPatrolSystem(), status) end end
+            if ImGui.Button("TEST: Rotate Officer Down scene 90 degrees") then if Dispatch.rotateOfficerDown then Dispatch.rotateOfficerDown(status) end end
+            if ImGui.Button("Revive scene officer (nearby)") then if Dispatch.reviveOfficerDown then Dispatch.reviveOfficerDown(status) end end
+            if ImGui.Button("Clear Officer Down scene") then if Dispatch.clearOfficerDown then Dispatch.clearOfficerDown(getPatrolSystem(), status) end end
+            if ImGui.Button("Log Officer Down diagnostics") then if Dispatch.officerDownDiagnostics then status("Officer Down | "..Dispatch.officerDownDiagnostics()) end end
+            ImGui.TextWrapped("The scene prepares within 180 m and unlocks at 55 m. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Change rotation only after clearing this test scene. Automatic dispatch weights remain 50/30/20.")
+        end
+        -- Officer Down UI end
         -- r4 probe UI begin
         if ImGui.CollapsingHeader("Legacy Coyote marker experiment") then
             local probe = context.markerProbe
@@ -286,7 +298,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.17f VIP route catalogue###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18a Officer Down###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

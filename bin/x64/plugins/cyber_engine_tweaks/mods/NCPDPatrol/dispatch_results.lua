@@ -35,10 +35,11 @@ end
 -- Terminal stage meanings are native contracts: 3 success, 4 failure,
 -- 5 cancellation, 6 journal error. Tokens are scoped to their native system.
 function M.observeGenerated(recordOnly, onClosed)
-    for _, name in ipairs({"NCPDPatrolVIPSystem", "NCPDPatrolCyberpsychoSystem"}) do
+    for _, name in ipairs({"NCPDPatrolVIPSystem", "NCPDPatrolCyberpsychoSystem", "NCPDPatrolOfficerDownSystem"}) do
         pcall(function()
             local backend = Game.GetScriptableSystemsContainer():Get(name)
-            if not backend or backend:Version() ~= 4 then return end
+            local expected = name == "NCPDPatrolOfficerDownSystem" and 1 or 4
+            if not backend or backend:Version() ~= expected then return end
             local stage = backend:GetStage()
             if stage < 3 or stage > 6 then return end
             local key = name .. ":" .. tostring(backend:GetToken())

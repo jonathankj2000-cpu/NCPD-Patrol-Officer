@@ -1,3 +1,38 @@
+NCPD PATROL v0.18a OFFICER DOWN - COMPLETE BRANCH TEST
+
+Manual-only rescue prototype at TEST_KRYSS_01:
+X=-490.911377, Y=-173.816315, Z=7.887070.
+One police car, one injured officer, one defending officer, two gang cars and
+five gang members. BOTH the revive and suspect neutralization are required.
+Completion pays EUR$2000 and records one generated career incident.
+
+Install all 99 files and fully restart the game. Go on duty, travel 100-5000 m
+from the intersection, then use CET -> Testing -> Officer Down prototype ->
+TEST: Request Officer Down. The quest has a fixed native marker and keeps your
+manual waypoint. This prototype is not part of the automatic 50/30/20 mix.
+
+The scene prepares within 180 m. All ten entities are protected and held until
+arrival within 55 m. Staging protection/position locks are then released;
+the injured officer stays protected until revival. Approach on foot and use F
+or the nearby CET revive fallback. Remain within 2.5 m for 3 seconds. Recovery
+must actually finish with full health before rescue counts.
+
+The supplied coordinate does not specify street direction. Use Clear Officer
+Down scene, then TEST: Rotate Officer Down scene 90 degrees and request again
+if placement is unsuitable. Ground, clearance and navmesh checks can refuse a
+layout. Physical road alignment, combat and animations still need game testing.
+
+Cancel active dispatch and end shift clean up the scene. Successful scenes may
+remain for 90 seconds or until you leave 150 m; this does not reserve the next
+dispatch. Clear Officer Down scene permits a quick repeat at this one test site.
+Log Officer Down diagnostics includes native quest/aid/marker state and rotation.
+
+All existing VIP routes, native marker-bank assets, arrest/partner code and
+automatic dispatch weights are retained. Browser Extension remains optional.
+See docs/OFFICER_DOWN_v018a.md in the repository.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17f VIP ROUTE CATALOGUE - COMPLETE BRANCH TEST
 
 VIP transport now selects from 360 pre-generated endpoint pairs at 60 fixed

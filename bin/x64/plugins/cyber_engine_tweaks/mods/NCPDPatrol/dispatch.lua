@@ -3,6 +3,7 @@ local HUD = require("dispatch_hud")
 local Journal = require("dispatch_journal")
 local Cyberpsycho = require("cyberpsycho")
 local VIP = require("vip")
+local OfficerDown = require("officer_down")
 local Scanner = require("dispatch_scanner")
 local Schedule = require("dispatch_scheduler")
 local Results = require("dispatch_results")
@@ -24,7 +25,7 @@ local function hide()
 end
 
 function M.init() HUD.init() end
-function M.state() return VIP.isActive() and VIP.state() or (Cyberpsycho.isActive() and Cyberpsycho.state() or state) end
+function M.state() return OfficerDown.isActive() and OfficerDown.state() or (VIP.isActive() and VIP.state() or (Cyberpsycho.isActive() and Cyberpsycho.state() or state)) end
 function M.vipState() return VIP.state() end
 function M.vipDiagnostics() return VIP.diagnostics() end
 function M.refreshVIPWaypoint(patrol,status) return VIP.refreshWaypoint(patrol,status) end
@@ -42,14 +43,14 @@ function M.isBusy() return Schedule.isBusy() end
 function M.setBusy(value) Schedule.setBusy(value) end
 -- Existing callers use this as the global reservation guard, including live
 -- actor cleanup. Background scenes do not reserve the next assignment.
-function M.isActive() return Scanner.isActive() or Cyberpsycho.isActive() or VIP.isActive() end
+function M.isActive() return Scanner.isActive() or Cyberpsycho.isActive() or VIP.isActive() or OfficerDown.isActive() end
 function M.lifecycle()
     local vip, cyber = VIP.lifecycle(), Cyberpsycho.lifecycle()
     return {
         scanner = Scanner.isActive(), vip = vip, cyberpsycho = cyber,
-        reserved = Scanner.isActive() or vip.reserved or cyber.reserved,
-        foregroundCleanup = vip.foregroundCleanup or cyber.foregroundCleanup,
-        backgroundCleanup = vip.backgroundCleanup or cyber.backgroundCleanup,
+        reserved = Scanner.isActive() or vip.reserved or cyber.reserved or OfficerDown.isActive(),
+        foregroundCleanup = vip.foregroundCleanup or cyber.foregroundCleanup or OfficerDown.lifecycle().foregroundCleanup,
+        backgroundCleanup = vip.backgroundCleanup or cyber.backgroundCleanup or OfficerDown.lifecycle().backgroundCleanup,
         standby = Schedule.isCooling(),
     }
 end
@@ -100,6 +101,7 @@ function M.candidates() return Scanner.candidates() end
 function M.isSoundEnabled() return soundEnabled end
 function M.isVoiceEnabled() return voiceEnabled end
 function M.navigationState()
+    if OfficerDown.isActive() then return "Officer Down fixed quest marker; manual waypoint retained." end
     if VIP.isActive() then return "VIP pickup/delivery marker active. GPS may require opening the map." end
     if Cyberpsycho.isActive() then return "Cyberpsycho scene marker; HUD shows target distance. GPS may require opening the map." end
     return Scanner.navigationState()
@@ -152,6 +154,7 @@ function M.start(patrol, status)
 end
 
 function M.finish(patrol, status)
+    if OfficerDown.isActive() or OfficerDown.hasCleanup() then OfficerDown.finish(patrol, status, "Shift ended; Officer Down closed") end
     if VIP.isActive() or VIP.hasCleanup() then VIP.finish(patrol, status, "Shift ended; VIP transport closed", false, true) end
     if Cyberpsycho.isActive() or Cyberpsycho.hasCleanup() then Cyberpsycho.finish(patrol, status, "Shift ended; cyberpsycho test closed") end
     Journal.update(0, status)
@@ -168,6 +171,7 @@ end
 
 -- Used after a load: never remove a marker by an ID from the previous world.
 function M.reset(keepVIPCleanup)
+    if not keepVIPCleanup then OfficerDown.reset() end
     if not keepVIPCleanup then VIP.reset() end
     Cyberpsycho.reset()
     Journal.reset()
@@ -204,6 +208,12 @@ function M.request(patrol, status)
 end
 
 function M.cancel(patrol, status)
+    if OfficerDown.isActive() then
+        local cleared = OfficerDown.cancel(patrol, status)
+        hide()
+        if cleared then Schedule.standby() end
+        return cleared
+    end
     if VIP.isActive() then
         local cleared = VIP.cancel(patrol, status)
         hide()
@@ -256,6 +266,22 @@ function M.requestVIP(patrol, status)
 end
 function M.requestVIPAmbush(status) return VIP.requestAmbush(status) end
 
+-- This first scene is manual-only; weighted automatic choices are unchanged.
+function M.requestOfficerDown(patrol, status)
+    if M.isActive() then
+        if status then status("Officer Down | Cancel/clear the current dispatch before requesting the test") end
+        return false
+    end
+    local accepted = OfficerDown.request(patrol, status, soundEnabled, voiceEnabled)
+    if accepted then Schedule.generatedAssigned() end
+    return accepted
+end
+function M.officerDownState() return OfficerDown.state() end
+function M.officerDownDiagnostics() return OfficerDown.diagnostics() end
+function M.rotateOfficerDown(status) return OfficerDown.rotate(status) end
+function M.reviveOfficerDown(status) return OfficerDown.revive(status) end
+function M.clearOfficerDown(patrol,status) return OfficerDown.cancel(patrol,status) end
+
 local function generatedAvailable(name)
     local ok, ready = pcall(function()
         local system = Game.GetScriptableSystemsContainer():Get(name)
@@ -301,6 +327,7 @@ function M.update(delta, onDuty, status, getPatrol)
     Journal.update(delta, status)
     local cyberBusy = Cyberpsycho.update(delta, onDuty, getPatrol(), status, HUD)
     local vipBusy = VIP.update(delta, onDuty, getPatrol(), status, HUD)
+    local officerBusy = OfficerDown.update(delta, onDuty, getPatrol(), status, HUD)
     Results.observeGenerated(false,function() Schedule.generatedClosed(status) end)
     poll = poll + delta
     if poll < 1 then return end
@@ -311,14 +338,14 @@ function M.update(delta, onDuty, status, getPatrol)
     local ok, err = pcall(function()
         if patrol:Version() ~= 17 then return end
         if not onDuty or not patrol:IsOnDuty() then
-            if dutySeen and not Cyberpsycho.isActive() and not Cyberpsycho.hasCleanup() and not VIP.isActive() and not VIP.hasCleanup() then M.reset() end
+            if dutySeen and not Cyberpsycho.isActive() and not Cyberpsycho.hasCleanup() and not VIP.isActive() and not VIP.hasCleanup() and not OfficerDown.isActive() and not OfficerDown.hasCleanup() then M.reset() end
             if not cleaned then Scanner.clear(patrol); cleaned = true end
             return
         end
         if not dutySeen then M.start(patrol, status) end
         if stopped() then return end
         local inMenu = patrol:IsDispatchMenuOpen()
-        if cyberBusy or vipBusy then
+        if cyberBusy or vipBusy or officerBusy then
             -- A completed generated call can retain bodies while they are
             -- cleaned. Do not add that retention time before the normal wait.
             -- Actual actor cleanup still owns the assignment reservation.
@@ -342,6 +369,7 @@ function M.update(delta, onDuty, status, getPatrol)
 end
 
 function M.shutdown(patrol)
+    if OfficerDown.isActive() or OfficerDown.hasCleanup() then OfficerDown.finish(patrol, nil, "Mod shutdown") end
     if VIP.isActive() or VIP.hasCleanup() then VIP.finish(patrol, nil, "Mod shutdown", false, true) end
     if Cyberpsycho.isActive() then Cyberpsycho.finish(patrol, nil, "Mod shutdown") end
     Journal.cancel(Scanner.token(), "Mod shutdown")

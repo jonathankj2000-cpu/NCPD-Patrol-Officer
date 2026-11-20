@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\officer_down\officer_down.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\officer_down\officer_down_onscreens.json

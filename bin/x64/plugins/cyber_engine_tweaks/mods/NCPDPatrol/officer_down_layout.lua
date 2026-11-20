@@ -1,0 +1,57 @@
+-- Fixed relative scene layout. Validate all support/clearance before creating
+-- any entity; no road level or navmesh fallback to another floor.
+local Scene=require('officer_down_scene')
+local M={}
+local function finite(p) return p and p.x==p.x and p.y==p.y and p.z==p.z and math.abs(p.x)<100000 and math.abs(p.y)<100000 and math.abs(p.z)<100000 end
+function M.build(heading,player)
+    local spatial,nav=Game.GetSpatialQueriesSystem(),Game.GetAINavigationSystem()
+    if not spatial or not nav then error('Scene ground/navigation services unavailable') end
+    local a=math.rad(heading);local fx,fy=-math.sin(a),math.cos(a);local rx,ry=math.cos(a),math.sin(a)
+    local function point(x,y,z) return Vector4.new(Scene.x+fx*x+rx*y,Scene.y+fy*x+ry*y,z or Scene.z,1) end
+    local function ray(a,b) return spatial:SyncRaycastByCollisionGroup(a,b,CName.new('Static'),true,false) end
+    local function floor(p)
+        local hit,result=ray(Vector4.new(p.x,p.y,p.z+.7,1),Vector4.new(p.x,p.y,p.z-1.5,1))
+        if not hit or not result or not finite(result.position) or not finite(result.normal)
+            or result.normal.z<.85 or math.abs(result.position.z-Scene.z)>1.3 then return nil end
+        return result.position
+    end
+    local definitions={
+        {'police','Vehicle.NCPDPatrol_OD_Police',-9,0,90},
+        {'gangcar','Vehicle.NCPDPatrol_OD_GangCar',8,-5.5,90},
+        {'gangcar','Vehicle.NCPDPatrol_OD_GangCar',8,5.5,90},
+        {'injured','Character.NCPDPatrol_OD_Injured',-12.5,-1.5,0},
+        {'defender','Character.NCPDPatrol_OD_Defender',-12.5,2.5,0},
+        {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,-8,180},
+        {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,-4,180},
+        {'enemy','Character.NCPDPatrol_OD_Ganger',12,0,180},
+        {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,4,180},
+        {'enemy','Character.NCPDPatrol_OD_Ganger',11.5,8,180},
+    }
+    local layout={}
+    for _,row in ipairs(definitions) do
+        local p=point(row[3],row[4]);local ground=floor(p)
+        if not ground then error('Unsupported scene ground at '..row[1]..'; try another scene rotation') end
+        local car=row[1]=='police' or row[1]=='gangcar'
+        if car then
+            for _,corner in ipairs({{-1,-2.4},{-1,2.4},{1,-2.4},{1,2.4}}) do
+                local q=floor(point(row[3]+corner[1],row[4]+corner[2]))
+                if not q or math.abs(q.z-ground.z)>.4 then error('Uneven vehicle footprint at '..row[1]) end
+            end
+            for _,side in ipairs({-.8,0,.8}) do
+                local from=point(row[3]+side,row[4]-2.5,ground.z+.8)
+                local to=point(row[3]+side,row[4]+2.5,ground.z+.8)
+                if ray(from,to) then error('Static obstruction in scene vehicle footprint') end
+            end
+            p=Vector4.new(ground.x,ground.y,ground.z+.15,1)
+        else
+            if ray(Vector4.new(ground.x,ground.y,ground.z+.15,1),Vector4.new(ground.x,ground.y,ground.z+1.9,1)) then error('Blocked officer/gang spawn') end
+            local result=nav:FindPointInSphereForCharacter(ground,1.2,player)
+            if not result or result.status~=worldNavigationRequestStatus.OK or not finite(result.point)
+                or math.abs(result.point.z-ground.z)>1 or (result.point.x-ground.x)^2+(result.point.y-ground.y)^2>2.25 then error('Scene actor has no nearby supported navmesh') end
+            p=Vector4.new(result.point.x,result.point.y,result.point.z+.1,1)
+        end
+        layout[#layout+1]={kind=row[1],record=row[2],position=p,yaw=(heading+row[5])%360,car=car}
+    end
+    return layout
+end
+return M

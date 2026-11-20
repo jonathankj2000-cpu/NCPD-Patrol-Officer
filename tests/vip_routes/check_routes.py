@@ -26,6 +26,8 @@ def main():
              ['vip.lua','vip_waypoint.lua','vip_ambush.lua','vip_ambush_unit.lua','marker_navigation.lua','arrest.lua']]
     paths += subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','r6','archive'],cwd=ROOT,text=True).splitlines()
     for path in paths:
+        if path=='r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds':
+            continue # additive Officer Down kind/receipt; original outcome traces still run
         assert (ROOT / path).read_bytes() == subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT), path
 
     def selector(source=None):
@@ -63,7 +65,8 @@ def main():
               'old_live_pool_negative_control':True,'scanner_radius_negative_control':True,
               'actual_facade_lifecycle_reward_and_new_assignment':True,
               'native_marker_bank_integration':'tests/fixed_markers/check_fixed.py executes all 360 pairs',
-              'all_native_scripts_archives_arrest_and_vip_actor_code_unchanged':True,
+              'old_quest_native_scripts_archives_arrest_and_vip_actor_code_unchanged':True,
+              'incident_ledger_extension':'Officer Down adds one kind/receipt; original VIP/CP payment traces retained',
               'actual_game_road_and_rendering_validation':False}
     print('PASS: 60 canonical VIP endpoints / 360 baked routes; no discovery/drop-point dependency; nonzero pickup/delivery IDs; scanner safety, local/expanded bounds, recent-history exhaustion; actual VIP facade/boarding/EUR$2000/cleanup/new request; old selector and radius mutants rejected (engine boundaries mocked)')
     return report

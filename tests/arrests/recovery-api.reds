@@ -15,7 +15,12 @@ public static native func GetTeleportationFacility(game: GameInstance) -> ref<Te
 public native struct Quaternion {
  public static native func ToEulerAngles(value: Quaternion) -> EulerAngles;
 }
-public native struct EulerAngles {}
+public native struct EulerAngles {
+ public native let Roll: Float;
+ public native let Pitch: Float;
+ public native let Yaw: Float;
+ public static native func ToQuat(rotation: EulerAngles) -> Quaternion;
+}
 public native class TeleportationFacility extends IScriptable {
  public native func Teleport(objectToTeleport: ref<GameObject>, position: Vector4, orientation: EulerAngles) -> Void;
 }
