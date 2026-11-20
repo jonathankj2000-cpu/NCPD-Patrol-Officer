@@ -1,6 +1,7 @@
 -- Geographic selection and diagnostics for VIP transport only. This policy is
 -- deliberately separate from cyberpsycho placement and witness navigation.
 local M = {}
+local LocationPolicy = require("dispatch_location_policy")
 function M.new()
     local locationInfo="Not selected"
     local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
@@ -17,8 +18,9 @@ function M.new()
             -- fast travel can be inactive while V is in a car or during a lock.
             local ok,variant,phaseNow,point=pcall(function() return pin:GetVariant(),pin:GetPhase(),pin:GetWorldPosition() end)
             if ok and finite(point) and (point.x~=0 or point.y~=0 or point.z~=0) then
-                if variant==gamedataMappinVariant.FastTravelVariant
-                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then
+                if (variant==gamedataMappinVariant.FastTravelVariant
+                    or variant==gamedataMappinVariant.ServicePointDropPointVariant)
+                    and LocationPolicy.allowed(pin,point,variant==gamedataMappinVariant.FastTravelVariant) then
                     local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
                     if not seen[key] then
                         seen[key]=true

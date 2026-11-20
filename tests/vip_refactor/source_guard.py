@@ -2,7 +2,7 @@
 from pathlib import Path
 import subprocess,textwrap,sys
 sys.path.insert(0,str(__import__('pathlib').Path(__file__).resolve().parents[1]/'quest_marker_probe'))
-from probe_source import without_probe
+from probe_source import without_probe,without_location_exclusion
 BASE='a9b654fed01145dd908ffe82de6e097bf2917c56'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 BRANDING={
@@ -28,7 +28,7 @@ def between(text,start,end):
 def verify(root):
     mods=root/PREFIX
     old=original(root,'vip.lua')
-    locations=(mods/'vip_locations.lua').read_text()
+    locations=without_location_exclusion((mods/'vip_locations.lua').read_text())
     waypoint=without_probe((mods/'vip_waypoint.lua').read_text())
     distance=between(old,'local function distance(','local function finite(')
     finite=between(old,'local function finite(','local function same(')

@@ -1,3 +1,15 @@
+NCPD PATROL v0.17e1 H10 LOCATION FIX - COMPLETE BRANCH TEST
+
+Megabuilding H10: Atrium is excluded from generated dispatch locations:
+VIP pickup, VIP delivery and cyberpsycho destination. The exact fast-travel ID
+is blocked, with a 2 m XYZ fallback for marker wrappers lacking point data.
+Street-level points beneath the building remain eligible. The world terminal,
+scanner incidents, marker-bank indices, native scripts and archives are unchanged.
+
+Includes all v0.17e improvements. Install all 88 files and fully restart.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17e PATROL IMPROVEMENTS - COMPLETE BRANCH TEST
 
 Install the entire bin/r6/archive package and fully restart the game.

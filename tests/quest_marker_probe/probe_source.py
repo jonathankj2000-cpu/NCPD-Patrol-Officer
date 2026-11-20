@@ -1,7 +1,22 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_location_exclusion(source):
+    # Exact reviewed H10 eligibility addition only; historical traces retain
+    # all other geography/RNG/actor policy. New target cases test the exclusion.
+    source=source.replace('local LocationPolicy = require("dispatch_location_policy")\n','')
+    source=source.replace('if metres>=500 and metres<=2000 and LocationPolicy.allowed(pin,point,true) then',
+                          'if metres>=500 and metres<=2000 then')
+    source=source.replace('if (variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant)\n                    and LocationPolicy.allowed(pin,point,variant==gamedataMappinVariant.FastTravelVariant) then',
+                          'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
+    return source
+
 def without_probe(source):
+    # Reviewed H10 hotfix build labels.
+    source=source.replace('-- NCPD Patrol v0.17e1 H10 location fix | excludes indoor H10 Atrium from generated dispatch','-- NCPD Patrol v0.17e patrol improvements | catalogue/diagnostics, career duty entry and road-checked backup')
+    source=source.replace('v0.17e1 H10 location fix loaded. Indoor H10 Atrium excluded from VIP pickup/delivery and cyberpsycho dispatch. Install the complete package and restart.','v0.17e patrol improvements loaded. Marker catalogue/diagnostics refactored; Start Shift in NCPD Career; backup uses checked off-camera road approaches. Install the complete package and restart.')
+    source=source.replace('NCPD Patrol - v0.17e1 H10 location fix###','NCPD Patrol - v0.17e patrol improvements###')
+    source=without_location_exclusion(source)
     # Reviewed v0.17e build labels only; session behavior is still compared.
     source=source.replace('-- NCPD Patrol v0.17e patrol improvements | catalogue/diagnostics, career duty entry and road-checked backup','-- NCPD Patrol v0.17d fixed quest markers r5c | finite journal marker bank')
     source=source.replace('v0.17e patrol improvements loaded. Marker catalogue/diagnostics refactored; Start Shift in NCPD Career; backup uses checked off-camera road approaches. Install the complete package and restart.','v0.17d fixed quest markers r5c loaded. Scanner, VIP and cyberpsycho activate fixed journal pins. Unmapped sites use independent quest-style markers. Install the complete package and restart.')

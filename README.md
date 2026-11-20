@@ -1,5 +1,16 @@
 # NCPD Patrol
 
+## v0.17e1 — H10 location fix
+
+Excludes **Megabuilding H10: Atrium** from VIP pickup/delivery and cyberpsycho
+dispatch destinations. Uses its exact fast-travel record plus a 2 m XYZ fallback;
+street-level locations below it remain eligible. World fast travel and fixed
+marker-bank indices are preserved. Includes the complete v0.17e improvements.
+
+[Download the complete v0.17e1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e1_H10_Location_Fix_TEST.zip)
+
+Install all 88 files and restart the game.
+
 ## v0.17e — patrol improvements branch test
 
 Extracts the working r5c marker catalogue and diagnostic formatting with **3161

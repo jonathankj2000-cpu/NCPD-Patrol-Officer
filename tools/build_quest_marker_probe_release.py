@@ -7,8 +7,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.17e_Patrol_Improvements_TEST.zip'
-REPORT='NCPD_Patrol_v0.17e_Patrol_Improvements_verification.json'
+NAME='NCPD_Patrol_v0.17e1_H10_Location_Fix_TEST.zip'
+REPORT='NCPD_Patrol_v0.17e1_H10_Location_Fix_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
 
 def blob(body):return hashlib.sha1(b'blob '+str(len(body)).encode()+b'\0'+body).hexdigest()
@@ -20,7 +20,7 @@ def main():
     static_base='63a6100602de836dd4f670fa8022f87fc1acfe99'
     for name in ['archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl']:
         assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{static_base}:{name}'],cwd=ROOT),name
-    assert len(modules)==28 and len(scripts)==36
+    assert len(modules)==29 and len(scripts)==36
     for archive in sorted((ROOT/'archive/pc/mod').glob('*.archive')):
         assert archive.read_bytes()==subprocess.check_output(['git','show',f'19e8b82ea1b42f4fbbdca031ea9e9365b82d6af5:{archive.relative_to(ROOT).as_posix()}'],cwd=ROOT),archive
     for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
@@ -29,11 +29,12 @@ def main():
     changed.update('r6/scripts/NCPDPatrol/NCPDPatrol'+n+'System.reds' for n in ['DispatchJournal','VIP','Cyberpsycho'])
     changed.update('archive/pc/mod/NCPDPatrol_'+n+'.archive' for n in ['Dispatch','VIP','Cyberpsycho'])
     changed.update([PREFIX+'backup.lua','r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds','r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds'])
+    changed.add(PREFIX+'vip_locations.lua')
     added={PREFIX+'quest_marker_probe.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds',
            'archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive','archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl',
            'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds',
            'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds',
-           'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds',PREFIX+'backup_approach.lua',
+           'r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds',PREFIX+'backup_approach.lua',PREFIX+'dispatch_location_policy.lua',
            'r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds',
            'r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappinData.reds','THIRD_PARTY_NOTICES.txt',
            PREFIX+'marker_catalog.lua',PREFIX+'marker_navigation.lua',
@@ -45,7 +46,7 @@ def main():
     paths=[p for d in ['bin','r6','archive'] for p in (ROOT/d).rglob('*') if p.is_file()]
     paths.extend(ROOT/n for n in ['README.txt','LICENSE','THIRD_PARTY_NOTICES.txt'])
     assert {p.relative_to(ROOT).as_posix() for p in paths}==set(previous)|added|{'README.txt','LICENSE'}
-    assert len(paths)==87
+    assert len(paths)==88
     compared=['tests/dispatch_refactor/check_refactor.py','tests/cet_ui/check_cet_ui.py',
               'tests/vip_refactor/check_vip_refactor.py','tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py']
     with TemporaryDirectory(prefix='ncpd-marker-r4-check-') as tmp:
@@ -62,11 +63,11 @@ def main():
             info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
             z.writestr(info,p.read_bytes(),compresslevel=9)
     with zipfile.ZipFile(release) as z:
-        assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==87
+        assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==88
         assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
         for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
     body=release.read_bytes()
-    report={'version':'v0.17e-patrol-improvements','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+    report={'version':'v0.17e1-h10-location-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
         'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
         'probe':comparisons[compared[3]],'fixed_markers':comparisons[compared[4]],'fixed_marker_sources':json.loads((ROOT/'assets/fixed_markers/sources.json').read_text()),'fixed_marker_resources':json.loads((ROOT/'assets/fixed_markers/compiled.json').read_text()),'vip_comparison':comparisons[compared[2]],
         'dispatch_comparison':comparisons[compared[0]],'ui_comparison':comparisons[compared[1]],
@@ -90,6 +91,8 @@ def main():
         'bean_bagger_archive_unchanged':True,'bean_bagger_clear_colour_regression_found':False,
         'bean_bagger_new_runtime_diagnostics':False,'bean_bagger_review':'docs/BEAN_BAGGER_BLUE_PUMP_REVIEW.md',
         'actual_backup_driving_and_appearance_validation':False,
+        'dispatch_location_exclusions':json.loads((ROOT/'assets/fixed_markers/location-exclusions.json').read_text()),
+        'native_scripts_unchanged_from_v017e':True,
     })
     (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({k:v for k,v in report.items() if k not in ['files','vip_comparison','dispatch_comparison','ui_comparison']},indent=2))

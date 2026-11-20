@@ -2,6 +2,7 @@ local Navigation = require("marker_navigation") -- r5 marker hook
 -- Manual encounter prototype. IDs originate only in this module's CreateEntity.
 local M = {}
 local Variants = require("cyberpsycho_variants")
+local LocationPolicy = require("dispatch_location_policy")
 local selected, testVariant, previousVariant = nil, nil, nil
 local phase, label = "idle", "No cyberpsycho incident"
 local id, actor, token, origin, command = nil, nil, nil, nil, nil
@@ -140,7 +141,7 @@ local function chooseDestination(player)
                 local metres=distance(point,start)
                 -- Interaction availability changes while mounted. It does not
                 -- invalidate a known fast-travel location as a scene anchor.
-                if metres>=500 and metres<=2000 then
+                if metres>=500 and metres<=2000 and LocationPolicy.allowed(pin,point,true) then
                     local key=string.format("%.1f:%.1f:%.1f",point.x,point.y,point.z)
                     if not seen[key] then
                         seen[key]=true
