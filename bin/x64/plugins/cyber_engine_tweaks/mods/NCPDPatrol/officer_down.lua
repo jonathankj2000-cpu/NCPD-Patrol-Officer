@@ -8,6 +8,8 @@ local phase,label='idle','Officer Down test ready'
 local heading,token,actors,elapsed,poll,retention=0,nil,{},0,0,0
 local finalReason,terminalSeen,recovered=nil,false,false
 local generation=nil
+local placementElapsed,placementPoll,placementPasses,placementReason=0,0,0,nil
+local selectedHeading=nil
 local function native()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolOfficerDownSystem')
@@ -43,11 +45,15 @@ end
 function M.reset()
     phase,label='idle','Officer Down test ready';token,actors=nil,{}
     elapsed,poll,retention=0,0,0;finalReason,terminalSeen,recovered=nil,false,false
+    placementElapsed,placementPoll,placementPasses,placementReason=0,0,0,nil
+    selectedHeading=nil
     generation=nil
 end
 function M.diagnostics()
     local ok,text=pcall(function() return native():GetDiagnostics() end)
-    return 'phase='..phase..' | site=test_kryss_01 | heading='..heading..' | owned actors='..#actors..' | '..tostring(ok and text or text)
+    return 'phase='..phase..' | site=test_kryss_01 | heading='..tostring(selectedHeading or heading)..' | preferred heading='..heading..' | owned actors='..#actors
+        ..' | placement passes='..placementPasses..' | nearby wait='..string.format('%.1f',placementElapsed)..'/'..Site.prepareGrace..' s'
+        ..' | placement='..tostring(placementReason or 'not attempted')..' | '..tostring(ok and text or text)
 end
 function M.revive(status)
     local ok,result=pcall(function() return native():StartRevive() end)
@@ -80,6 +86,8 @@ function M.request(patrol,status,sound,voice)
         if not token or token<=0 then token=nil;error('Officer Down quest request rejected') end
         generation=backend:GetSessionGeneration()
         phase,elapsed,poll='responding',0,0;terminalSeen,recovered=false,false
+        placementElapsed,placementPoll,placementPasses,placementReason=0,Site.prepareInterval,0,nil
+        selectedHeading=nil
         patrol:NotifyDispatch('NCPD DISPATCH: Officer down. Patrol pinned behind a police vehicle. Respond, neutralize the suspects and revive the injured officer. Backup available.',10,sound,voice)
         report('Assigned: TEST_KRYSS_01 | heading='..heading..' degrees | distance='..math.floor(d)..' m',status)
     end)
@@ -88,12 +96,18 @@ function M.request(patrol,status,sound,voice)
     end
     return ok
 end
-local function createScene(backend)
-    local layout=Layout.build(heading,Game.GetPlayer())
+local function createScene(backend,status)
+    local layout,selected,reason,tries=Layout.choose(heading,Game.GetPlayer())
+    placementPasses=placementPasses+1
+    placementReason=reason
+    if not layout then return false end
     local entities=Game.GetDynamicEntitySystem()
     for _,row in ipairs(layout) do
         if not TweakDB:GetRecord(TweakDBID.new(row.record)) then error('Missing private scene record: '..row.record) end
     end
+    selectedHeading=selected
+    placementReason='Selected '..selected..' degrees after '..tries..' rotation checks'
+    report(placementReason,status)
     for _,row in ipairs(layout) do
         local spec=DynamicEntitySpec.new()
         spec.recordID=TweakDBID.new(row.record);spec.position=row.position;spec.orientation=backend:Orientation(row.yaw)
@@ -103,6 +117,7 @@ local function createScene(backend)
         row.id=id;actors[#actors+1]=row
     end
     phase,elapsed='spawning',0
+    return true
 end
 local function prepare(backend)
     local entities=Game.GetDynamicEntitySystem()
@@ -192,7 +207,19 @@ local function update(delta,onDuty,patrol,status,HUD)
     if delta<=0 or delta>.5 then return true end
     elapsed,poll=elapsed+delta,poll+delta
     local d=distance(player:GetWorldPosition(),origin())
-    if phase=='responding' and d<=Site.prepare then createScene(backend) end
+    if phase=='responding' and d<=Site.prepare then
+        placementPoll=placementPoll+delta
+        if d<=Site.prepareNear then placementElapsed=placementElapsed+delta end
+        if placementPoll>=Site.prepareInterval or placementElapsed>=Site.prepareGrace then
+            placementPoll=0
+            if not createScene(backend,status) then
+                if placementElapsed>=Site.prepareGrace then
+                    error('All four scene rotations rejected after '..placementPasses..' placement passes | '..tostring(placementReason))
+                end
+                if placementPasses==1 then report('Waiting for supported, unoccupied scene layout; automatic rotations/retry pending',status) end
+            end
+        end
+    end
     if poll>=.25 then
         poll=0
         if phase=='spawning' then
@@ -220,7 +247,7 @@ function M.update(delta,onDuty,patrol,status,HUD)
     if ok then return result end
     if phase~='idle' and phase~='cleanup' then
         M.finish(patrol,status,'Officer Down failed: '..tostring(result),true)
-        if patrol then patrol:NotifyDispatch('NCPD: Officer Down scene could not be prepared. Check scene diagnostics; try another rotation.',8) end
+        if patrol then patrol:NotifyDispatch('NCPD: Officer Down scene could not be prepared. Check scene diagnostics; automatic placement could not finish.',8) end
     end
     if HUD then pcall(function() HUD.set('',false) end) end
     return M.isActive()

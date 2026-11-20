@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18a2 Officer Down ground fix | typed navigation and full probe height
+-- NCPD Patrol v0.18a3 Officer Down placement | automatic rotations and vehicle clearance
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -308,7 +308,7 @@ end
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18a2 Officer Down ground fix loaded. Character navigation receives Vector4 ground; probes cover the accepted height range. Other scene behavior and dispatch markers are unchanged. Install the complete package and fully restart the game.")
+    status("v0.18a3 Officer Down placement loaded. Automatic rotations, vehicle clearance and early preparation with bounded retry. Combat, revive, rewards and dispatch markers are unchanged. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

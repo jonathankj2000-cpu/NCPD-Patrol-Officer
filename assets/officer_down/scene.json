@@ -11,7 +11,10 @@
   "heading_requires_game_validation": true,
   "enemy_count": 5,
   "gang_cars": 2,
-  "prepare_radius_metres": 180,
+  "prepare_radius_metres": 250,
+  "prepare_retry_near_radius_metres": 180,
+  "prepare_retry_interval_seconds": 1,
+  "prepare_retry_grace_seconds": 8,
   "arrival_radius_metres": 55,
   "retain_seconds": 90,
   "retain_distance_metres": 150

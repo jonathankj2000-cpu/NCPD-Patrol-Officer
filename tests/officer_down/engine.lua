@@ -16,7 +16,8 @@ Vector4={new=function(x,y,z,w) return {x=x,y=y,z=z,w=w,X=x,Y=y,Z=z,W=w,__vector=
 Vector3={new=function(x,y,z) return {x=x,y=y,z=z,X=x,Y=y,Z=z,__vector='Vector3'} end}
 function Vector4:Distance(a,b) return math.sqrt((a.X-b.X)^2+(a.Y-b.Y)^2+(a.Z-b.Z)^2) end
 CName={new=function(x) return x end};TweakDBID={new=function(x) return x end}
-EulerAngles={ToQuat=function(_,rotation) return rotation end}
+EulerAngles={ToQuat=function(_,rotation) return rotation end,
+ new=function(roll,pitch,yaw) return {Roll=roll,Pitch=pitch,Yaw=yaw,__vector='EulerAngles'} end}
 NCPDPatrolOfficerDownSite=SiteNative
 NCPDPatrolFixedMarkerCatalog={PathHash=function(_,s) return PathHash(s) end}
 function AsQuestMappin(pin) if pin and pin.kind=='quest' then return pin end end
@@ -118,16 +119,26 @@ function stats:RequestSettingStatPoolValue(id,pool,health) if not F.blockHealth 
 function transaction:GiveItem(p,item,amount) F.paymentAttempts=F.paymentAttempts+1;if not F.paymentOK then return false end;F.wallet=F.wallet+amount;return true end
 ItemID={FromTDBID=function(_,id) return id end}
 local teleport={Teleport=function(_,a,p,r) F.locks=F.locks+1;a.pos=p end}
-local spatial={SyncRaycastByCollisionGroup=function(_,a,b)
+local spatial={SyncRaycastByCollisionGroup=function(_,a,b,group,staticOnly,dynamicOnly)
  assert(a.__vector=='Vector4' and b.__vector=='Vector4','Raycast endpoints must be Vector4')
+ assert(group=='Static' and staticOnly==true and dynamicOnly==false,'Ground/clearance must remain static-only')
  if a.x==b.x and a.y==b.y and a.z>b.z then
-  if F.noGround then return false end
+  F.groundProbes[#F.groundProbes+1]=a
+  if F.noGround or (F.noGroundAt and F.noGroundAt(a)) then return false end
   local offset=F.surfaceOffsetAt and F.surfaceOffsetAt(a) or F.surfaceOffset or 0
   local z=require('officer_down_scene').z+(F.lowerFloor and -12 or offset)
   if z>a.z or z<b.z then return false end
   return true,{position=Vector3.new(a.x,a.y,z),normal=Vector3.new(0,0,F.normalZ or 1)}
  end
  return F.obstruction==true
+end,
+Overlap=function(_,box,center,rotation,group)
+ assert(box.__vector=='Vector4' and box.w==0 and center.__vector=='Vector4' and center.w==1)
+ assert(rotation.__vector=='EulerAngles' and rotation.Roll==0 and rotation.Pitch==0 and group=='Vehicle')
+ assert(box.x>0 and box.y>0 and box.z>0,'Overlap half-extents must be positive')
+ F.overlapQueries[#F.overlapQueries+1]={box=box,center=center,rotation=rotation}
+ if F.overlapError then error('Unexpected Overlap engine error') end
+ return F.vehiclePresent or (F.vehicleAt and F.vehicleAt(center,box,rotation)) or false
 end}
 local nav={FindPointInSphereForCharacter=function(_,p)
  assert(p.__vector=='Vector4' and p.w==1,"FindPointInSphereForCharacter parameter 1 must be Vector4")
@@ -154,6 +165,7 @@ function F:Reset()
  self.blockRecovery=false;self.blockHealth=false;self.failJournal=false;self.paymentOK=true
  self.noGround=false;self.lowerFloor=false;self.obstruction=false;self.noNav=false
  self.surfaceOffset=0;self.surfaceOffsetAt=nil;self.normalZ=1;self.navQueries=0
+ self.noGroundAt=nil;self.groundProbes={};self.vehiclePresent=false;self.vehicleAt=nil;self.overlapError=false;self.overlapQueries={}
  self.creates={};self.deletes={};self.managed={[999]=true};self.objects={};self.god={};self.notices={};self.threats={};self.locks=0;self.interactions=0;self.wallet=0;self.paymentAttempts=0;self.receipts={}
  self.pins={n=0};self.manual=654;self.story={path='story',state=2};self.tracked=self.story
  self.playerPoint=self:Point(-350,0,0)

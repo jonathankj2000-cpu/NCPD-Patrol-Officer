@@ -1,3 +1,33 @@
+NCPD PATROL v0.18a3 OFFICER DOWN PLACEMENT - COMPLETE BRANCH TEST
+
+Officer Down automatically checks 0, 90, 180 and 270 degrees before rejecting
+a scene layout. A manually selected preferred heading is tried first, followed
+by the other three quarter-turns. The selected angle is logged; it does not
+change the next request's preferred heading.
+
+Preparation can begin at 250 m when ground, static clearance, navigation and
+separate Vehicle overlap checks pass for all ten spawn positions. No entity is
+created for a rejected layout. Missing ground and an occupied vehicle volume
+are reported separately. This does not delete, stop or change ambient traffic.
+
+If all four rotations fail, retry once per active second. Distant failures can
+settle on approach. Within 180 m there is an eight-active-second grace period;
+after that, failure logs retain the reasons for all four rotations. Menus and
+an unready session pause placement. Once actor creation starts, no rotation or
+placement retry can overlap a partial scene; existing cleanup retains ownership.
+
+Install the complete 99-file package and fully restart. Request the Officer
+Down test normally; manual rotation is no longer required for rejected layouts.
+Log Officer Down diagnostics shows the selected/preferred heading, placement
+passes, nearby wait and latest rejection. Street alignment and traffic behavior
+still need game testing. Earlier creation cannot guarantee priority over all
+traffic settings or prevent cars entering an already-created scene.
+
+All native scripts, seven archives, quest/waypoint code, combat/revive rules
+and rewards are unchanged from v0.18a2. Browser Extension remains optional.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18a2 OFFICER DOWN GROUND FIX - COMPLETE BRANCH TEST
 
 Fixes the reported FindPointInSphereForCharacter parameter 1 error. The

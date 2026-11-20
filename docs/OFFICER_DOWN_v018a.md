@@ -140,3 +140,53 @@ scene actors, combat/revive behavior and payment logic remain byte-identical to
 v0.18a1. Install the complete package, fully restart, and first retry the same
 90-degree rotation that previously reached character navigation. If support is
 still rejected, the full new line identifies which check needs investigation.
+
+## v0.18a3: automatic placement and separate traffic clearance
+
+By default each placement pass tries **0, 90, 180, then 270 degrees**, stopping
+at the first fully valid layout. The CET rotation control remains a preferred
+starting heading for calibration; its four unique quarter-turns wrap once.
+Automatic selection records the actual heading without changing that preference
+for the next request. Only explicitly classified placement rejections permit
+another rotation. A native/API error still fails directly with its own reason.
+
+The earliest preparation radius is now **250 m**. The whole layout must pass
+ground, footprint, static clearance, NPC navigation and **Vehicle overlap**
+checks before any entity is created. Collision data/navmesh missing farther
+away is not treated as a permanently invalid scene. If all four angles are
+rejected, retry at one-second intervals. Within **180 m**, accumulate at most
+**eight active seconds** before a final fresh check and failure. Outside that
+near radius, the existing five-minute response deadline bounds waiting. Menus,
+unready sessions and positions beyond the preparation radius pause placement.
+No placement retry occurs after any actor creation, including partial failures.
+
+Vehicle overlap checks use the same native API/types and half-extent convention
+as the game's `SpatialQueriesHelper.HasSpaceInFront`: `Vector4` dimensions and
+center, `EulerAngles` rotation, `Vehicle` collision group, boolean/out trace.
+Car boxes have half-extents (1.05, 2.5, 0.75 m), centered 0.9 m above supported
+ground, rotated to the actual car yaw. NPC checks use (0.4, 0.4, 0.8 m), centered
+0.95 m above the final navmesh position. The original Static ray still passes
+`staticOnly=true, dynamicOnly=false`. A missing Static hit is not evidence that
+a traffic car blocked that ray. New `Vehicle occupies ... spawn` rejections
+identify vehicle overlap separately. Existing slope/height/footprint limits stay.
+
+This checks occupancy at preparation time. It does not reserve traffic lanes,
+remove ambient cars, change population settings or prevent a car entering later.
+The 250 m radius is an earlier opportunity, not a proof that the scene always
+spawns before traffic. One mod author's reported standard ranges are 165/185/
+200/220 m for low/medium/high/psycho density, while active presets and traffic
+mods can change them. Those figures are not measured values from this user's
+game. References: [reported ranges](https://www.nexusmods.com/cyberpunk2077/mods/38385?tab=posts),
+[runtime preset-dependent distances](https://www.nexusmods.com/cyberpunk2077/mods/35457?tab=description),
+and `DecompiledGameScripts/core/systems/spatialQueriesSystem.swift` plus the
+native `SpatialQueriesSystem` signatures in the pinned game reference.
+
+Tests cover each fallback angle and manual preference, typed overlap boxes at
+all ten positions, rejection at the final NPC before any creation, early
+missing-ground recovery, moving/persistent traffic, bounded near waiting,
+menu/world pauses, API errors, cancellation, and no retry after partial creation.
+Engine queries remain mocked; the new overlap behavior and physical road layout
+still require in-game testing. All native scripts and seven archives are
+byte-identical to v0.18a2. The scene's runtime settings are regenerated; the
+archive builder extracts and retains an existing archive only when both full
+resource payloads match the newly compiled/round-tripped outputs exactly.

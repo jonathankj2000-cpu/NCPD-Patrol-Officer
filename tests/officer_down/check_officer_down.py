@@ -98,6 +98,7 @@ def main():
   lua.globals().NCPDPatrolFixedMarkerSystem=lua.execute(translate(p))
  lua.execute((HERE/'engine.lua').read_text())
  layout_checks=check_layout_boundaries(lua)
+ lua.execute((HERE/'placement_scenarios.lua').read_text())
  lua.execute((HERE/'scenarios.lua').read_text())
  # New UI controls must route once; historical UI suite covers retained actions.
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime
@@ -146,7 +147,12 @@ def main():
  assert 'dispatch.request' not in view.Events(view) and 'partner.' not in view.Events(view)
  view.Frame(view,'Testing',label);assert view.locatorCalls==1 and view.originalQuest.active
  report={'manual_fixed_scene':True,'position':json.loads((ROOT/'assets/officer_down/scene.json').read_text())['position'],
- 'cars':3,'officers':2,'gang_members':5,'arrival_metres':55,'prepare_metres':180,
+ 'cars':3,'officers':2,'gang_members':5,'arrival_metres':55,'prepare_metres':250,
+ 'automatic_rotation_order':[0,90,180,270],'manual_preferred_heading_retained':True,
+ 'vehicle_overlap_queries_typed':True,'all_ten_positions_checked_before_creation':True,
+ 'prepare_near_metres':180,'prepare_interval_seconds':1,'prepare_near_grace_seconds':8,
+ 'early_missing_ground_retry_on_approach':True,'placement_grace_pauses_with_menus_and_unready_session':True,
+ 'unexpected_engine_errors_not_retried_as_geometry':True,'no_rotation_after_partial_creation':True,
  'prearrival_protection_and_position_lock':True,'actual_native_aid_and_dual_completion':True,
  'existing_partner_identity_untouched':True,'reward':2000,'one_career_incident':True,
  'dispatch_manual_waypoint_preserved':True,'native_marker_never_unregistered':True,
@@ -154,7 +160,7 @@ def main():
  'partial_refused_and_delayed_cleanup':True,'automatic_weights_unchanged':True,
  'typed_ground_and_probe_regressions':layout_checks,
  'ui_controls_routed':6,'actual_game_rendering_combat_traffic_and_layout_validation':False}
- print('PASS: Officer Down Vector3 raycast / Vector4 navigation regression reproduces the previous type error; full probe-height coverage across four rotations, rejected slopes/height/footprints/lower road levels; actual Lua/native quest, staging protection/position lock, private IDs, 3-second aid/recovery, dual completion, EUR$2000 once, actor cleanup/dispatch reservation, world reset/manual waypoint and six CET routes (engine boundaries mocked)')
+ print('PASS: Officer Down automatic 0/90/180/270 selection, typed Vehicle overlap on all ten positions, 250 m early preparation, bounded/paused near retry, no rotation after creation or API-error masking; Vector3 raycast / Vector4 navigation regression reproduces the previous type error; ground/slope/footprint limits, actual Lua/native quest, staging protection, aid/dual completion, EUR$2000 once, cleanup/dispatch reservation, world reset/manual waypoint and six CET routes (engine boundaries mocked)')
  return report
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

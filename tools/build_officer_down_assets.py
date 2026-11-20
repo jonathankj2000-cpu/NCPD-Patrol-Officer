@@ -7,7 +7,7 @@ MOD='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 
 def outputs():
  s=json.loads((DIR/'scene.json').read_text());p=s['position']
- scene='-- Generated from assets/officer_down/scene.json. Native marker shares this exact point.\nreturn {x=%.9f,y=%.9f,z=%.9f,prepare=%d,arrival=%d,retainSeconds=%d,retainDistance=%d}\n'%(p['x'],p['y'],p['z'],s['prepare_radius_metres'],s['arrival_radius_metres'],s['retain_seconds'],s['retain_distance_metres'])
+ scene='-- Generated from assets/officer_down/scene.json. Native marker shares this exact point.\nreturn {x=%.9f,y=%.9f,z=%.9f,prepare=%d,prepareNear=%d,prepareInterval=%d,prepareGrace=%d,arrival=%d,retainSeconds=%d,retainDistance=%d}\n'%(p['x'],p['y'],p['z'],s['prepare_radius_metres'],s['prepare_retry_near_radius_metres'],s['prepare_retry_interval_seconds'],s['prepare_retry_grace_seconds'],s['arrival_radius_metres'],s['retain_seconds'],s['retain_distance_metres'])
  native='// Generated from assets/officer_down/scene.json; marker resource uses the same point.\npublic class NCPDPatrolOfficerDownSite extends IScriptable {\n    public static func Position() -> Vector4 {\n        let point: Vector4;\n        point.X = %.9f; point.Y = %.9f; point.Z = %.9f; point.W = 1.0;\n        return point;\n    }\n}\n'%(p['x'],p['y'],p['z'])
  return {MOD+'officer_down_scene.lua':scene,'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds':native}
 
@@ -47,7 +47,15 @@ def main():
   run('pack',packed,'--outpath',out)
   archive=out/'NCPDPatrol_OfficerDown.archive';extracted=t/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
   assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
-  target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
+  target=ROOT/'archive/pc/mod'/archive.name
+  # A runtime-only scene setting does not change journal/localization bytes.
+  # WolvenKit can alter archive timestamps on repack; retain the installed
+  # archive only after extracting and proving its full resource set identical.
+  retain=False
+  if target.exists():
+   existing=t/'existing';existing.mkdir();run('extract',target,'--outpath',existing)
+   retain={p.name:p.read_bytes() for p in existing.rglob('*') if p.is_file()}==expected
+  if not retain:shutil.copy2(archive,target)
   inputs=['assets/officer_down/scene.json',*[f'assets/officer_down/{f}' for f in files],'assets/quest_marker_probe/reference-contract.json']
   (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'authored_inputs':{p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in inputs},'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'fixed_pins':1,'position_source':'User TEST_KRYSS_01; same authored offset from the proven Coyote anchor','game_validation':False},indent=2)+'\n')
  print('PASS: Officer Down scene data and fixed quest marker compiled, round-tripped and extracted byte-identically')

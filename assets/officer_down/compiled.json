@@ -2,7 +2,7 @@
   "archive_path": "archive/pc/mod/NCPDPatrol_OfficerDown.archive",
   "archive_sha256": "4c49fbe807d0c52b85c8f00eea8111c9f64791c2840c64ae112a10624800d684",
   "authored_inputs": {
-    "assets/officer_down/scene.json": "fd3397b37d4af1b31b0b2a1066b9399c38144699f7795ffc2d12262c99e9b9a5",
+    "assets/officer_down/scene.json": "c32fc32dec358fa45722bbfd1a89b56ccfd9a164f554f3b092668e5b6acf8a26",
     "assets/officer_down/officer_down.journal.json": "cf6c366619c02be3bd6c2d442eadf103be5b167f2427f40ab10f07071ad60583",
     "assets/officer_down/officer_down_onscreens.json.json": "0655ab7140df65ea033a90176765edcf70e20a781ed9713f2a2f62a6ed242d48",
     "assets/quest_marker_probe/reference-contract.json": "6df54971748be1650eb101d9c2d3b3a89e37715de8d0b2a36b9295e6a228b052"

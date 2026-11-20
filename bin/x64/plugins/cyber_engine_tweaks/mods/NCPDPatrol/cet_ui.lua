@@ -268,7 +268,7 @@ function M.new(context)
             if ImGui.Button("Revive scene officer (nearby)") then if Dispatch.reviveOfficerDown then Dispatch.reviveOfficerDown(status) end end
             if ImGui.Button("Clear Officer Down scene") then if Dispatch.clearOfficerDown then Dispatch.clearOfficerDown(getPatrolSystem(), status) end end
             if ImGui.Button("Log Officer Down diagnostics") then if Dispatch.officerDownDiagnostics then status("Officer Down | "..Dispatch.officerDownDiagnostics()) end end
-            ImGui.TextWrapped("The scene prepares within 180 m and unlocks at 55 m. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Change rotation only after clearing this test scene. Automatic dispatch weights remain 50/30/20.")
+            ImGui.TextWrapped("Preparation starts within 250 m and checks four rotations automatically. Occupied or unsupported layouts retry once per second; within 180 m they have 8 active seconds. The scene unlocks at 55 m. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Change the preferred rotation only after clearing this scene. Automatic dispatch weights remain 50/30/20.")
         end
         -- Officer Down UI end
         -- r4 probe UI begin
@@ -325,7 +325,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18a2 Officer Down ground fix###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18a3 Officer Down placement###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

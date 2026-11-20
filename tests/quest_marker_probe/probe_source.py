@@ -12,6 +12,9 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18a3 Officer Down placement | automatic rotations and vehicle clearance','-- NCPD Patrol v0.18a2 Officer Down ground fix | typed navigation and full probe height')
+    source=source.replace('v0.18a3 Officer Down placement loaded. Automatic rotations, vehicle clearance and early preparation with bounded retry. Combat, revive, rewards and dispatch markers are unchanged. Install the complete package and fully restart the game.','v0.18a2 Officer Down ground fix loaded. Character navigation receives Vector4 ground; probes cover the accepted height range. Other scene behavior and dispatch markers are unchanged. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18a3 Officer Down placement###','NCPD Patrol - v0.18a2 Officer Down ground fix###')
     source=source.replace('-- NCPD Patrol v0.18a2 Officer Down ground fix | typed navigation and full probe height','-- NCPD Patrol v0.18a1 Officer Down locator | manual test waypoint button')
     source=source.replace('v0.18a2 Officer Down ground fix loaded. Character navigation receives Vector4 ground; probes cover the accepted height range. Other scene behavior and dispatch markers are unchanged. Install the complete package and fully restart the game.','v0.18a1 Officer Down locator loaded. CET Testing includes a manual waypoint to the test intersection. Existing dispatch markers and scene behavior are unchanged. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18a2 Officer Down ground fix###','NCPD Patrol - v0.18a1 Officer Down locator###')
