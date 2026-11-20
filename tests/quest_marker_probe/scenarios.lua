@@ -187,3 +187,9 @@ for _=1,20 do Native:Tick(.25) end
 assert(#F.writes==previousWrites and #F.factWrites==previousFacts and #F.removed==previousDeletes)
 assert(Native.m_restorePending)
 F.attached=true;Native:Tick(.25);assert(not Native.m_restorePending)
+
+F:Reset();F.sessionReady=false
+local rw,rn,rd=#F.writes,#F.factWrites,#F.removed
+Native:Tick(.25);Native:Stop('session loading')
+assert(#F.writes==rw and #F.factWrites==rn and #F.removed==rd)
+F.sessionReady=true;Native:Tick(.25)

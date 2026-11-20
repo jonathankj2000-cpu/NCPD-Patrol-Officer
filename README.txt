@@ -1,3 +1,41 @@
+NCPD PATROL v0.17d FIXED QUEST MARKERS r5c - COMPLETE BRANCH TEST
+
+Fixes the r5b rejection where an active native pin had the correct hash,
+objective link and positions, but the ownership census said zero. The private
+catalogue is now independent of journal availability during restoration, and
+selected private-entry identity participates in the census directly.
+
+CET updates and both marker controllers wait for Codeware Session/Ready.
+BeforeEnd blocks work while the old player can still exist. Session callbacks
+change flags only; restored journal work is deferred and capped at 48 objectives
+per update. Duplicate Ready events do not invalidate an assignment.
+
+INSTALL AND TEST
+Install the entire bin/r6/archive package and fully restart. Bank interface 4
+and the new NCPDPatrolMarkerSession.reds file are required. 84 install files,
+27 Lua modules and 34 native scripts. All six archives are unchanged from r5b.
+Browser Extension remains optional; no additional dependency or hotkey.
+
+Test loading, repeated scanner/VIP/cyberpsycho requests, cancel/complete and
+reload. A normal native marker should persist beyond five seconds and show:
+ownership entries=3112, selected in catalog=true, active bank pins=1,
+native confirmed=true, fallback=false.
+
+CET > Diagnostics > Fixed quest markers > Log active dispatch marker diagnostics
+The button prints current state and a retained pre-cleanup snapshot. It now
+also shows catalogue membership, expected hash, session readiness and restore
+cursor. Fallback's status follows its latest registration/active observations.
+
+18 portable suites include the directly observed r5b failure and a negative
+control against the actual r5b code. Offline source/API compilation is separate
+from an installed game-cache build. Actual rendering/reload stability remains
+unverified. The repeated crash is NOT attributed or claimed fixed: the earlier
+raw dump showed an abnormal animation allocation; a later access violation is
+reported in the supplied analysis without its raw archive here.
+See docs/FIXED_QUEST_MARKERS.md for evidence and scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.17d FIXED QUEST MARKERS r5b - COMPLETE BRANCH TEST
 
 This build changes marker lifetime and recovery after r5a's disappearing pins.

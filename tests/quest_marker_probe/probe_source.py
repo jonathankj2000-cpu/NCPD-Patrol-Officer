@@ -2,7 +2,7 @@
 import re
 
 def without_probe(source):
-    source=re.sub(r"fixed quest markers r5[ab]", "fixed quest markers r5", source)
+    source=re.sub(r"fixed quest markers r5[abc]", "fixed quest markers r5", source)
     # Exact navigation adapters only. Bank-present behavior has its own suite;
     # historical oracles exercise the unavailable-bank compatibility boundary.
     source=re.sub(r'^.* -- r5 marker hook[^\n]*\n','',source,flags=re.M)

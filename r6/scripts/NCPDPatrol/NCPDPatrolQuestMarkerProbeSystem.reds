@@ -103,7 +103,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
     private func RuntimeAllowed() -> Bool {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         let patrol: ref<NCPDPatrolSystem> = NCPDPatrolSystem.Get(this.GetGameInstance());
-        return IsDefined(player) && player.IsAttached() && !player.IsDead() && !player.IsInCombat()
+        return NCPDPatrolMarkerSession.WorldReady() && IsDefined(player) && player.IsAttached() && !player.IsDead() && !player.IsInCombat()
             && IsDefined(patrol) && !patrol.IsOnDuty() && !patrol.HasWantedLevel();
     }
     private func CloseLegacy() -> Void {
@@ -336,6 +336,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         this.Report("Archived phase cleanup confirmed; test ready again");
     }
     public func Stop(reason: String) -> Void {
+        if !NCPDPatrolMarkerSession.WorldReady() { this.ForgetWorld(); this.Report(reason); return; };
         let journal: ref<JournalManager> = this.Journal();
         let map: ref<MappinSystem> = this.Map();
         let tracked: wref<JournalEntry>;
@@ -358,7 +359,7 @@ public class NCPDPatrolQuestMarkerProbeSystem extends ScriptableSystem {
         let entry: wref<JournalEntry>;
         let sampleSeconds: Float;
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
-        if !IsDefined(player) || !player.IsAttached() { return; };
+        if !NCPDPatrolMarkerSession.WorldReady() || !IsDefined(player) || !player.IsAttached() { return; };
         if this.m_legacyPending { this.CloseLegacy(); };
         if this.m_restorePending {
             if !IsDefined(this.Journal()) || !IsDefined(this.Facts()) || !IsDefined(this.Map()) { return; };

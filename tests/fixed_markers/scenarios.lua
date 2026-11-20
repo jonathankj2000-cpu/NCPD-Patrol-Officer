@@ -63,7 +63,7 @@ assert(not Native:HasWork() and F:OwnedActive()==0)
 -- recreated later are also removed while idle. A foreign pin survives.
 F:Reset();F.materialize=true;old=request(1);Native.m_nativeID={value=999999}
 foreign=F:AddPin(123);foreign.kind='visual';foreign.data={otherMod=true}
-Native:OnRestored(0,0);tick(2);assert(F.pins.n==2 and F.pins[1]==foreign and F:OwnedActive()==0 and not Native:HasWork())
+Native:OnRestored(0,0);tick(40);assert(F.pins.n==2 and F.pins[1]==foreign and F:OwnedActive()==0 and not Native:HasWork())
 assert(not Native:IsActive(old));for _,id in ipairs(F.deleted) do assert(id~=999999) end
 F:AddPin(PathHash(F.objective..'/bank_2'));tick(4);assert(F:OwnedActive()==0 and F.pins.n==3)
 -- Manual activation changes invalidate proof; later player story/waypoint
@@ -129,7 +129,7 @@ assert(VIPNative:GetStage()==3 and F.paidVIP==1 and not Native:HasWork() and F:O
 -- and terminal cleanup must never unregister any of these engine-owned IDs.
 F:Reset()
 for _,d in ipairs(Definitions) do F:AddPin(F.entries[d.path].hash).active=false end
-Native:OnRestored(0,0);tick(2)
+Native:OnRestored(0,0);tick(40)
 assert(F.pins.n==1556 and #F.deleted==0 and F:OwnedActive()==0)
 F.materialize=true;token=request(42);local stableID=Native.m_nativeID.value
 assert(Native.m_confirmed and Native.m_registeredBankPins==1556 and Native.m_activeBankPins==1)
@@ -180,7 +180,62 @@ local writes,nodes,deletes,activations=#F.writes,#F.nodes,#F.deleted,F.activatio
 local activeCount=F:OwnedActive();tick(40)
 assert(#F.writes==writes and #F.nodes==nodes and #F.deleted==deletes and F.activationWrites==activations)
 assert(Native.m_restorePending and F:OwnedActive()==activeCount)
-F.attached=true;tick(2);assert(not Native.m_restorePending and F:OwnedActive()==0)
+F.attached=true;tick(40);assert(not Native.m_restorePending and F:OwnedActive()==0)
+-- Reproduce the reported r5b state: /location entries are unavailable during
+-- restore, then appear before assignment. The selected pin is valid and its
+-- catalogue membership must not depend on those earlier journal reads.
+for _,scope in ipairs({0,1,2,3,4,5,6,8}) do
+ F:Reset(scope);F.hideSitePins=true;Native:OnRestored(0,0);tick(40)
+ assert(ArraySize(Native.m_ownHashes)==3112)
+ F.hideSitePins=false;F.materialize=true
+ local site=scope<6 and 40 or 204
+ token=request(site);tick(40)
+ assert(Native.m_confirmed and Native.m_pinCount==1 and Native.m_activeBankPins==1)
+ assert(Native.m_registeredBankPins==1 and not Native.m_fallback and F.fallbackCreates==0)
+ stop(token)
+end
+-- Restored catalogue damage gets one repair; direct ownership still retains
+-- the selected private pin if catalogue checking is deliberately sabotaged.
+F:Reset(3);F.materialize=true;token=request(40)
+ArrayClear(Native.m_ownHashes);ArrayClear(Native.m_ownPaths);tick(1)
+assert(Native.m_confirmed and ArraySize(Native.m_ownHashes)==3112)
+Native.m_catalogRepairTried=true;ArrayClear(Native.m_ownHashes);ArrayClear(Native.m_ownPaths)
+tick(40);assert(Native.m_retained and not Native.m_confirmed and not Native.m_fallback and F:OwnedActive()==1)
+stop(token)
+-- A runtime hash alias from the exact private entry may retain that selected
+-- pin, but is not full catalogue proof. Foreign identities are not adopted.
+F:Reset(3);F.materialize=true
+local selected=F.entries[path(F.objective,40)];selected.hash=123456789;F.hashes[selected.hash]=selected
+token=request(40);tick(40)
+assert(Native.m_retained and not Native.m_confirmed and not Native.m_fallback and Native.m_activeBankPins==1)
+assert(Native.m_registeredMatches==1 and F:OwnedActive()==1);stop(token)
+-- Session/Ready is stronger than attachment. BeforeEnd closes the gate while
+-- player and managers still exist; no cleanup/world lookup runs until ready.
+F:Reset();F.materialize=true;token=request(42)
+F:Emit('Session/BeforeEnd');local rw,rn,rd=#F.writes,#F.nodes,#F.deleted
+local cursor=Native.m_restoreCursor;tick(40)
+assert(not SessionNative:IsReady() and F.attached)
+assert(#F.writes==rw and #F.nodes==rn and #F.deleted==rd and Native.m_restoreCursor==cursor)
+F:Emit('Session/BeforeStart');Native:OnRestored(0,0);tick(20)
+assert(Native.m_restoreCursor==0 and Native.m_restorePending)
+F:Emit('Session/Ready');local reads=F.entryReads;tick(1)
+assert(Native.m_restoreCursor==48 and F.entryReads-reads<=240)
+tick(40);assert(not Native.m_restorePending and F:OwnedActive()==0)
+-- Duplicate Ready notifications must not invalidate a current assignment.
+F:Reset();F.materialize=true;token=request(42);local generation=SessionNative:GetGeneration()
+F:Emit('Session/Ready');tick(2);assert(SessionNative:GetGeneration()==generation and Native:IsActive(token) and Native.m_confirmed)
+stop(token)
+-- Session callback registration is idempotent and sticky across world changes.
+SessionNative:OnInitialize()
+for _,name in ipairs({'Session/BeforeStart','Session/BeforeEnd','Session/End','Session/Ready'}) do assert(#F.callbacks[name]==1) end
+F:Emit('Session/Ready')
+-- Async fallback registration status must follow new observations instead of
+-- remaining 'pending' once the instance is available and active.
+F:Reset();F.failRegister=true;token=Native:Request(0,point(42));tick(2)
+assert(Native:GetStatus()=='Fallback registration pending')
+local late=F:AddPin(0,point(42));late.kind='visual';late.data=NewFixedData();Native.m_fallbackID=late:GetNewMappinID()
+tick(1);assert(Native:GetStatus()=='Independent quest-style fallback' and Native.m_fallbackRegistered)
+stop(token)
 -- Lua adapter owner tokens and legacy-unavailable-bank compatibility boundary.
 local Navigation=require('marker_navigation')
 F:Reset();Navigation.reset();F.materialize=true
@@ -196,3 +251,12 @@ assert(Native.m_site==0 and Native.m_fallback and not Native.m_confirmed)
 Navigation.clear('scanner');Navigation.update(.25)
 F.nativeMissing=true;local legacy=Navigation.place(F.patrol,point(1),'scanner')
 assert(not Navigation.isBank(legacy) and legacy.value==999 and F.legacyPoint)
+
+-- Adapter readiness checks use only the service container during loading.
+F:Reset();Navigation.reset();F:Emit('Session/BeforeEnd')
+local prior=Game.GetScriptableSystemsContainer
+Game.GetScriptableSystemsContainer=function() error('World container queried while session unavailable') end
+assert(not Navigation.worldReady());Navigation.update(.25);Navigation.finish();Navigation.diagnostics();Navigation.lastNative()
+assert(not pcall(Navigation.place,F.patrol,point(40),'scanner'))
+Game.GetScriptableSystemsContainer=prior
+F:Emit('Session/BeforeStart');F:Emit('Session/Ready');tick(40)

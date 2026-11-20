@@ -1,123 +1,129 @@
-Fixed quest markers r5b
+Fixed quest markers r5c
 
-R5a failed in game: the scanner marker briefly appeared in world and map, then
-vanished from both. VIP/cyberpsycho reportedly behaved similarly; later calls
-produced no initial marker. The post-fallback diagnostics had already cleared
-the native evidence. The user also reported an assertion during save loading.
-Sanitized observations are in assets/fixed_markers/r5a-game-evidence.json.
-R5b's game rendering, repeated-load stability and crash resolution are unverified.
+The r5b game snapshot proves a premature rejection: one active selected native
+QuestMappin has the expected hash, objective link and both positions, while the
+bank census says zero. The retained/confirmed predicates therefore fail, and
+five seconds later our code hides that valid native pin. The user observed two
+briefly visible markers, then none on another attempt, and another reload crash.
+Sanitized evidence is in assets/fixed_markers/r5b-game-evidence.json.
 
-Native lifetime and proof
+Ownership identity and native proof
 
-R5b preserves r5a's six archives byte-for-byte: each site objective contains
-one map pin and the definitions start inactive. There are 132 scanner sites,
-191 terminals and 1556 site objectives/pins. The original location policy,
-RNG, dispatch mix, journal text, timers, actors, results, payments and career
-owners remain in place. Existing native quest owners still select the site path.
+R5b admitted current paths to m_ownHashes only if journal entries were available
+inside RestoreCleanup. StartCurrent later resolved the selected entry without
+repairing that catalogue. The exact live reason for the missing membership is
+not captured, but the suite reproduces the rejection with temporarily absent
+journal entries against the actual r5b implementation.
 
-The earlier implementation treated registered inactive native instances as
-unwanted markers, unregistered them and required their absence for success.
-That incorrectly conflated registration with visibility and could interfere
-with native caching/reuse. R5b separates registered and ACTIVE counts. Cleanup
-requests MappinManager Inactive and SetMappinActive(false) for private native
-pins. It never unregisters an engine-owned quest pin. UnregisterMappin is
-reserved for our own tagged, script-created fallback instances.
+R5c builds a pure catalogue of 3112 private current/legacy paths using RED4ext's
+Murmur3 seed 0x5EEDBA5E. It does not depend on journal availability or use world
+handles. The catalogue survives world changes, with one repair if damaged.
+Sorted identities use binary lookup. Recorded r5/r5b game hashes are independent
+checks of the algorithm and canonical paths. Journal mutation is not required
+to build identity data.
 
-Unexpected ACTIVE private pins are deactivated, including legacy r5 hashes.
-Inactive native instances are preserved. On activation, one exact inactive
-cached instance with the expected hash and position may be re-enabled once.
-An ambiguous hash, wrong position or inactive objective does not qualify.
-Cleanup verifies deactivation before replacement; refused deactivation retries.
-Foreign, story and manual pins remain outside this private namespace.
+The selected pin additionally belongs to the exact private path resolved by the
+current request. That direct identity participates in the SAME ownership census
+as all other bank pins. An incomplete cached catalogue cannot exclude this pin.
+A foreign hash or unrelated manual/story pin is not adopted. Full confirmation
+requires catalogue membership and completeness; an exceptional runtime alias
+can retain the selected pin without claiming full catalogue proof.
 
-Full native confirmation still requires one active selected QuestMappin, exactly
-one active private bank pin overall, the correct objective hash/ID association,
-correct runtime AND quest-log positions, an active site objective and unchanged
-manual waypoint ID across activation. Inactive cached bank entries do not fail
-this check. The marker manager uses typed Uint16 IDs and path index 1;
-disablePreviousMappins=false. No runtime position writes or manual tracking
-writes are added. Terminal references and scanner Coyote-relative offsets stay
-as authored in r5a. The user's r4d static marker is the proven anchor reference;
-it does not prove that the r5b bank activation works in game.
+Native confirmation still requires exactly one active selected native pin,
+exactly one active private bank pin, no other active private pins, the same
+objective hash/ID, active objective, matching runtime AND quest-log positions,
+and unchanged manual waypoint ID across activation. Inactive cached native
+instances are valid. A correctly positioned selected native marker is retained
+when full proof is incomplete, with native confirmed=false. A journal/census
+failure alone must not delete a physically valid selected pin.
 
-A physically valid selected native marker may have incomplete journal proof.
-R5b retains that one active correctly positioned pin and explicitly reports
-"Native marker retained; journal link unconfirmed", with native confirmed=false.
-A journal-readback failure alone no longer deletes an otherwise usable pin.
-Five active seconds WITHOUT a usable native pin trigger deactivation and common-
-objective recovery before fallback. Menus pause the sampling timer.
+Native quest instances belong to the engine. Cleanup requests Inactive and
+SetMappinActive(false), preserving reuse. UnregisterMappin is reserved for our
+own tagged script-created fallback. Exact cached-target reactivation remains
+bounded to one attempt; ambiguous hashes and wrong positions are not activated.
+No runtime position writes, global marker disabling or manual waypoint tracking
+writes are introduced.
 
-Evidence and fallback
+Session lifecycle and restoration
 
-Before native-to-fallback handover, the controller retains a snapshot containing
-scope/site/path, hash/ID, registered/active counts, target/runtime/journal
-positions and link results. Clearing current proof does not erase that snapshot.
-A new assignment resets it. This eliminates the need to capture a transient
-five-second log line while testing.
+A new Codeware ScriptableService, NCPDPatrolMarkerSession, registers sticky
+Session/BeforeStart, BeforeEnd, End and Ready callbacks. These callbacks change
+ONLY local readiness/generation flags. They do not access journals, actors,
+map pins or quest nodes. Duplicate Ready events are idempotent. The service is
+initialized before sessions and survives world transitions without old-world
+references.
 
-The existing Diagnostics > Fixed quest markers > Log active dispatch marker
-diagnostics button prints TWO lines: "Fixed markers" for current state and
-"Fixed markers before cleanup" for the retained native snapshot. Both are also
-shown in the panel. The separate legacy Coyote experiment remains under Testing.
+The native bank, legacy marker experiment and CET update entrypoint require
+Session/Ready as well as normal player/world conditions. BeforeEnd suspends
+CET controller updates even while GetPlayer is still non-null and attached.
+A later generation forgets old logical marker state. Native work happens from
+a subsequent update, outside the lifecycle callback. This is stronger than
+r5b's attachment check; it is not a verified explanation of the reported crash.
 
-Fallback is an independent script-created QuestStatic/QuestGiver renderer,
-not a claim of native journal association or GPS. Diagnostics expose its ID,
-registration, active/visible engine flags, position match and attempt count.
-A requested but unobserved fallback is reported as pending. The visible flag
-is an engine observation, not proof of rendered pixels. Failed/missing
-registration retries at most once per five active seconds. A known inactive
-fallback at the target is re-enabled rather than duplicated.
+The restored private-objective sweep processes at most 48 objectives per Tick,
+after readiness. Its 1556 paths are fixed; no all-bank discovery happens during
+restore. An incomplete/rejected sweep blocks new marker activation rather than
+running an unbounded synchronous reset. Current diagnostics show readiness,
+generation, restore cursor, ownership count/builds, expected hash and selected
+membership. Existing quest owners retain timers, actors, results and rewards.
 
-Save loading and reported crash
+Fallback and diagnostics
 
-Both the dispatch bank and legacy experiment now require a defined AND ATTACHED
-player before their Tick can reconcile journals, execute nodes or change
-markers. A non-null GetPlayer result during old-world detachment is insufficient.
-The normal world-attachment callback still forgets old Lua handles and the
-native restored callbacks forget previous-world IDs/tokens.
+Before a genuine native-to-fallback handover, the controller retains scope/site/
+path/hash, counts, link and positions. The existing Diagnostics > Fixed quest
+markers > Log active dispatch marker diagnostics control prints current state
+AND Fixed markers before cleanup. No transient log capture is required.
 
-The supplied crash report says PoolAnimBuffers requested 550622650736 bytes
-(about 513 GiB) with alignment 322565760, during "Loading world" after 647
-seconds in the process. The allocation/alignment are abnormal. The short stack
-report does not identify a mod. This evidence neither proves nor excludes NCPD
-Patrol causality. The lifecycle fixes address source defects; they are NOT a
-verified fix for that animation allocation assertion. No crash dump, screenshot,
-save or system-info attachment is committed or bundled.
+Fallback remains an independent script-created renderer, not journal/GPS proof.
+Current status now follows every observation: a delayed registration can change
+from pending to active once observed. The r5b log's pending label with true
+registration/active flags is reproduced as a regression, not interpreted as an
+absent marker. Engine visibility flags are not proof of rendered pixels.
+Retries are bounded; an inactive known fallback is re-enabled without duplicates.
 
-Verification and installation
+Evidence and limits
 
-18 portable suites and offline API compilation cover the complete package.
-The bank suite executes production native/Lua code with mocked engine
-boundaries, including a 1556-instance inactive cache, repeated same-ID reuse,
-active-only proof/pruning, partial-proof retention, snapshot survival, fallback
-liveness/retries, and a non-null detached player during restore. Both cache
-unregistration and detached-player regressions are independently rejected
-when the suite runs the actual earlier r5a implementation as negative controls.
+The user-provided analysis is research input. Its suggested explanations are
+not treated as facts or mandatory changes. The supplied earlier raw crash dump
+showed an abnormal PoolAnimBuffers allocation of roughly 513 GiB. The later
+analysis describes an access violation reading 0xFFFFFFFFFFFFFFFF during player
+spawning; the corresponding raw archive was not attached here. Neither report
+establishes NCPD Patrol causality, and r5c does not claim to resolve the crash.
+No crash dump, save, screenshot, system information or full external analysis
+is committed or included in the install.
 
-The original scanner/VIP/cyberpsycho attendance, stage transitions, completion,
-reward and tracking methods are still source-guarded. All six scanner briefings,
-VIP pickup/delivery, cyberpsycho response/neutralize, reuse, timeout, stale tokens
-and separate payment ledgers remain covered. Old dispatch/VIP/CET comparison
-suites retain their unavailable-bank compatibility scope. Offline compilation
-runs with Browser Extension present and absent; it is not a game-cache compile.
+All six archives remain byte-identical to r5a/r5b: 132 scanner sites and 191
+terminal sites, 1556 single-pin site objectives, inactive definitions, named
+terminal anchors and scanner offsets relative to the game-confirmed Coyote
+anchor. Original location policy, dispatch mix, RNG, actors, journal text,
+deadlines, results, money and progression remain with their existing owners.
+Browser Extension remains optional. The new service uses already-required
+Codeware 1.21.4 APIs.
 
-Install the entire r5b package and fully exit/restart the game. Bank interface 3
-is required; CET hot reload is insufficient. First verify save loading, then
-request/cancel several scanner, VIP and cyberpsycho assignments and reload.
-Check that markers persist past five seconds, change with the stage, disappear
-on cancellation/completion, and leave the manual waypoint available.
+Verification and game test
 
-native confirmed=true is the preferred full proof. retained=true with
-native confirmed=false means the native marker is kept but journal binding is
-unconfirmed. If no marker is visible, use the same diagnostics button and keep
-both lines; the retained snapshot and fallback ID/state avoid the earlier race.
-GPS and crash resolution still require actual game tests.
+18 portable suites execute production code with engine boundaries mocked. New
+coverage includes journal entries absent during restore then available at
+assignment, the observed scope-3/site-40/hash-3418482757 case, direct selected
+identity with a damaged catalogue, a native runtime alias without false full
+proof, sticky/idempotent session callbacks, BeforeEnd with a still-attached
+player, 48-objective work bounds, no world-container lookup while unavailable,
+and delayed fallback registration status. Actual r5b code must fail the valid-
+marker rejection control; the earlier two r5a negative controls remain.
 
-Resource building remains:
-DOTNET_ROOT=<runtime> python tools/build_fixed_marker_assets.py --wk-cli <WolvenKit.CLI>
+Existing 1556-instance native cache/reuse tests, all six scanner briefings,
+VIP pickup/delivery, cyberpsycho response/neutralize, cancellation, completion,
+reward ledgers, manual waypoints and tracking remain covered. Original actor/
+reward/result methods are source-guarded. Historical comparisons retain their
+unavailable-bank scope; bank-present behavior has its own suite. Offline source/
+API compilation runs with Browser Extension present and absent; it is not a
+compile of the user's installed game cache.
 
-R5b needs no resource rebuild. The builder still verifies one-pin site layout,
-inactive definitions, original objective/text preservation, roundtrip and
-extracted compiled bytes. Rebuild through that tool after future journal edits.
-Rollback uses the entire previous package including its three journal archives;
-reward and progression receipts are not migrated by this feature.
+Install the entire r5c package and fully restart. There are 84 install files,
+27 Lua modules and 34 native scripts; the new MarkerSession service is required.
+Bank interface 4 is required. Check loading, then repeated scanner/VIP/cyberpsycho
+requests, marker persistence beyond five seconds, cancel/complete and reload.
+Expected normal native state: ownership entries=3112, selected in catalog=true,
+registered/active selected=1, active bank pins=1, native confirmed=true,
+fallback=false. Use both diagnostic lines if behavior differs. Game rendering,
+GPS and repeated-load stability still require actual game validation.

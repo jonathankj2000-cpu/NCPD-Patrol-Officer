@@ -3,10 +3,23 @@ local catalog=require('marker_catalog')
 local M={}
 local owner,token,revision=nil,nil,-1
 local function native()
+    if not M.worldReady() then return nil end
     local container=Game.GetScriptableSystemsContainer()
     local system=container and container:Get('NCPDPatrolFixedMarkerSystem')
-    if system and system:Version()~=3 then error('Install the complete r5b fixed marker package and restart') end
+    if system and system:Version()~=4 then error('Install the complete r5c fixed marker package and restart') end
     return system
+end
+function M.worldReady()
+    if not Game then return false end
+    -- Historical comparison fixtures have no Codeware service API. A complete
+    -- game install has it, and missing/unready service fails closed there.
+    if not Game.GetScriptableServiceContainer then return true end
+    local ok,ready=pcall(function()
+        local container=Game.GetScriptableServiceContainer()
+        local service=container and container:GetService('NCPDPatrolMarkerSession')
+        return service and service:IsReady() or false
+    end)
+    return ok and ready or false
 end
 function M.isBank(handle) return type(handle)=='table' and handle.fixedMarker==true end
 local function match(point,scanner)
@@ -20,6 +33,7 @@ local function match(point,scanner)
     return best
 end
 function M.place(patrol,point,who)
+    if not M.worldReady() then error("Game session is not ready for a dispatch marker") end
     local backend=native()
     -- Compatibility boundary for older installs/test fixtures. Complete r5
     -- always has the native bank; it never uses CustomPositionVariant.
@@ -57,7 +71,7 @@ end
 function M.diagnostics()
     local ok,text=pcall(function()
         local backend=native()
-        return backend and backend:GetDiagnostics() or 'Fixed marker backend unavailable; install complete r5b package'
+        return backend and backend:GetDiagnostics() or 'Fixed marker backend unavailable; install complete r5c package'
     end)
     return ok and text or tostring(text)
 end
@@ -75,6 +89,7 @@ function M.finish()
     owner,token=nil,nil
 end
 function M.update(delta,status)
+    if not M.worldReady() then M.reset();return end
     local ok,err=pcall(function()
         local backend=native()
         if not backend then return end

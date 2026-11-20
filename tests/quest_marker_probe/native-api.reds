@@ -53,3 +53,16 @@ public native class gameJournalPath extends IScriptable {
 public abstract native class QuestMappin extends IMappin {
  public final native func GetJournalPathHash() -> Uint32;
 }
+
+// Codeware Utils/Hash.reds and App/Utils/Hashing.hpp: RED4ext Murmur3 seed.
+public native func Murmur3(data: script_ref<String>, opt seed: Uint32) -> Uint32;
+public native class ScriptableService extends IScriptable {}
+public native class ScriptableServiceContainer extends IScriptable {
+ public native func GetService(name: CName) -> ref<ScriptableService>;
+}
+@addMethod(GameInstance)
+public static native func GetScriptableServiceContainer() -> ref<ScriptableServiceContainer>;
+public native class CallbackSystemEvent extends IScriptable {}
+
+// Game orphans.swift:29488, actual unsigned comparison for sorted ownership.
+public native func OperatorLess(a: Uint32, b: Uint32) -> Bool;

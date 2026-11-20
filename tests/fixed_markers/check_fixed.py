@@ -62,6 +62,8 @@ def main():
         code=code.replace('IsDefined(pin:GetScriptData())','IsDefined(AsFixedData(pin:GetScriptData()))')
         code=code.replace('new NCPDPatrolFixedMarkerData()', 'NewFixedData()').replace('new gameJournalPath()', 'NewJournalPath()').replace('new questMappinManagerNodeDefinition()', 'NewManagerNode()')
         for name in ['point','runtimePoint','questPoint']:code=code.replace('local '+name+' = nil','local '+name+' = Vector4.new(0,0,0,0)')
+        # RED integer division truncates; Lua numeric division does not.
+        code=code.replace('middle = (left + right) / 2','middle = math.floor((left + right) / 2)')
         # RED structs zero-initialize; Lua tables do not.
         code=code.replace('local empty = {}','local empty = {value=0}')
         code=code.replace('known = map:GetQuestMappinPosition(self.m_hash, point)','known, point = map:GetQuestMappinPosition(self.m_hash)')
@@ -74,11 +76,13 @@ def main():
     lua.globals().Definitions=convert(definitions);lua.globals().Entries=convert(entries);lua.globals().Sites=convert(catalog['sites'])
     # Native path hashing is an engine boundary. Use RED4ext's algorithm and
     # seed, independently checked against both actual r5 game logs.
+    assert journal_hash('quests/minor_quest/ncpd_patrol_dispatch_3/main/resolve_bank_40/location')==3418482757
     assert journal_hash('quests/minor_quest/ncpd_patrol_vip/main/pickup/bank_204')==764426284
     assert journal_hash('quests/minor_quest/ncpd_patrol_dispatch_4/main/resolve/bank_42')==1219236847
     owned=[d['path'] for d in definitions]+[d['objective'].rsplit('_bank_',1)[0]+'/bank_'+str(d['site']) for d in definitions]
     assert len({journal_hash(p) for p in owned})==3112,'Private bank hash collision'
     lua.globals().PathHash=journal_hash
+    lua.globals().SessionNative=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds'))
     lua.globals().Native=lua.execute(executable(src));lua.globals().MOD_DIR=str(PREFIX)
     for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
         lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
@@ -91,18 +95,22 @@ def main():
         ("F:Reset();for _,d in ipairs(Definitions) do F:AddPin(F.entries[d.path].hash).active=false end;Native:OnRestored(0,0);Native:Tick(.25)", 'Engine-managed quest pins must not be unregistered'),
         ("F:Reset();F.entries[F.objective..'_bank_42'].state=2;F.entries[F.objective..'_bank_42/briefing'].state=2;F.attached=false;Native:OnRestored(0,0);local writes=#F.writes;Native:Tick(.25);assert(#F.writes==writes,'Detached player mutation')",'Detached player mutation'),
     ]
-    with tempfile.TemporaryDirectory(prefix='ncpd-bank-r5a-regression-') as temp:
-        old_path=Path(temp)/'r5a.reds';old_path.write_text(old_source)
-        for scenario,expected in negatives:
-            lua=LuaRuntime(unpack_returned_tuples=True)
-            lua.globals().Definitions=convert(definitions);lua.globals().Entries=convert(entries);lua.globals().Sites=convert(catalog['sites'])
-            lua.globals().PathHash=journal_hash;lua.globals().Native=lua.execute(executable(old_path))
-            for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
-                lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
-            lua.execute((HERE/'engine.lua').read_text())
-            try:lua.execute(scenario)
-            except Exception as error:assert expected in str(error),str(error)
-            else:raise AssertionError('r5a negative regression was not detected: '+expected)
+    r5b_source=subprocess.check_output(['git','show','dae8ffd398713fda789c9ec91864be3b83497d0d:r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds'],cwd=ROOT,text=True)
+    r5b_negatives=[("F:Reset(3);F.hideSitePins=true;Native:OnRestored(0,0);for _=1,40 do Native:Tick(.25) end;F.hideSitePins=false;F.materialize=true;local p=Sites[40].position;Native:Request(40,Vector4.new(p.x,p.y,p.z,1));Native:Tick(.25);assert(Native.m_pinCount==1 and Native.m_linked and Native.m_positionOK and Native.m_questPositionOK,'r5b setup did not expose a valid marker');assert(Native.m_confirmed,'r5b rejected directly observed native pin')",'r5b rejected directly observed native pin')]
+    with tempfile.TemporaryDirectory(prefix='ncpd-bank-regression-') as temp:
+        for label,text,cases in [('r5a',old_source,negatives),('r5b',r5b_source,r5b_negatives)]:
+            old_path=Path(temp)/(label+'.reds');old_path.write_text(text)
+            for scenario,expected in cases:
+                lua=LuaRuntime(unpack_returned_tuples=True)
+                lua.globals().Definitions=convert(definitions);lua.globals().Entries=convert(entries);lua.globals().Sites=convert(catalog['sites'])
+                lua.globals().SessionNative=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds'))
+                lua.globals().PathHash=journal_hash;lua.globals().Native=lua.execute(executable(old_path))
+                for file,name in [('NCPDPatrolDispatchJournalSystem.reds','ScannerNative'),('NCPDPatrolCyberpsychoSystem.reds','CyberNative'),('NCPDPatrolVIPSystem.reds','VIPNative')]:
+                    lua.globals()[name]=lua.execute(executable(ROOT/'r6/scripts/NCPDPatrol'/file))
+                lua.execute((HERE/'engine.lua').read_text())
+                try:lua.execute(scenario)
+                except Exception as error:assert expected in str(error),str(error)
+                else:raise AssertionError('Earlier negative regression was not detected: '+expected)
     sys.path.insert(0,str(HERE.parent/'quest_marker_probe'));from probe_source import without_probe
     for name in ['dispatch_scanner.lua','cyberpsycho.lua','vip_waypoint.lua']:
         base=subprocess.check_output(['git','show',f'a15e4ea35eb738050f45fccf42360b86f96fa4fc:bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/{name}'],cwd=ROOT,text=True)
@@ -118,8 +126,8 @@ def main():
         'original_objectives_and_text_retained':True,'same_target_native_hash_position_objective_proof':True,
         'default_no_native_pin_falls_back_honestly':True,'manual_waypoint_never_written':True,
         'stale_tokens_and_background_owner_cleanup_scoped':True,'vip_pickup_delivery_and_cyberpsycho_stage_switch':True,
-        'load_rediscovery_and_refused_deletion_retry':True,'gameplay_actor_reward_and_result_methods_unchanged':True,'one_pin_per_site_objective':True,'all_pin_definitions_inactive':True,'mappin_manager_activation_explicit':True,'unexpected_and_legacy_bank_pins_pruned':True,'actual_native_owner_transitions_executed':True,'inactive_native_cache_retained':True,'same_id_native_reuse':True,'valid_native_retained_without_false_journal_confirmation':True,'pre_cleanup_snapshot_retained':True,'fallback_registration_liveness_observed':True,'detached_player_blocks_mutations':True,'r5a_negative_controls_detected':2}
-    print('PASS: actual finite journal bank/native and Lua adapter: 323 sites/1556 fixed pins, same-position native proof, inactive definitions/single-pin objectives, explicit MappinManager activation, legacy/flood cleanup, default no-pin fallback, actual VIP/CP/scanner owner transitions, stale token/owner isolation, 1556 cached native instances/reuse without native unregistration, retained partial proof, preserved snapshot/fallback liveness, detached-world guards, two r5a negative controls, manual waypoint preservation and preserved gameplay owners (engine boundaries mocked)')
+        'load_rediscovery_and_refused_deletion_retry':True,'gameplay_actor_reward_and_result_methods_unchanged':True,'one_pin_per_site_objective':True,'all_pin_definitions_inactive':True,'mappin_manager_activation_explicit':True,'unexpected_and_legacy_bank_pins_pruned':True,'actual_native_owner_transitions_executed':True,'inactive_native_cache_retained':True,'same_id_native_reuse':True,'valid_native_retained_without_false_journal_confirmation':True,'pre_cleanup_snapshot_retained':True,'fallback_registration_liveness_observed':True,'detached_player_blocks_mutations':True,'r5a_negative_controls_detected':2,'r5b_valid_native_rejection_negative_control_detected':True,'ownership_independent_of_journal_readiness':True,'selected_pin_direct_identity_counted':True,'session_ready_and_before_end_gate':True,'restore_objectives_per_tick_maximum':48,'fallback_status_follows_live_state':True}
+    print('PASS: actual finite journal bank/native and Lua adapter: 323 sites/1556 fixed pins, same-position native proof, inactive definitions/single-pin objectives, explicit MappinManager activation, legacy/flood cleanup, default no-pin fallback, actual VIP/CP/scanner owner transitions, stale token/owner isolation, 1556 cached native instances/reuse without native unregistration, retained partial proof, preserved snapshot/fallback liveness, detached-world guards, two r5a negative controls plus r5b late-journal rejection control, deterministic ownership/direct selected identity, Session/Ready gate and 48-objective restore slices, live fallback status, manual waypoint preservation and preserved gameplay owners (engine boundaries mocked)')
     return report
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--report',type=Path);args=parser.parse_args();report=main()

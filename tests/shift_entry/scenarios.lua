@@ -1,9 +1,9 @@
 local function scenario(route,trunkVersion,missing)
- local f={callbacks={},hotkeys={},messages={},begins=0,spawns=0,finishes=0,trunkFinishes=0,request=0}
+ local f={callbacks={},hotkeys={},messages={},begins=0,spawns=0,finishes=0,trunkFinishes=0,request=0,worldReady=true,partnerUpdates=0,trunkTicks=0}
  local function noop() end
  local player={}
  local function display() return 'fixture' end
- package.loaded.partner={spawn=function(onDuty) assert(onDuty);f.spawns=f.spawns+1 end,update=noop,reset=noop,dismiss=noop,
+ package.loaded.partner={spawn=function(onDuty) assert(onDuty);f.spawns=f.spawns+1 end,update=function() f.partnerUpdates=f.partnerUpdates+1 end,reset=noop,dismiss=noop,
   state=display,activeProfile=display,vehicleState=display,aidState=display}
  package.loaded.dispatch=setmetatable({init=noop,start=function() f.dispatchStarted=true end,finish=noop,update=noop,reset=noop,setBusy=noop,
   isBusy=function() return false end,isAutomatic=function() return false end,isActive=function() return false end,
@@ -26,13 +26,13 @@ local function scenario(route,trunkVersion,missing)
   GetVoiceDiagnosticRevision=function() return 0 end,TickBonuses=noop}
  local support={Version=function() return NativeVersions.NCPDPatrolSupportSystem end,IsPartnerDownConfigured=function() return true end}
  local nativeTrunk={Version=function() return trunkVersion end,FinishSession=function() f.trunkFinishes=f.trunkFinishes+1 end,
-  Tick=noop,IsBusy=function() return false end,TakeCommand=function() return 0 end}
+  Tick=function() f.trunkTicks=f.trunkTicks+1 end,IsBusy=function() return false end,TakeCommand=function() return 0 end}
  local container={Get=function(_,name)
   if name=='NCPDPatrolSystem' then return patrol end
   if name=='NCPDPatrolSupportSystem' then return support end
   if name=='NCPDPatrolTrunkSystem' and not missing then return nativeTrunk end
  end}
- Game={GetPlayer=function() return not f.unloaded and player or nil end,GetScriptableSystemsContainer=function() return container end,
+ Game={GetScriptableServiceContainer=function() return {GetService=function(_,name) assert(name=='NCPDPatrolMarkerSession');return {IsReady=function() return f.worldReady end} end} end,GetPlayer=function() return not f.unloaded and player or nil end,GetScriptableSystemsContainer=function() return container end,
   GetVehicleSystem=function() return {EnablePlayerVehicle=noop,IsVehiclePlayerUnlocked=function() return true end} end,
   GetTransactionSystem=function() return {GetItemQuantity=function() return 1 end} end}
  TweakDB={GetRecord=function() return {} end};TweakDBID={new=function(v) return v end};ItemID={CreateQuery=function(v) return v end}
@@ -77,4 +77,17 @@ for _,case in ipairs({{3,false},{4,true}}) do
   nativeTrunk.Version=function() return NativeVersions.NCPDPatrolTrunkSystem end
   invoke(true);assert(f.onDuty and f.begins==1 and f.spawns==1,'failed version check latched duty state')
  end
+end
+
+-- Session gate blocks all actual init.lua update consumers even while the
+-- old player remains non-null; starting a shift during this interval is denied.
+do
+ local f,invoke=scenario('hotkey',NativeVersions.NCPDPatrolTrunkSystem,false)
+ local began,spawned,partnerUpdates,trunkTicks=f.begins,f.spawns,f.partnerUpdates,f.trunkTicks
+ f.worldReady=false
+ for _=1,20 do f.callbacks.onUpdate(.25) end
+ invoke(true)
+ assert(f.begins==began and f.spawns==spawned and f.partnerUpdates==partnerUpdates and f.trunkTicks==trunkTicks)
+ f.worldReady=true;f.onDuty=false;f.callbacks.onUpdate(.25)
+ assert(f.partnerUpdates>partnerUpdates)
 end

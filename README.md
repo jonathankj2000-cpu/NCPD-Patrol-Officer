@@ -1,5 +1,22 @@
 # NCPD Patrol
 
+## Fixed quest markers r5c — branch test
+
+Corrects r5b's false rejection of a valid native marker: deterministic private
+ownership is independent of journal availability during restore, and the
+selected private entry identifies its own pin. Codeware Session/Ready gates
+CET/native work; restore processes at most 48 objectives per update. Fallback
+status follows live registration rather than keeping its initial pending label.
+
+[Download the complete r5c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5c_TEST.zip)
+
+Install all 84 files and fully restart; the new session service and bank
+interface 4 are required. All six archives stay byte-identical to r5b. Expected
+normal state: 3112 ownership identities, selected membership true, one active
+bank pin and native confirmed=true. The existing diagnostics button prints
+both current and pre-cleanup evidence. Game stability and crash attribution
+remain unverified. [Implementation and evidence](docs/FIXED_QUEST_MARKERS.md).
+
 ## Fixed quest markers r5b — branch test
 
 Native quest pins now survive deactivation for engine reuse. The check counts

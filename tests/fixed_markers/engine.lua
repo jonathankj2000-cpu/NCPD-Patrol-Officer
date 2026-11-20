@@ -8,6 +8,8 @@ function NotEquals(a,b) return a~=b end
 function Cast(x) return x end
 function ArraySize(a) return a.n end
 function ArrayClear(a) for k in pairs(a) do a[k]=nil end;a.n=0 end
+function ArrayInsert(a,i,x) for j=a.n,i+1,-1 do a[j]=a[j-1] end;a[i]=x;a.n=a.n+1 end
+function Murmur3(s,seed) assert(seed==1592638046);return PathHash(s) end
 function ArrayPush(a,x) a[a.n]=x;a.n=a.n+1 end
 function ArrayErase(a,i) for j=i,a.n-2 do a[j]=a[j+1] end;a[a.n-1]=nil;a.n=a.n-1 end
 function ArrayContains(a,x) for i=0,a.n-1 do if a[i]==x then return true end end;return false end
@@ -30,6 +32,23 @@ ScriptedPuppet={IsActive=function(_,x) return not x.down end,IsDefeated=function
 ItemID={FromTDBID=function(_,x) return x end}
 local journal,map,patrol,player,container,quests={},{},{},{},{},{}
 local rewards={}
+local serviceContainer={}
+local callbacks={}
+function callbacks:UnregisterCallback(event,context,fn)
+ local list=F.callbacks[event] or {};local kept={}
+ for _,c in ipairs(list) do if c.context~=context or c.fn~=fn then kept[#kept+1]=c end end
+ F.callbacks[event]=kept
+end
+function callbacks:RegisterCallback(event,context,fn,sticky)
+ assert(sticky==true);F.callbacks[event]=F.callbacks[event] or {}
+ F.callbacks[event][#F.callbacks[event]+1]={context=context,fn=fn,sticky=sticky}
+ return {}
+end
+function F:Emit(event)
+ for _,c in ipairs(self.callbacks[event] or {}) do c.context[c.fn](c.context,{}) end
+end
+function serviceContainer:GetService(name) if name=='NCPDPatrolMarkerSession' then return SessionNative end end
+
 function F:Scope(index)
  for _,e in pairs(self.entries) do if e.kind~='gameJournalQuestMapPin' then e.state=1 end end
  for _,owner in ipairs({ScannerNative,CyberNative,VIPNative}) do owner.m_stage=0 end
@@ -51,7 +70,7 @@ function F:Scope(index)
 end
 function F:Reset(scope)
  self.entries={};self.hashes={};self.pins={n=0};self.writes={};self.nodes={};self.deleted={};self.fallbackCreates=0;self.nextID=9000
- self.materialize=false;self.failDelete=false;self.failHide=false;self.failRegister=false;self.rejectPath=nil
+ self.callbacks={};self.hideSitePins=false;self.entryReads=0;self.materialize=false;self.failDelete=false;self.failHide=false;self.failRegister=false;self.rejectPath=nil
  self.menu=false;self.duty=true;self.wanted=false;self.loaded=true;self.attached=true;self.nativeMissing=false;self.failActivate=false;self.activationWrites=0
  self.manual=700;self.story={path='story',state=2};self.tracked=self.story;self.tracks={};self.lookupKnown=true;self.linked=true;self.changeManual=false
  self.wallet=0;self.reserved=0;self.paidVIP=0;self.paidCyber=0;self.completed=false;self.paymentOK=true
@@ -63,10 +82,14 @@ function F:Reset(scope)
  for _,d in ipairs(Definitions) do self.entries[d.path].objective=d.objective end
  for _,owner in ipairs({ScannerNative,CyberNative,VIPNative}) do owner:OnAttach();owner.m_restorePending=false end
  ScannerNative.m_paidDispatches={n=0};ScannerNative.m_pendingDispatchRewards={n=0}
- Native:OnAttach();self:Scope(scope or 0);Native:Tick(.25)
+ SessionNative:OnLoad();SessionNative:OnInitialize();self:Emit('Session/BeforeStart')
+ Native:OnAttach();self:Scope(scope or 0);self:Emit('Session/Ready')
+ for _=1,40 do Native:Tick(.25) end
  self.writes={};self.nodes={};self.deleted={}
 end
 function journal:GetEntryByString(path,kind)
+ F.entryReads=F.entryReads+1
+ if F.hideSitePins and kind=='gameJournalQuestMapPin' and path:sub(-9)=='/location' then return nil end
  local e=F.entries[path];if e and e.kind==kind then return e end
 end
 function journal:GetEntryState(entry) assert(entry);return entry.state end
@@ -110,7 +133,7 @@ end
 function F:OwnedActive()
  local count=0
  for i=0,self.pins.n-1 do local p=self.pins[i]
-  if p.active and ((p.kind=='quest' and ArrayContains(Native.m_ownHashes,p.hash)) or AsFixedData(p.data)) then count=count+1 end
+  if p.active and ((p.kind=='quest' and (ArrayContains(Native.m_ownHashes,p.hash) or (p.hash==Native.m_hash and Native.m_currentPath~=''))) or AsFixedData(p.data)) then count=count+1 end
  end
  return count
 end
@@ -178,17 +201,18 @@ function container:Get(name)
  if name=='NCPDPatrolCyberpsychoSystem' then return CyberNative end
  if name=='NCPDPatrolVIPSystem' then return VIPNative end
 end
-GameInstance={GetJournalManager=function() return journal end,GetMappinSystem=function() return map end,GetQuestsSystem=function() return quests end,
+GameInstance={GetScriptableServiceContainer=function() return serviceContainer end,GetCallbackSystem=function() return callbacks end,GetJournalManager=function() return journal end,GetMappinSystem=function() return map end,GetQuestsSystem=function() return quests end,
  GetTransactionSystem=function() return {GiveItem=function(_,player,item,amount) assert(item=='Items.money');if not F.paymentOK then return false end;F.wallet=F.wallet+amount;return true end} end,
  GetMountingFacility=function() return {GetMountingInfoSingleWithObjects=function() return {slotId={id=F.driver and 'seat_front_left' or 'seat_front_right'}} end} end}
 NCPDPatrolSystem={Get=function() return patrol end}
 NCPDPatrolIncidentSystem={Get=function() return rewards end}
+NCPDPatrolMarkerSession=SessionNative
 NCPDPatrolFixedMarkerSystem=Native
 NCPDPatrolDispatchJournalSystem={Get=function() return ScannerNative end}
 NCPDPatrolCyberpsychoSystem={Get=function() return CyberNative end}
 NCPDPatrolVIPSystem={Get=function() return VIPNative end}
 function GetPlayer() if F.loaded then return player end end
-Game={GetScriptableSystemsContainer=function() return container end,GetMappinSystem=function() return map end,GetPlayer=GetPlayer}
+Game={GetScriptableServiceContainer=function() return serviceContainer end,GetScriptableSystemsContainer=function() return container end,GetMappinSystem=function() return map end,GetPlayer=GetPlayer}
 F.patrol=patrol;F.map=map;F.journal=journal;F.player=player
 function F:Actor(record,point)
  local x={record=record,point=point,down=false}

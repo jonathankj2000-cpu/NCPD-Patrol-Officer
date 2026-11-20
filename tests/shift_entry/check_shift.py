@@ -18,4 +18,4 @@ for name in ['NCPDPatrolSystem','NCPDPatrolSupportSystem','NCPDPatrolTrunkSystem
 lua.globals().NativeVersions=lua.table_from(versions)
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE/'scenarios.lua').read_text())
-print('PASS: actual init.lua + trunk.lua start/end via CET, native fast travel request and hotkey; current installed interfaces, old/missing trunk refusal, no partial start, retry and duplicate-start guards (engine boundaries mocked)')
+print('PASS: actual init.lua + trunk.lua start/end via CET, native fast travel request and hotkey; current installed interfaces, old/missing trunk refusal, no partial start, retry/duplicate-start guards and Session/Ready update gate with non-null old player (engine boundaries mocked)')
