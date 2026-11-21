@@ -22,6 +22,11 @@ plus 3 s usable-access window could delay actual combat far inside that radius.
 - Approaching from a distance still permits the existing settling/access window.
   Reaching 50 m may activate as soon as a complete current body/aid-state/clearance
   and walking-path snapshot succeeds; it does not require waiting 7 extra seconds.
+- The first live aid-point/path proof uses the healthy owned defender's character
+  profile and the recorded empty scene center. Its source nav point must remain
+  within 1.5 m of that center and 0.75 m vertically; complete path endpoints are
+  still required. V's moving/occupied car seat supplies neither source nor owner.
+  Off-duty survey path proof still starts from V and uses the original rules.
 - Once proved, aid access survives a temporary failure to calculate a walking
   route from V's vehicle seat. Actual injured body/ground/down-state/clearance
   checks continue before release. Missing, buried, blocked or escaped actors

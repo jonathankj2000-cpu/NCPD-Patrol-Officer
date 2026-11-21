@@ -187,7 +187,15 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
     public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
         return this.Eligible() && (this.m_stage == 1 || this.m_stage == 2) && npc == this.m_injured && NCPDPatrolAidAccess.IsReady(npc);
     }
+    public func GetInjuredAidNavigationOwner() -> ref<NPCPuppet> {
+        if this.Eligible() && (this.m_stage == 1 || this.m_stage == 2) && IsDefined(this.m_defender)
+            && this.m_defender.IsAttached() && !this.m_defender.IsDead() { return this.m_defender; };
+        return null;
+    }
     public func HasInjuredAidPath(npc: ref<NPCPuppet>, point: Vector4) -> Bool {
+        if this.m_catalogIndex > 0 {
+            return this.IsInjuredAidReady(npc) && NCPDPatrolAidAccess.HasPathFromScene(this.GetGameInstance(), npc, point, this.SitePosition(), this.m_defender);
+        };
         return this.IsInjuredAidReady(npc) && NCPDPatrolAidAccess.HasPath(this.GetGameInstance(), npc, point);
     }
     public static func Get(game: GameInstance) -> ref<NCPDPatrolOfficerDownSystem> {

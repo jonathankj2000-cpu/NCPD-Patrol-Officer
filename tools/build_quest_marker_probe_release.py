@@ -22,7 +22,7 @@ def main():
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  changed={PREFIX+n for n in ['init.lua','cet_ui.lua','officer_down.lua','officer_down_actors.lua','officer_down_scene.lua','scene_survey_functional.lua']}
- changed.update('r6/scripts/NCPDPatrol/'+n for n in ['NCPDPatrolOfficerDownSystem.reds','NCPDPatrolOfficerDownSite.reds','NCPDPatrolPartnerSafety.reds','NCPDPatrolSystem.reds'])
+ changed.update('r6/scripts/NCPDPatrol/'+n for n in ['NCPDPatrolOfficerDownSystem.reds','NCPDPatrolOfficerDownSite.reds','NCPDPatrolPartnerSafety.reds','NCPDPatrolSystem.reds','NCPDPatrolAidAccess.reds'])
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
@@ -67,7 +67,7 @@ def main():
   'global_heat_reset_or_immunity':False,'existing_wanted_termination_unchanged':True,
   'reference_vehicle_threat_and_combat_hit_paths_found':True,'reported_wanted_cause_proven':False,
   'reference_game_source_commit':'81d996b584a693e8b0f0b20526a9fa38b5c83fe7',
-  'existing_40_native_scripts_and_eight_archives_unchanged_from_v018e2':True,
+  'existing_39_native_scripts_and_eight_archives_unchanged_from_v018e2':True,
   'scanner_vip_cyberpsycho_markers_survey_profiles_arrest_partner_and_backup_ai_unchanged':True,
   'all_payment_and_career_ledgers_unchanged':True,'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},
   'officer_down_sites':16,'officer_down_reward':2000,'officer_down_career_credit':1,
@@ -80,7 +80,7 @@ def main():
   'completed_private_npc_and_vehicle_ids_can_retire_after_detachment':True,'explicit_delete_refusal_receipt_supported_for_completed_scenes':True,'fresh_entity_and_spawning_queries_required':True,'background_cleanup_errors_preserve_successful_quest_and_other_types':True,'runtime_cause_and_engine_acknowledgement_confirmed':False,
   'officer_down_arrival_radius_m':50,'mounted_arrival_allowed':True,'live_npc_spawn_anchor_precision_removed':True,
   'initial_binding_and_physical_safety_still_required':True,'fast_arrival_complete_usable_snapshot_required':True,
-  'proven_aid_route_retained_across_vehicle_seat_path_failure':True,'v018e2_scene_failure_negative_controls':True,
+  'proven_aid_route_retained_across_vehicle_seat_path_failure':True,'first_live_aid_route_from_scene_center_and_healthy_defender':True,'v018e2_scene_failure_negative_controls':True,
   'police_stray_discharge_interval_seconds':10,'police_exact_shot_group_seconds':0.5,'recent_hostile_shooter_seconds':6,
   'police_exception_requires_hostile_combat_and_no_direct_police_aim':True,'police_hit_intent_proven':False,
   'game_checks_required':['Officer Down mounted arrival at 50 m and natural NPC staging movement',

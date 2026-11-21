@@ -2,7 +2,9 @@ NCPD PATROL v0.18f SCENE ARRIVAL AND STRAY FIRE - COMPLETE BRANCH TEST
 
 Officer Down combat now starts within 50 m of the scene center, including
 arrival in a vehicle. A fast approach uses a complete safe/usable injured-officer
-snapshot instead of waiting out the distant 4+3 second survey window. Previously
+snapshot instead of waiting out the distant 4+3 second survey window. Live aid
+routes use the scene center and healthy defender's navigation profile, so the
+first access proof also works independently of V's moving car seat. Previously
 proven aid access is retained when a vehicle seat temporarily lacks a walking
 route; the officer's body, ground, identity and clearance remain checked.
 

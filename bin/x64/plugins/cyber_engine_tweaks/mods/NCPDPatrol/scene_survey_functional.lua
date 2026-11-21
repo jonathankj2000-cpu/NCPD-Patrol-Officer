@@ -29,8 +29,8 @@ local function body(spatial,sample)
     if not ground.vehicle_clear then return ground,'Injured officer overlaps a vehicle' end
     return ground
 end
-local function approach(spatial,nav,backend,actor,p,ground,probe,fixed)
-    local result=nav:FindPointInSphereForCharacter(point(probe),.5,Game.GetPlayer())
+local function approach(spatial,nav,backend,actor,p,ground,probe,fixed,navigationOwner)
+    local result=nav:FindPointInSphereForCharacter(point(probe),.5,navigationOwner or Game.GetPlayer())
     if not result or result.status~=worldNavigationRequestStatus.OK or not finite(result.point)
         or distance(result.point,probe)>.75 or distance(result.point,p)>M.aidRange then return nil,'No aid position within interaction range' end
     local q=copy(fixed and probe or result.point)
@@ -71,6 +71,8 @@ function M.new(backend,site,options)
         self.age=self.age+delta
         local spatial,nav=Game.GetSpatialQueriesSystem(),Game.GetAINavigationSystem()
         if not spatial or not nav then error('Functional survey ground/navigation services unavailable') end
+        local navigationOwner=options and options.liveScene and backend:GetInjuredAidNavigationOwner() or nil
+        if options and options.liveScene and not navigationOwner then error('Live incident navigation owner not ready') end
         local samples,row,actor={}
         local frame={phase=partial and 'spawning' or (transition and 'functional-settling' or 'functional-observing'),elapsed_active=self.age,
             since_down_request=self.boundAt and self.age-self.boundAt or nil,scene_radius=M.sceneRadius,aid_range=M.aidRange,corrections_enabled=false}
@@ -110,13 +112,13 @@ function M.new(backend,site,options)
         local aid,old=self.aidPosition,self.aidPosition
         local continued=false
         if not reason then
-            if aid then aid,reason=approach(spatial,nav,backend,actor,p,ground,aid,true);continued=aid~=nil end
+            if aid then aid,reason=approach(spatial,nav,backend,actor,p,ground,aid,true,navigationOwner);continued=aid~=nil end
             if not aid then
                 self.stable=0;reason=nil
                 for i=0,7 do
                     local angle=i*math.pi/4
                     local probe={x=p.x+math.cos(angle)*1.5,y=p.y+math.sin(angle)*1.5,z=ground.position.z}
-                    aid,reason=approach(spatial,nav,backend,actor,p,ground,probe)
+                    aid,reason=approach(spatial,nav,backend,actor,p,ground,probe,nil,navigationOwner)
                     if aid then break end
                 end
             end

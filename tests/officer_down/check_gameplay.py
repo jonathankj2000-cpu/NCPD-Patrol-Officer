@@ -44,6 +44,15 @@ def main():
  try:arrival_case(fast,legacy=True)
  except LuaError as error:assert '50 m arrival waited' in str(error),str(error)
  else:raise AssertionError('Previous late-combat gate was not reproduced')
+ # No prior approval is needed to decouple V's seat from the first local aid
+ # proof. Layout is created first; subsequent player-owned nav calls fail.
+ arrival_case('''local c,f,s=CF,F,SurveyFixture;c.request(1);f.player.mounted={}
+ f.playerPoint=c.point(-80);c.step(.25);assert(#f.creates==10)
+ s.playerNavBlocked=true;c.step(.5);f.playerPoint=c.point(-50);c.step(.25)
+ assert(OfficerNative:GetStage()==2,'Mounted player navigation blocked first scene activation: '..c.scene.state())
+ assert(s.sceneSourceQueries>0 and s.scenePathQueries>0 and #f.threats==15)
+ assert(OfficerNative:GetInjuredAidNavigationOwner()==OfficerNative.m_defender)
+ s.playerNavBlocked=false;f.player.mounted=nil;c.clear()''')
  # The initial binding is still strict; animation after binding and before
  # approval follows live physical safety, not a spawn coordinate tolerance.
  arrival_case('''local c,f,s=CF,F,SurveyFixture;c.request(1);f.playerPoint=c.point(-100);c.step(.75)
@@ -135,12 +144,12 @@ def main():
  assert(s.actorTeleports==0 and OfficerNative:GetStage()==1)
  f.playerPoint=c.point(-40);c.step(.25);assert(OfficerNative:GetStage()==2)
  c.clear()''',inspect_offset)
- # Arrival in a vehicle samples a nearby road-level nav source. No lower
- # bridge/other floor is accepted when it is outside the source sphere.
+ # Live aid proof starts at the scene center with the healthy owned defender,
+ # so no walking route/nav point at V's vehicle seat is required for combat.
  case('''local c,f=CF,F;c.request(2);f.playerPoint=c.point(-100,0,1);f.player.mounted={}
  local nav=Game.GetAINavigationSystem();local find=nav.FindPointInSphereForCharacter;local checked=false
  nav.FindPointInSphereForCharacter=function(self,p,r,owner)
-  if r==1.5 then checked=true;return {status=0,point=Vector4.new(p.x,p.y,c.site.z,1)} end
+  if r==1.5 and owner==OfficerNative.m_defender then checked=true;return {status=0,point=Vector4.new(p.X,p.Y,c.site.z,1)} end
   return find(self,p,r,owner)
  end
  c.step(9);assert(checked)
@@ -222,7 +231,8 @@ def main():
   'existing_rewards_unchanged':True,'actual_game_validation':False,
   'v018e2_defender_and_delayed_arrival_negative_controls':True,'mounted_combat_radius_m':50,
   'fast_arrival_requires_full_usable_snapshot':True,'live_npc_safety_replaces_spawn_displacement':True,
-  'survey_validation_profiles_unchanged':True,'retained_approval_does_not_repeat_player_origin_path':True}
+  'survey_validation_profiles_unchanged':True,'retained_approval_does_not_repeat_player_origin_path':True,
+  'first_live_aid_proof_uses_scene_center_and_owned_defender_not_player_seat':True}
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()
  if a.report:a.report.write_text(json.dumps(r,indent=2)+'\n')

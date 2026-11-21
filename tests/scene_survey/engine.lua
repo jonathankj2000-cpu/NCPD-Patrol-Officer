@@ -103,12 +103,24 @@ function spatial:Overlap(box,center,angle,group)
 end
 Game.GetSpatialQueriesSystem=function() return spatial end
 local navigation={FindPointInSphereForCharacter=function(_,p,radius,owner)
- assert(p.__vector=='Vector4' and p.w==1 and owner==player and (radius==.5 or radius==1.2 or radius==1.5))
+ local sceneOwner=owner and owner.record=='Character.NCPDPatrol_OD_Defender'
+ assert(p.__vector=='Vector4' and p.W==1 and (owner==player or sceneOwner) and (radius==.5 or radius==1.2 or radius==1.5))
+ -- REDscript writes X/Y/Z/W; CET exposes those same native struct fields as
+ -- x/y/z/w. Preserve that value-copy boundary in this plain-table fixture.
+ p=Vector4.new(p.X,p.Y,p.Z,p.W)
+ if sceneOwner then s.sceneSourceQueries=(s.sceneSourceQueries or 0)+1 end
+ if owner==player and s.playerNavBlocked then return {status=1} end
  if s.noNav[location(p).id] then return {status=1} end
  return {status=0,point=Vector4.new(p.x,p.y,p.z,1)}
 end}
 function navigation:CalculatePathForCharacter(a,b,tolerance,owner)
- assert(a.__vector=='Vector4' and b.__vector=='Vector4' and tolerance==.5 and owner==player)
+ local sceneOwner=owner and owner.record=='Character.NCPDPatrol_OD_Defender'
+ assert(a.__vector=='Vector4' and b.__vector=='Vector4' and tolerance==.5 and (owner==player or sceneOwner))
+ if owner==player and s.playerNavBlocked then return {path={n=0}} end
+ if sceneOwner then
+  local site=location(a);assert((a.x-site.x)^2+(a.y-site.y)^2<=1.5^2,'Live aid path started outside the scene center')
+  s.scenePathQueries=(s.scenePathQueries or 0)+1
+ end
  s.pathQueries=(s.pathQueries or 0)+1
  if s.pathError then error('Injected navigation API failure') end
  if s.noAidPath then return {path={n=0}} end
