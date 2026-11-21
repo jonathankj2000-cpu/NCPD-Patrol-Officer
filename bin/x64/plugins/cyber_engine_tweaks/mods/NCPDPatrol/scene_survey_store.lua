@@ -6,7 +6,7 @@ local M={logFile='scene_survey_results.jsonl',exportFile='scene_survey_report.js
 local known={};for _,site in ipairs(Catalog.sites) do known[site.id]=site end
 local function finite(v) return type(v)=='number' and v==v and math.abs(v)<100000 end
 function M.new()
-    local self={loaded=false,last={},best={},pilotLast={},pilotBest={},events={},ignored=0}
+    local self={loaded=false,last={},best={},pilotLast={},pilotBest={},placementLast={},placementBest={},events={},ignored=0}
     local function accept(row)
         if type(row)~='table' or row.schema~=1 then return false end
         if row.kind~='site_result' then return true end
@@ -16,14 +16,18 @@ function M.new()
             or row.position.x~=site.x or row.position.y~=site.y or row.position.z~=site.z then return false end
         local key=row.site..'/'..row.variant
         local profile=row.validation_profile or 'legacy-immediate-v1'
-        if profile~='legacy-immediate-v1' and profile~='injured-settling-pilot-v1' then return false end
+        if profile~='legacy-immediate-v1' and profile~='injured-settling-pilot-v1' and profile~='injured-staging-pilot-v1' then return false end
         local latest,best=self.last,self.best
         if profile=='injured-settling-pilot-v1' then latest,best=self.pilotLast,self.pilotBest end
+        if profile=='injured-staging-pilot-v1' then latest,best=self.placementLast,self.placementBest end
         if row.status=='validated' then
             if not finite(row.heading) or row.heading<0 or row.heading>=360 or row.cleanup_confirmed~=true
                 or type(row.samples)~='table' or #row.samples~=10 or not finite(row.observed_seconds) or row.observed_seconds<3 then return false end
-            if profile=='injured-settling-pilot-v1' and (row.pilot_settling_seconds~=4
+            if profile~='legacy-immediate-v1' and (row.pilot_settling_seconds~=4
                 or not finite(row.maximum_observation_drift) or row.maximum_observation_drift>.15) then return false end
+            if profile=='injured-staging-pilot-v1' and (row.placement_release_seconds~=.5
+                or not finite(row.placement_corrections) or row.placement_corrections<0
+                or row.placement_corrections%1~=0) then return false end
             best[key]=row
         elseif row.status~='unverified' and row.status~='failed' and row.status~='cancelled' then return false end
         latest[key]=row
@@ -59,7 +63,8 @@ function M.new()
     end
     function self:preferred(site,variant,profile)
         self:load();local key=site.id..'/'..variant
-        local row=(profile=='injured-settling-pilot-v1' and self.pilotBest[key]) or self.best[key]
+        local row=(profile=='injured-staging-pilot-v1' and self.placementBest[key])
+            or (profile=='injured-settling-pilot-v1' and self.pilotBest[key]) or self.best[key]
         return row and row.heading or nil
     end
     function self:needsTest(site,variant)
@@ -68,7 +73,8 @@ function M.new()
     end
     function self:count(variant,profile)
         local count=0
-        local best=profile=='injured-settling-pilot-v1' and self.pilotBest or self.best
+        local best=profile=='injured-staging-pilot-v1' and self.placementBest
+            or (profile=='injured-settling-pilot-v1' and self.pilotBest or self.best)
         for _,site in ipairs(Catalog.sites) do if best[site.id..'/'..variant] then count=count+1 end end
         return count
     end
@@ -80,13 +86,15 @@ function M.new()
                 local key=site.id..'/'..variant
                 rows[#rows+1]={site=site.id,label=site.label,variant=variant,position={x=site.x,y=site.y,z=site.z},captured_heading=site.heading,
                     latest=self.last[key] or {status='untested'},proven=self.best[key] or false,
-                    injured_settling_pilot_latest=self.pilotLast[key] or {status='untested'},injured_settling_pilot_proven=self.pilotBest[key] or false}
+                    injured_settling_pilot_latest=self.pilotLast[key] or {status='untested'},injured_settling_pilot_proven=self.pilotBest[key] or false,
+                    injured_placement_pilot_latest=self.placementLast[key] or {status='untested'},injured_placement_pilot_proven=self.placementBest[key] or false}
             end
         end
         local report={schema=1,catalog_revision=Catalog.revision,layout_revision=Layout.revision,coverage=Catalog.coverage,
             scope='Placement, actual ten-actor spawn and stability; combat/revive not tested',
             sites=rows,events=self.events,ignored_or_incompatible_lines=self.ignored,
-            validation_profiles={legacy='Original immediate 1.5 m survey',pilot='Opt-in 4 s injured settling, then unchanged 1.5 m bound, local support/clearance and 3 s stable observation; separate results'}}
+            validation_profiles={legacy='Original immediate 1.5 m survey',pilot='Opt-in 4 s injured settling, then unchanged 1.5 m bound, local support/clearance and 3 s stable observation; separate results',
+                placement='Opt-in production-style injured correction for 4 s, then corrections disabled, 0.5 s release and 3 s stable observation within original 1.5 m; separate results'}}
         local file,reason=io.open(M.exportFile,'w')
         if not file then error('Cannot export survey report: '..tostring(reason)) end
         local ok,result=pcall(function() assert(file:write(json.encode(report)));assert(file:flush());return file:close() end)

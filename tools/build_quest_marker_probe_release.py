@@ -1,39 +1,40 @@
-"""Verify and package the opt-in three-site injured transition pilot.
+"""Verify and package bounded injured placement with uncorrected observation.
 
-The workflow entrypoint is retained. All native scripts/archives and live Officer
-Down geometry are unchanged from v0.18b. Full tours retain the legacy procedure.
+The workflow entrypoint is retained. Only the off-duty survey owner gains native
+placement methods. Full tours, live missions, geometry and archives are unchanged.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='6b8db2612cb2504270a6fad779ee436c34bbfb1f'
+BASE='4ef1464d4b7c54828e6ccd15f9b3cae88047172d'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.18b1_Injured_Settling_Pilot_TEST.zip'
-REPORT='NCPD_Patrol_v0.18b1_Injured_Settling_Pilot_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py']
+NAME='NCPD_Patrol_v0.18b2_Injured_Placement_Pilot_TEST.zip'
+REPORT='NCPD_Patrol_v0.18b2_Injured_Placement_Pilot_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==38 and len(scripts)==41
+ assert len(modules)==39 and len(scripts)==41
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','officer_down_actors.lua','scene_survey.lua','scene_survey_store.lua']}
- added={PREFIX+'scene_survey_settling.lua'}
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua','scene_survey_settling.lua','scene_survey.lua','scene_survey_store.lua']}
+ changed.add('r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds')
+ added={PREFIX+'scene_survey_staging.lua'}
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
  paths=[p for d in ['bin','r6','archive'] for p in (ROOT/d).rglob('*') if p.is_file()]+[ROOT/n for n in ['README.txt','LICENSE','THIRD_PARTY_NOTICES.txt']]
  assert {p.relative_to(ROOT).as_posix() for p in paths}==set(previous)|added|{'README.txt','LICENSE','THIRD_PARTY_NOTICES.txt'}
- assert len(paths)==105
+ assert len(paths)==106
  comparisons={
  'dispatch':'tests/dispatch_refactor/check_refactor.py','ui':'tests/cet_ui/check_cet_ui.py',
  'vip':'tests/vip_refactor/check_vip_refactor.py','probe':'tests/quest_marker_probe/check_probe.py',
  'fixed_markers':'tests/fixed_markers/check_fixed.py','vip_routes':'tests/vip_routes/check_routes.py',
  'officer_down':'tests/officer_down/check_officer_down.py','scene_survey':'tests/scene_survey/check_survey.py',
- 'injured_settling':'tests/scene_survey/check_settling.py'}
+ 'injured_settling':'tests/scene_survey/check_settling.py','injured_placement':'tests/scene_survey/check_staging.py'}
  with TemporaryDirectory(prefix='ncpd-officer-down-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
@@ -47,11 +48,11 @@ def main():
    info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,21,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
    z.writestr(info,p.read_bytes(),compresslevel=9)
  with zipfile.ZipFile(release) as z:
-  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==105
+  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==106
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.18b1-injured-settling-pilot','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.18b2-injured-placement-pilot','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'scene':json.loads((ROOT/'assets/officer_down/scene.json').read_text()),
@@ -81,15 +82,23 @@ def main():
   'survey_automatic_resume_after_save_reload':False,'survey_cet_reload_has_native_id_recovery':True,
   'survey_uses_controlled_teleport_and_readiness_checks':True,'memory_purging_loading_screen_claimed':False,
   'survey_results_are_preapproved_dispatch_locations':False,
-  'all_41_native_scripts_and_seven_archives_unchanged_from_v018b':True,
+  'other_40_native_scripts_and_seven_archives_unchanged_from_v018b1':True,
+  'only_native_change':'NCPDPatrolSceneSurveySystem.reds: opt-in injured staging correction and release gate',
   'live_officer_down_and_layout_geometry_unchanged_from_v018b':True,'legacy_17_site_runtime_and_evidence_comparison_identical':True,
   'injured_settling_opt_in_only':True,'injured_pilot_sites':['kryss_04','kryss_11','kryss_15'],
   'injured_pilot_profile':'injured-settling-pilot-v1','injured_settle_active_seconds':4,
   'injured_pilot_final_original_position_limit_m':1.5,'injured_pilot_observation_anchor_drift_m':0.15,
   'injured_pilot_temporal_motion_envelope_m':{'horizontal':3,'vertical':1.5},
   'injured_motion_samples_include_original_actual_world_and_local_delta':True,
-  'injured_pilot_actor_teleport_or_spawn_offset_compensation':False,
+  'passive_settling_pilot_actor_teleport_or_spawn_offset_compensation':False,
   'injured_pilot_results_separate_from_legacy':True,'animation_root_motion_cause_proven':False,
+  'injured_placement_opt_in_only':True,'injured_placement_profile':'injured-staging-pilot-v1',
+  'injured_placement_stage_active_seconds':4,'injured_placement_uncorrected_release_seconds':.5,
+  'injured_placement_uncorrected_observation_seconds':3,'injured_placement_final_original_position_limit_m':1.5,
+  'injured_placement_native_gate_closed_before_final_observation':True,
+  'injured_placement_expected_position_rebased_or_offset_compensated':False,
+  'injured_placement_ignored_teleports_and_continued_drift_rejected':True,
+  'injured_placement_results_separate_from_legacy_and_passive_pilot':True,
   'partial_cleanup_reserves_scene':True,'successful_aftermath_reserves_dispatch':False,
   'browser_extension_still_optional':True,'actual_game_validation':False,
   'game_checks_required':['compact scene street alignment and orientation','17 actual locations and transfer streaming/memory behavior','car root placement/traffic collisions','survey cancellation/return and CET recovery','officer down/recovery animation and F interaction','combat AI/cover','native quest marker rendering and reuse'],

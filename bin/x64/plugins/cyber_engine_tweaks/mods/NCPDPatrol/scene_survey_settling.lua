@@ -30,6 +30,7 @@ local function support(sample,final)
     if not state.vehicle_clear then return state,'Injured final local Vehicle clearance blocked' end
     return state
 end
+M.support=support -- shared conservative support/clearance for the staging pilot
 function M.new()
     local self={age=0,boundAt=nil,peak=0,anchors=nil,stable=0,maxDrift=0,previous=nil}
     function self:noteBound(actors,elapsed)

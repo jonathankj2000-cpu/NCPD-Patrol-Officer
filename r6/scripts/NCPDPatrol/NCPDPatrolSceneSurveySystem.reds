@@ -10,11 +10,17 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
     private let m_created: array<EntityID>;
     private let m_ids: array<EntityID>;
     private let m_objects: array<wref<GameObject>>;
+    private let m_injuredPlacement: Bool;
+    private let m_placementOpen: Bool;
+    private let m_injuredAnchor: Vector4;
     public func Version() -> Int32 { return 1; }
+    public func PlacementVersion() -> Int32 { return 1; }
     private func OnAttach() -> Void { this.Forget(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.Forget(); }
     private func Forget() -> Void {
         this.m_active = false; this.m_generation = -1;
+        this.m_injuredPlacement = false;
+        this.m_placementOpen = false;
         ArrayClear(this.m_ids); ArrayClear(this.m_objects); ArrayClear(this.m_created);
     }
     public func GetSessionGeneration() -> Int32 {
@@ -54,6 +60,11 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
         return true;
     }
     public func IsActive() -> Bool { return this.m_active; }
+    public func BeginPlacement() -> Bool {
+        if !this.Begin() { return false; };
+        this.m_injuredPlacement = true;
+        return true;
+    }
     public func GetRunGeneration() -> Int32 { return this.m_generation; }
     public func GetReturnPosition() -> Vector4 { return this.m_return; }
     public func GetReturnYaw() -> Float { return this.m_returnYaw; }
@@ -109,10 +120,37 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
         already = ArrayContains(this.m_ids, npc.GetEntityID());
         if !this.AddActor(npc) { return false; };
         if !already && record == t"Character.NCPDPatrol_OD_Injured" {
+            this.m_injuredAnchor = npc.GetWorldPosition();
+            this.m_placementOpen = this.m_injuredPlacement;
             npc.SetIsDefeatMechanicActive(false);
             GameInstance.GetStatPoolsSystem(this.GetGameInstance()).RequestSettingStatPoolValue(Cast<StatsObjectID>(npc.GetEntityID()), gamedataStatPoolType.Health, 10.0, null, true);
             StatusEffectHelper.ApplyStatusEffect(npc, t"BaseStatusEffect.NCPDPatrolOfficerDown");
         };
+        return true;
+    }
+    // Opt-in survey staging only. Same teleport facility as Officer Down's
+    // pre-arrival lock; never applied to the other nine actors or observation.
+    public func LockPosition(object: ref<GameObject>, point: Vector4, yaw: Float) -> Bool {
+        let rotation: EulerAngles;
+        let current: Vector4;
+        let npc: ref<NPCPuppet> = object as NPCPuppet;
+        if !this.m_injuredPlacement || !this.m_placementOpen || !this.SamePlayer() || !this.CanRun() || this.IsMenuOpen()
+            || !IsDefined(npc) || !npc.IsAttached() || npc.IsDead()
+            || npc.GetRecordID() != t"Character.NCPDPatrol_OD_Injured"
+            || !ArrayContains(this.m_created, npc.GetEntityID()) || !ArrayContains(this.m_ids, npc.GetEntityID())
+            || point.X != point.X || point.Y != point.Y || point.Z != point.Z || yaw != yaw || AbsF(yaw) > 720.0
+            || Vector4.Distance(point, this.m_origin) > 35.0 || Vector4.Distance(point, this.m_injuredAnchor) > 1.5 { return false; };
+        current = npc.GetWorldPosition();
+        if current.X != current.X || current.Y != current.Y || current.Z != current.Z
+            || (current.X - point.X) * (current.X - point.X) + (current.Y - point.Y) * (current.Y - point.Y) > 9.0
+            || AbsF(current.Z - point.Z) > 1.5 { return false; };
+        rotation.Roll = 0.0; rotation.Pitch = 0.0; rotation.Yaw = yaw;
+        GameInstance.GetTeleportationFacility(this.GetGameInstance()).Teleport(npc, point, rotation);
+        return true;
+    }
+    public func StopInjuredPlacement() -> Bool {
+        if !this.SamePlayer() || !this.m_injuredPlacement { return false; };
+        this.m_placementOpen = false;
         return true;
     }
     public func EndActors() -> Bool {
@@ -129,6 +167,7 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
             i += 1;
         };
         ArrayClear(this.m_ids); ArrayClear(this.m_objects); ArrayClear(this.m_created);
+        this.m_placementOpen = false;
         return true;
     }
     public func Finish() -> Bool {

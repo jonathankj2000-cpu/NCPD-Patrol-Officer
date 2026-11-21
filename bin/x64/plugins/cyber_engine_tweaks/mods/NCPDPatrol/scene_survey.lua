@@ -4,6 +4,7 @@ local Layout=require('officer_down_layout')
 local Actors=require('officer_down_actors')
 local Store=require('scene_survey_store')
 local Settling=require('scene_survey_settling')
+local Staging=require('scene_survey_staging')
 local M={}
 local context,storage={},Store.new()
 local phase,label='idle','Survey not started. '..Catalog.coverage
@@ -44,7 +45,9 @@ local function siteResult(status,reason)
         observed_seconds=stable,max_displacement=observedMax,cleanup_confirmed=true,
         injured_transition_peak_displacement=pilotState and pilotState.peak or nil,
         pilot_settling_seconds=pilotState and Settling.settleSeconds or nil,
-        maximum_observation_drift=pilotState and pilotState.maxDrift or nil}
+        maximum_observation_drift=pilotState and pilotState.maxDrift or nil,
+        placement_corrections=profile==Staging.profile and pilotState and pilotState.corrections or nil,
+        placement_release_seconds=profile==Staging.profile and Staging.releaseSeconds or nil}
 end
 local function captureDrain()
     for _,row in ipairs(actors) do
@@ -112,6 +115,7 @@ end
 function M.summary()
     return label..'\nPhase: '..phase..' | '..Catalog.coverage..' | proven compact='..storage:count('compact')..'/17 | proven standard='..storage:count('standard')..'/17'
         ..' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
+        ..' | placement pilot='..storage:count('compact',Staging.profile)..'/3'
 end
 function M.diagnostics()
     return M.summary()..' | site='..tostring(site and site.id)..' | variant='..tostring(variant)..' | heading='..tostring(heading)
@@ -132,10 +136,14 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         if requestedVariant~='compact' and requestedVariant~='standard' then error('Unknown survey layout') end
         if context.canStart then local allowed,why=context.canStart();if not allowed then error(why or 'Existing patrol actors/dispatch still active') end end
         local owner=native()
+        if pilot=='staging' then
+            local compatible,version=pcall(function() return owner:PlacementVersion() end)
+            if not compatible or version~=1 then error('Install the complete v0.18b2 Injured Placement Pilot package and fully restart the game') end
+        end
         if owner:IsActive() then error('Previous CET session left a survey reserved; use Recover survey cleanup and return') end
         if not owner:CanRun() or owner:IsMenuOpen() then error('Load a manual test save, go OFF DUTY, leave combat/menus and exit your vehicle') end
         storage:load();queue={}
-        profile=pilot and Settling.profile or 'legacy-immediate-v1';pilotState=nil
+        profile=pilot=='staging' and Staging.profile or (pilot and Settling.profile or 'legacy-immediate-v1');pilotState=nil
         for _,candidate in ipairs(Catalog.sites) do
             if pilot then
                 if Settling.pilotSites[candidate.id] then queue[#queue+1]=candidate end
@@ -146,7 +154,9 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         stopReason,lastError,pending=nil,nil,nil;moved=false
         run=((os and os.date) and os.date('!%Y%m%dT%H%M%S') or 'run')..'-'..(#storage.events+1)
         evidence({kind='run_started',variant=variant,queued=#queue,coverage=Catalog.coverage})
-        if not owner:Begin() then error('Native survey protection/reservation refused') end
+        local began
+        if profile==Staging.profile then began=owner:BeginPlacement() else began=owner:Begin() end
+        if not began then error('Native survey protection/reservation refused') end
         backend=owner;generation=owner:GetRunGeneration()
         local p=owner:GetReturnPosition();origin=copy(p);origin.heading=owner:GetReturnYaw()
         enter('travel')
@@ -157,6 +167,7 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
     return reason==true
 end
 function M.startPilot(status) return M.start('compact',false,status,true) end
+function M.startPlacementPilot(status) return M.start('compact',false,status,'staging') end
 function M.cancel(status)
     if not M.active() then say('No active survey; use recovery if a previous CET session was interrupted',status);return false end
     stopReason='Survey cancelled'
@@ -254,7 +265,7 @@ local function update(delta)
                 advanceAngle()
             else
                 trialEvent('trial_started','All ten positions validated; creating actual scene')
-                pilotState=profile==Settling.profile and Settling.new() or nil
+                pilotState=profile==Staging.profile and Staging.new(backend) or (profile==Settling.profile and Settling.new() or nil)
                 Actors.create(layout,backend,actors,function(row)
                     if not backend:TrackCreatedID(row.id) then error('Native survey ID tracking refused') end
                 end)
@@ -275,17 +286,24 @@ local function update(delta)
             if not ok then
                 if tostring(ready):find('unexpected road level/position',1,true) then rejectTrial(ready) else error(ready,0) end
             elseif partialFailure then -- rejected trial is already reserved for cleanup
-            elseif ready then enter(pilotState and 'settling' or 'observing');samples=nil;observedMax=0
+            elseif ready then enter(profile==Staging.profile and 'staging' or (pilotState and 'settling' or 'observing'));samples=nil;observedMax=0
             elseif clock>=15 then rejectTrial('Actor attachment/protection timed out') end
         end
-    elseif phase=='settling' then
+    elseif phase=='settling' or phase=='staging' or phase=='placement-release' then
         if poll>=.25 then
             local elapsed=poll;poll=0
-            local observed,reason,frame=pilotState:frame(actors,elapsed,true)
+            local observed,reason,frame=pilotState:frame(actors,elapsed,true,false,phase=='placement-release')
             frame.kind='injured_motion_sample';frame.site=site.id;frame.variant=variant;frame.heading=heading;frame.pass=pass;evidence(frame)
             if not observed then rejectTrial(reason)
             elseif distance(player:GetWorldPosition(),site)>3 then stopReason='V moved away during the placement test';pending=nil;cleanup('return')
-            elseif clock>=Settling.settleSeconds then
+            elseif phase=='staging' and clock>=Staging.stageSeconds then
+                if not backend:StopInjuredPlacement() then error('Native injured placement release refused') end
+                trialEvent('placement_corrections_stopped','Production-style injured correction stopped; waiting 0.5 active seconds without correction before final validation')
+                enter('placement-release')
+            elseif phase=='placement-release' and clock>=Staging.releaseSeconds then
+                trialEvent('placement_released','No further actor correction; original 1.5 m bound and three seconds of stable supported placement now required')
+                enter('observing');samples=nil;observedMax=0
+            elseif phase=='settling' and clock>=Settling.settleSeconds then
                 trialEvent('settling_complete','Four active seconds elapsed; original 1.5 m final limit and stable/support/clearance checks now apply')
                 enter('observing');samples=nil;observedMax=0
             end

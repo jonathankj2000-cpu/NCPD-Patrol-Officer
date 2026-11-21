@@ -1,3 +1,41 @@
+NCPD PATROL v0.18b2 INJURED PLACEMENT PILOT - COMPLETE BRANCH TEST
+
+The passive three-site settling test was reported to fail with the same injured
+displacement. Waiting does not correct an offset that persists after the fall.
+This build adds a separate production-style PLACEMENT pilot. It does not assume
+a repeatable landing direction or increase the final position tolerance.
+
+Install the complete 106-file package and FULLY RESTART the game. Preserve your
+existing scene_survey_results.jsonl. Load a MANUAL TEST SAVE, go OFF DUTY and
+exit the vehicle. Use this NEW button, not the passive settling or full tour:
+CET -> Testing -> Scene survey -> TEST: Injured placement pilot (3 sites).
+Close CET and leave V still. Kryss_04, Kryss_11 and Kryss_15 are tested.
+
+All ten actors still pass the original spawn checks. During four active seconds
+of staging, only the injured officer can be corrected to the ORIGINAL planned
+position, using the same teleport facility/trigger as Officer Down's existing
+pre-arrival position lock. Each correction first requires supported, locally
+clear target ground. There is no fixed landing-offset compensation.
+
+Corrections then stop, including a native phase gate. After 0.5 active seconds
+without correction, every actor must remain within the original 1.5 m limit
+and within 0.15 m of its final observation anchor for three active seconds.
+The injured officer must have supported, locally clear ground. Teleport request
+success is not placement proof; ignored requests, continuing drift and unsafe
+ground still fail. A failed injured transition leaves the site UNVERIFIED.
+
+Export the same scene_survey_report.json and share it together with
+scene_survey_results.jsonl. Placement outcomes, passive settling outcomes and
+legacy full-tour outcomes stay separate. No existing result is promoted merely
+by installing the update. The full 17-site buttons retain the original observer.
+
+Only the off-duty survey owner gains correction methods. Live Officer Down,
+arrest, partner, backup, quest markers, geometry, all seven archives and the
+other 40 REDscript files are unchanged. Actual down-animation/physics placement
+still needs an in-game test. See docs/SCENE_SURVEY_v018b2.md.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18b1 INJURED SETTLING PILOT - COMPLETE BRANCH TEST
 
 This build adds an OPT-IN pilot at Kryss_04, Kryss_11 and Kryss_15. The first two

@@ -150,7 +150,7 @@ def main():
   'observe_active_seconds':3,'final_original_position_limit_m':1.5,'observation_anchor_drift_m':.15,
   'legacy_17_site_runtime_and_evidence_identical':True,'legacy_successes_preserved_and_pilot_results_separate':True,
   'movement_logged_without_actor_teleport_or_rebase':True,'ground_and_local_clearance_checks':True,
-  'actual_game_animation_confirmation':False,'all_native_scripts_archives_and_layout_geometry_unchanged':True}
+  'actual_game_animation_confirmation':False,'live_native_scripts_archives_and_layout_geometry_unchanged':True}
 
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

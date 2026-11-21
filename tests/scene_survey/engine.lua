@@ -3,6 +3,7 @@
 SF={time=0,maxLive=0,moves=0,logs={},allActors={},groundDelay=0,groundRemaining=0,
  actorTeleports=0,blocked={},noGround={},noNav={},holdDetached=false,detaching={},
  failFile=false,canStart=true,otherReason='other owner active',facing=37.25}
+AbsF=math.abs
 local s,f=SF,F
 local catalog=require('scene_survey_sites')
 f.duty=false
@@ -38,7 +39,12 @@ tele.Teleport=function(_,object,p,angle)
   s.moves=s.moves+1;s.facing=angle.Yaw
   f.playerPoint=Vector4.new(p.x,p.y,p.z,1)
   if s.afterMove then s.afterMove(location(p)) end
- else s.actorTeleports=s.actorTeleports+1;object.pos=p end
+ else
+  s.actorTeleports=s.actorTeleports+1
+  s.actorTeleportLog=s.actorTeleportLog or {}
+  s.actorTeleportLog[#s.actorTeleportLog+1]={record=object.record,target={x=p.x,y=p.y,z=p.z},time=s.time}
+  if not s.ignoreActorTeleports then object.pos=p end
+ end
 end
 local create=f.entities.CreateEntity
 f.entities.CreateEntity=function(self,spec)
@@ -130,9 +136,11 @@ function s.untilPhase(name,limit)
  end
  error('Expected phase '..name..': '..survey.diagnostics())
 end
-function s.assertNoGameplay()
+function s.assertNoGameplay(allowInjuredPlacement)
  assert(f.wallet==0 and IncidentNative:GetCompletedCount()==0 and OfficerNative:GetStage()==0)
  assert(f.pins.n==0 and f.manual==654 and f.tracked==f.story and #f.threats==0)
- assert(f.managed[999] and s.actorTeleports==0)
+ assert(f.managed[999])
+ if not allowInjuredPlacement then assert(s.actorTeleports==0) end
+ for _,move in ipairs(s.actorTeleportLog or {}) do assert(move.record=='Character.NCPDPatrol_OD_Injured') end
 end
 SurveyFixture=s

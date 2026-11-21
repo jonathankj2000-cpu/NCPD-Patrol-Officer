@@ -12,6 +12,9 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18b2 Injured Placement Pilot | bounded staging then uncorrected validation','-- NCPD Patrol v0.18b1 Injured Settling Pilot | opt-in three-site transition measurements')
+    source=source.replace('v0.18b2 Injured Placement Pilot loaded. Use TEST: Injured placement pilot (3 sites). Only this pilot corrects injured placement during staging, then stops corrections before strict observation. Full tours, passive settling and live incidents retain their procedures. Install the complete package and fully restart the game.','v0.18b1 Injured Settling Pilot loaded. Testing has an opt-in three-site injured transition probe. Full 17-site surveys retain their original procedure. Existing results are preserved; pilot results use a separate validation profile. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18b2 Injured Placement Pilot###','NCPD Patrol - v0.18b1 Injured Settling Pilot###')
     source=source.replace('-- NCPD Patrol v0.18b1 Injured Settling Pilot | opt-in three-site transition measurements','-- NCPD Patrol v0.18b Scene Survey | compact layout and 17-site off-duty tour')
     source=source.replace('v0.18b1 Injured Settling Pilot loaded. Testing has an opt-in three-site injured transition probe. Full 17-site surveys retain their original procedure. Existing results are preserved; pilot results use a separate validation profile. Install the complete package and fully restart the game.','v0.18b Scene Survey loaded. Compact Officer Down layout and an explicit off-duty 17-site test tour. City Center and Watson only. Use a manual test save; survey evidence is stored in the CET mod folder. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18b1 Injured Settling Pilot###','NCPD Patrol - v0.18b Scene Survey###')
@@ -77,4 +80,5 @@ def without_probe(source):
 PROBE_BUTTONS={'Log active dispatch marker diagnostics','Log legacy Coyote test diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test'}
 PROBE_BUTTONS.update({'TEST: Survey all 17 sites (compact)','TEST: Survey all 17 sites (standard)','TEST: Retry unverified survey sites','Stop survey and return','Recover survey cleanup and return','Load saved survey results','Export scene survey report','Log scene survey diagnostics'})
 PROBE_BUTTONS.add('TEST: Injured settling pilot (3 sites)')
+PROBE_BUTTONS.add('TEST: Injured placement pilot (3 sites)')
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})
