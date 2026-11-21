@@ -1,3 +1,39 @@
+NCPD PATROL v0.18b3 FUNCTIONAL SCENE SURVEY - COMPLETE BRANCH TEST
+
+The normal 17-site survey now judges the injured officer by usable placement:
+supported ground, clear local space, correct down-state, and a complete walking
+route to a clear aid position within 2.5 m. That position must remain usable for
+three active seconds. An offset from the intended spawn point is logged; it no
+longer rejects the injured officer. No fixed 0.15 m root anchor or corrective
+teleports are used by this protocol. Other actors retain their original checks.
+
+Install the complete 107-file package and FULLY RESTART. Keep your existing
+scene_survey_results.jsonl. Load a MANUAL TEST SAVE, go OFF DUTY and exit the
+vehicle. Use the normal full-tour button:
+CET -> Testing -> Scene survey -> TEST: Survey all 17 sites (compact).
+Close CET and leave V still. Standard/retry buttons also use functional rules.
+City Center (Central) and Watson are the only regions covered by the 17 sites.
+
+After four active seconds for the initial down transition, the test allows up
+to 12 active seconds to confirm a usable three-second aid window. The officer
+must stay inside the 25 m incident area. Below-ground or missing/dead actors,
+local clipping proxies, walls/vehicles blocking access, isolated navmesh points,
+incomplete paths and unavailable down-state still prevent validation. No exact
+injured landing coordinate, direction or small animation motion is prescribed.
+
+Export the same two report files. The primary results now show the functional
+profile after a normal survey; historical successes/failures and both earlier
+pilots are preserved separately. Old success does not skip functional re-testing.
+Previous precision pilots are under Previous injured-placement comparisons.
+
+This is a placement/access test: actual F interaction, revive completion and
+rendered skeleton clearance still need gameplay confirmation. Local geometry
+queries are conservative proxies, not full animation collision proof. Existing
+live missions, arrest, partner, backup, quest markers and archives are unchanged.
+See docs/SCENE_SURVEY_v018b3.md.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18b2 INJURED PLACEMENT PILOT - COMPLETE BRANCH TEST
 
 The passive three-site settling test was reported to fail with the same injured

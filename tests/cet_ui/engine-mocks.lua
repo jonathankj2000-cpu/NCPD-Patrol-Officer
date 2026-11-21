@@ -60,7 +60,7 @@ package.loaded.quest_marker_probe={state=display,startVisual=command('probe.visu
     start=command('probe.start'),cycleMode=command('probe.cycleMode')}
 package.loaded.scene_survey={configure=noop,blocksDuty=function() return f.surveyReserved==true end,summary=display,diagnostics=display,active=no,
     update=noop,reset=noop,shutdown=noop,start=command('survey.start'),cancel=command('survey.cancel'),recover=command('survey.recover'),
-    loadResults=command('survey.loadResults'),export=command('survey.export'),startPilot=command('survey.startPilot'),startPlacementPilot=command('survey.startPlacementPilot')}
+    loadResults=command('survey.loadResults'),export=command('survey.export'),startPilot=command('survey.startPilot'),startPlacementPilot=command('survey.startPlacementPilot'),startFunctional=command('survey.startFunctional')}
 
 local patrol={fixtureName='patrol',Version=function() return 17 end,
     IsOnDuty=function() return f.onDuty end,HasWantedLevel=no,WasTerminatedForCrime=no,

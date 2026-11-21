@@ -87,23 +87,37 @@ function spatial:SyncRaycastByCollisionGroup(a,b,group,staticOnly,dynamicOnly)
   if z>a.z or z<b.z then return false end
   return true,{position=Vector3.new(a.x,a.y,z),normal=Vector3.new(0,0,s.normal or 1)}
  end
+ if s.aidWallBlocked and (a.x-b.x)^2+(a.y-b.y)^2>1.2^2 then return true end
  return s.obstruction==true
 end
 function spatial:Overlap(box,center,angle,group)
  assert(box.__vector=='Vector4' and center.__vector=='Vector4' and angle.__vector=='EulerAngles' and group=='Vehicle')
  local q=location(center)
  if box.x==.35 and s.injuredVehicleBlocked then return true end
+ if box.x==.4 and s.aidStandingBlocked then return true end
+ if box.x==.2 and s.aidCorridorBlocked then return true end
  if s.overlapError or (s.carOverlapError and box.x==1.05) then error('Injected native Overlap API error') end
  if box.x==1.05 and s.blockHeading and s.blockHeading[q.id] and math.abs(((angle.Yaw-90)%360)-s.blockHeading[q.id])<.001 then return true end
  if box.x==1.05 and s.blocked[q.id] then return true end
  return s.centerBlocked~=nil and s.centerBlocked==q.id and math.abs(center.x-q.x)<.01 and math.abs(center.y-q.y)<.01
 end
 Game.GetSpatialQueriesSystem=function() return spatial end
-Game.GetAINavigationSystem=function() return {FindPointInSphereForCharacter=function(_,p,radius,owner)
+local navigation={FindPointInSphereForCharacter=function(_,p,radius,owner)
  assert(p.__vector=='Vector4' and p.w==1 and owner==player and (radius==.5 or radius==1.2))
  if s.noNav[location(p).id] then return {status=1} end
  return {status=0,point=Vector4.new(p.x,p.y,p.z,1)}
-end} end
+end}
+function navigation:CalculatePathForCharacter(a,b,tolerance,owner)
+ assert(a.__vector=='Vector4' and b.__vector=='Vector4' and tolerance==.5 and owner==player)
+ s.pathQueries=(s.pathQueries or 0)+1
+ if s.pathError then error('Injected navigation API failure') end
+ if s.noAidPath then return {path={n=0}} end
+ local last=s.partialAidPath and Vector4.new(b.x+3,b.y,b.z,1) or b
+ local first=s.partialAidStart and Vector4.new(a.x+3,a.y,a.z,1) or a
+ return {path={n=2,[0]=first,[1]=last}}
+end
+Game.GetAINavigationSystem=function() return navigation end
+GameInstance.GetAINavigationSystem=function() return navigation end
 local open=io.open
 io.open=function(name,mode)
  assert(name=='scene_survey_results.jsonl' or name=='scene_survey_report.json','Unexpected survey file path: '..tostring(name))

@@ -275,18 +275,20 @@ function M.new(context)
             ImGui.TextWrapped("Coverage: City Center (Central) and Watson only. The document's 16 sites plus TEST_KRYSS_01 make 17. Use a manual test save, go OFF DUTY and exit your vehicle. The test moves V between recorded centers, spawns one protected scene, checks stability, confirms cleanup and returns to your start. Close CET and leave the game running. Combat, quest markers and rewards are outside this placement test.")
             if survey then
                 ImGui.TextWrapped(survey.summary())
-                if ImGui.Button("TEST: Injured placement pilot (3 sites)") then survey.startPlacementPilot(status) end
-                ImGui.TextWrapped("New placement pilot: Kryss_04, Kryss_11 and Kryss_15. Correct the injured officer during four seconds of staging, then stop all corrections and require stable placement. The original 1.5 m final limit remains. Start with this test before another full tour.")
-                if ImGui.Button("TEST: Injured settling pilot (3 sites)") then survey.startPilot(status) end
-                ImGui.TextWrapped("Settling pilot only: Kryss_04, Kryss_11 and Kryss_15 (previously validated control). Four active seconds for the injured transition, then the original 1.5 m final limit, local support/clearance checks and three stable seconds. Positions are measured, never corrected. Pilot results stay separate from the full 17-site survey; export the same report after testing.")
-                if ImGui.Button("TEST: Survey all 17 sites (compact)") then survey.start('compact',false,status) end
-                if ImGui.Button("TEST: Survey all 17 sites (standard)") then survey.start('standard',false,status) end
-                if ImGui.Button("TEST: Retry unverified survey sites") then survey.start('compact',true,status) end
+                ImGui.TextWrapped("Functional validation: the injured officer may land elsewhere inside the incident area. The test checks actual ground, local clearance, down-state and a complete walking route to a clear aid position within 2.5 m. That aid position must remain usable for three seconds. Spawn displacement is logged without correction or a precision limit. Actual F/revive execution still requires a gameplay test.")
+                if ImGui.Button("TEST: Survey all 17 sites (compact)") then survey.startFunctional('compact',false,status) end
+                if ImGui.Button("TEST: Survey all 17 sites (standard)") then survey.startFunctional('standard',false,status) end
+                if ImGui.Button("TEST: Retry unverified survey sites") then survey.startFunctional('compact',true,status) end
                 if ImGui.Button("Stop survey and return") then survey.cancel(status) end
                 if ImGui.Button("Recover survey cleanup and return") then survey.recover(status) end
                 if ImGui.Button("Load saved survey results") then survey.loadResults(status) end
                 if ImGui.Button("Export scene survey report") then survey.export(status) end
                 if ImGui.Button("Log scene survey diagnostics") then status('Scene survey | '..survey.diagnostics()) end
+                if ImGui.CollapsingHeader("Previous injured-placement comparisons") then
+                    if ImGui.Button("TEST: Injured placement pilot (3 sites)") then survey.startPlacementPilot(status) end
+                    if ImGui.Button("TEST: Injured settling pilot (3 sites)") then survey.startPilot(status) end
+                    ImGui.TextWrapped("Historical three-site protocols retain their old precision rules for comparison. Normal full-survey buttons above use functional validation.")
+                end
                 ImGui.TextWrapped("Evidence: scene_survey_results.jsonl. Export: scene_survey_report.json. Both are inside the NCPDPatrol CET folder. Proven rotations are reused first on later tests. Temporary blockage remains eligible for retry. Cleanup must finish before another teleport. After a CET reload, use recovery; a saved-game reload never resumes the tour automatically. Transfers use controlled teleport and ground/navmesh checks; a memory-purging loading screen is not claimed.")
             end
         end
@@ -345,7 +347,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18b2 Injured Placement Pilot###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18b3 Functional Scene Survey###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

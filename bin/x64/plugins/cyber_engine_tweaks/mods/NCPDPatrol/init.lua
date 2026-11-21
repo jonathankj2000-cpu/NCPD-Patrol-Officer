@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18b2 Injured Placement Pilot | bounded staging then uncorrected validation
+-- NCPD Patrol v0.18b3 Functional Scene Survey | injured usability replaces spawn precision
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18b2 Injured Placement Pilot loaded. Use TEST: Injured placement pilot (3 sites). Only this pilot corrects injured placement during staging, then stops corrections before strict observation. Full tours, passive settling and live incidents retain their procedures. Install the complete package and fully restart the game.")
+    status("v0.18b3 Functional Scene Survey loaded. Normal 17-site buttons validate injured ground, clearance, down-state and a reachable aid position. Landing displacement is informational; no injured corrections or precision anchor. Existing results are preserved by validation profile. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
