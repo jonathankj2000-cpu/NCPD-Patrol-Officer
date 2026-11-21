@@ -1,9 +1,72 @@
 """Officer Down mixed dispatch, failure cleanup, mounted access and durable logs."""
 from pathlib import Path
-import argparse,json,sys
+import argparse,json,subprocess,sys
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE));from check_catalog import case,events
+MOD='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
+PREVIOUS='82ed62c3987854acb06cbf527d648079b9a086e6'
+def arrival_case(body,inspect=None,legacy=False):
+ prefix=''
+ if legacy:
+  # Exact production modules from the user's previous package. Engine and
+  # journal boundaries stay the same, isolating the reported staging policy.
+  for name in ['officer_down_actors','scene_survey_functional','officer_down']:
+   source=subprocess.check_output(['git','show',f'{PREVIOUS}:{MOD}{name}.lua'],cwd=ROOT,text=True)
+   prefix+=f'package.loaded.{name}=assert(loadstring({json.dumps(source)}))()\n'
+  prefix+='CF.use(package.loaded.officer_down)\n'
+ case(prefix+body,inspect)
 def main():
+ # A defender's animation/cover movement after approval must not invalidate a
+ # usable scene. A queued teleport is deliberately not applied in this frame.
+ drift='''local c,f,s=CF,F,SurveyFixture;c.staged(1)
+ local defender=OfficerNative.m_defender;local before=s.actorTeleports
+ defender.pos=Vector4.new(defender.pos.x+2.25,defender.pos.y,defender.pos.z,1)
+ s.ignoreActorTeleports=true;f.player.mounted={};f.playerPoint=c.point(-51);c.step(4)
+ assert(OfficerNative:GetStage()==1,'Approved scene rejected after defender animation: '..c.scene.state())
+ assert(s.actorTeleports==before,'Approved live NPC was teleported back to a spawn anchor')
+ f.playerPoint=c.point(-50);c.step(.25)
+ assert(OfficerNative:GetStage()==2,'50 m mounted arrival did not activate combat: '..c.scene.state())
+ assert(#f.threats==15 and f.wallet==0);c.step(10)
+ assert(OfficerNative:GetStage()==2 and c.scene.isActive());f.player.mounted=nil;c.clear()'''
+ arrival_case(drift)
+ from lupa.luajit21 import LuaError
+ try:arrival_case(drift,legacy=True)
+ except LuaError as error:
+  assert 'Approved scene rejected' in str(error) and 'Actor displaced: defender' in str(error),str(error)
+ else:raise AssertionError('Previous approved-scene displacement failure was not reproduced')
+ # Fast approaches need a complete usable snapshot, but never wait through
+ # the distant 4+3 s survey window once the player reaches 50 m in a vehicle.
+ fast='''local c,f,s=CF,F,SurveyFixture;c.request(1);f.player.mounted={}
+ f.playerPoint=c.point(-80);c.step(.75);f.playerPoint=c.point(-50);c.step(.25)
+ assert(OfficerNative:GetStage()==2,'50 m arrival waited for distant settling window: '..c.scene.state())
+ assert(#f.threats==15 and f.wallet==0);f.player.mounted=nil;c.clear()'''
+ arrival_case(fast)
+ try:arrival_case(fast,legacy=True)
+ except LuaError as error:assert '50 m arrival waited' in str(error),str(error)
+ else:raise AssertionError('Previous late-combat gate was not reproduced')
+ # The initial binding is still strict; animation after binding and before
+ # approval follows live physical safety, not a spawn coordinate tolerance.
+ arrival_case('''local c,f,s=CF,F,SurveyFixture;c.request(1);f.playerPoint=c.point(-100);c.step(.75)
+ local a=OfficerNative.m_defender;a.pos=Vector4.new(a.pos.x+2,a.pos.y,a.pos.z,1)
+ c.step(9);assert(OfficerNative:GetStage()==1);f.playerPoint=c.point(-50);c.step(.25)
+ assert(OfficerNative:GetStage()==2 and s.actorTeleports==0);c.clear()''')
+ # A proven aid route is not invalidated by V's temporary seat/nav-source
+ # failure. The officer's actual body/ground/state are still checked at arrival.
+ arrival_case('''local c,f,s=CF,F,SurveyFixture;c.staged(1);f.player.mounted={};s.noAidPath=true
+ f.playerPoint=c.point(-50);c.step(.25);assert(OfficerNative:GetStage()==2)
+ assert(#f.threats==15);s.noAidPath=false;f.player.mounted=nil;c.clear()''')
+ for mutation,reason in [
+  ("local a=OfficerNative.m_defender;a.pos=Vector4.new(a.pos.x,a.pos.y,a.pos.z-.5,1)",'no usable ground: defender'),
+  ("local a=OfficerNative.m_defender;a.pos=c.point(30)",'outside supported incident area: defender'),
+  ("local a=s.allActors[1];a.pos=Vector4.new(a.pos.x+2,a.pos.y,a.pos.z,1);s.ignoreActorTeleports=true",'Actor displaced: police'),
+  ("s.injuredVehicleBlocked=true",'Injured officer overlaps a vehicle'),
+ ]:
+  arrival_case('''local c,f,s=CF,F,SurveyFixture;c.staged(1)
+ '''+mutation+'''
+ f.playerPoint=c.point(-50);c.step(17)
+ assert(OfficerNative:GetStage()==4 and #f.threats==0 and f.wallet==0,c.scene.state())
+ assert(c.scene.state():find('''+json.dumps(reason)+''',1,true),c.scene.state())
+ assert(not c.scene.isActive() and f.managed[999])''')
  # Every possible first weighted draw uses the real dispatcher. Other type
  # request boundaries are covered by their full existing engine suites.
  case('''local c,f,s=CF,F,SurveyFixture;c.only(1);f.playerPoint=c.point(-800)
@@ -152,11 +215,14 @@ def main():
  mod=ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
  for tab,label,event in [('Dispatch','Request Officer Down dispatch','dispatch.requestOfficerDownNearby'),('Testing','TEST: Request Officer Down dispatch','dispatch.requestOfficerDownNearby'),('Diagnostics','Export Officer Down gameplay report','dispatch.exportOfficerDownLog')]:
   _,f=ui_runtime(mod);f.Frame(f,tab,label);assert f.clicks==1 and event in f.Events(f)
- print('PASS: actual 45/27/18/10 mixed selection and 90-weight fallback, automatic Officer Down/closure/next call, natural shifted and mounted aid access, temporary blockage cooldown, strict physical/partial cleanup and CET recovery, world-ID invalidation, best-effort append-only logs/export, rewards once and three CET routes (engine boundaries mocked)')
+ print('PASS: actual 45/27/18/10 mixed selection, automatic completion/next call; previous defender displacement and delayed-arrival failures reproduced; 50 m mounted activation, fast usable snapshot, no live NPC anchor teleports, retained approval with fresh body/identity/ground and strict car/unsafe-actor guards; physical cleanup/CET recovery, durable logs, rewards once and CET routes (engine boundaries mocked)')
  return {'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'weighted_first_draws':100,
   'automatic_resume_with_retained_scene':True,'physical_cleanup_and_cet_recovery':True,'world_change_never_deletes_reused_ids':True,
   'gameplay_log_preserved_and_streamed':True,'logging_failure_does_not_block_gameplay':True,'natural_and_mounted_access':True,
-  'existing_rewards_unchanged':True,'actual_game_validation':False}
+  'existing_rewards_unchanged':True,'actual_game_validation':False,
+  'v018e2_defender_and_delayed_arrival_negative_controls':True,'mounted_combat_radius_m':50,
+  'fast_arrival_requires_full_usable_snapshot':True,'live_npc_safety_replaces_spawn_displacement':True,
+  'survey_validation_profiles_unchanged':True,'retained_approval_does_not_repeat_player_origin_path':True}
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()
  if a.report:a.report.write_text(json.dumps(r,indent=2)+'\n')

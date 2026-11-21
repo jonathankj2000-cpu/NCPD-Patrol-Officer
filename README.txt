@@ -1,3 +1,35 @@
+NCPD PATROL v0.18f SCENE ARRIVAL AND STRAY FIRE - COMPLETE BRANCH TEST
+
+Officer Down combat now starts within 50 m of the scene center, including
+arrival in a vehicle. A fast approach uses a complete safe/usable injured-officer
+snapshot instead of waiting out the distant 4+3 second survey window. Previously
+proven aid access is retained when a vehicle seat temporarily lacks a walking
+route; the officer's body, ground, identity and clearance remain checked.
+
+Live defenders/gang members can move naturally inside the supported scene area.
+They are not repeatedly teleported to spawn coordinates or rejected solely for
+crossing the survey's 1.5 m precision limit. Fresh identity, finite position,
+scene bounds, ground and Static/vehicle clearance checks remain active. Cars
+retain their displacement checks. Off-duty survey profiles/results are unchanged.
+
+On duty, V may have one stray gun discharge onto non-hostile police excused per
+10 simulation seconds while fighting a nearby non-police hostile. Direct police
+aim/tracking, repeated shots, civilian hits, hostile police, melee, explosions,
+collisions and existing wanted levels use the normal game rules. Recent enemy
+gunfire hitting V can supply context for six seconds. Exact-shot pellets are
+grouped for at most 0.5 s; there is no general grace period or heat reset.
+An excused shot shows: "NCPD: Stray police hit excused. Check your fire."
+Diagnostics > Scanner bonus and radio > Log police fire diagnostics shows the
+number of excused discharges. This is a conservative combat-context heuristic,
+not proof of the player's intent or of the original reported wanted cause.
+
+Install the COMPLETE package and FULLY RESTART THE GAME. The v0.18e2 detached
+actor cleanup and startup fix remain. Existing money/career ledgers, rewards,
+dispatch mix, independent quest markers, partner/backup AI and arrests remain.
+See docs/SCENE_ARRIVAL_AND_STRAY_FIRE_v018f.md for scope and validation limits.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18e2 DETACHED ACTOR CLEANUP - COMPLETE BRANCH TEST
 
 The new report showed one pending managed row and zero attached cached actors

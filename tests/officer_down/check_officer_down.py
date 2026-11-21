@@ -154,7 +154,7 @@ def main():
  assert 'dispatch.request' not in view.Events(view) and 'partner.' not in view.Events(view)
  view.Frame(view,'Testing',label);assert view.locatorCalls==1 and view.originalQuest.active
  report={'manual_fixed_scene':True,'position':json.loads((ROOT/'assets/officer_down/scene.json').read_text())['position'],
- 'cars':3,'officers':2,'gang_members':5,'arrival_metres':55,'prepare_metres':250,
+ 'cars':3,'officers':2,'gang_members':5,'arrival_metres':50,'prepare_metres':250,
  'production_layout':'compact','compact_line_gap_metres':12,'gang_lateral_offset_metres':5.5,'gang_center_gap_metres':11,
  'automatic_rotation_order':[0,90,180,270],'manual_preferred_heading_retained':True,
  'vehicle_overlap_queries_typed':True,'all_ten_positions_checked_before_creation':True,

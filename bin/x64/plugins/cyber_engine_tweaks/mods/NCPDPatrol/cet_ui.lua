@@ -220,6 +220,12 @@ function M.new(context)
                 end)
                 ImGui.TextWrapped(ok and info or ("Scanner diagnostics failed: " .. tostring(info)))
                 if ImGui.Button("Log scanner diagnostics") then context.logScanner(patrol, true) end
+                -- v018f police fire UI begin
+                if ImGui.Button("Log police fire diagnostics") then
+                    local success, fire = pcall(function() return patrol:GetPoliceFireDiagnostics() end)
+                    status("Police fire | " .. (success and fire or "Install the complete v0.18f package and fully restart the game."))
+                end
+                -- v018f police fire UI end
                 local success, voice = pcall(function() return patrol:GetVoiceDiagnostics() end)
                 ImGui.TextWrapped(success and voice or "Voice diagnostics unavailable; install all v0.17d files.")
             else
@@ -370,7 +376,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18e2 Detached Actor Cleanup###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18f Scene Arrival and Stray Fire###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

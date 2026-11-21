@@ -17,6 +17,11 @@ NCPDPatrolMarkerSession={WorldReady=function() return f.ready end}
 GameInstance={GetScriptableSystemsContainer=function()
  return {Get=function() return {GetHeatStage=function() return f.heat end} end}
 end}
+EngineTime={ToFloat=function(_,x) return x end}
+GameInstance.GetSimTime=function() return f.time or 100 end
+GameInstance.GetTargetingSystem=function() return f.targeting end
+Vector4={Distance=function(_,a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end}
+ScriptedPuppet={IsDefeated=function(_,a) return a.down==true end,IsUnconscious=function(_,a) return a.unconscious==true end}
 function Core:GetGameInstance() return {} end
 function Core:CancelDispatchVoiceWindow() end
 function Core:StopVehicleChatter() end
@@ -26,6 +31,9 @@ local function actor(kind,police)
  local a={kind=kind,police=police,attached=true,dead=false}
  function a:IsAttached() return self.attached end
  function a:IsDead() return self.dead end
+ function a:IsDeadNoStatPool() return self.deadNoPool==true end
+ function a:IsInCombat() return f.combat==true end
+ function a:GetWorldPosition() return self.pos or {x=0,y=0,z=0} end
  function a:IsPlayer() return self.kind=='player' end
  function a:GetGame() return {} end
  function a:IsCharacterPolice() return self.police end
@@ -49,6 +57,7 @@ civilianCar.record={Affiliation=function() return {Type=function() return gameda
 function GetPlayer() return not f.noPlayer and player or nil end
 function AsNPC(x) return x and x.kind=='npc' and x or nil end
 function AsVehicle(x) return x and x.kind=='vehicle' and x or nil end
+function AsPlayer(x) return x and x.kind=='player' and x or nil end
 function wrappedMethod(hit)
  f.calls=f.calls+1;f.damage=f.damage+1
  if hit.target.kind=='vehicle' and hit.target.prevention and not hit.attackData:GetInstigator().prevention then

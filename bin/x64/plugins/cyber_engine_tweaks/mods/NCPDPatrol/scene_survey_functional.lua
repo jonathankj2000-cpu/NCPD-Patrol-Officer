@@ -48,7 +48,19 @@ local function approach(spatial,nav,backend,actor,p,ground,probe,fixed)
     if not backend:HasInjuredAidPath(actor,point(q)) then return nil,'No complete walking route to injured officer' end
     return q
 end
-function M.new(backend,site)
+-- Live catalogue incidents already have a surveyed layout. A standing actor's
+-- root/cover animation is not a new survey failure; check actual usable space.
+-- Survey callers do not opt in and retain their original 1.5 m placement rule.
+local function liveActor(spatial,sample,site,actor)
+    if actor:IsDead() then return 'Scene actor dead: '..sample.kind end
+    if distance(sample.actual,site)>M.sceneRadius or math.abs(sample.actual.z-sample.expected.z)>1.5 then return 'Scene actor outside supported incident area: '..sample.kind end
+    local ground,reason=floor(spatial,sample.actual)
+    if not ground or ground.root_height<-.25 or ground.root_height>1 or ground.normal_z<.7 then return 'Scene actor has no usable ground: '..sample.kind end
+    local p,z=sample.actual,ground.position.z
+    if ray(spatial,point(p,z+.15),point(p,z+1.7)) then return 'Scene actor overlaps Static geometry: '..sample.kind end
+    if spatial:Overlap(Vector4.new(.3,.3,.65,0),point(p,z+.9),EulerAngles.new(0,0,sample.yaw),CName.new('Vehicle')) then return 'Scene actor overlaps a vehicle: '..sample.kind end
+end
+function M.new(backend,site,options)
     local self={age=0,boundAt=nil,peak=0,stable=0,previous=nil,aidPosition=nil,proof=nil,reason=nil}
     function self:noteBound(actors,elapsed)
         self.age=self.age+(elapsed or 0)
@@ -72,6 +84,9 @@ function M.new(backend,site)
                     if object:IsDead() then return failed('Injured officer dead') end
                     frame.scene_distance=distance(sample.actual,site)
                     if frame.scene_distance>M.sceneRadius then return failed('Injured officer outside incident area') end
+                elseif options and options.liveScene and not candidate.car then
+                    local reason=liveActor(spatial,sample,site,object)
+                    if reason then return failed(reason) end
                 elseif sample.displacement>1.5 then return failed('Actor displaced: '..candidate.kind) end
                 if candidate.car then object:ForceBrakesUntilStoppedOrFor(1) end
                 samples[#samples+1]=sample
@@ -90,6 +105,7 @@ function M.new(backend,site)
         if unsafe then return failed(reason) end
         if transition then return samples,nil,frame end
         frame.aid_state_ready=backend:IsInjuredAidReady(actor)==true
+        frame.body_ready=not reason and frame.aid_state_ready
         if not reason and not frame.aid_state_ready then reason='Injured officer is not ready for aid' end
         local aid,old=self.aidPosition,self.aidPosition
         local continued=false

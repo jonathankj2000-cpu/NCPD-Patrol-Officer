@@ -350,7 +350,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         let i: Int32 = 0;
         let enemy: wref<NPCPuppet>;
         if !this.Eligible() || token != this.m_token || this.m_stage != 1 || ArraySize(this.m_npcs) != 7 || ArraySize(this.m_cars) != 3
-            || !IsDefined(this.m_injured) || !IsDefined(this.m_defender) || Vector4.Distance(player.GetWorldPosition(), this.SitePosition()) > 55.0 { return false; };
+            || !IsDefined(this.m_injured) || !IsDefined(this.m_defender) || Vector4.Distance(player.GetWorldPosition(), this.SitePosition()) > NCPDPatrolOfficerDownSite.ArrivalRadius() { return false; };
         this.m_stage = 2; this.m_remaining = 600.0; this.m_reason = "Neutralize the suspects and revive the officer";
         this.ReleaseProtection(true);
         while i < ArraySize(this.m_npcs) {

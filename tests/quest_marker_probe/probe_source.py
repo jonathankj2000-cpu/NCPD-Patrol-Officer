@@ -12,6 +12,10 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=re.sub(r'^                -- v018f police fire UI begin\n.*?^                -- v018f police fire UI end\n','',source,flags=re.M|re.S)
+    source=source.replace('-- NCPD Patrol v0.18f Scene Arrival and Stray Fire | 50 m mounted activation and bounded police-hit allowance','-- NCPD Patrol v0.18e2 Detached Actor Cleanup | owned NPC/car ID retirement and fresh world checks')
+    source=source.replace('v0.18f Scene Arrival and Stray Fire loaded. Officer Down combat starts at 50 m, including from a vehicle; live NPCs use physical safety instead of spawn precision. One stray police discharge per 10 s may be excused during hostile combat; deliberate aim and repeated fire retain normal wanted rules. Install the complete package and fully restart the game.','v0.18e2 Detached Actor Cleanup loaded. Completed Officer Down scenes can retain detached NPC/car ID bookkeeping without blocking the next call. Fresh entity/spawning checks still protect live actors. Cleanup API v3; install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18f Scene Arrival and Stray Fire###','NCPD Patrol - v0.18e2 Detached Actor Cleanup###')
     source=source.replace('-- NCPD Patrol v0.18e2 Detached Actor Cleanup | owned NPC/car ID retirement and fresh world checks','-- NCPD Patrol v0.18e1 Startup Fix | observed REDscript Dispose compatibility')
     source=source.replace('v0.18e2 Detached Actor Cleanup loaded. Completed Officer Down scenes can retain detached NPC/car ID bookkeeping without blocking the next call. Fresh entity/spawning checks still protect live actors. Cleanup API v3; install the complete package and fully restart the game.','v0.18e1 Startup Fix loaded. Unsupported REDscript Dispose call removed; optional CET disposal is capability-checked. Officer Down ownership, detached vehicle receipts and manual retry are retained. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18e2 Detached Actor Cleanup###','NCPD Patrol - v0.18e1 Startup Fix###')
@@ -103,4 +107,5 @@ PROBE_BUTTONS.add('TEST: Injured settling pilot (3 sites)')
 PROBE_BUTTONS.add('TEST: Injured placement pilot (3 sites)')
 PROBE_BUTTONS.update({'Request Officer Down dispatch','Export Officer Down gameplay report'})
 PROBE_BUTTONS.add('TEST: Request Officer Down dispatch')
+PROBE_BUTTONS.add('Log police fire diagnostics')
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})

@@ -3,6 +3,7 @@ from pathlib import Path
 import argparse
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from lupa.luajit21 import LuaRuntime
@@ -30,6 +31,19 @@ def main():
             continue # approved Start/End sidebar is exercised by the Career suite
         if path=='r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds':
             continue # additive Officer Down kind/receipt; original outcome traces still run
+        if path=='r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds':
+            # Remove only the reviewed additive police-fire state/methods and
+            # reset hooks. Original duty enforcement/payment code must remain
+            # byte-identical; the new policy runs in partner_safety's suite.
+            source=(ROOT/path).read_text()
+            for section in ['fields','methods']:
+                source,count=re.subn(r'^    // v018f police fire '+section+r' begin\n.*?^    // v018f police fire '+section+r' end\n'+('\n' if section=='methods' else ''),'',source,flags=re.M|re.S)
+                assert count==1,section
+            hook='        this.ResetPoliceFireGuard(); // v018f police fire reset\n'
+            assert source.count(hook)==2
+            source=source.replace(hook,'')
+            assert source.encode()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),path
+            continue
         assert (ROOT / path).read_bytes() == subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT), path
 
     def selector(source=None):

@@ -16,3 +16,16 @@ public final static native func GetAttitudeTowards(const first: ref<GameObject>,
 protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool { return false; }
 @addMethod(NPCPuppet)
 protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool { return false; }
+// GameObject.swift:984, orphans.swift:11353/22383/22401/22415,
+// attackData.swift:204/252. These are source methods, not RTTI-only imports.
+@addMethod(GameObject)
+protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool { return false; }
+@addMethod(GameInstance)
+public final static native func GetSimTime(game: GameInstance) -> EngineTime;
+@addMethod(GameInstance)
+public final static native func GetTargetingSystem(game: GameInstance) -> ref<TargetingSystem>;
+public native class IAttack extends IScriptable {}
+public native class TargetingSystem extends IScriptable {
+    public final native func GetLookAtObject(instigator: wref<GameObject>, opt withLOS: Bool, opt ignoreTranparent: Bool) -> ref<GameObject>;
+    public final native func GetTrackedTargetObject(instigator: wref<GameObject>) -> ref<GameObject>;
+}

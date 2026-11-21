@@ -207,6 +207,7 @@ function M.diagnostics()
         ..' | placement passes='..placementPasses..' | nearby wait='..string.format('%.1f',placementElapsed)..'/'..Site.prepareGrace..' s'
         ..' | selected site='..tostring(selectedSite and selectedSite.id or 'test_kryss_01')..' | catalogue='..tostring(catalogMode)
         ..' | retained handles='..#draining..' | access ready seconds='..tostring(access and access.stable or 0)
+        ..' | scene approved='..tostring(readyLogged)..' | combat radius='..Site.arrival..' m'
         ..' | aftermath remaining='..string.format('%.1f',phase=='aftermath' and not aftermathCleanupStarted and math.max(0,Site.retainSeconds-retention) or 0)..' s'
         ..' | cleanup started='..tostring(aftermathCleanupStarted)..' | cleanup seconds='..string.format('%.1f',cleanupAge)
         ..' | cleanup error='..tostring(cleanupError or 'none')
@@ -337,7 +338,7 @@ local function createScene(backend,status)
     return true
 end
 local function prepare(backend) return Actors.prepare(actors,backend) end
-local function lock(backend) return Actors.lock(actors,backend,catalogMode and {freeInjured=true} or nil) end
+local function lock(backend) return Actors.lock(actors,backend,catalogMode and {freeInjured=true,freeNPCs=true} or nil) end
 local function release(backend)
     for _,row in ipairs(actors) do
         if row.command then row.actor:GetAIControllerComponent():StopExecutingCommand(row.command,false);row.command=nil end
@@ -450,10 +451,10 @@ local function update(delta,onDuty,patrol,status,HUD)
         local sampled=poll;poll=0
         if phase=='spawning' then
             if prepare(backend) then
-                phase,elapsed='staged',0;sceneAge=0;access=catalogMode and Functional.new(backend,selectedSite) or nil
+                phase,elapsed='staged',0;sceneAge=0;access=catalogMode and Functional.new(backend,selectedSite,{liveScene=true}) or nil
                 sampled=0
                 if access then access:noteBound(actors,0) end
-                report('Scene protected and held; awaiting arrival',status)
+                report(catalogMode and 'Scene protected; checking injured officer access' or 'Scene protected and held; awaiting arrival',status)
                 log('actors_bound',{actors=snapshot()},status)
             elseif elapsed>=15 then error('Scene attachment/protection timed out') end
         end
@@ -464,10 +465,21 @@ local function update(delta,onDuty,patrol,status,HUD)
                 -- Use active elapsed time, including real frame/poll jitter.
                 -- The injured actor is never locked back to its spawn point.
                 sceneAge=sceneAge+sampled
-                local measured,reason=access:frame(actors,sampled,sceneAge<=Functional.settleSeconds)
+                -- At 50 m, one complete body/access check can release combat in
+                -- an already-surveyed scene. The distant settling window must
+                -- not make an approaching vehicle wait beside a frozen battle.
+                local arrived=d<=Site.arrival
+                local measured,reason,frame=access:frame(actors,sampled,sceneAge<=Functional.settleSeconds and not arrived)
                 if not measured then error(reason) end
-                usable=access.stable>=Functional.observeSeconds
-                if usable and not readyLogged then readyLogged=true;log('ready',{functional=access.proof,actors=snapshot()},status) end
+                if not readyLogged and (access.stable>=Functional.observeSeconds or (arrived and frame.functionally_ready)) then
+                    readyLogged=true
+                    report('Scene ready; combat starts within '..Site.arrival..' m, including from a vehicle',status)
+                    log('ready',{functional=access.proof,arrival_check=arrived,actors=snapshot()},status)
+                end
+                -- Preserve a proven scene when V's seat temporarily has no
+                -- walking route. Identity, bounds, ground and body clearance
+                -- still run; a blocked or buried officer never counts as ready.
+                usable=readyLogged and frame.body_ready==true
                 if not usable and sceneAge>=Functional.settleSeconds+Functional.timeoutSeconds then error(access.reason or 'No safe, reachable injured aid position') end
             end
             if usable and d<=Site.arrival then release(backend);patrol:NotifyDispatch('NCPD: On scene. Secure the area and revive the injured officer.',5);report('On scene: five suspects and one injured officer',status) end

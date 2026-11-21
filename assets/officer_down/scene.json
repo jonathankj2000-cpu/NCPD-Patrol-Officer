@@ -15,7 +15,7 @@
   "prepare_retry_near_radius_metres": 180,
   "prepare_retry_interval_seconds": 1,
   "prepare_retry_grace_seconds": 8,
-  "arrival_radius_metres": 55,
+  "arrival_radius_metres": 50,
   "retain_seconds": 90,
   "retain_distance_metres": 150
 }

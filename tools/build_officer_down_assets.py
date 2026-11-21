@@ -8,7 +8,7 @@ MOD='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 def outputs():
  s=json.loads((DIR/'scene.json').read_text());p=s['position']
  scene='-- Generated from assets/officer_down/scene.json. Native marker shares this exact point.\nreturn {x=%.9f,y=%.9f,z=%.9f,prepare=%d,prepareNear=%d,prepareInterval=%d,prepareGrace=%d,arrival=%d,retainSeconds=%d,retainDistance=%d}\n'%(p['x'],p['y'],p['z'],s['prepare_radius_metres'],s['prepare_retry_near_radius_metres'],s['prepare_retry_interval_seconds'],s['prepare_retry_grace_seconds'],s['arrival_radius_metres'],s['retain_seconds'],s['retain_distance_metres'])
- native='// Generated from assets/officer_down/scene.json; marker resource uses the same point.\npublic class NCPDPatrolOfficerDownSite extends IScriptable {\n    public static func Position() -> Vector4 {\n        let point: Vector4;\n        point.X = %.9f; point.Y = %.9f; point.Z = %.9f; point.W = 1.0;\n        return point;\n    }\n}\n'%(p['x'],p['y'],p['z'])
+ native='// Generated from assets/officer_down/scene.json; marker resource uses the same point.\npublic class NCPDPatrolOfficerDownSite extends IScriptable {\n    public static func Position() -> Vector4 {\n        let point: Vector4;\n        point.X = %.9f; point.Y = %.9f; point.Z = %.9f; point.W = 1.0;\n        return point;\n    }\n    public static func ArrivalRadius() -> Float { return %.1f; }\n}\n'%(p['x'],p['y'],p['z'],s['arrival_radius_metres'])
  return {MOD+'officer_down_scene.lua':scene,'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds':native}
 
 def validate(journal,texts):

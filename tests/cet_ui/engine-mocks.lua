@@ -65,7 +65,7 @@ package.loaded.scene_survey={configure=noop,blocksDuty=function() return f.surve
 local patrol={fixtureName='patrol',Version=function() return 17 end,
     IsOnDuty=function() return f.onDuty end,HasWantedLevel=no,WasTerminatedForCrime=no,
     GetMonitorState=display,GetShiftJobs=zero,GetShiftBonus=zero,GetMonitorDiagnostics=display,
-    GetLastBonusAmount=zero,GetVoiceDiagnostics=display,GetVoiceDiagnosticRevision=zero,
+    GetLastBonusAmount=zero,GetVoiceDiagnostics=display,GetVoiceDiagnosticRevision=zero,GetPoliceFireDiagnostics=display,
     TakeDutyRequest=zero,IsDispatchMenuOpen=no}
 function patrol:BeginShift() record('patrol.BeginShift');f.onDuty=true end
 function patrol:FinishShift() record('patrol.FinishShift');f.onDuty=false end

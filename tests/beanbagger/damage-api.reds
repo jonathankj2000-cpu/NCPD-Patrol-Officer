@@ -7,6 +7,9 @@ public native class AttackData extends IScriptable {
  public native const func GetInstigator() -> wref<GameObject>;
  public native const func GetWeapon() -> wref<WeaponObject>;
  public native const func GetAttackType() -> gamedataAttackType;
+ // attackData.swift:204/252; shared by the on-duty stray-hit guard.
+ public final const func GetAttackDefinition() -> ref<IAttack> { return null; }
+ public final const func GetAttackTime() -> Float { return 0.0; }
  public native func AddFlag(flag: hitFlag, sourceName: CName) -> Void;
  public native func RemoveFlag(flag: hitFlag) -> Void;
  public static native func IsRangedOnly(attackType: gamedataAttackType) -> Bool;

@@ -52,7 +52,7 @@ function M.lock(actors,backend,options)
     for _,row in ipairs(actors) do
         if row.actor and row.actor:IsAttached() then
             local p=row.actor:GetWorldPosition()
-            if not (options and options.freeInjured and row.kind=='injured')
+            if not (options and ((options.freeInjured and row.kind=='injured') or (options.freeNPCs and not row.car)))
                 and ((p.x-row.position.x)^2+(p.y-row.position.y)^2>.25 or math.abs(p.z-row.position.z)>1) then
                 if not backend:LockPosition(row.actor,row.position,row.yaw) then error('Pre-arrival position lock rejected') end
             end
