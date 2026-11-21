@@ -1,3 +1,38 @@
+NCPD PATROL v0.18b1 INJURED SETTLING PILOT - COMPLETE BRANCH TEST
+
+This build adds an OPT-IN pilot at Kryss_04, Kryss_11 and Kryss_15. The first two
+were rejected in the uploaded run; Kryss_15 is a previously validated control.
+The full 17-site survey and the live Officer Down encounter retain their v0.18b
+procedure/geometry. All 41 REDscript files and seven archives are unchanged.
+
+Install the complete 105-file package and fully restart. Keep your existing
+scene_survey_results.jsonl. Use a MANUAL TEST SAVE, OFF DUTY and on foot, then:
+CET -> Testing -> Scene survey -> TEST: Injured settling pilot (3 sites).
+Close CET and leave V still. Export scene survey report afterwards and share
+both scene_survey_report.json and scene_survey_results.jsonl from the mod folder.
+
+Only in this pilot, the injured actor gets four active seconds to settle after
+all ten actors are attached. Positions are logged during spawning, settling
+and final observation. The final distance from the ORIGINAL requested position
+stays at 1.5 m. Three seconds of final stability, supported ground and local
+Static/Vehicle clearance are required. A temporary transition envelope is not a
+final acceptance radius. Other actors retain 1.5 m throughout the transition.
+No actor teleport, position rebase or spawn-offset compensation is applied.
+
+Existing results are preserved. Pilot outcomes use a separate validation profile
+and do not mark legacy full-survey failures as validated. The report includes
+actual/expected XYZ, world/local displacement, per-frame time since the down
+request, transition peak, final anchor movement and ground/clearance observations.
+It measures transition motion; it does not claim an animation clip has finished.
+
+The uploaded evidence confirms 76/82 post-spawn failures named the injured actor,
+with timestamp differences of 1-2 seconds. Failed records did not include the
+rejected coordinates, so animation/physics motion and a consistent final offset
+remain hypotheses. A persistent final displacement above 1.5 m still fails.
+See docs/SCENE_SURVEY_v018b1.md for the evidence and exact pilot boundaries.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18b COMPACT OFFICER DOWN AND SCENE SURVEY - COMPLETE BRANCH TEST
 
 Officer Down now uses a compact layout: 12 m between the police/gang car lines.

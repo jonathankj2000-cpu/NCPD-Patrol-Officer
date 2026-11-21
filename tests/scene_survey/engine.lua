@@ -86,6 +86,7 @@ end
 function spatial:Overlap(box,center,angle,group)
  assert(box.__vector=='Vector4' and center.__vector=='Vector4' and angle.__vector=='EulerAngles' and group=='Vehicle')
  local q=location(center)
+ if box.x==.35 and s.injuredVehicleBlocked then return true end
  if s.overlapError or (s.carOverlapError and box.x==1.05) then error('Injected native Overlap API error') end
  if box.x==1.05 and s.blockHeading and s.blockHeading[q.id] and math.abs(((angle.Yaw-90)%360)-s.blockHeading[q.id])<.001 then return true end
  if box.x==1.05 and s.blocked[q.id] then return true end

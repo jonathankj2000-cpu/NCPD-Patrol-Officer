@@ -59,19 +59,30 @@ function M.lock(actors,backend)
         end
     end
 end
-function M.observe(actors)
+function M.measure(row,system)
+    system=system or Game.GetDynamicEntitySystem()
+    if not system or not system:IsReady() then return nil,'Entity system not ready' end
+    local actor=system:GetEntity(row.id)
+    if not row.bound or not actor or not actor:IsAttached() then return nil,'Actor missing/detached: '..row.kind end
+    if not system:IsManaged(row.id) or actor:GetRecordID()~=TweakDBID.new(row.record) then return nil,'Actor identity changed: '..row.kind end
+    local p=actor:GetWorldPosition()
+    if not p or p.x~=p.x or p.y~=p.y or p.z~=p.z or math.abs(p.x)>=100000 or math.abs(p.y)>=100000 or math.abs(p.z)>=100000 then return nil,'Actor displaced: '..row.kind end
+    return {kind=row.kind,record=row.record,yaw=row.yaw,
+        expected={x=row.position.x,y=row.position.y,z=row.position.z},actual={x=p.x,y=p.y,z=p.z},displacement=distance(p,row.position)},nil,actor
+end
+function M.observe(actors,options)
     local system=Game.GetDynamicEntitySystem()
     if not system or not system:IsReady() then return nil,'Entity system not ready' end
     local samples={}
     for _,row in ipairs(actors) do
-        local actor=system:GetEntity(row.id)
-        if not row.bound or not actor or not actor:IsAttached() then return nil,'Actor missing/detached: '..row.kind end
-        if not system:IsManaged(row.id) or actor:GetRecordID()~=TweakDBID.new(row.record) then return nil,'Actor identity changed: '..row.kind end
-        local p=actor:GetWorldPosition()
-        if not p or p.x~=p.x or p.y~=p.y or p.z~=p.z or distance(p,row.position)>1.5 then return nil,'Actor displaced: '..row.kind end
+        local sample,reason,actor=M.measure(row,system)
+        if not sample then return nil,reason end
+        if options and options.injuredTransition and row.kind=='injured' then
+            local p,q=sample.actual,sample.expected
+            if (p.x-q.x)^2+(p.y-q.y)^2>9 or math.abs(p.z-q.z)>1.5 then return nil,'Injured transition outside hard envelope',sample end
+        elseif sample.displacement>1.5 then return nil,'Actor displaced: '..row.kind,sample end
         if row.car then actor:ForceBrakesUntilStoppedOrFor(1) end
-        samples[#samples+1]={kind=row.kind,record=row.record,yaw=row.yaw,
-            expected={x=row.position.x,y=row.position.y,z=row.position.z},actual={x=p.x,y=p.y,z=p.z},displacement=distance(p,row.position)}
+        samples[#samples+1]=sample
     end
     return samples
 end

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18b Scene Survey | compact layout and 17-site off-duty tour
+-- NCPD Patrol v0.18b1 Injured Settling Pilot | opt-in three-site transition measurements
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18b Scene Survey loaded. Compact Officer Down layout and an explicit off-duty 17-site test tour. City Center and Watson only. Use a manual test save; survey evidence is stored in the CET mod folder. Install the complete package and fully restart the game.")
+    status("v0.18b1 Injured Settling Pilot loaded. Testing has an opt-in three-site injured transition probe. Full 17-site surveys retain their original procedure. Existing results are preserved; pilot results use a separate validation profile. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

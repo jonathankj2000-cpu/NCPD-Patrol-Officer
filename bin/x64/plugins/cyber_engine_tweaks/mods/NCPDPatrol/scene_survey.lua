@@ -3,6 +3,7 @@ local Catalog=require('scene_survey_sites')
 local Layout=require('officer_down_layout')
 local Actors=require('officer_down_actors')
 local Store=require('scene_survey_store')
+local Settling=require('scene_survey_settling')
 local M={}
 local context,storage={},Store.new()
 local phase,label='idle','Survey not started. '..Catalog.coverage
@@ -13,6 +14,8 @@ local clock,poll,stable,observedMax=0,0,0,0
 local heading,samples,pending,afterCleanup,stopReason,lastError
 local done,passed=0,0
 local moved=false
+local profile='legacy-immediate-v1'
+local pilotState=nil
 local function point(p) return Vector4.new(p.x,p.y,p.z,1) end
 local function copy(p) return {x=p.x,y=p.y,z=p.z} end
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
@@ -29,7 +32,7 @@ local function say(text,status)
 end
 local function enter(nextPhase) phase=nextPhase;clock,poll,stable=0,0,0 end
 local function evidence(row)
-    row.run=run;row.catalog_revision=Catalog.revision;row.layout_revision=Layout.revision
+    row.run=run;row.catalog_revision=Catalog.revision;row.layout_revision=Layout.revision;row.validation_profile=profile
     storage:append(row)
 end
 local function trialEvent(kind,reason)
@@ -38,7 +41,10 @@ end
 local function siteResult(status,reason)
     return {kind='site_result',site=site.id,label=site.label,position=copy(site),variant=variant,
         status=status,heading=heading,reason=reason,failures=failures,samples=samples,
-        observed_seconds=stable,max_displacement=observedMax,cleanup_confirmed=true}
+        observed_seconds=stable,max_displacement=observedMax,cleanup_confirmed=true,
+        injured_transition_peak_displacement=pilotState and pilotState.peak or nil,
+        pilot_settling_seconds=pilotState and Settling.settleSeconds or nil,
+        maximum_observation_drift=pilotState and pilotState.maxDrift or nil}
 end
 local function captureDrain()
     for _,row in ipairs(actors) do
@@ -84,7 +90,7 @@ local function advanceAngle()
         if pass<2 then pass=pass+1;angleIndex=1
         else resultAndNext(siteResult('unverified','No complete stable placement after two passes; see per-heading failures'));return end
     end
-    heading=angles[angleIndex];samples=nil;observedMax=0
+    heading=angles[angleIndex];samples=nil;observedMax=0;pilotState=nil
     enter('preflight')
 end
 local function finishRun(returned)
@@ -105,6 +111,7 @@ function M.blocksDuty()
 end
 function M.summary()
     return label..'\nPhase: '..phase..' | '..Catalog.coverage..' | proven compact='..storage:count('compact')..'/17 | proven standard='..storage:count('standard')..'/17'
+        ..' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
 end
 function M.diagnostics()
     return M.summary()..' | site='..tostring(site and site.id)..' | variant='..tostring(variant)..' | heading='..tostring(heading)
@@ -119,7 +126,7 @@ function M.export(status)
     say(ok and ('Report exported to '..name..' inside the NCPDPatrol CET folder') or tostring(name),status)
     return ok
 end
-function M.start(requestedVariant,onlyUnverified,status)
+function M.start(requestedVariant,onlyUnverified,status,pilot)
     if M.active() then say('A survey is already running; stop/return before starting another',status);return false end
     local ok,reason=pcall(function()
         if requestedVariant~='compact' and requestedVariant~='standard' then error('Unknown survey layout') end
@@ -128,8 +135,11 @@ function M.start(requestedVariant,onlyUnverified,status)
         if owner:IsActive() then error('Previous CET session left a survey reserved; use Recover survey cleanup and return') end
         if not owner:CanRun() or owner:IsMenuOpen() then error('Load a manual test save, go OFF DUTY, leave combat/menus and exit your vehicle') end
         storage:load();queue={}
+        profile=pilot and Settling.profile or 'legacy-immediate-v1';pilotState=nil
         for _,candidate in ipairs(Catalog.sites) do
-            if not onlyUnverified or storage:needsTest(candidate,requestedVariant) then queue[#queue+1]=candidate end
+            if pilot then
+                if Settling.pilotSites[candidate.id] then queue[#queue+1]=candidate end
+            elseif not onlyUnverified or storage:needsTest(candidate,requestedVariant) then queue[#queue+1]=candidate end
         end
         if #queue==0 then say('All 17 sites already have a successful latest test for '..requestedVariant,status);return false end
         variant=requestedVariant;index=1;done,passed=0,0;actors,draining={},{}
@@ -146,6 +156,7 @@ function M.start(requestedVariant,onlyUnverified,status)
     if not ok then say('Start failed: '..tostring(reason),status);return false end
     return reason==true
 end
+function M.startPilot(status) return M.start('compact',false,status,true) end
 function M.cancel(status)
     if not M.active() then say('No active survey; use recovery if a previous CET session was interrupted',status);return false end
     stopReason='Survey cancelled'
@@ -200,8 +211,8 @@ local function update(delta)
     end
     if phase=='travel' then
         if #actors>0 or #draining>0 then error('Previous actor ownership not cleared before travel') end
-        site=queue[index];failures={};angleIndex,pass=1,1;samples=nil;observedMax=0
-        local preferred=storage:preferred(site,variant)
+        site=queue[index];failures={};angleIndex,pass=1,1;samples=nil;observedMax=0;pilotState=nil
+        local preferred=storage:preferred(site,variant,profile)
         angles={}
         if preferred then angles[1]=preferred end
         for step=0,3 do
@@ -243,6 +254,7 @@ local function update(delta)
                 advanceAngle()
             else
                 trialEvent('trial_started','All ten positions validated; creating actual scene')
+                pilotState=profile==Settling.profile and Settling.new() or nil
                 Actors.create(layout,backend,actors,function(row)
                     if not backend:TrackCreatedID(row.id) then error('Native survey ID tracking refused') end
                 end)
@@ -251,17 +263,42 @@ local function update(delta)
         end
     elseif phase=='spawning' then
         if poll>=.25 then
-            poll=0
+            local elapsed=poll;poll=0
             local ok,ready=pcall(Actors.prepare,actors,backend)
+            if pilotState then pilotState:noteBound(actors,elapsed) end
+            local partialFailure=false
+            if ok and pilotState and pilotState.boundAt then
+                local measured,reason,frame=pilotState:frame(actors,0,true,true)
+                frame.kind='injured_motion_sample';frame.site=site.id;frame.variant=variant;frame.heading=heading;frame.pass=pass;evidence(frame)
+                if not measured then partialFailure=true;rejectTrial(reason) end
+            end
             if not ok then
                 if tostring(ready):find('unexpected road level/position',1,true) then rejectTrial(ready) else error(ready,0) end
-            elseif ready then enter('observing');samples=nil;observedMax=0
+            elseif partialFailure then -- rejected trial is already reserved for cleanup
+            elseif ready then enter(pilotState and 'settling' or 'observing');samples=nil;observedMax=0
             elseif clock>=15 then rejectTrial('Actor attachment/protection timed out') end
+        end
+    elseif phase=='settling' then
+        if poll>=.25 then
+            local elapsed=poll;poll=0
+            local observed,reason,frame=pilotState:frame(actors,elapsed,true)
+            frame.kind='injured_motion_sample';frame.site=site.id;frame.variant=variant;frame.heading=heading;frame.pass=pass;evidence(frame)
+            if not observed then rejectTrial(reason)
+            elseif distance(player:GetWorldPosition(),site)>3 then stopReason='V moved away during the placement test';pending=nil;cleanup('return')
+            elseif clock>=Settling.settleSeconds then
+                trialEvent('settling_complete','Four active seconds elapsed; original 1.5 m final limit and stable/support/clearance checks now apply')
+                enter('observing');samples=nil;observedMax=0
+            end
         end
     elseif phase=='observing' then
         if poll>=.25 then
             local elapsed=poll;poll=0
-            local observed,reason=Actors.observe(actors)
+            local observed,reason
+            if pilotState then
+                local frame
+                observed,reason,frame=pilotState:frame(actors,elapsed,false)
+                frame.kind='injured_motion_sample';frame.site=site.id;frame.variant=variant;frame.heading=heading;frame.pass=pass;evidence(frame)
+            else observed,reason=Actors.observe(actors) end
             if not observed then rejectTrial(reason)
             elseif distance(player:GetWorldPosition(),site)>3 then
                 stopReason='V moved away during the placement test';pending=nil;cleanup('return')

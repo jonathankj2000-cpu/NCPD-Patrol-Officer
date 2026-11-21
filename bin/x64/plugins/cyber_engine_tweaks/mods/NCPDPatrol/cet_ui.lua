@@ -275,6 +275,8 @@ function M.new(context)
             ImGui.TextWrapped("Coverage: City Center (Central) and Watson only. The document's 16 sites plus TEST_KRYSS_01 make 17. Use a manual test save, go OFF DUTY and exit your vehicle. The test moves V between recorded centers, spawns one protected scene, checks stability, confirms cleanup and returns to your start. Close CET and leave the game running. Combat, quest markers and rewards are outside this placement test.")
             if survey then
                 ImGui.TextWrapped(survey.summary())
+                if ImGui.Button("TEST: Injured settling pilot (3 sites)") then survey.startPilot(status) end
+                ImGui.TextWrapped("Settling pilot only: Kryss_04, Kryss_11 and Kryss_15 (previously validated control). Four active seconds for the injured transition, then the original 1.5 m final limit, local support/clearance checks and three stable seconds. Positions are measured, never corrected. Pilot results stay separate from the full 17-site survey; export the same report after testing.")
                 if ImGui.Button("TEST: Survey all 17 sites (compact)") then survey.start('compact',false,status) end
                 if ImGui.Button("TEST: Survey all 17 sites (standard)") then survey.start('standard',false,status) end
                 if ImGui.Button("TEST: Retry unverified survey sites") then survey.start('compact',true,status) end
@@ -341,7 +343,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18b Scene Survey###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18b1 Injured Settling Pilot###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end
