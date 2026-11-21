@@ -1,7 +1,7 @@
 {
   "version": "v0.18f-scene-arrival-and-stray-fire",
   "base_commit": "82ed62c3987854acb06cbf527d648079b9a086e6",
-  "source_commit": "cad8117a4de5eb46c81599add699cbd81e9d1f26",
+  "source_commit": "73ed1a25a546d5d9bebc476d6b446fca1d2c8c1f",
   "install_files": 115,
   "lua_modules_parsed": 43,
   "redscript_files": 44,
@@ -661,7 +661,8 @@
       "fast_arrival_requires_full_usable_snapshot": true,
       "live_npc_safety_replaces_spawn_displacement": true,
       "survey_validation_profiles_unchanged": true,
-      "retained_approval_does_not_repeat_player_origin_path": true
+      "retained_approval_does_not_repeat_player_origin_path": true,
+      "first_live_aid_proof_uses_scene_center_and_owned_defender_not_player_seat": true
     },
     "partner_safety": {
       "partner_guard_exact_registered_partner_only": true,
@@ -709,6 +710,7 @@
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_actors.lua",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_scene.lua",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_functional.lua",
+    "r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds",
     "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds",
     "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds",
     "r6/scripts/NCPDPatrol/NCPDPatrolPartnerSafety.reds",
@@ -732,7 +734,7 @@
   "reference_vehicle_threat_and_combat_hit_paths_found": true,
   "reported_wanted_cause_proven": false,
   "reference_game_source_commit": "81d996b584a693e8b0f0b20526a9fa38b5c83fe7",
-  "existing_40_native_scripts_and_eight_archives_unchanged_from_v018e2": true,
+  "existing_39_native_scripts_and_eight_archives_unchanged_from_v018e2": true,
   "scanner_vip_cyberpsycho_markers_survey_profiles_arrest_partner_and_backup_ai_unchanged": true,
   "all_payment_and_career_ledgers_unchanged": true,
   "automatic_weights": {
@@ -774,6 +776,7 @@
   "initial_binding_and_physical_safety_still_required": true,
   "fast_arrival_complete_usable_snapshot_required": true,
   "proven_aid_route_retained_across_vehicle_seat_path_failure": true,
+  "first_live_aid_route_from_scene_center_and_healthy_defender": true,
   "v018e2_scene_failure_negative_controls": true,
   "police_stray_discharge_interval_seconds": 10,
   "police_exact_shot_group_seconds": 0.5,
@@ -790,9 +793,9 @@
     "existing marker/reward/career behavior"
   ],
   "zip_path": "releases/NCPD_Patrol_v0.18f_Scene_Arrival_and_Stray_Fire_TEST.zip",
-  "zip_bytes": 1407387,
-  "zip_sha256": "7435ee75e9ed2c3006e99386b0a61e94b00692937e1bc7964400ecdf5396e1d6",
-  "zip_git_blob": "11e8ea5fcd0fb368021d0e8a4e3ac954a4470388",
+  "zip_bytes": 1407847,
+  "zip_sha256": "a86d9303579278b3b43a136dcb5f9d0e872a24081033b178750fff436ad34160",
+  "zip_git_blob": "1fd770a6ab7a59e4dae048b7cccd8b4a76c2f138",
   "files": {
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/partner.lua": {
       "sha256": "0d54721733e30d4eb17a85128d8a2ffe3ae1040d8b9ef7a844d79fbd7f09efbc",
@@ -851,8 +854,8 @@
       "git_blob": "7a7a0073d3cd00d4dcaf7b642512de5922fb54dd"
     },
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_functional.lua": {
-      "sha256": "639054fc3962de32d64ed7ffab6458415218c47e1d4e4daf0c97a0a78a888054",
-      "git_blob": "523b9310d185188c18abef1902fe88724c177d4d"
+      "sha256": "b5d51d6137811c22048afc6229135f57c6270f5af686c0a50558735fdf3050cb",
+      "git_blob": "626b4d6c289d65e75213bd2eb0845930e35814ce"
     },
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_store.lua": {
       "sha256": "6a86528044e274690232beb73ec177ee3942f4a6bac0cfaef19d7229acdf066c",
@@ -1071,8 +1074,8 @@
       "git_blob": "ad577f7c3a3c7366442fa20d6ecf826b62c40d2b"
     },
     "r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds": {
-      "sha256": "e5979dd509f0423417105e70bd3626069da1dca845f4e5f7b385d98d9ca2fd2e",
-      "git_blob": "28f85e566406c862563fb0da0d866a6d63118384"
+      "sha256": "27ff7e1d7e4c6e877e12ce4e4cb99eb3751a058e7ab4f02dac8d0e106c1c18a7",
+      "git_blob": "f33ffa727bfad37cfcab58fd73636d4614beec5b"
     },
     "r6/scripts/NCPDPatrol/NCPDPatrolTrunkPopup.reds": {
       "sha256": "bf21b27f456fc05e1dfcd442fe609e6345b8a60fcde70157515258f4e1d56a71",
@@ -1127,8 +1130,8 @@
       "git_blob": "27c73b29028f8a92dd90fa51d785a5e810bb610b"
     },
     "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds": {
-      "sha256": "6ba6b588020c31b485ace4c4431d5c848c8225688a9369c06b76fd9f4b1a5227",
-      "git_blob": "4051880ca5b437899a6bd7759acf26693b4e574e"
+      "sha256": "7ed83f06ed114017f7eca7297320a3ae0ca46550d8f9a521e22a028e3eb62f60",
+      "git_blob": "9c1bfc6827691af3baac8ee308f5d39defdad047"
     },
     "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds": {
       "sha256": "e1a041ae6c583d1558976f02aa76d1179608e820c92bd5733b1881e9da1ea9cb",
@@ -1243,8 +1246,8 @@
       "git_blob": "45bc4d6718dddc04a92ff0c5f9e34adad07af0cb"
     },
     "README.txt": {
-      "sha256": "682ae593d2f67ab17690841d4268096dbebfb44a98ba539e88d88ea3f2a88a9b",
-      "git_blob": "3367c63e406069120836f290b309e4b783e4972e"
+      "sha256": "6b7ec109344b0af79323722c1b02cc46079795097a0ad719be2b82374a4ba6af",
+      "git_blob": "0f8258f077362cfcd8739042045ec238ea0bdaaf"
     },
     "LICENSE": {
       "sha256": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
