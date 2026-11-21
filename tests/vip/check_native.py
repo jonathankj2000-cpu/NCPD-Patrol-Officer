@@ -30,3 +30,12 @@ with tempfile.TemporaryDirectory(prefix='ncpd-native-') as d:
   optional=([ROOT/'tests/career/contracts'/n for n in ['browser-data.reds','browser-extension.reds','browser-controller.reds']]+[WORK/'v010b-framework/BrowserExtension.Classes.reds']) if browser else []
   subprocess.run([str(compiler),str(path),'--',*map(str,optional+scripts)],check=True)
   print('PASS: offline source/API compile with BEF='+str(browser)+' (not the actual game cache)')
+ # This exact previous owner caused the supplied 2026-11-21 game error. The
+ # corrected contracts must reject it rather than inventing an Entity import.
+ legacy=Path(d)/'v018e-officer-down.reds'
+ legacy.write_text(subprocess.check_output(['git','show','1f3bb6cf71cc72fd1dff8a412fafb436ce9919c1:r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'],cwd=ROOT,text=True))
+ broken=[legacy if p==ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds' else p for p in scripts]
+ rejected=subprocess.run([str(compiler),str(path),'--',*map(str,broken)],capture_output=True,text=True)
+ diagnostic=rejected.stdout+rejected.stderr
+ assert rejected.returncode!=0 and 'Dispose' in diagnostic and 'VehicleObject' in diagnostic,diagnostic
+ print('PASS: previous v0.18e VehicleObject.Dispose source/API compilation failure reproduced with corrected contracts')

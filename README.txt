@@ -1,3 +1,32 @@
+NCPD PATROL v0.18e1 STARTUP FIX - COMPLETE BRANCH TEST
+
+Fixes the supplied REDscript startup compilation failure in v0.18e:
+NCPDPatrolOfficerDownSystem.reds:165: method Dispose not found on VehicleObject.
+The direct vehicle.Dispose() call and the incorrect offline native declaration
+have been removed. Engine/C++ or CET/RTTI method listings do not establish
+REDscript availability. The corrected source/API check now rejects the previous
+v0.18e owner and accepts this build with Browser Extension present and absent.
+
+The native owner only authorizes an exact owned-vehicle cleanup attempt. Lua
+tries the optional CET Entity.Dispose capability inside pcall after the existing
+ownership/deletion-receipt guards. Missing/rejected CET support logs an unavailable
+event and keeps ownership; no REDscript compile dependency is introduced and no
+vehicle is considered physically gone merely because the attempt was authorized.
+
+Manual Officer Down retry, detached Codeware ID bookkeeping, quest markers,
+EUR$2000 payment/career credit and the 45/27/18/10 dispatch mix are preserved.
+The test suite covers both available and missing CET disposal capabilities and
+retains the three-consecutive-incident and exact-once payment checks.
+
+Install this COMPLETE 115-file package and FULLY RESTART THE GAME. The matching
+native cleanup API is now version 2. No dependency reinstall or save reset is
+required by the supplied error. Keep existing survey/gameplay logs; this ZIP does
+not overwrite them. 28 portable suites and offline source/API checks do not claim
+an actual game-cache build or prove optional CET availability in your game.
+See docs/STARTUP_FIX_v018e1.md for the error and verification scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18e OFFICER DOWN CLEANUP - COMPLETE BRANCH TEST
 
 Fixes repeated Officer Down requests being held behind completed-scene cleanup.

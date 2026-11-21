@@ -108,6 +108,26 @@ for _,row in ipairs(f.disposals) do row.actor.attached=false;f.managed[row.id]=n
 c.step(2);assert(not c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==0)
 assert(d.requestOfficerDownNearby(f.patrol,c.status));f.entities.DeleteEntity=remove;c.clear()'''
     case(deferred)
+    # No CET Dispose capability: the callback remains optional and bounded.
+    # Its absence cannot become a native compile dependency or lose ownership.
+    unavailable=stalled_cars[:stalled_cars.index('f.disposeCompletes=true')]+'''
+for _,a in pairs(f.objects) do
+ if a.record=='Vehicle.NCPDPatrol_OD_Police' or a.record=='Vehicle.NCPDPatrol_OD_GangCar' then a.Dispose=nil end
+end
+c.step(125)
+assert(c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==10 and OfficerNative:GetStage()==3)
+assert(f.wallet==2000 and #f.creates==10 and not f.disposals and not d.isActive())
+for id,a in pairs(f.objects) do
+ if a.record=='Vehicle.NCPDPatrol_OD_Police' or a.record=='Vehicle.NCPDPatrol_OD_GangCar' then
+  a.attached=false;f.managed[id]=nil;f.objects[id]=nil
+ end
+end
+c.step(2);assert(not c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==0 and f.wallet==2000)'''
+    def inspect_unavailable(lua):
+        rows=events()
+        assert sum(r['kind']=='vehicle_dispose_unavailable' for r in rows)==3
+        assert not any(r['kind']=='failed' for r in rows)
+    case(unavailable,inspect_unavailable)
     # A refused delete has no acceptance receipt, so even an otherwise valid
     # owned vehicle cannot be disposed through the fallback.
     case('''candidate();f.deleteOK=false;f.disposeCompletes=true
@@ -158,16 +178,16 @@ for _,row in pairs(f.objects) do
  if row.record=='Character.NCPDPatrol_OD_Injured' then npc=row end
 end
 assert(OfficerNative:CacheCreatedObject(car) and OfficerNative:CacheCreatedObject(npc))
-assert(not OfficerNative:DisposeCreatedVehicle(car))
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(car))
 assert(OfficerNative:MarkDeleteAccepted(car.id) and OfficerNative:MarkDeleteAccepted(npc.id))
-assert(not OfficerNative:DisposeCreatedVehicle(npc) and not OfficerNative:RetireDetachedVehicleID(npc.id))
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(npc) and not OfficerNative:RetireDetachedVehicleID(npc.id))
 local foreign=f:Actor(car.record,car.id,car.pos)
-assert(not OfficerNative:DisposeCreatedVehicle(foreign) and not OfficerNative:DisposeCreatedVehicle(f.objects[999]))
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(foreign) and not OfficerNative:PrepareCreatedVehicleDisposal(f.objects[999]))
 local record=car.record;car.record='Vehicle.OtherMod'
-assert(not OfficerNative:DisposeCreatedVehicle(car));car.record=record
-f.ready=false;assert(not OfficerNative:DisposeCreatedVehicle(car));f.ready=true
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(car));car.record=record
+f.ready=false;assert(not OfficerNative:PrepareCreatedVehicleDisposal(car));f.ready=true
 local gen=f.generation;f.generation=gen+1
-assert(not OfficerNative:DisposeCreatedVehicle(car) and not OfficerNative:RetireDetachedVehicleID(car.id));f.generation=gen
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(car) and not OfficerNative:RetireDetachedVehicleID(car.id));f.generation=gen
 assert(not f.disposals);c.clear()''')
     # Automatic selection preserves the retained scene and can choose another
     # type while bodies remain. It never shortens retention on its own.
@@ -234,7 +254,7 @@ f.objects[id.hash]=f:Actor('ambient',id,f.playerPoint);f.managed[id.hash]=true
 assert(not d.requestOfficerDownNearby(f.patrol,c.status))
 assert(#f.deletes==oldDeletes and f.objects[id.hash].record=='ambient')
 assert(c.scene.lifecycle().phase=='idle' and OfficerNative:GetCreatedCount()==0 and f.wallet==2000)''')
-    print('PASS: actual Officer Down repeat: reported stage=3/three rows/ten handles reproduced; accepted-car native disposal recovery with deferred detach/refusal/CET receipts; two prior-version negative controls; three completions/rearmed pin/EUR$6000 once; automatic retention/fallback, error/world/context guards and waypoint ownership (engine boundaries mocked)')
+    print('PASS: actual Officer Down repeat: reported stage=3/three rows/ten handles reproduced; optional CET disposal with supported/missing capabilities, deferred detach/refusal and native ownership receipts; two prior-version negative controls; three completions/rearmed pin/EUR$6000 once; automatic retention/fallback, error/world/context guards and waypoint ownership (engine boundaries mocked)')
     return {'three_sequential_completions':True,'same_site_native_pin_rearmed':True,'previous_silent_refusal_detected':True,
       'manual_retry_shortens_aftermath_only':True,'automatic_retention_and_other_types_preserved':True,
       'physical_cleanup_before_next_token':True,'cleanup_error_does_not_fail_successful_quest':True,

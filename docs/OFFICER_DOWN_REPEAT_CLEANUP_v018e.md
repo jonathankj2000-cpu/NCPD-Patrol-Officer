@@ -1,5 +1,9 @@
 # Officer Down cleanup and repeat requests
 
+Historical v0.18e design notes. Its direct REDscript Dispose call failed in the
+reported game cache; [v0.18e1](STARTUP_FIX_v018e1.md) removes that call and the
+incorrect offline import. Disposal is now only a capability-checked CET attempt.
+
 The report from v0.18d shows `phase=aftermath`, `stage=3`, aid completed, zero
 remaining enemies, zero active quest pins, three pending actor rows and ten
 retained handles. The player had exceeded both 90 seconds and 150 m. This proves

@@ -29,7 +29,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
     private let m_retiredPoll: Float;
     public func Version() -> Int32 { return 1; }
     public func CatalogVersion() -> Int32 { return 1; }
-    public func CleanupVersion() -> Int32 { return 1; }
+    public func CleanupVersion() -> Int32 { return 2; }
     public func GetCatalogIndex() -> Int32 { return this.m_catalogIndex; }
     public func SitePosition() -> Vector4 {
         if this.m_catalogIndex > 0 { return NCPDPatrolOfficerDownCatalog.Position(this.m_catalogIndex); };
@@ -144,7 +144,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         };
         this.m_retiredVehicleIDs = remaining;
     }
-    public func DisposeCreatedVehicle(object: ref<GameObject>) -> Bool {
+    public func PrepareCreatedVehicleDisposal(object: ref<GameObject>) -> Bool {
         let id: EntityID;
         let record: TweakDBID;
         let vehicle: ref<VehicleObject>;
@@ -158,11 +158,10 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         if !IsDefined(vehicle) { return false; };
         record = vehicle.GetRecordID();
         if record != t"Vehicle.NCPDPatrol_OD_Police" && record != t"Vehicle.NCPDPatrol_OD_GangCar" { return false; };
-        // Codeware has already accepted deletion. Request native teardown once
-        // if the owned vehicle still remains attached; Lua still waits for both
-        // manager removal and physical detachment before clearing the registry.
+        // Authorize one capability-checked CET attempt only. Entity.Dispose is
+        // not exposed to the observed REDscript game cache. This method never
+        // calls it or treats authorization as evidence of physical teardown.
         ArrayPush(this.m_disposeRequested, id);
-        vehicle.Dispose();
         return true;
     }
     public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
@@ -470,6 +469,6 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         let disposed: Int32 = ArraySize(this.m_disposeRequested);
         let retired: Int32 = ArraySize(this.m_retiredVehicleIDs);
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.m_stage) | token=\(this.m_token) | aid=\(this.m_aid) | enemies remaining=\(this.GetRemainingEnemies()) | created IDs=\(created) | delete accepted=\(accepted) | native disposals=\(disposed) | detached vehicle IDs retained=\(retired)/256 | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.m_stage) | token=\(this.m_token) | aid=\(this.m_aid) | enemies remaining=\(this.GetRemainingEnemies()) | created IDs=\(created) | delete accepted=\(accepted) | CET dispose attempts=\(disposed) | detached vehicle IDs retained=\(retired)/256 | \(marker) | \(this.m_reason)";
     }
 }

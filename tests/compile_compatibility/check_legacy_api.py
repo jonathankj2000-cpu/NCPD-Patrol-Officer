@@ -14,6 +14,12 @@ def compatibility_errors(source):
  bool_names=set(re.findall(r'\b(\w+)\s*:\s*Bool\b',code))|{'true','false'}
  bool_calls=set(re.findall(r'\bfunc\s+(\w+)\([^)]*\)\s*->\s*Bool\b',code))
  errors=[]
+ # v0.18e failed in the user's game cache: Dispose appears in engine/RTTI
+ # references, but is not a callable REDscript method on VehicleObject.
+ if re.search(r'\.\s*Dispose\s*\(',code):
+  errors.append('Dispose is unavailable in the observed REDscript game cache')
+ if re.search(r'\bnative\s+func\s+Dispose\s*\(',code):
+  errors.append('Do not invent a REDscript Dispose import from engine/RTTI references')
  # r4 failed in the actual game compiler: questNodeDefinition.id is Uint16,
  # while an untyped integer literal is Int32. The newer offline checker had
  # accepted that implicit narrowing, so require an explicit cast here.
@@ -49,10 +55,15 @@ def main():
  rejected='let node: ref<questMappinManagerNodeDefinition> = new questMappinManagerNodeDefinition(); node.id = 0;'
  assert compatibility_errors(rejected)
  assert not compatibility_errors(rejected.replace('node.id = 0;', 'node.id = Cast<Uint16>(0);'))
+ assert compatibility_errors('vehicle.Dispose();')
+ assert compatibility_errors('@addMethod(Entity) public final native func Dispose() -> Void;')
+ assert not compatibility_errors('// vehicle.Dispose();\nlet note: String = "vehicle.Dispose()";')
+ contract=(ROOT/'tests/officer_down/native-api.reds').read_text()
+ assert not compatibility_errors(contract),'Offline contract reintroduced the invalid Dispose import'
  failures=[]
  paths=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
  for path in paths:
   failures.extend(path.name+': '+error for error in compatibility_errors(path.read_text()))
  assert not failures,'\n'.join(failures)
- print(f'PASS: {len(paths)} scripts checked for observed Bool-operator, popup-import and quest-node Uint16 incompatibilities (lint, not a game-cache compile)')
+ print(f'PASS: {len(paths)} scripts checked for observed Bool-operator, popup-import, quest-node Uint16 and unavailable REDscript Dispose errors, including rejected fake imports (lint, not a game-cache compile)')
 if __name__=='__main__':main()

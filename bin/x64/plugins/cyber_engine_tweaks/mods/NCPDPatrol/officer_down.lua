@@ -56,7 +56,7 @@ local function snapshot()
     end
     return result
 end
-local function deleteActors()
+local function deleteActors(status)
     if catalogMode then
         for _,row in ipairs(actors) do
             if not row.drainCaptured then
@@ -75,8 +75,16 @@ local function deleteActors()
     if catalogMode and cleanupAge>=5 then
         for _,object in ipairs(draining) do
             local idOK,id=pcall(function() return tostring(object:GetEntityID().hash) end)
-            if native():DisposeCreatedVehicle(object) then
-                log('vehicle_dispose_requested',{id=idOK and id or 'unavailable',seconds=cleanupAge})
+            if native():PrepareCreatedVehicleDisposal(object) then
+                -- A RTTI/CET listing is not proof of REDscript availability.
+                -- Optional CET capability: absence/failure retains every ID.
+                local called,result=pcall(function() return object:Dispose() end)
+                local requested=called and result~=false
+                log(requested and 'vehicle_dispose_requested' or 'vehicle_dispose_unavailable',
+                    {id=idOK and id or 'unavailable',seconds=cleanupAge,api='CET Entity.Dispose',reason=not requested and tostring(result) or nil})
+                if not requested then
+                    report('Optional CET vehicle disposal unavailable; cleanup still pending for owned vehicle '..tostring(idOK and id or 'unknown'),status)
+                end
             end
         end
     end
@@ -115,7 +123,7 @@ local function cleanupDetails()
         vehicles=vehicles,npcs=npcs,unknown=unknown,pending=pending,error=cleanupError}
 end
 local function tryDeleteActors(status)
-    local ok,done=pcall(deleteActors)
+    local ok,done=pcall(deleteActors,status)
     if not ok then
         local reason=tostring(done)
         if cleanupError~=reason then
@@ -188,7 +196,7 @@ function M.diagnostics()
         ..' | placement='..tostring(placementReason or 'not attempted')..' | '..tostring(ok and text or text)
 end
 function M.supportsCatalog()
-    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:CleanupVersion()==1 and n:IsCatalogReady() end)
+    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:CleanupVersion()==2 and n:IsCatalogReady() end)
     return ok and ready==true
 end
 function M.logState() return Log.state() end
@@ -262,7 +270,7 @@ function M.requestNearby(patrol,status,sound,voice,source)
         local compatible,ready=pcall(function() return backend:CatalogVersion()==1 and backend:IsCatalogReady() end)
         if not compatible or not ready then error('Install the complete v0.18c Officer Down dispatch package and restart') end
         local cleanupReady,cleanupVersion=pcall(function() return backend:CleanupVersion() end)
-        if not cleanupReady or cleanupVersion~=1 then error('Install the complete v0.18e cleanup module and fully restart the game') end
+        if not cleanupReady or cleanupVersion~=2 then error('Install the complete v0.18e1 startup fix and fully restart the game') end
         local system=Game.GetDynamicEntitySystem();if not system or not system:IsReady() then error('Codeware entity system unavailable') end
         local site,d,radius,why=Selection.choose(player:GetWorldPosition())
         if not site then report(why,status);return false end
