@@ -1,3 +1,36 @@
+NCPD PATROL v0.18d SHIFT CONTROLS - COMPLETE BRANCH TEST
+
+NCPD Career now shows END SHIFT while on duty, on all three pages. The button
+shows ENDING SHIFT until the existing CET controller consumes the request.
+It uses the normal shift cleanup; career totals and earned rewards are retained.
+Fast travel terminals already offer Start/End Shift and are unchanged.
+
+CET -> Testing -> Dispatch scenarios -> TEST: Request Officer Down dispatch
+requests a normal nearby surveyed incident, alongside the scanner/VIP/cyberpsycho
+tests. The Dispatch-tab button remains available. Existing assignment guards,
+45/27/18/10 mix, 16 sites and gameplay/survey logs are unchanged.
+
+PARTNER POLICE-HIT SAFETY
+Reference game code gates ordinary damage/death crime reports on V, but police
+vehicles can also inject threats and send CombatHit reactions for non-prevention
+attackers. Our spawned follower is not an actual prevention-system unit. That
+reaction path exists; it does not prove the cause of a particular wanted star.
+This build ignores only gun hits from the currently registered NCPD partner on
+non-hostile police NPCs and police vehicles while on duty in the current world.
+The check runs before their ordinary OnHit/damage/threat callbacks. Hostile police
+quest targets, enemy targets, V's own hits, other companions, backup, melee,
+explosions and vehicle collisions retain their existing behavior. Wanted stars
+are never erased, delayed or globally disabled. Criminal activity still ends duty.
+See docs/SHIFT_CONTROLS_AND_PARTNER_SAFETY_v018d.md for evidence and test limits.
+
+Install this complete 115-file package and FULLY RESTART the game. Browser
+Extension remains optional; it is required for the Career browser page only.
+27 portable suites and an offline source/API compile cover this change; actual
+police reactions, wanted attribution and bullet rendering require a game test.
+Existing saves, survey evidence and gameplay logs are not overwritten by the ZIP.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18c OFFICER DOWN DISPATCH - COMPLETE BRANCH TEST
 
 Officer Down now joins normal dispatch at 16 surveyed City Center/Watson sites.

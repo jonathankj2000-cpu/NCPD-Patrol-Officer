@@ -332,6 +332,12 @@ function M.new(context)
             if ImGui.Button("TEST: Request VIP transport") then Dispatch.requestVIP(getPatrolSystem(), status) end
             if ImGui.Button("TEST: Trigger VIP ambush") then Dispatch.requestVIPAmbush(status) end
             if ImGui.Button("TEST: Request cyberpsycho dispatch") then Dispatch.requestCyberpsycho(getPatrolSystem(), status) end
+            -- Officer Down catalogue UI begin
+            if ImGui.Button("TEST: Request Officer Down dispatch") then
+                if Dispatch.requestOfficerDownNearby then Dispatch.requestOfficerDownNearby(getPatrolSystem(), status)
+                else status("Officer Down dispatch module unavailable") end
+            end
+            -- Officer Down catalogue UI end
             ImGui.TextWrapped("Next cyberpsycho: " .. Dispatch.cyberpsychoVariantState())
             if ImGui.Button("TEST: Next cyberpsycho variant") then Dispatch.cycleCyberpsychoVariant(status) end
             if ImGui.Button("Use random cyberpsycho variants") then Dispatch.randomCyberpsychoVariants(status) end
@@ -364,7 +370,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18c Officer Down Dispatch###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18d Shift Controls###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

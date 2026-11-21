@@ -150,9 +150,9 @@ def main():
  # Added CET actions route once without adding a hotkey or changing trunk keys.
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui_runtime
  mod=ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
- for tab,label,event in [('Dispatch','Request Officer Down dispatch','dispatch.requestOfficerDownNearby'),('Diagnostics','Export Officer Down gameplay report','dispatch.exportOfficerDownLog')]:
+ for tab,label,event in [('Dispatch','Request Officer Down dispatch','dispatch.requestOfficerDownNearby'),('Testing','TEST: Request Officer Down dispatch','dispatch.requestOfficerDownNearby'),('Diagnostics','Export Officer Down gameplay report','dispatch.exportOfficerDownLog')]:
   _,f=ui_runtime(mod);f.Frame(f,tab,label);assert f.clicks==1 and event in f.Events(f)
- print('PASS: actual 45/27/18/10 mixed selection and 90-weight fallback, automatic Officer Down/closure/next call, natural shifted and mounted aid access, temporary blockage cooldown, strict physical/partial cleanup and CET recovery, world-ID invalidation, best-effort append-only logs/export, rewards once and two CET routes (engine boundaries mocked)')
+ print('PASS: actual 45/27/18/10 mixed selection and 90-weight fallback, automatic Officer Down/closure/next call, natural shifted and mounted aid access, temporary blockage cooldown, strict physical/partial cleanup and CET recovery, world-ID invalidation, best-effort append-only logs/export, rewards once and three CET routes (engine boundaries mocked)')
  return {'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'weighted_first_draws':100,
   'automatic_resume_with_retained_scene':True,'physical_cleanup_and_cet_recovery':True,'world_change_never_deletes_reused_ids':True,
   'gameplay_log_preserved_and_streamed':True,'logging_failure_does_not_block_gameplay':True,'natural_and_mounted_access':True,

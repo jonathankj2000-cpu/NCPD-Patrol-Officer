@@ -92,4 +92,4 @@ assert 'this.LoadPageByAddress(' not in source
 assert 'this.m_deviceLogicController.LoadPageByAddress(' in source
 assert 'GetWebPage(address: String)' in source and 'ClaimNextReward()' in source
 assert 'CreateScriptedQuest' not in source
-print('PASS: three portal pages fit five viewport sizes; career Start Shift queues actual native duty request with pending/active feedback and duplicate/stale/session/death/wanted guards; rank/reward/partner rendering, viewport/hover/callback cleanup, fixed T2/T3/T5 rewards, CET controls, save restore and actual pinned BEF registration/navigation (native boundaries mocked)')
+print('PASS: three portal pages fit five viewport sizes; career Start/End Shift queue native desired states with pending feedback, no direct lifecycle changes, duplicate/stale/session/death/wanted guards; rank/reward/partner rendering, callback cleanup, tiered rewards and pinned BEF registration/navigation (native boundaries mocked)')

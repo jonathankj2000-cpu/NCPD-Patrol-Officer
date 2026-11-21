@@ -12,6 +12,9 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18d Shift Controls | Career End Shift and scoped partner police-hit safety','-- NCPD Patrol v0.18c Officer Down Dispatch | surveyed sites and gameplay reliability logs')
+    source=source.replace('v0.18d Shift Controls loaded. Career Start/End Shift; Officer Down under Testing > Dispatch scenarios; registered partner gun hits on non-hostile police are ignored on duty. Existing dispatch, rewards and wanted termination remain active. Install the complete package and fully restart the game.','v0.18c Officer Down Dispatch loaded. 16 surveyed City Center/Watson sites; mix 45% scanner, 27% VIP, 18% cyberpsycho, 10% Officer Down. Dispatch tab has a direct request; Diagnostics exports gameplay reliability logs. Survey tools and existing results are preserved. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18d Shift Controls###','NCPD Patrol - v0.18c Officer Down Dispatch###')
     source=source.replace('-- NCPD Patrol v0.18c Officer Down Dispatch | surveyed sites and gameplay reliability logs','-- NCPD Patrol v0.18b3 Functional Scene Survey | injured usability replaces spawn precision')
     source=source.replace('v0.18c Officer Down Dispatch loaded. 16 surveyed City Center/Watson sites; mix 45% scanner, 27% VIP, 18% cyberpsycho, 10% Officer Down. Dispatch tab has a direct request; Diagnostics exports gameplay reliability logs. Survey tools and existing results are preserved. Install the complete package and fully restart the game.','v0.18b3 Functional Scene Survey loaded. Normal 17-site buttons validate injured ground, clearance, down-state and a reachable aid position. Landing displacement is informational; no injured corrections or precision anchor. Existing results are preserved by validation profile. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18c Officer Down Dispatch###','NCPD Patrol - v0.18b3 Functional Scene Survey###')
@@ -90,4 +93,5 @@ PROBE_BUTTONS.update({'TEST: Survey all recorded sites (compact)','TEST: Survey 
 PROBE_BUTTONS.add('TEST: Injured settling pilot (3 sites)')
 PROBE_BUTTONS.add('TEST: Injured placement pilot (3 sites)')
 PROBE_BUTTONS.update({'Request Officer Down dispatch','Export Officer Down gameplay report'})
+PROBE_BUTTONS.add('TEST: Request Officer Down dispatch')
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})

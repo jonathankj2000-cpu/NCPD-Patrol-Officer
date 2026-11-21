@@ -13,8 +13,9 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
     private let m_owner: wref<GameObject>;
     private let m_claimButton: wref<inkCanvas>;
     private let m_refreshButton: wref<inkCanvas>;
-    private let m_startShiftButton: wref<inkCanvas>;
+    private let m_dutyButton: wref<inkCanvas>;
     private let m_startRequested: Bool;
+    private let m_endRequested: Bool;
     private let m_serviceTab: wref<inkCanvas>;
     private let m_rewardsTab: wref<inkCanvas>;
     private let m_partnerTab: wref<inkCanvas>;
@@ -35,6 +36,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         this.m_revision = 0;
         this.m_section = 0;
         this.m_startRequested = false;
+        this.m_endRequested = false;
         if IsDefined(this.m_owner) {
             this.m_state = NCPDPatrolCareerBrowserState.Get(this.m_owner.GetGame());
             if IsDefined(this.m_state) { this.m_state.ReportBrowser(logic); };
@@ -46,6 +48,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         this.m_state = null;
         this.m_owner = null;
         this.m_startRequested = false;
+        this.m_endRequested = false;
         super.Uninit();
     }
     private func ReleasePageCallbacks() -> Void {
@@ -65,7 +68,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         ArrayClear(this.m_partnerButtons);
         this.m_claimButton = null;
         this.m_refreshButton = null;
-        this.m_startShiftButton = null;
+        this.m_dutyButton = null;
         this.m_serviceTab = null;
         this.m_rewardsTab = null;
         this.m_partnerTab = null;
@@ -218,6 +221,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
     protected cb func OnRefreshReleased(event: ref<inkPointerEvent>) -> Bool {
         if !event.IsAction(n"click") { return false; };
         this.m_startRequested = false;
+        this.m_endRequested = false;
         this.RefreshPage(); return true;
     }
     protected cb func OnStartShiftReleased(event: ref<inkPointerEvent>) -> Bool {
@@ -232,6 +236,21 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         // This page never starts actors, awards or a second shift on its own.
         patrol.RequestDuty(false);
         this.m_startRequested = !patrol.HasWantedLevel();
+        this.RefreshPage();
+        return true;
+    }
+    protected cb func OnEndShiftReleased(event: ref<inkPointerEvent>) -> Bool {
+        let player: ref<PlayerPuppet>;
+        let patrol: ref<NCPDPatrolSystem>;
+        if !event.IsAction(n"click") || this.m_endRequested || !IsDefined(this.Career()) || !NCPDPatrolMarkerSession.WorldReady() { return false; };
+        player = GetPlayer(this.m_owner.GetGame());
+        if !IsDefined(player) || !player.IsAttached() || player.IsDead() { return false; };
+        patrol = NCPDPatrolSystem.Get(this.m_owner.GetGame());
+        if !IsDefined(patrol) || !patrol.IsOnDuty() { return false; };
+        // Keep the normal CET end-shift path responsible for actors/dispatch.
+        // A stale end button can never request a new shift.
+        patrol.RequestDuty(true);
+        this.m_endRequested = true;
         this.RefreshPage();
         return true;
     }
@@ -272,6 +291,7 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         let active: ref<inkCanvas>;
         let state: String = "OFF DUTY";
         let shiftLabel: String = "START SHIFT";
+        let shiftHandler: CName = n"OnStartShiftReleased";
         this.Rect(sidebar, 0.0, 0.0, width, height - 96.0, this.Color(0.025, 0.058, 0.080, 1.0));
         this.Rect(sidebar, width - 1.0, 0.0, 1.0, height - 96.0, this.Line());
         this.Label(sidebar, "PERSONNEL DIVISION", 28.0, 30.0, width - 56.0, 30.0, 20, this.Muted());
@@ -280,9 +300,14 @@ public class NCPDPatrolCareerSiteListener extends BrowserEventsListener {
         this.Label(sidebar, "SERVICE STATUS", 28.0, 330.0, width - 56.0, 28.0, 18, this.Muted());
         if duty { state = "ON DUTY"; };
         this.Chip(sidebar, state, 28.0, 365.0, width - 56.0, this.Cyan());
-        if duty { this.m_startRequested = false; shiftLabel = "SHIFT ACTIVE"; };
+        if duty {
+            this.m_startRequested = false;
+            shiftLabel = "END SHIFT";
+            shiftHandler = n"OnEndShiftReleased";
+            if this.m_endRequested { shiftLabel = "ENDING SHIFT"; };
+        } else { this.m_endRequested = false; };
         if !duty && this.m_startRequested { shiftLabel = "SHIFT REQUESTED"; };
-        this.m_startShiftButton = this.Button(sidebar, shiftLabel, n"OnStartShiftReleased", 24.0, 414.0, width - 48.0, 44.0, true, !duty && !this.m_startRequested);
+        this.m_dutyButton = this.Button(sidebar, shiftLabel, shiftHandler, 24.0, 414.0, width - 48.0, 44.0, true, !this.m_startRequested && !this.m_endRequested);
         this.Rect(sidebar, 28.0, 478.0, width - 56.0, 1.0, this.Line());
         this.m_serviceTab = this.Button(sidebar, "SERVICE RECORD", n"OnServiceTabReleased", 24.0, 502.0, width - 48.0, 60.0, false, true);
         this.m_rewardsTab = this.Button(sidebar, "REWARDS & EQUIPMENT", n"OnRewardsTabReleased", 24.0, 578.0, width - 48.0, 60.0, false, true);
