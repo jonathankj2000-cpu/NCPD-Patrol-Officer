@@ -42,8 +42,12 @@ function M.advance(elapsed, duringCleanup)
     if duringCleanup then countdown = math.max(0, countdown) end
 end
 
-function M.mixDescription() return "50% Scanner / 30% VIP / 20% Cyberpsycho" end
-function M.choices()
+function M.mixDescription(officerDown)
+    if officerDown then return "45% Scanner / 27% VIP / 18% Cyberpsycho / 10% Officer Down" end
+    return "50% Scanner / 30% VIP / 20% Cyberpsycho"
+end
+function M.choices(officerDown)
+    if officerDown then return {{name="Scanner",weight=45},{name="VIP",weight=27},{name="Cyberpsycho",weight=18},{name="Officer Down",weight=10}} end
     return {{name="Scanner",weight=50},{name="VIP",weight=30},{name="Cyberpsycho",weight=20}}
 end
 

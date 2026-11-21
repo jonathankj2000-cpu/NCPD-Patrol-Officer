@@ -115,9 +115,10 @@ function M.blocksDuty()
     return ok and active==true
 end
 function M.summary()
+    local total=tostring(#Catalog.sites)
     return label..'\nPhase: '..phase..' | '..Catalog.coverage
-        ..' | functional compact='..storage:count('compact',Functional.profile)..'/17 | functional standard='..storage:count('standard',Functional.profile)..'/17'
-        ..' | proven compact='..storage:count('compact')..'/17 | proven standard='..storage:count('standard')..'/17'
+        ..' | functional compact='..storage:count('compact',Functional.profile)..'/'..total..' | functional standard='..storage:count('standard',Functional.profile)..'/'..total
+        ..' | proven compact='..storage:count('compact')..'/'..total..' | proven standard='..storage:count('standard')..'/'..total
         ..' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
         ..' | placement pilot='..storage:count('compact',Staging.profile)..'/3'
 end
@@ -157,7 +158,7 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
                 if Settling.pilotSites[candidate.id] then queue[#queue+1]=candidate end
             elseif not onlyUnverified or storage:needsTest(candidate,requestedVariant,profile) then queue[#queue+1]=candidate end
         end
-        if #queue==0 then say('All 17 sites already have a successful latest test for '..requestedVariant,status);return false end
+        if #queue==0 then say('All '..#Catalog.sites..' sites already have a successful latest test for '..requestedVariant,status);return false end
         variant=requestedVariant;index=1;done,passed=0,0;actors,draining={},{}
         stopReason,lastError,pending=nil,nil,nil;moved=false
         run=((os and os.date) and os.date('!%Y%m%dT%H%M%S') or 'run')..'-'..(#storage.events+1)

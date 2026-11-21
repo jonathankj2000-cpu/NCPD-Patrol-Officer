@@ -17,25 +17,100 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
     private let m_restore: Bool;
     private let m_previous: wref<JournalEntry>;
     private let m_marker: ref<NCPDPatrolSceneMarker>;
+    private persistent let m_catalogIndex: Int32;
+    private let m_created: array<EntityID>;
+    private let m_createdGeneration: Int32;
+    private let m_cleanupObjects: array<wref<GameObject>>;
     public func Version() -> Int32 { return 1; }
+    public func CatalogVersion() -> Int32 { return 1; }
+    public func GetCatalogIndex() -> Int32 { return this.m_catalogIndex; }
+    public func SitePosition() -> Vector4 {
+        if this.m_catalogIndex > 0 { return NCPDPatrolOfficerDownCatalog.Position(this.m_catalogIndex); };
+        return NCPDPatrolOfficerDownSite.Position();
+    }
+    public func IsCatalogReady() -> Bool {
+        let i: Int32 = 1;
+        let objective: String;
+        if !IsDefined(this.Journal()) { return false; };
+        while i <= NCPDPatrolOfficerDownCatalog.Count() {
+            objective = NCPDPatrolOfficerDownCatalog.Root(i) + "/main/assist/location";
+            if !IsDefined(this.Journal().GetEntryByString(objective, "gameJournalQuestMapPin")) { return false; };
+            i += 1;
+        };
+        return true;
+    }
+    public func TrackCreatedID(token: Int32, id: EntityID) -> Bool {
+        let empty: EntityID;
+        if !this.Eligible() || this.m_stage != 1 || token != this.m_token || id == empty || ArraySize(this.m_created) >= 10 { return false; };
+        if !ArrayContains(this.m_created, id) { ArrayPush(this.m_created, id); };
+        return true;
+    }
+    public func GetCreatedCount() -> Int32 { return ArraySize(this.m_created); }
+    public func GetCreatedGeneration() -> Int32 { return this.m_createdGeneration; }
+    public func GetCreatedID(index: Int32) -> EntityID {
+        let empty: EntityID;
+        if index >= 0 && index < ArraySize(this.m_created) { return this.m_created[index]; };
+        return empty;
+    }
+    public func GetCreatedObject(index: Int32) -> ref<GameObject> {
+        let id: EntityID = this.GetCreatedID(index);
+        let i: Int32 = 0;
+        while i < ArraySize(this.m_cleanupObjects) {
+            if IsDefined(this.m_cleanupObjects[i]) && this.m_cleanupObjects[i].GetEntityID() == id { return this.m_cleanupObjects[i]; };
+            i += 1;
+        };
+        i = 0;
+        while i < ArraySize(this.m_npcs) {
+            if IsDefined(this.m_npcs[i]) && this.m_npcs[i].GetEntityID() == id { return this.m_npcs[i]; };
+            i += 1;
+        };
+        i = 0;
+        while i < ArraySize(this.m_cars) {
+            if IsDefined(this.m_cars[i]) && this.m_cars[i].GetEntityID() == id { return this.m_cars[i]; };
+            i += 1;
+        };
+        return null;
+    }
+    public func CacheCreatedObject(object: ref<GameObject>) -> Bool {
+        if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration() || !IsDefined(object)
+            || !ArrayContains(this.m_created, object.GetEntityID()) { return false; };
+        if !ArrayContains(this.m_cleanupObjects, object) { ArrayPush(this.m_cleanupObjects, object); };
+        return true;
+    }
+    public func ClearCreatedIDs() -> Bool {
+        if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration() || this.m_stage == 1 || this.m_stage == 2 { return false; };
+        ArrayClear(this.m_created); ArrayClear(this.m_npcs); ArrayClear(this.m_cars); ArrayClear(this.m_cleanupObjects);
+        this.m_injured = null; this.m_defender = null;
+        return true;
+    }
+    public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
+        return this.Eligible() && (this.m_stage == 1 || this.m_stage == 2) && npc == this.m_injured && NCPDPatrolAidAccess.IsReady(npc);
+    }
+    public func HasInjuredAidPath(npc: ref<NPCPuppet>, point: Vector4) -> Bool {
+        return this.IsInjuredAidReady(npc) && NCPDPatrolAidAccess.HasPath(this.GetGameInstance(), npc, point);
+    }
     public static func Get(game: GameInstance) -> ref<NCPDPatrolOfficerDownSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolOfficerDownSystem") as NCPDPatrolOfficerDownSystem;
     }
     private func OnAttach() -> Void { this.Forget(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.Forget(); }
-    private func Root() -> String { return "quests/minor_quest/ncpd_patrol_officer_down"; }
-    private func Phase() -> String { return "quests/minor_quest/ncpd_patrol_officer_down/main"; }
-    private func Objective() -> String { return "quests/minor_quest/ncpd_patrol_officer_down/main/assist"; }
-    private func Briefing() -> String { return "quests/minor_quest/ncpd_patrol_officer_down/main/assist/briefing"; }
+    private func Root() -> String {
+        if this.m_catalogIndex > 0 { return NCPDPatrolOfficerDownCatalog.Root(this.m_catalogIndex); };
+        return "quests/minor_quest/ncpd_patrol_officer_down";
+    }
+    private func Phase() -> String { return this.Root() + "/main"; }
+    private func Objective() -> String { return this.Phase() + "/assist"; }
+    private func Briefing() -> String { return this.Objective() + "/briefing"; }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Forget() -> Void {
         this.m_stage = 0; this.m_token += 1; this.m_reward = 0;
         this.m_aid = 0; this.m_aidTime = 0.0; this.m_downTime = 0.0; this.m_missing = 0.0;
         ArrayClear(this.m_npcs); ArrayClear(this.m_cars);
+        ArrayClear(this.m_created); ArrayClear(this.m_cleanupObjects); this.m_createdGeneration = -1;
         this.m_injured = null; this.m_defender = null; this.m_previous = null;
         this.m_restore = true; this.m_reason = "Officer Down test ready";
         this.m_marker = new NCPDPatrolSceneMarker();
-        this.m_marker.Configure(this.Objective(), this.Phase(), NCPDPatrolOfficerDownSite.Position());
+        this.m_marker.Configure(this.Objective(), this.Phase(), this.SitePosition());
     }
     private func Eligible() -> Bool {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
@@ -65,13 +140,20 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
             && this.Write(this.Phase(), "gameJournalQuestPhase", gameJournalEntryState.Inactive)
             && this.Write(this.Root(), "gameJournalQuest", gameJournalEntryState.Inactive);
     }
-    public func BeginDispatch() -> Int32 {
+    public func BeginDispatch() -> Int32 { return this.BeginAt(0); }
+    public func BeginCatalogDispatch(index: Int32) -> Int32 {
+        if index < 1 || index > NCPDPatrolOfficerDownCatalog.Count() || !NCPDPatrolOfficerDownCatalog.Enabled(index) || !this.IsCatalogReady() { return 0; };
+        return this.BeginAt(index);
+    }
+    private func BeginAt(index: Int32) -> Int32 {
         let rewards: ref<NCPDPatrolIncidentSystem> = NCPDPatrolIncidentSystem.Get(this.GetGameInstance());
-        if !this.Eligible() || !this.IsReady() || this.m_stage == 1 || this.m_stage == 2 || !IsDefined(rewards) { return 0; };
+        if !this.Eligible() || !this.IsReady() || this.m_stage == 1 || this.m_stage == 2 || ArraySize(this.m_created) > 0 || !IsDefined(rewards) { return 0; };
         this.m_marker.Close(this.GetGameInstance());
         if !this.ResetJournal() { return 0; };
+        this.m_catalogIndex = index;
+        if !this.IsReady() { return 0; };
         this.m_marker = new NCPDPatrolSceneMarker();
-        this.m_marker.Configure(this.Objective(), this.Phase(), NCPDPatrolOfficerDownSite.Position());
+        this.m_marker.Configure(this.Objective(), this.Phase(), this.SitePosition());
         this.m_previous = this.Journal().GetTrackedEntry();
         if !this.Write(this.Root(), "gameJournalQuest", gameJournalEntryState.Active)
             || !this.Write(this.Phase(), "gameJournalQuestPhase", gameJournalEntryState.Active)
@@ -80,6 +162,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         this.m_reward = rewards.Reserve(n"officer_down");
         if this.m_reward <= 0 { this.ResetJournal(); return 0; };
         this.m_token += 1; this.m_stage = 1; this.m_remaining = 300.0;
+        this.m_createdGeneration = this.GetSessionGeneration();
         this.m_aid = 0; this.m_aidTime = 0.0; this.m_downTime = 0.0; this.m_missing = 0.0;
         ArrayClear(this.m_npcs); ArrayClear(this.m_cars); this.m_injured = null; this.m_defender = null;
         this.m_restore = false; this.m_reason = "Respond to the injured patrol";
@@ -125,7 +208,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         let rotation: EulerAngles;
         if !this.Eligible() || this.m_stage != 1 || !IsDefined(object) || !object.IsAttached()
             || point.X != point.X || point.Y != point.Y || point.Z != point.Z
-            || Vector4.Distance(point, NCPDPatrolOfficerDownSite.Position()) > 35.0 { return false; };
+            || Vector4.Distance(point, this.SitePosition()) > 35.0 { return false; };
         while i < ArraySize(this.m_npcs) { if this.m_npcs[i] == object { owned = true; }; i += 1; };
         i = 0;
         while i < ArraySize(this.m_cars) { if this.m_cars[i] == object { owned = true; }; i += 1; };
@@ -157,7 +240,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         let i: Int32 = 0;
         let enemy: wref<NPCPuppet>;
         if !this.Eligible() || token != this.m_token || this.m_stage != 1 || ArraySize(this.m_npcs) != 7 || ArraySize(this.m_cars) != 3
-            || !IsDefined(this.m_injured) || !IsDefined(this.m_defender) || Vector4.Distance(player.GetWorldPosition(), NCPDPatrolOfficerDownSite.Position()) > 55.0 { return false; };
+            || !IsDefined(this.m_injured) || !IsDefined(this.m_defender) || Vector4.Distance(player.GetWorldPosition(), this.SitePosition()) > 55.0 { return false; };
         this.m_stage = 2; this.m_remaining = 600.0; this.m_reason = "Neutralize the suspects and revive the officer";
         this.ReleaseProtection(true);
         while i < ArraySize(this.m_npcs) {
@@ -252,7 +335,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         this.m_remaining -= delta;
         if this.m_remaining <= 0.0 { this.Finish(4, "Officer Down response expired"); return; };
         if this.m_stage == 1 { return; };
-        if Vector4.Distance(player.GetWorldPosition(), NCPDPatrolOfficerDownSite.Position()) > 300.0 { this.Finish(4, "Patrol assistance abandoned"); return; };
+        if Vector4.Distance(player.GetWorldPosition(), this.SitePosition()) > 300.0 { this.Finish(4, "Patrol assistance abandoned"); return; };
         while i < ArraySize(this.m_npcs) {
             if !IsDefined(this.m_npcs[i]) || !this.m_npcs[i].IsAttached() { missing = true; };
             i += 1;

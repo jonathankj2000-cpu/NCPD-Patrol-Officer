@@ -139,7 +139,7 @@ def main():
   'uncorrected_release_seconds':.5,'uncorrected_observation_seconds':3,'final_original_position_limit_m':1.5,
   'observation_anchor_drift_m':.15,'native_corrects_only_owned_injured_during_staging':True,
   'continued_drift_and_ignored_teleport_rejected':True,'target_static_ground_and_vehicle_clearance_required':True,
-  'three_evidence_profiles_kept_separate':True,'live_mission_and_arrest_unchanged':True,'actual_game_validation':False}
+  'three_evidence_profiles_kept_separate':True,'legacy_manual_scene_and_arrest_policy_preserved':True,'actual_game_validation':False}
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()
  if a.report:a.report.write_text(json.dumps(r,indent=2)+'\n')

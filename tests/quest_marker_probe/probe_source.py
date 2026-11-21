@@ -12,6 +12,11 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    source=source.replace('-- NCPD Patrol v0.18c Officer Down Dispatch | surveyed sites and gameplay reliability logs','-- NCPD Patrol v0.18b3 Functional Scene Survey | injured usability replaces spawn precision')
+    source=source.replace('v0.18c Officer Down Dispatch loaded. 16 surveyed City Center/Watson sites; mix 45% scanner, 27% VIP, 18% cyberpsycho, 10% Officer Down. Dispatch tab has a direct request; Diagnostics exports gameplay reliability logs. Survey tools and existing results are preserved. Install the complete package and fully restart the game.','v0.18b3 Functional Scene Survey loaded. Normal 17-site buttons validate injured ground, clearance, down-state and a reachable aid position. Landing displacement is informational; no injured corrections or precision anchor. Existing results are preserved by validation profile. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18c Officer Down Dispatch###','NCPD Patrol - v0.18b3 Functional Scene Survey###')
+    source=re.sub(r'^        -- Officer Down catalogue UI begin\n.*?^        -- Officer Down catalogue UI end\n','',source,flags=re.M|re.S)
+    source=re.sub(r'^            -- Officer Down catalogue UI begin\n.*?^            -- Officer Down catalogue UI end\n','',source,flags=re.M|re.S)
     source=source.replace('-- NCPD Patrol v0.18b3 Functional Scene Survey | injured usability replaces spawn precision','-- NCPD Patrol v0.18b2 Injured Placement Pilot | bounded staging then uncorrected validation')
     source=source.replace('v0.18b3 Functional Scene Survey loaded. Normal 17-site buttons validate injured ground, clearance, down-state and a reachable aid position. Landing displacement is informational; no injured corrections or precision anchor. Existing results are preserved by validation profile. Install the complete package and fully restart the game.','v0.18b2 Injured Placement Pilot loaded. Use TEST: Injured placement pilot (3 sites). Only this pilot corrects injured placement during staging, then stops corrections before strict observation. Full tours, passive settling and live incidents retain their procedures. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18b3 Functional Scene Survey###','NCPD Patrol - v0.18b2 Injured Placement Pilot###')
@@ -81,7 +86,8 @@ def without_probe(source):
         'NCPD Patrol - v0.17d quest marker test r4###','NCPD Patrol - v0.17d VIP refactor r3###')
 
 PROBE_BUTTONS={'Log active dispatch marker diagnostics','Log legacy Coyote test diagnostics','TEST: Start static quest marker','TEST: Relocate native marker near V','TEST: Andrea visual marker','Remove quest marker test'}
-PROBE_BUTTONS.update({'TEST: Survey all 17 sites (compact)','TEST: Survey all 17 sites (standard)','TEST: Retry unverified survey sites','Stop survey and return','Recover survey cleanup and return','Load saved survey results','Export scene survey report','Log scene survey diagnostics'})
+PROBE_BUTTONS.update({'TEST: Survey all recorded sites (compact)','TEST: Survey all recorded sites (standard)','TEST: Retry unverified survey sites','Stop survey and return','Recover survey cleanup and return','Load saved survey results','Export scene survey report','Log scene survey diagnostics'})
 PROBE_BUTTONS.add('TEST: Injured settling pilot (3 sites)')
 PROBE_BUTTONS.add('TEST: Injured placement pilot (3 sites)')
+PROBE_BUTTONS.update({'Request Officer Down dispatch','Export Officer Down gameplay report'})
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})

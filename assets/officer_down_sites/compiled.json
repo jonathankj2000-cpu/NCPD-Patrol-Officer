@@ -1,0 +1,17 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive",
+  "archive_sha256": "0d51089ec37648b436c81aee90ff7c34e364632d06398f7f180a0d37319b79e9",
+  "new_fixed_pins": 15,
+  "total_catalog_sites": 16,
+  "original_archive_unchanged": true,
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true,
+  "all_new_pins_authored_inactive": true,
+  "authored_inputs": {
+    "assets/officer_down_sites/catalog.json": "c2180bc011693d2f4ae1d29ea52b7511e21de752972acf833966c5a07050a3f7",
+    "assets/officer_down_sites/officer_down_sites.journal.json": "503cc10e0dd7e9e6a0b5d44c329dd79bdcd0b5c74084c8986a1c33729682d46b",
+    "assets/officer_down/officer_down.journal.json": "cf6c366619c02be3bd6c2d442eadf103be5b167f2427f40ab10f07071ad60583",
+    "assets/quest_marker_probe/reference-contract.json": "6df54971748be1650eb101d9c2d3b3a89e37715de8d0b2a36b9295e6a228b052"
+  },
+  "actual_game_validation": false
+}

@@ -143,7 +143,7 @@ def main():
  assert(not tour.startFunctional('compact',true));s.assertNoGameplay()''')
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui_runtime
  mod=ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
- for label,event in [('TEST: Survey all 17 sites (compact)','survey.startFunctional|compact|false'),('TEST: Survey all 17 sites (standard)','survey.startFunctional|standard|false'),('TEST: Retry unverified survey sites','survey.startFunctional|compact|true')]:
+ for label,event in [('TEST: Survey all recorded sites (compact)','survey.startFunctional|compact|false'),('TEST: Survey all recorded sites (standard)','survey.startFunctional|standard|false'),('TEST: Retry unverified survey sites','survey.startFunctional|compact|true')]:
   _,f=ui_runtime(mod);f.Frame(f,'Testing',label);assert f.clicks==1 and event in f.Events(f)
  print('PASS: default 17-site functional injured validation; safe 4 m landing offsets and 0.7 m motion accepted without corrections; supported/clear body and usable 2.5 m aid position for 3 s, complete native path endpoints; wall/vehicle/ground/isolated-nav/partial-path/down-state failures, scene bounds, strict other actors, paused/reset aid window, cleanup/CET recovery, old-native refusal and four isolated evidence profiles (engine boundaries mocked)')
  return {'profile':PROFILE,'default_full_tour':True,'injured_spawn_displacement_limit':None,'injured_anchor_drift_limit':None,

@@ -17,35 +17,14 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
     public func PlacementVersion() -> Int32 { return 1; }
     public func FunctionalVersion() -> Int32 { return 1; }
     public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
-        return this.SamePlayer() && this.CanRun() && IsDefined(npc) && npc.IsAttached() && !npc.IsDead()
+        return this.SamePlayer() && this.CanRun() && NCPDPatrolAidAccess.IsReady(npc)
             && npc.GetRecordID() == t"Character.NCPDPatrol_OD_Injured"
-            && ArrayContains(this.m_created, npc.GetEntityID()) && ArrayContains(this.m_ids, npc.GetEntityID())
-            && IsDefined(npc.GetAIControllerComponent())
-            && StatusEffectSystem.ObjectHasStatusEffect(npc, t"BaseStatusEffect.NCPDPatrolOfficerDown");
+            && ArrayContains(this.m_created, npc.GetEntityID()) && ArrayContains(this.m_ids, npc.GetEntityID());
     }
     // Navigation confirms a complete route to a usable aid position, not just
     // a nearby isolated navmesh point. This never starts or claims a revive.
     public func HasInjuredAidPath(npc: ref<NPCPuppet>, point: Vector4) -> Bool {
-        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
-        let navigation: ref<AINavigationSystem>;
-        let path: ref<NavigationPath>;
-        let count: Int32;
-        let i: Int32 = 0;
-        if !this.IsInjuredAidReady(npc) || point.X != point.X || point.Y != point.Y || point.Z != point.Z
-            || Vector4.Distance(point, npc.GetWorldPosition()) > 2.5 { return false; };
-        navigation = GameInstance.GetAINavigationSystem(this.GetGameInstance());
-        if !IsDefined(navigation) { return false; };
-        path = navigation.CalculatePathForCharacter(player.GetWorldPosition(), point, 0.5, player);
-        if !IsDefined(path) { return false; };
-        count = ArraySize(path.path);
-        if count == 0 || Vector4.Distance(path.path[0], player.GetWorldPosition()) > 1.0
-            || Vector4.Distance(path.path[count - 1], point) > 0.75 { return false; };
-        while i < count {
-            if path.path[i].X != path.path[i].X || path.path[i].Y != path.path[i].Y || path.path[i].Z != path.path[i].Z
-                || AbsF(path.path[i].X) >= 100000.0 || AbsF(path.path[i].Y) >= 100000.0 || AbsF(path.path[i].Z) >= 100000.0 { return false; };
-            i += 1;
-        };
-        return true;
+        return this.IsInjuredAidReady(npc) && NCPDPatrolAidAccess.HasPath(this.GetGameInstance(), npc, point);
     }
     private func OnAttach() -> Void { this.Forget(); }
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.Forget(); }

@@ -55,7 +55,7 @@ function M.lifecycle()
     }
 end
 function M.completed() return Results.completed() end
-function M.mixDescription() return Schedule.mixDescription() end
+function M.mixDescription() return Schedule.mixDescription(OfficerDown.supportsCatalog()) end
 function M.rewardDiagnostics() return Results.rewardDiagnostics() end
 function M.failedCount() return Results.failedCount() end
 function M.lastOutcome() return Results.lastOutcome() end
@@ -96,6 +96,7 @@ function M.schedulerDiagnostics(patrol)
         .." | reserved="..tostring(lifecycle.reserved).." | foreground cleanup="..tostring(lifecycle.foregroundCleanup)
         .." | background cleanup="..tostring(lifecycle.backgroundCleanup)
         .." | VIP: "..VIP.diagnostics().." | Cyberpsycho: "..Cyberpsycho.diagnostics()
+        ..(OfficerDown.supportsCatalog() and (" | Officer Down: "..OfficerDown.diagnostics()) or "")
 end
 function M.candidates() return Scanner.candidates() end
 function M.isSoundEnabled() return soundEnabled end
@@ -276,6 +277,17 @@ function M.requestOfficerDown(patrol, status)
     if accepted then Schedule.generatedAssigned() end
     return accepted
 end
+function M.requestOfficerDownNearby(patrol,status,source)
+    if M.isActive() then
+        if status then status("Officer Down | Complete/cancel the current assignment and its cleanup first") end
+        return false
+    end
+    local accepted=OfficerDown.requestNearby(patrol,status,soundEnabled,voiceEnabled,source or 'manual')
+    if accepted then Schedule.generatedAssigned() end
+    return accepted
+end
+function M.officerDownLogState() return OfficerDown.logState() end
+function M.exportOfficerDownLog(status) return OfficerDown.exportLog(status) end
 function M.officerDownState() return OfficerDown.state() end
 function M.officerDownDiagnostics() return OfficerDown.diagnostics() end
 function M.rotateOfficerDown(status) return OfficerDown.rotate(status) end
@@ -296,20 +308,22 @@ end
 
 -- Draw without replacement, preserving original weights among remaining types.
 -- A failed request with owned actors/cleanup blocks every subsequent attempt.
-function M.requestMixed(patrol,status)
+function M.requestMixed(patrol,status,source)
     local player=Game.GetPlayer()
     if not patrol or not player or not patrol:IsOnDuty() or patrol:HasWantedLevel() then
         report("An active, non-wanted shift is required",status);return false
     end
     if stopped() or M.isActive() then report("Finish the active call or its cleanup first",status);return false end
     if patrol:IsDispatchMenuOpen() or player:IsInCombat() then report("Leave menus and combat before requesting a call",status);return false end
-    local choices = Schedule.choices()
-    for _=1,3 do
+    local withOfficer=OfficerDown.supportsCatalog()
+    local choices = Schedule.choices(withOfficer)
+    for _=1,#choices do
         local choice = Schedule.draw(choices)
         local accepted=false
         if choice.name=="Scanner" then accepted=M.request(patrol,status)
         elseif choice.name=="VIP" and generatedAvailable("NCPDPatrolVIPSystem") then accepted=M.requestVIP(patrol,status)
-        elseif choice.name=="Cyberpsycho" and generatedAvailable("NCPDPatrolCyberpsychoSystem") then accepted=M.requestCyberpsycho(patrol,status) end
+        elseif choice.name=="Cyberpsycho" and generatedAvailable("NCPDPatrolCyberpsychoSystem") then accepted=M.requestCyberpsycho(patrol,status)
+        elseif choice.name=="Officer Down" then accepted=M.requestOfficerDownNearby(patrol,status,source or 'mixed') end
         if accepted then
             if status then status("Dispatch mix | Assigned "..choice.name.." | "..M.mixDescription()) end
             return true
@@ -318,7 +332,8 @@ function M.requestMixed(patrol,status)
         if status then status("Dispatch mix | "..choice.name.." unavailable; trying another type") end
     end
     Schedule.retry()
-    report("No suitable scanner, VIP or cyberpsycho call; retrying in 30 seconds",status)
+    report(withOfficer and "No suitable scanner, VIP, cyberpsycho or Officer Down call; retrying in 30 seconds"
+        or "No suitable scanner, VIP or cyberpsycho call; retrying in 30 seconds",status)
     return false
 end
 
@@ -358,7 +373,7 @@ function M.update(delta, onDuty, status, getPatrol)
             Scanner.update(patrol, inMenu, status, report)
         elseif Schedule.canAdvance(inMenu) and not Game.GetPlayer():IsInCombat() then
             Schedule.advance(elapsed, false)
-            if Schedule.isDue() then M.requestMixed(patrol, status) end
+            if Schedule.isDue() then M.requestMixed(patrol, status,'automatic') end
         end
     end)
     if not ok then

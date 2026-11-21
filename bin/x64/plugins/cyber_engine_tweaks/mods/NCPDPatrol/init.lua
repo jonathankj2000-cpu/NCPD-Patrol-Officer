@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18b3 Functional Scene Survey | injured usability replaces spawn precision
+-- NCPD Patrol v0.18c Officer Down Dispatch | surveyed sites and gameplay reliability logs
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18b3 Functional Scene Survey loaded. Normal 17-site buttons validate injured ground, clearance, down-state and a reachable aid position. Landing displacement is informational; no injured corrections or precision anchor. Existing results are preserved by validation profile. Install the complete package and fully restart the game.")
+    status("v0.18c Officer Down Dispatch loaded. 16 surveyed City Center/Watson sites; mix 45% scanner, 27% VIP, 18% cyberpsycho, 10% Officer Down. Dispatch tab has a direct request; Diagnostics exports gameplay reliability logs. Survey tools and existing results are preserved. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

@@ -60,7 +60,9 @@ def check_layout_boundaries(lua):
 def code(path):
  s=translate(path)
  s=s.replace('new NCPDPatrolSceneMarker()','NewSceneMarker()').replace('new gameJournalPath()','NewJournalPath()').replace('new questMappinManagerNodeDefinition()','NewManagerNode()')
- s=s.replace('self:Objective() + ','self:Objective() .. ')
+ for name in ['Objective','Phase','Root']:
+  s=s.replace('self:'+name+'() + ','self:'+name+'() .. ')
+ s=s.replace('NCPDPatrolOfficerDownCatalog:Root(i) + ','NCPDPatrolOfficerDownCatalog:Root(i) .. ')
  s=s.replace('pin = pins[i]','pin = AsQuestMappin(pins[i])')
  s=s.replace('known = map:GetQuestMappinPosition(self.m_hash, point)','known, point = map:GetQuestMappinPosition(self.m_hash)')
  for name in ['point','world']:s=s.replace('local '+name+' = nil','local '+name+' = Vector4.new(0,0,0,0)')
@@ -71,6 +73,7 @@ def engine_runtime():
  lua=LuaRuntime(unpack_returned_tuples=True);lua.globals().PathHash=journal_hash;lua.globals().MOD_DIR=str(MOD)
  lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path;math.randomseed(20261120)')
  lua.globals().SceneMarker=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds'))
+ lua.globals().NCPDPatrolAidAccess=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds'))
  lua.globals().OfficerNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'))
  lua.globals().SiteNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds'))
  lua.globals().IncidentNative=lua.execute(code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds'))

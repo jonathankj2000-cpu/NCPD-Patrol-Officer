@@ -1,3 +1,58 @@
+NCPD PATROL v0.18c OFFICER DOWN DISPATCH - COMPLETE BRANCH TEST
+
+Officer Down now joins normal dispatch at 16 surveyed City Center/Watson sites.
+The latest report validated 16 of 17 compact scenes. Kryss_13 remains outside
+the dispatch catalogue because its landing ground was not confirmed.
+
+Automatic mix: 45% Scanner / 27% VIP / 18% Cyberpsycho / 10% Officer Down.
+Unavailable types fall back to the remaining types. Existing busy/availability
+and Request new dispatch trunk controls apply. No new hotkey is required.
+For a direct gameplay test while ON DUTY, use CET -> Dispatch ->
+Request Officer Down dispatch. This selects a nearby surveyed site.
+
+Search starts at 500-1000 m and expands to 2 km and 5 km when necessary. A site
+uses its proven rotation first, then automatic quarter-turn checks before any
+actor is created. Actual traffic, support and clearance are rechecked. Actors
+are prepared within 250 m; enemies engage after arrival within 55 m and usable
+injured access has been confirmed. The injured officer lands naturally; other
+actors remain staged. Complete both officer revive and suspect neutralization
+for EUR$2000 and one career incident, paid by the existing unique-ID ledger.
+
+Every site has its own authored quest marker. Only the selected quest/pin is
+activated. Manual waypoints and the existing marker controller are preserved.
+The original fixed-intersection test remains available under CET Testing.
+
+GAMEPLAY RELIABILITY LOGGING
+Raw attempts: officer_down_dispatch.jsonl
+Summary: officer_down_dispatch_report.json
+CET -> Diagnostics -> Export Officer Down gameplay report.
+Both files are in bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol.
+The log records assignments, rotations, created/bound actors, marker state,
+ready access, arrival, revive, outcome and physical cleanup. Logging errors do
+not cancel gameplay or affect money. Raw history is append-only; summaries keep
+per-site counters. Survey reports/logs remain separate and are preserved.
+
+Successful scenes may remain for 90 seconds or until you leave 150 m, without
+reserving the next assignment. Partial/refused deletion keeps foreground cleanup
+reserved until owned actors are physically gone. Pending native IDs/handles are
+recovered after a CET reload; saved-game loads never reuse old actor identifiers.
+
+ADDING MORE AREAS
+Keep recording coordinates and using the off-duty survey under CET Testing.
+Survey buttons now say all recorded sites. Approved reports can be imported into
+the catalogue and their fixed markers built into a later package. Stable site
+indices/quest paths remain intact when another site is appended. No location is
+permanently blacklisted by a temporary gameplay failure. See
+docs/OFFICER_DOWN_DISPATCH_v018c.md for the import/build workflow.
+
+Install the complete 114-file package and FULLY RESTART. Existing progress,
+survey evidence and gameplay logs are not bundled or overwritten by this ZIP.
+Initial site placement was surveyed in game; new multi-site quest markers and
+long-running gameplay still need testing in game. Browser Extension remains
+optional. Dependencies and the other incident reward amounts are unchanged.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18b3 FUNCTIONAL SCENE SURVEY - COMPLETE BRANCH TEST
 
 The normal 17-site survey now judges the injured officer by usable placement:

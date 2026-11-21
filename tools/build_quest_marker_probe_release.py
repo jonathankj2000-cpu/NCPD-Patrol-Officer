@@ -1,41 +1,44 @@
-"""Verify and package default functional injured placement/access validation.
+"""Verify and package multi-site Officer Down dispatch with gameplay evidence.
 
-The workflow entrypoint is retained. Normal full-tour UI actions use functional
-checks; explicit legacy comparisons, live missions, geometry and archives remain.
+The workflow entrypoint is retained. Existing incident/marker archives are
+unchanged; one independent journal archive adds surveyed Officer Down sites.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='fbd809c6ce79a727d0997245aa0a07ea84529f23'
+BASE='25d0afb06c5240423d92f11ec842c333986fe164'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.18b3_Functional_Scene_Survey_TEST.zip'
-REPORT='NCPD_Patrol_v0.18b3_Functional_Scene_Survey_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py']
+NAME='NCPD_Patrol_v0.18c_Officer_Down_Dispatch_TEST.zip'
+REPORT='NCPD_Patrol_v0.18c_Officer_Down_Dispatch_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==40 and len(scripts)==41
+ assert len(modules)==43 and len(scripts)==43
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','scene_survey.lua','scene_survey_store.lua']}
- changed.add('r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds')
- added={PREFIX+'scene_survey_functional.lua'}
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua','dispatch.lua','dispatch_scheduler.lua','officer_down.lua','officer_down_actors.lua','scene_survey.lua']}
+ changed.update('r6/scripts/NCPDPatrol/'+n for n in ['NCPDPatrolSceneSurveySystem.reds','NCPDPatrolOfficerDownSystem.reds'])
+ added={PREFIX+n for n in ['officer_down_sites.lua','officer_down_selection.lua','officer_down_log.lua']}
+ added.update('r6/scripts/NCPDPatrol/'+n for n in ['NCPDPatrolOfficerDownCatalog.reds','NCPDPatrolAidAccess.reds'])
+ added.update('archive/pc/mod/'+n for n in ['NCPDPatrol_OfficerDownSites.archive','NCPDPatrol_OfficerDownSites.archive.xl'])
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
  paths=[p for d in ['bin','r6','archive'] for p in (ROOT/d).rglob('*') if p.is_file()]+[ROOT/n for n in ['README.txt','LICENSE','THIRD_PARTY_NOTICES.txt']]
  assert {p.relative_to(ROOT).as_posix() for p in paths}==set(previous)|added|{'README.txt','LICENSE','THIRD_PARTY_NOTICES.txt'}
- assert len(paths)==107
+ assert len(paths)==114
  comparisons={
  'dispatch':'tests/dispatch_refactor/check_refactor.py','ui':'tests/cet_ui/check_cet_ui.py',
  'vip':'tests/vip_refactor/check_vip_refactor.py','probe':'tests/quest_marker_probe/check_probe.py',
  'fixed_markers':'tests/fixed_markers/check_fixed.py','vip_routes':'tests/vip_routes/check_routes.py',
  'officer_down':'tests/officer_down/check_officer_down.py','scene_survey':'tests/scene_survey/check_survey.py',
  'injured_settling':'tests/scene_survey/check_settling.py','injured_placement':'tests/scene_survey/check_staging.py',
- 'injured_functional':'tests/scene_survey/check_functional.py'}
+ 'injured_functional':'tests/scene_survey/check_functional.py','officer_catalog':'tests/officer_down/check_catalog.py',
+ 'officer_gameplay':'tests/officer_down/check_gameplay.py'}
  with TemporaryDirectory(prefix='ncpd-officer-down-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
@@ -49,23 +52,24 @@ def main():
    info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,21,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
    z.writestr(info,p.read_bytes(),compresslevel=9)
  with zipfile.ZipFile(release) as z:
-  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==107
+  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==114
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.18b3-functional-scene-survey','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.18c-officer-down-dispatch','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'scene':json.loads((ROOT/'assets/officer_down/scene.json').read_text()),
   'compiled_scene_resources':json.loads((ROOT/'assets/officer_down/compiled.json').read_text()),
   'existing_six_archives_unchanged_from_v017f':True,'native_fixed_marker_controller_catalog_and_diagnostics_unchanged':True,
   'vip_actor_ambush_and_baked_routes_unchanged':True,'arrest_partner_and_backup_unchanged':True,
-  'existing_economy_unchanged':True,'new_officer_down_reward':2000,'generated_career_credit':1,
-  'automatic_weights':{'scanner':50,'vip':30,'cyberpsycho':20},'officer_down_manual_only':True,
+  'existing_economy_unchanged':True,'officer_down_reward':2000,'generated_career_credit':1,
+  'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'officer_down_manual_only':False,
+  'unavailable_catalogue_preserves_original_relative_mix':{'scanner':50,'vip':30,'cyberpsycho':20},
   'world_reset_forgets_old_ids':True,'main_partner_registration_reused':False,
   'native_marker_never_unregistered':True,'automatic_dispatch_manual_waypoint_never_written':True,
-  'manual_test_locator_on_explicit_click':True,'existing_40_native_scripts_and_seven_archives_unchanged_from_v018a3':True,
-  'other_existing_gameplay_modules_unchanged_from_v018a3':True,'ground_probe_height_metres':1.5,
+  'manual_test_locator_on_explicit_click':True,'existing_39_native_scripts_and_seven_archives_unchanged_from_v018b3':True,
+  'ground_probe_height_metres':1.5,
   'ground_height_limit_metres':1.3,'ground_normal_z_minimum':0.85,'vehicle_corner_height_limit_metres':0.4,
   'raycast_vector3_converted_to_navigation_vector4':True,'ground_rejections_include_specific_reason':True,
   'automatic_scene_rotation_order':[0,90,180,270],'manual_preferred_heading_retained':True,
@@ -83,9 +87,9 @@ def main():
   'survey_automatic_resume_after_save_reload':False,'survey_cet_reload_has_native_id_recovery':True,
   'survey_uses_controlled_teleport_and_readiness_checks':True,'memory_purging_loading_screen_claimed':False,
   'survey_results_are_preapproved_dispatch_locations':False,
-  'other_40_native_scripts_and_seven_archives_unchanged_from_v018b2':True,
-  'only_native_change':'NCPDPatrolSceneSurveySystem.reds: read-only functional injured readiness and complete aid path checks',
-  'live_officer_down_and_layout_geometry_unchanged_from_v018b':True,'explicit_legacy_17_site_runtime_and_evidence_comparison_identical':True,
+  'changed_native_scripts':['NCPDPatrolOfficerDownSystem.reds','NCPDPatrolSceneSurveySystem.reds'],
+  'new_native_scripts':['NCPDPatrolOfficerDownCatalog.reds','NCPDPatrolAidAccess.reds'],
+  'officer_down_layout_geometry_unchanged_from_v018b':True,'explicit_legacy_17_site_runtime_and_evidence_comparison_identical':True,
   'injured_settling_opt_in_only':True,'injured_pilot_sites':['kryss_04','kryss_11','kryss_15'],
   'injured_pilot_profile':'injured-settling-pilot-v1','injured_settle_active_seconds':4,
   'injured_pilot_final_original_position_limit_m':1.5,'injured_pilot_observation_anchor_drift_m':0.15,
@@ -107,9 +111,17 @@ def main():
   'functional_complete_navigation_path_and_local_access_required':True,
   'functional_actor_teleport_or_position_rebase':False,'functional_other_nine_actors_keep_original_checks':True,
   'functional_actual_revive_executed':False,'functional_profiles_primary_export_and_retry_are_separate':True,
+  'officer_down_catalog':json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text()),
+  'officer_down_new_resources':json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text()),
+  'officer_down_sites':16,'officer_down_excluded_unverified_sites':['kryss_13'],'officer_down_new_inactive_pins':15,
+  'officer_down_search_bands_m':[1000,2000,5000],'officer_down_minimum_assignment_distance_m':500,
+  'officer_down_failed_site_active_cooldown_seconds':120,'officer_down_injured_uses_functional_checks_without_position_lock':True,
+  'officer_down_native_created_ids_and_physical_handles_retained_for_cet_recovery':True,
+  'officer_down_gameplay_logs':['officer_down_dispatch.jsonl','officer_down_dispatch_report.json'],
+  'officer_down_log_failure_does_not_change_gameplay_or_payments':True,'officer_down_survey_tools_and_old_logs_preserved':True,
   'partial_cleanup_reserves_scene':True,'successful_aftermath_reserves_dispatch':False,
   'browser_extension_still_optional':True,'actual_game_validation':False,
-  'game_checks_required':['compact scene street alignment and orientation','17 actual locations and transfer streaming/memory behavior','car root placement/traffic collisions','survey cancellation/return and CET recovery','officer down/recovery animation and F interaction','combat AI/cover','native quest marker rendering and reuse'],
+  'game_checks_required':['16 new catalogue call paths and native quest marker rendering/reuse','real traffic/road streaming and natural injured access','officer recovery animation and F interaction','combat AI/cover and backup cooperation','repeated completions/failures and automatic resume','gameplay JSONL/export over longer sessions','survey cancellation/return and CET recovery'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
  (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')

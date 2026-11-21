@@ -48,11 +48,12 @@ function M.prepare(actors,backend)
     end
     return ready
 end
-function M.lock(actors,backend)
+function M.lock(actors,backend,options)
     for _,row in ipairs(actors) do
         if row.actor and row.actor:IsAttached() then
             local p=row.actor:GetWorldPosition()
-            if (p.x-row.position.x)^2+(p.y-row.position.y)^2>.25 or math.abs(p.z-row.position.z)>1 then
+            if not (options and options.freeInjured and row.kind=='injured')
+                and ((p.x-row.position.x)^2+(p.y-row.position.y)^2>.25 or math.abs(p.z-row.position.z)>1) then
                 if not backend:LockPosition(row.actor,row.position,row.yaw) then error('Pre-arrival position lock rejected') end
             end
             if row.car then row.actor:ForceBrakesUntilStoppedOrFor(1) end

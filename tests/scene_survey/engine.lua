@@ -103,7 +103,7 @@ function spatial:Overlap(box,center,angle,group)
 end
 Game.GetSpatialQueriesSystem=function() return spatial end
 local navigation={FindPointInSphereForCharacter=function(_,p,radius,owner)
- assert(p.__vector=='Vector4' and p.w==1 and owner==player and (radius==.5 or radius==1.2))
+ assert(p.__vector=='Vector4' and p.w==1 and owner==player and (radius==.5 or radius==1.2 or radius==1.5))
  if s.noNav[location(p).id] then return {status=1} end
  return {status=0,point=Vector4.new(p.x,p.y,p.z,1)}
 end}
@@ -120,7 +120,8 @@ Game.GetAINavigationSystem=function() return navigation end
 GameInstance.GetAINavigationSystem=function() return navigation end
 local open=io.open
 io.open=function(name,mode)
- assert(name=='scene_survey_results.jsonl' or name=='scene_survey_report.json','Unexpected survey file path: '..tostring(name))
+ assert(name=='scene_survey_results.jsonl' or name=='scene_survey_report.json'
+  or name=='officer_down_dispatch.jsonl' or name=='officer_down_dispatch_report.json','Unexpected evidence file path: '..tostring(name))
  if s.failFile and mode~='r' then return nil,'injected disk failure' end
  return open(name,mode)
 end

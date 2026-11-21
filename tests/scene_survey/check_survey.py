@@ -219,8 +219,8 @@ def main():
  # and an active/native-recovered survey blocks the ordinary duty hotkey.
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui_runtime
  ui,f=ui_runtime(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
- for label,expected in {'TEST: Survey all 17 sites (compact)':'survey.startFunctional|compact|false',
-  'TEST: Survey all 17 sites (standard)':'survey.startFunctional|standard|false',
+ for label,expected in {'TEST: Survey all recorded sites (compact)':'survey.startFunctional|compact|false',
+  'TEST: Survey all recorded sites (standard)':'survey.startFunctional|standard|false',
   'TEST: Retry unverified survey sites':'survey.startFunctional|compact|true','Stop survey and return':'survey.cancel',
   'Recover survey cleanup and return':'survey.recover','Load saved survey results':'survey.loadResults',
   'Export scene survey report':'survey.export','Log scene survey diagnostics':'Scene survey | fixture'}.items():
