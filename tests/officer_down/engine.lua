@@ -40,6 +40,14 @@ function F:Actor(record,id,point)
  function a:GetEntityID() return self.id end
  function a:GetWorldPosition() return self.pos end
  function a:IsAttached() return self.attached end
+ function a:Dispose()
+  assert(self.record=='Vehicle.NCPDPatrol_OD_Police' or self.record=='Vehicle.NCPDPatrol_OD_GangCar','Disposed an unrelated actor')
+  F.disposals=F.disposals or {};F.disposals[#F.disposals+1]={id=self.id.hash,record=self.record,actor=self}
+  if F.disposeCompletes then
+   self.attached=false;F.objects[self.id.hash]=nil
+   if not F.disposeLeavesManaged then F.managed[self.id.hash]=nil end
+  end
+ end
  function a:IsDead() return self.dead end
  function a:IsDeadNoStatPool() return self.deadNoPool end
  function a:GetHighLevelStateFromBlackboard() return self.down and 7 or 2 end
@@ -151,6 +159,7 @@ Game={GetPlayer=function() return player end,GetScriptableSystemsContainer=funct
 function GetPlayer() return player end
 NCPDPatrolIncidentSystem={Get=function() return IncidentNative end}
 NCPDPatrolOfficerDownSystem={Get=function() return OfficerNative end}
+function GameInstance:GetDynamicEntitySystem() return entities end
 for _,owner in ipairs({OfficerNative,IncidentNative}) do owner.GetGameInstance=function() return {} end end
 -- Receipt rendering boundary; the production receipt FIFO is still exercised.
 SimpleMessageType={Money=1};GetAllBlackboardDefs=function() return {UI_Notifications={},WarningMessage=1} end

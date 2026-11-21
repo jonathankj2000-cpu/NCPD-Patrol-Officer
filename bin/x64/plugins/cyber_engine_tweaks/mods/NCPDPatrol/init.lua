@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18d Shift Controls | Career End Shift and scoped partner police-hit safety
+-- NCPD Patrol v0.18e Officer Down Cleanup | accepted vehicle teardown and repeat-call ownership
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18d Shift Controls loaded. Career Start/End Shift; Officer Down under Testing > Dispatch scenarios; registered partner gun hits on non-hostile police are ignored on duty. Existing dispatch, rewards and wanted termination remain active. Install the complete package and fully restart the game.")
+    status("v0.18e Officer Down Cleanup loaded. Repeat calls wait for physical cleanup, not stale vehicle registrations. Accepted vehicle deletion has a scoped native fallback. Manual Officer Down retry ends completed-scene retention early. Existing dispatch/rewards and v0.18d controls remain. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

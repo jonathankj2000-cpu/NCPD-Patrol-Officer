@@ -21,8 +21,15 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
     private let m_created: array<EntityID>;
     private let m_createdGeneration: Int32;
     private let m_cleanupObjects: array<wref<GameObject>>;
+    private let m_deleteAccepted: array<EntityID>;
+    private let m_disposeRequested: array<EntityID>;
+    private let m_cleanupVehicleIDs: array<EntityID>;
+    private let m_retiredVehicleIDs: array<EntityID>;
+    private let m_retiredGeneration: Int32;
+    private let m_retiredPoll: Float;
     public func Version() -> Int32 { return 1; }
     public func CatalogVersion() -> Int32 { return 1; }
+    public func CleanupVersion() -> Int32 { return 1; }
     public func GetCatalogIndex() -> Int32 { return this.m_catalogIndex; }
     public func SitePosition() -> Vector4 {
         if this.m_catalogIndex > 0 { return NCPDPatrolOfficerDownCatalog.Position(this.m_catalogIndex); };
@@ -72,15 +79,90 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         return null;
     }
     public func CacheCreatedObject(object: ref<GameObject>) -> Bool {
+        let vehicle: ref<VehicleObject>;
         if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration() || !IsDefined(object)
             || !ArrayContains(this.m_created, object.GetEntityID()) { return false; };
         if !ArrayContains(this.m_cleanupObjects, object) { ArrayPush(this.m_cleanupObjects, object); };
+        vehicle = object as VehicleObject;
+        if IsDefined(vehicle) && (vehicle.GetRecordID() == t"Vehicle.NCPDPatrol_OD_Police" || vehicle.GetRecordID() == t"Vehicle.NCPDPatrol_OD_GangCar")
+            && !ArrayContains(this.m_cleanupVehicleIDs, object.GetEntityID()) { ArrayPush(this.m_cleanupVehicleIDs, object.GetEntityID()); };
         return true;
     }
     public func ClearCreatedIDs() -> Bool {
         if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration() || this.m_stage == 1 || this.m_stage == 2 { return false; };
         ArrayClear(this.m_created); ArrayClear(this.m_npcs); ArrayClear(this.m_cars); ArrayClear(this.m_cleanupObjects);
+        ArrayClear(this.m_deleteAccepted); ArrayClear(this.m_disposeRequested);
+        ArrayClear(this.m_cleanupVehicleIDs);
         this.m_injured = null; this.m_defender = null;
+        return true;
+    }
+    public func MarkDeleteAccepted(id: EntityID) -> Bool {
+        if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration()
+            || this.m_stage < 3 || !ArrayContains(this.m_created, id) { return false; };
+        if !ArrayContains(this.m_deleteAccepted, id) { ArrayPush(this.m_deleteAccepted, id); };
+        return true;
+    }
+    public func GetRetiredVehicleCount() -> Int32 { return ArraySize(this.m_retiredVehicleIDs); }
+    public func RetireDetachedVehicleID(id: EntityID) -> Bool {
+        let system: ref<DynamicEntitySystem>;
+        let object: ref<GameObject>;
+        let i: Int32 = 0;
+        if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration() || this.m_stage < 3
+            || !ArrayContains(this.m_created, id) || !ArrayContains(this.m_cleanupVehicleIDs, id)
+            || !ArrayContains(this.m_deleteAccepted, id) { return false; };
+        while i < ArraySize(this.m_created) {
+            if this.m_created[i] == id { object = this.GetCreatedObject(i); };
+            i += 1;
+        };
+        if IsDefined(object) && object.IsAttached() { return false; };
+        system = GameInstance.GetDynamicEntitySystem();
+        if !IsDefined(system) || !system.IsReady() { return false; };
+        object = system.GetEntity(id) as GameObject;
+        if IsDefined(object) && object.IsAttached() { return false; };
+        if !ArrayContains(this.m_retiredVehicleIDs, id) {
+            if ArraySize(this.m_retiredVehicleIDs) >= 256 { return false; };
+            ArrayPush(this.m_retiredVehicleIDs, id);
+        };
+        this.m_retiredGeneration = this.GetSessionGeneration();
+        return true;
+    }
+    private func PruneRetiredVehicles(delta: Float) -> Void {
+        let system: ref<DynamicEntitySystem>;
+        let remaining: array<EntityID>;
+        let i: Int32 = 0;
+        if ArraySize(this.m_retiredVehicleIDs) == 0 { return; };
+        if this.m_retiredGeneration != this.GetSessionGeneration() { ArrayClear(this.m_retiredVehicleIDs); return; };
+        if delta <= 0.0 || delta > 0.5 { return; };
+        this.m_retiredPoll += delta;
+        if this.m_retiredPoll < 1.0 { return; };
+        this.m_retiredPoll = 0.0;
+        system = GameInstance.GetDynamicEntitySystem();
+        if !IsDefined(system) || !system.IsReady() { return; };
+        while i < ArraySize(this.m_retiredVehicleIDs) {
+            if system.IsManaged(this.m_retiredVehicleIDs[i]) { ArrayPush(remaining, this.m_retiredVehicleIDs[i]); };
+            i += 1;
+        };
+        this.m_retiredVehicleIDs = remaining;
+    }
+    public func DisposeCreatedVehicle(object: ref<GameObject>) -> Bool {
+        let id: EntityID;
+        let record: TweakDBID;
+        let vehicle: ref<VehicleObject>;
+        if !this.IsSessionReady() || this.m_createdGeneration != this.GetSessionGeneration()
+            || this.m_stage < 3 || !IsDefined(object) || !object.IsAttached()
+            || !ArrayContains(this.m_cleanupObjects, object) { return false; };
+        id = object.GetEntityID();
+        if !ArrayContains(this.m_created, id) || !ArrayContains(this.m_deleteAccepted, id)
+            || ArrayContains(this.m_disposeRequested, id) { return false; };
+        vehicle = object as VehicleObject;
+        if !IsDefined(vehicle) { return false; };
+        record = vehicle.GetRecordID();
+        if record != t"Vehicle.NCPDPatrol_OD_Police" && record != t"Vehicle.NCPDPatrol_OD_GangCar" { return false; };
+        // Codeware has already accepted deletion. Request native teardown once
+        // if the owned vehicle still remains attached; Lua still waits for both
+        // manager removal and physical detachment before clearing the registry.
+        ArrayPush(this.m_disposeRequested, id);
+        vehicle.Dispose();
         return true;
     }
     public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
@@ -107,6 +189,8 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         this.m_aid = 0; this.m_aidTime = 0.0; this.m_downTime = 0.0; this.m_missing = 0.0;
         ArrayClear(this.m_npcs); ArrayClear(this.m_cars);
         ArrayClear(this.m_created); ArrayClear(this.m_cleanupObjects); this.m_createdGeneration = -1;
+        ArrayClear(this.m_deleteAccepted); ArrayClear(this.m_disposeRequested);
+        ArrayClear(this.m_cleanupVehicleIDs); ArrayClear(this.m_retiredVehicleIDs); this.m_retiredGeneration = -1; this.m_retiredPoll = 0.0;
         this.m_injured = null; this.m_defender = null; this.m_previous = null;
         this.m_restore = true; this.m_reason = "Officer Down test ready";
         this.m_marker = new NCPDPatrolSceneMarker();
@@ -327,6 +411,7 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
         let i: Int32 = 0;
         let missing: Bool = false;
         if !NCPDPatrolMarkerSession.WorldReady() || !IsDefined(player) || !player.IsAttached() || !this.IsReady() { return; };
+        this.PruneRetiredVehicles(delta);
         if this.m_restore { this.m_marker.Close(this.GetGameInstance()); if !this.ResetJournal() { return; }; this.m_restore = false; };
         if this.m_stage != 1 && this.m_stage != 2 { return; };
         if !this.Eligible() { this.Finish(5, "Shift ended or criminal activity"); return; };
@@ -380,7 +465,11 @@ public class NCPDPatrolOfficerDownSystem extends ScriptableSystem {
     public func GetRemainingSeconds() -> Int32 { return Cast<Int32>(MaxF(0.0, this.m_remaining)); }
     public func GetDiagnostics() -> String {
         let marker: String = "not configured";
+        let created: Int32 = ArraySize(this.m_created);
+        let accepted: Int32 = ArraySize(this.m_deleteAccepted);
+        let disposed: Int32 = ArraySize(this.m_disposeRequested);
+        let retired: Int32 = ArraySize(this.m_retiredVehicleIDs);
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.m_stage) | token=\(this.m_token) | aid=\(this.m_aid) | enemies remaining=\(this.GetRemainingEnemies()) | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.m_stage) | token=\(this.m_token) | aid=\(this.m_aid) | enemies remaining=\(this.GetRemainingEnemies()) | created IDs=\(created) | delete accepted=\(accepted) | native disposals=\(disposed) | detached vehicle IDs retained=\(retired)/256 | \(marker) | \(this.m_reason)";
     }
 }

@@ -1,3 +1,40 @@
+NCPD PATROL v0.18e OFFICER DOWN CLEANUP - COMPLETE BRANCH TEST
+
+Fixes repeated Officer Down requests being held behind completed-scene cleanup.
+The reported phase=aftermath / stage=3 / owned actors=3 / retained handles=10
+shows a completed quest with unresolved actor cleanup. Ten retained references
+do not mean ten live actors. Three remaining rows match the scene's three cars,
+but the original diagnostic does not identify their types or engine cause.
+
+Codeware accepts deletion once and can reject retries while removal is pending.
+After five cleanup seconds, still-attached private scene vehicles with a recorded
+accepted deletion can receive one native Dispose request. New calls still wait
+for physical detachment. If only a detached vehicle's Codeware ID remains, that
+ID is retained in a bounded native bookkeeping registry and no longer blocks a
+new scene. It is pruned when Codeware confirms removal, or forgotten on world
+change. No live NPC is retired this way. Other mods' entities are excluded.
+
+Use CET -> Testing -> Dispatch scenarios -> TEST: Request Officer Down dispatch.
+A manual request may end a completed scene's 90-second retention early. Delayed
+cleanup now reports its status; retry after the scene-cleared message. Automatic
+requests preserve the usual 90-second / 150-metre retention and other call types.
+
+Diagnostics now show pending vehicle/NPC counts, attached handles, accepted
+deletions, native disposal requests and retained detached IDs. Existing gameplay
+JSONL/report exports preserve these events. Payment, progression, markers,
+Career Start/End Shift and partner police-hit safety are unchanged.
+
+Install the complete 115-file package and FULLY RESTART THE GAME. New native
+cleanup methods require the matching REDscript module. Keep existing survey and
+gameplay logs; the ZIP does not overwrite them. 28 portable suites include the
+reported stalled-car shape, two previous-version negative controls, three
+consecutive completions, physical-delay/refusal and world/CET recovery checks.
+Offline source/API compilation and runtime simulations do not replace an in-game
+check of actual vehicle disposal and Codeware acknowledgement. See
+docs/OFFICER_DOWN_REPEAT_CLEANUP_v018e.md.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18d SHIFT CONTROLS - COMPLETE BRANCH TEST
 
 NCPD Career now shows END SHIFT while on duty, on all three pages. The button

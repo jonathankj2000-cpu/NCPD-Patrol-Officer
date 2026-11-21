@@ -19,6 +19,7 @@ local selectedSite,catalogMode,logRun=nil,false,nil
 local draining,sceneAge,access,readyLogged,cleanupAge={},0,nil,false,0
 local cleanupWarned,aftermathCleanupStarted=false,false
 local markerLogged=false
+local cleanupError=nil
 local function native()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolOfficerDownSystem')
@@ -67,7 +68,27 @@ local function deleteActors()
             end
         end
     end
-    actors=Actors.remove(actors)
+    actors=Actors.remove(actors,catalogMode and function(row)
+        if not native():MarkDeleteAccepted(row.id) then error('Native deletion acceptance tracking refused') end
+        row.deleteAccepted=true
+    end or nil)
+    if catalogMode and cleanupAge>=5 then
+        for _,object in ipairs(draining) do
+            local idOK,id=pcall(function() return tostring(object:GetEntityID().hash) end)
+            if native():DisposeCreatedVehicle(object) then
+                log('vehicle_dispose_requested',{id=idOK and id or 'unavailable',seconds=cleanupAge})
+            end
+        end
+    end
+    if catalogMode and #actors>0 then
+        local remaining={}
+        for _,row in ipairs(actors) do
+            if native():RetireDetachedVehicleID(row.id) then
+                log('detached_vehicle_id_retired',{id=tostring(row.id.hash),kind=row.kind,record=row.record})
+            else remaining[#remaining+1]=row end
+        end
+        actors=remaining
+    end
     if #actors>0 then return false end
     for _,object in ipairs(draining) do
         local ok,attached=pcall(function() return object:IsAttached() end)
@@ -79,6 +100,57 @@ local function deleteActors()
         draining={}
     end
     return true
+end
+local function cleanupDetails()
+    local attached=0;local pending={};local vehicles,npcs,unknown=0,0,0
+    for _,row in ipairs(actors) do
+        pending[#pending+1]={kind=row.kind or 'recovered',record=row.record,id=tostring(row.id.hash),delete_accepted=row.deleteAccepted}
+        if row.car then vehicles=vehicles+1 elseif row.kind then npcs=npcs+1 else unknown=unknown+1 end
+    end
+    for _,object in ipairs(draining) do
+        local ok,present=pcall(function() return object:IsAttached() end)
+        if ok and present then attached=attached+1 end
+    end
+    return {phase=phase,seconds=cleanupAge,managed_rows=#actors,retained_handles=#draining,attached_handles=attached,
+        vehicles=vehicles,npcs=npcs,unknown=unknown,pending=pending,error=cleanupError}
+end
+local function tryDeleteActors(status)
+    local ok,done=pcall(deleteActors)
+    if not ok then
+        local reason=tostring(done)
+        if cleanupError~=reason then
+            cleanupError=reason;log('cleanup_error',cleanupDetails(),status)
+            report('Actor cleanup will retry: '..reason,status)
+        end
+        return false
+    end
+    cleanupError=nil
+    return done==true
+end
+local function cleanupComplete(status)
+    phase,token,access='idle',nil,nil
+    cleanupAge,cleanupWarned,cleanupError=0,false,nil
+    aftermathCleanupStarted=false;retention,poll=0,0
+    report('Previous Officer Down scene cleared; ready for another Officer Down call',status)
+end
+local function warnPendingCleanup(status)
+    if cleanupAge>=15 and not cleanupWarned then
+        cleanupWarned=true;local detail=cleanupDetails()
+        log('cleanup_pending',detail,status)
+        report('Actor cleanup pending: '..detail.managed_rows..' managed rows, '..detail.attached_handles
+            ..' attached actors. Retrying; other dispatch types remain available during aftermath.',status)
+    end
+end
+local function clearAftermathForManual(status)
+    if not aftermathCleanupStarted then
+        aftermathCleanupStarted=true;cleanupAge=0;cleanupWarned=false
+        log('cleanup_requested',{reason='Manual Officer Down retry',actors=#actors},status)
+    end
+    if tryDeleteActors(status) then cleanupComplete(status);return true end
+    local detail=cleanupDetails()
+    report('Previous Officer Down scene cleanup requested: '..detail.managed_rows..' managed rows, '
+        ..detail.attached_handles..' attached actors. Retry after the scene is cleared.',status)
+    return false
 end
 function M.state() return label end
 function M.isActive() return phase~='idle' and phase~='aftermath' end
@@ -98,18 +170,25 @@ function M.reset()
     generation=nil
     selectedSite,catalogMode,logRun=nil,false,nil;draining,sceneAge,access,readyLogged,cleanupAge={},0,nil,false,0
     cleanupWarned,aftermathCleanupStarted,markerLogged=false,false,false
+    cleanupError=nil
     Selection.reset()
 end
 function M.diagnostics()
     local ok,text=pcall(function() return native():GetDiagnostics() end)
+    local cleanup=cleanupDetails()
     return 'phase='..phase..' | site='..tostring(selectedSite and selectedSite.id or 'test_kryss_01')..' | heading='..tostring(selectedHeading or heading)..' | preferred heading='..tostring(selectedSite and selectedSite.heading or heading)..' | owned actors='..#actors
         ..' | placement passes='..placementPasses..' | nearby wait='..string.format('%.1f',placementElapsed)..'/'..Site.prepareGrace..' s'
         ..' | selected site='..tostring(selectedSite and selectedSite.id or 'test_kryss_01')..' | catalogue='..tostring(catalogMode)
         ..' | retained handles='..#draining..' | access ready seconds='..tostring(access and access.stable or 0)
+        ..' | aftermath remaining='..string.format('%.1f',phase=='aftermath' and not aftermathCleanupStarted and math.max(0,Site.retainSeconds-retention) or 0)..' s'
+        ..' | cleanup started='..tostring(aftermathCleanupStarted)..' | cleanup seconds='..string.format('%.1f',cleanupAge)
+        ..' | cleanup error='..tostring(cleanupError or 'none')
+        ..' | pending vehicles/NPCs/unknown='..cleanup.vehicles..'/'..cleanup.npcs..'/'..cleanup.unknown
+        ..' | attached handles='..cleanup.attached_handles
         ..' | placement='..tostring(placementReason or 'not attempted')..' | '..tostring(ok and text or text)
 end
 function M.supportsCatalog()
-    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:IsCatalogReady() end)
+    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:CleanupVersion()==1 and n:IsCatalogReady() end)
     return ok and ready==true
 end
 function M.logState() return Log.state() end
@@ -132,7 +211,7 @@ function M.finish(patrol,status,reason,failed)
     end
     log('cleanup_requested',{reason=reason,actors=#actors,phase=phase},status)
     finalReason=reason or 'Officer Down scene cleared';phase='cleanup';poll=0;cleanupAge=0;cleanupWarned=false
-    if deleteActors() then phase='idle';token=nil;report(finalReason,status);return true end
+    if tryDeleteActors(status) then phase='idle';token=nil;report(finalReason,status);return true end
     report(finalReason..'; actor cleanup pending',status);return false
 end
 function M.cancel(patrol,status) if phase=='idle' then return false end;return M.finish(patrol,status,'Officer Down cancelled/cleared') end
@@ -164,17 +243,32 @@ function M.request(patrol,status,sound,voice)
     return ok
 end
 function M.requestNearby(patrol,status,sound,voice,source)
-    if phase~='idle' then return false end
+    local manual=source==nil or source=='manual'
+    if phase~='idle' and not (manual and phase=='aftermath') then
+        if manual then report('Previous Officer Down scene is '..phase..'; complete it or wait for confirmed cleanup',status) end
+        return false
+    end
     local ok,reason=pcall(function()
         local player=Game.GetPlayer()
         if not player or not player:IsAttached() or player:IsDead() or not patrol or not patrol:IsOnDuty() or patrol:HasWantedLevel()
-            or patrol:IsDispatchMenuOpen() or player:IsInCombat() then error('An available, non-wanted shift outside menus/combat is required') end
+            or patrol:IsDispatchMenuOpen() or player:IsInCombat() then
+            report('An available, non-wanted shift outside menus/combat is required',status);return false
+        end
         local backend=native();backend:Tick(0)
+        if not backend:IsSessionReady() then report('Wait for the game world before requesting Officer Down',status);return false end
+        if generation and backend:GetSessionGeneration()~=generation then
+            M.reset();report('World changed; old Officer Down IDs forgotten. Request again in the current shift.',status);return false
+        end
         local compatible,ready=pcall(function() return backend:CatalogVersion()==1 and backend:IsCatalogReady() end)
         if not compatible or not ready then error('Install the complete v0.18c Officer Down dispatch package and restart') end
+        local cleanupReady,cleanupVersion=pcall(function() return backend:CleanupVersion() end)
+        if not cleanupReady or cleanupVersion~=1 then error('Install the complete v0.18e cleanup module and fully restart the game') end
         local system=Game.GetDynamicEntitySystem();if not system or not system:IsReady() then error('Codeware entity system unavailable') end
         local site,d,radius,why=Selection.choose(player:GetWorldPosition())
         if not site then report(why,status);return false end
+        -- A direct test/request may end the completed scene's retention early.
+        -- No new token, marker, reward or actors until physical cleanup succeeds.
+        if phase=='aftermath' and not clearAftermathForManual(status) then return false end
         local accepted=backend:BeginCatalogDispatch(site.index)
         if not accepted or accepted<=0 then report('Officer Down quest/cleanup reservation unavailable',status);return false end
         selectedSite,catalogMode,token=site,true,accepted;logRun=Log.newRun()
@@ -182,6 +276,7 @@ function M.requestNearby(patrol,status,sound,voice,source)
         terminalSeen,recovered=false,false;actors,draining={},{}
         placementElapsed,placementPoll,placementPasses,placementReason=0,Site.prepareInterval,0,nil
         selectedHeading,sceneAge,access,readyLogged,cleanupAge=nil,0,nil,false,0;cleanupWarned,aftermathCleanupStarted,markerLogged=false,false,false
+        cleanupError=nil
         Selection.remember(site.id)
         log('assigned',{source=source or 'manual',token=token,generation=generation,heading=site.heading,
             position={x=site.x,y=site.y,z=site.z},distance=d,search_radius=radius,selection=why,player_position=playerPosition()},status)
@@ -190,7 +285,8 @@ function M.requestNearby(patrol,status,sound,voice,source)
         return true
     end)
     if not ok then
-        if token or #actors>0 then M.finish(patrol,status,'Officer Down setup failed: '..tostring(reason),true)
+        if phase=='aftermath' then report('Request unavailable; completed scene retained: '..tostring(reason),status)
+        elseif token or #actors>0 then M.finish(patrol,status,'Officer Down setup failed: '..tostring(reason),true)
         else report('Request failed: '..tostring(reason),status) end
         return false
     end
@@ -263,25 +359,29 @@ local function update(delta,onDuty,patrol,status,HUD)
     local backend=native()
     if not backend:IsSessionReady() then return M.isActive() end
     if generation and backend:GetSessionGeneration()~=generation then M.reset();return false end
+    backend:Tick(delta)
     if onDuty and (not patrol or not patrol:IsDispatchMenuOpen()) then Selection.advance(delta) end
     if phase=='aftermath' then
-        if delta>0 and delta<=.5 and (not patrol or not patrol:IsDispatchMenuOpen()) then retention=retention+delta;poll=poll+delta end
-        if (not onDuty or retention>=Site.retainSeconds or distance(player:GetWorldPosition(),origin())>Site.retainDistance) and poll>=1 then
-            poll=0
-            if not aftermathCleanupStarted then aftermathCleanupStarted=true;log('cleanup_requested',{reason='Aftermath retention ended',actors=#actors},status) end
-            if deleteActors() then phase='idle';token=nil;access=nil end
+        if delta>0 and delta<=.5 then
+            if aftermathCleanupStarted then cleanupAge=cleanupAge+delta;poll=poll+delta
+            elseif not patrol or not patrol:IsDispatchMenuOpen() then retention=retention+delta;poll=poll+delta end
         end
+        if (aftermathCleanupStarted or not onDuty or retention>=Site.retainSeconds or distance(player:GetWorldPosition(),origin())>Site.retainDistance) and poll>=1 then
+            poll=0
+            if not aftermathCleanupStarted then aftermathCleanupStarted=true;cleanupAge=0;log('cleanup_requested',{reason='Aftermath retention ended',actors=#actors},status) end
+            if tryDeleteActors(status) then cleanupComplete(status) end
+        end
+        if phase=='aftermath' then warnPendingCleanup(status) end
         return false
     end
     if phase=='cleanup' then
         if delta>0 and delta<=.5 then poll=poll+delta;cleanupAge=cleanupAge+delta end
-        if poll>=1 then poll=0;if deleteActors() then phase='idle';token=nil;report(finalReason or 'Scene cleared',status) end end
+        if poll>=1 then poll=0;if tryDeleteActors(status) then phase='idle';token=nil;report(finalReason or 'Scene cleared',status) end end
         if phase=='cleanup' and cleanupAge>=15 and not cleanupWarned then
             cleanupWarned=true;log('cleanup_pending',{seconds=cleanupAge,managed_rows=#actors,retained_handles=#draining},status)
         end
         return M.isActive()
     end
-    backend:Tick(delta)
     if not onDuty or not patrol or not patrol:IsOnDuty() then M.finish(patrol,status,'Shift ended',false);return M.isActive() end
     if backend:GetToken()~=token then M.finish(patrol,status,'Officer Down session superseded');return M.isActive() end
     local stage=backend:GetStage()
