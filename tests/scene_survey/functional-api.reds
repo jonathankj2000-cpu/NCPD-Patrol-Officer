@@ -12,3 +12,6 @@ public enum worldNavigationRequestStatus { OK = 0, Failed = 1 }
 public native struct NavigationFindPointResult { public let point: Vector4; public let status: worldNavigationRequestStatus; }
 @addMethod(GameInstance)
 public static native func GetAINavigationSystem(game: GameInstance) -> ref<AINavigationSystem>;
+// orphans.swift:11549, existing native game declaration; never installed.
+@addMethod(GameInstance)
+public final static native func FindEntityByID(game: GameInstance, entityId: EntityID) -> ref<Entity>;

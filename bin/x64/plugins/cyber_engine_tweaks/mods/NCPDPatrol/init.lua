@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18f Scene Arrival and Stray Fire | 50 m mounted activation and bounded police-hit allowance
+-- NCPD Patrol v0.18g Scene Discovery | off-duty terminal-offset search and separate placement evidence
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18f Scene Arrival and Stray Fire loaded. Officer Down combat starts at 50 m, including from a vehicle; live NPCs use physical safety instead of spawn precision. One stray police discharge per 10 s may be excused during hostile combat; deliberate aim and repeated fire retain normal wanted rules. Install the complete package and fully restart the game.")
+    status("v0.18g Scene Discovery loaded. Testing > Scene discovery searches shifted centers around 60 existing terminals with both layouts. Start with the three closest terminals. Developer test only; approved dispatch sites and original survey results are preserved. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

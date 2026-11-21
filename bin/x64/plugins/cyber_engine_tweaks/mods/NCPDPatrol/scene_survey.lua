@@ -1,11 +1,12 @@
 -- Explicit off-duty test tour. One owned scene at a time; never starts a quest.
-local Catalog=require('scene_survey_sites')
+local DefaultCatalog=require('scene_survey_sites')
 local Layout=require('officer_down_layout')
 local Actors=require('officer_down_actors')
-local Store=require('scene_survey_store')
+local DefaultStore=require('scene_survey_store')
 local Settling=require('scene_survey_settling')
 local Staging=require('scene_survey_staging')
 local Functional=require('scene_survey_functional')
+local function createRunner(Catalog,Store,discovery)
 local M={}
 local context,storage={},Store.new()
 local phase,label='idle','Survey not started. '..Catalog.coverage
@@ -16,6 +17,8 @@ local clock,poll,stable,observedMax=0,0,0,0
 local heading,samples,pending,afterCleanup,stopReason,lastError
 local done,passed=0,0
 local moved=false
+local anchor=nil
+local discoveryScope=nil
 local profile=Functional.profile
 local pilotState=nil
 local function point(p) return Vector4.new(p.x,p.y,p.z,1) end
@@ -35,6 +38,7 @@ end
 local function enter(nextPhase) phase=nextPhase;clock,poll,stable=0,0,0 end
 local function evidence(row)
     row.run=run;row.catalog_revision=Catalog.revision;row.layout_revision=Layout.revision;row.validation_profile=profile
+    if discovery and anchor then row.source_anchor=anchor.id end
     storage:append(row)
 end
 local function trialEvent(kind,reason)
@@ -90,6 +94,11 @@ local function resultAndNext(row)
     enter('between-sites')
 end
 local function advanceAngle()
+    if discovery then
+        site=anchor;samples=nil;observedMax=0;pilotState=nil
+        if not backend:SetOrigin(point(anchor)) or not backend:MovePlayer(point(anchor),anchor.heading) then error('Discovery anchor return refused') end
+        enter('landing');return
+    end
     angleIndex=angleIndex+1
     if angleIndex>#angles then
         if pass<2 then pass=pass+1;angleIndex=1
@@ -104,6 +113,10 @@ local function finishRun(returned)
     end)
     if not backend:Finish() then error('Survey protection release refused') end
     enter('idle');backend=nil;actors,draining={},{}
+    if discovery then
+        local ok,reason=pcall(function() return storage:export(profile) end)
+        if not ok then saveError=reason;saved=false end
+    end
     say((stopReason or 'Tour complete')..' | validated='..passed..'/'..done..(returned==false and ' | stopped without a return teleport' or ' | returned to starting position')
         ..(saved and (' | evidence='..Store.logFile) or (' | evidence write failed: '..tostring(saveError))))
 end
@@ -119,12 +132,13 @@ function M.summary()
     return label..'\nPhase: '..phase..' | '..Catalog.coverage
         ..' | functional compact='..storage:count('compact',Functional.profile)..'/'..total..' | functional standard='..storage:count('standard',Functional.profile)..'/'..total
         ..' | proven compact='..storage:count('compact')..'/'..total..' | proven standard='..storage:count('standard')..'/'..total
-        ..' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
-        ..' | placement pilot='..storage:count('compact',Staging.profile)..'/3'
+        ..(discovery and '' or (' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
+        ..' | placement pilot='..storage:count('compact',Staging.profile)..'/3'))
 end
 function M.diagnostics()
     return M.summary()..' | site='..tostring(site and site.id)..' | variant='..tostring(variant)..' | heading='..tostring(heading)
         ..' | owned IDs='..#actors..' | retained handles='..#draining..' | seconds='..string.format('%.2f',clock)..' | stop='..tostring(stopReason)
+        ..(discovery and (' | '..discovery:progress()) or '')
 end
 function M.loadResults(status)
     local ok,reason=pcall(function() storage:load();return 'Saved evidence loaded; incompatible/truncated lines='..storage.ignored end)
@@ -138,9 +152,12 @@ end
 function M.start(requestedVariant,onlyUnverified,status,pilot)
     if M.active() then say('A survey is already running; stop/return before starting another',status);return false end
     local ok,reason=pcall(function()
-        if requestedVariant~='compact' and requestedVariant~='standard' then error('Unknown survey layout') end
+        if requestedVariant~='compact' and requestedVariant~='standard' and not (discovery and requestedVariant=='both') then error('Unknown survey layout') end
         if context.canStart then local allowed,why=context.canStart();if not allowed then error(why or 'Existing patrol actors/dispatch still active') end end
         local owner=native()
+        if discovery then
+            if owner:DiscoveryVersion()~=1 or owner:FunctionalVersion()~=1 then error('Install the complete v0.18g Scene Discovery package and fully restart') end
+        end
         if pilot=='staging' then
             local compatible,version=pcall(function() return owner:PlacementVersion() end)
             if not compatible or version~=1 then error('Install the complete v0.18b2 Injured Placement Pilot package and fully restart the game') end
@@ -152,8 +169,9 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         if owner:IsActive() then error('Previous CET session left a survey reserved; use Recover survey cleanup and return') end
         if not owner:CanRun() or owner:IsMenuOpen() then error('Load a manual test save, go OFF DUTY, leave combat/menus and exit your vehicle') end
         storage:load();queue={}
-        profile=pilot=='functional' and Functional.profile or (pilot=='staging' and Staging.profile or (pilot and Settling.profile or 'legacy-immediate-v1'));pilotState=nil
-        for _,candidate in ipairs(Catalog.sites) do
+        profile=(discovery or pilot=='functional') and Functional.profile or (pilot=='staging' and Staging.profile or (pilot and Settling.profile or 'legacy-immediate-v1'));pilotState=nil
+        if discovery then queue=discovery:queue(requestedVariant,onlyUnverified,discoveryScope) end
+        for _,candidate in ipairs(discovery and {} or Catalog.sites) do
             if pilot==true or pilot=='staging' then
                 if Settling.pilotSites[candidate.id] then queue[#queue+1]=candidate end
             elseif not onlyUnverified or storage:needsTest(candidate,requestedVariant,profile) then queue[#queue+1]=candidate end
@@ -164,7 +182,8 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         run=((os and os.date) and os.date('!%Y%m%dT%H%M%S') or 'run')..'-'..(#storage.events+1)
         evidence({kind='run_started',variant=variant,queued=#queue,coverage=Catalog.coverage})
         local began
-        if profile==Staging.profile then began=owner:BeginPlacement() else began=owner:Begin() end
+        if discovery then began=owner:BeginDiscovery()
+        elseif profile==Staging.profile then began=owner:BeginPlacement() else began=owner:Begin() end
         if not began then error('Native survey protection/reservation refused') end
         backend=owner;generation=owner:GetRunGeneration()
         local p=owner:GetReturnPosition();origin=copy(p);origin.heading=owner:GetReturnYaw()
@@ -174,6 +193,10 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
     end)
     if not ok then say('Start failed: '..tostring(reason),status);return false end
     return reason==true
+end
+function M.startDataset(scope,onlyUnverified,status)
+    discoveryScope=scope
+    return M.start('both',onlyUnverified,status,'functional')
 end
 function M.startPilot(status) return M.start('compact',false,status,true) end
 function M.startPlacementPilot(status) return M.start('compact',false,status,'staging') end
@@ -233,6 +256,10 @@ local function update(delta)
     if phase=='travel' then
         if #actors>0 or #draining>0 then error('Previous actor ownership not cleared before travel') end
         site=queue[index];failures={};angleIndex,pass=1,1;samples=nil;observedMax=0;pilotState=nil
+        if discovery then
+            anchor=site;variant=site.variant
+            discovery:begin(anchor,variant)
+        end
         local preferred=storage:preferred(site,variant,profile)
         angles={}
         if preferred then angles[1]=preferred end
@@ -257,15 +284,64 @@ local function update(delta)
             if landing and clock>=5 then stable=stable+elapsed else stable=0 end
             if stable>=2 then
                 if not backend:MovePlayer(landing,site.heading) then error('Supported landing placement refused') end
-                enter('preflight');poll=1
+                enter(discovery and 'searching-offsets' or 'preflight');poll=1
             elseif clock>=30 then
                 failures[#failures+1]={phase='landing',reason=reason or 'Central landing did not settle'}
                 resultAndNext(siteResult('unverified','Landing not confirmed: '..tostring(reason)))
             end
         end
+    elseif phase=='searching-offsets' then
+        if distance(player:GetWorldPosition(),anchor)>3 then stopReason='V moved away during terminal search';cleanup('return');return true end
+        if poll>=discovery.interval then
+            poll=0
+            local candidate,yaw,trialPass=discovery:next()
+            if not candidate then
+                site=anchor;resultAndNext(siteResult('unverified','No complete functional scene after bounded offset/rotation search'));return true
+            end
+            heading,pass=yaw,trialPass
+            local landing,reason=Layout.landing(candidate,player)
+            local chosen=landing and discovery:grounded(candidate,landing)
+            if landing and not chosen then reason='Offset grounding moved to a different road level/position' end
+            local layout,ok
+            if chosen then
+                reason=discovery:duplicate(chosen,variant)
+                if not reason then
+                    ok,layout=pcall(Layout.build,heading,player,{site=chosen,variant=variant})
+                    if not ok then
+                        if not Layout.isRejection(layout) then error(layout,0) end
+                        reason=layout
+                    end
+                end
+            end
+            if chosen and ok then
+                site=chosen
+                if not backend:SetOrigin(point(site)) or not backend:MovePlayer(landing,heading) then error('Discovery candidate transfer refused') end
+                trialEvent('geometry_passed','All ten positions clear before spawning; confirming selected landing')
+                enter('candidate-landing')
+                say(site.label..' | '..variant..' | geometry passed; confirming actual shifted center')
+            else
+                failures[#failures+1]={site=candidate.id,position=copy(candidate),heading=heading,pass=pass,phase=phase,reason=tostring(reason)}
+                evidence({kind='geometry_rejected',site=candidate.id,variant=variant,heading=heading,position=copy(candidate),reason=tostring(reason)})
+                if #failures%16==0 then say(anchor.label..' | '..variant..' | '..discovery:progress()) end
+            end
+        end
+    elseif phase=='candidate-landing' then
+        if poll>=.25 then
+            local elapsed=poll;poll=0
+            local landing,reason=Layout.landing(site,player)
+            if distance(player:GetWorldPosition(),site)>1 then
+                if not backend:MovePlayer(point(site),heading) then error('Discovery landing hold refused') end
+            end
+            if landing and clock>=1 then stable=stable+elapsed else stable=0 end
+            if stable>=.5 then
+                if not backend:MovePlayer(landing,heading) then error('Discovery supported landing refused') end
+                enter('preflight');poll=1
+            elseif clock>=10 then rejectTrial('Selected offset landing did not remain clear: '..tostring(reason)) end
+        end
     elseif phase=='preflight' then
         if poll>=1 then
-            poll=0;heading=angles[angleIndex]
+            poll=0
+            if not discovery then heading=angles[angleIndex] end
             local ok,layout=pcall(Layout.build,heading,player,{site=site,variant=variant})
             if not ok then
                 if not Layout.isRejection(layout) then error(layout,0) end
@@ -421,3 +497,41 @@ function M.shutdown()
     end)
 end
 return M
+end
+
+local normal=createRunner(DefaultCatalog,DefaultStore)
+local discovered=nil
+local context={}
+local facade={}
+for name,fn in pairs(normal) do facade[name]=fn end
+local function discoveryRunner()
+    if not discovered then
+        local helper=require('scene_discovery').new()
+        discovered=createRunner(helper.catalog,{new=function() return helper.store end,logFile=helper.logFile,exportFile=helper.exportFile},helper)
+        discovered.configure(context)
+    end
+    return discovered
+end
+local function running()
+    if discovered and discovered.active() then return discovered end
+    return normal
+end
+function facade.configure(value) context=value or {};normal.configure(context);if discovered then discovered.configure(context) end end
+function facade.active() return normal.active() or (discovered and discovered.active()) or false end
+function facade.update(delta) return running().update(delta) end
+function facade.summary() return running().summary() end
+function facade.diagnostics() return running().diagnostics() end
+function facade.cancel(status) return running().cancel(status) end
+function facade.reset() normal.reset();if discovered then discovered.reset() end end
+function facade.shutdown() normal.shutdown();if discovered then discovered.shutdown() end end
+function facade.recover(status)
+    if discovered and discovered.active() then return discovered.cancel(status) end
+    local ok,isDiscovery=pcall(function() local box=Game.GetScriptableSystemsContainer();return box:Get('NCPDPatrolSceneSurveySystem'):IsDiscovery() end)
+    if ok and isDiscovery then return discoveryRunner().recover(status) end
+    return normal.recover(status)
+end
+function facade.startDiscovery(scope,onlyUnverified,status) return discoveryRunner().startDataset(scope,onlyUnverified,status) end
+function facade.discoverySummary() return discoveryRunner().summary() end
+function facade.exportDiscovery(status) return discoveryRunner().export(status) end
+function facade.loadDiscovery(status) return discoveryRunner().loadResults(status) end
+return facade

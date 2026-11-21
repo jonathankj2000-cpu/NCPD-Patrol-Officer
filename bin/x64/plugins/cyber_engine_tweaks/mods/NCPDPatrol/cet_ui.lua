@@ -316,6 +316,22 @@ function M.new(context)
             end
         end
         -- Officer Down UI end
+        -- v018g discovery UI begin
+        if ImGui.CollapsingHeader("Scene discovery: terminal offsets") then
+            local survey=context.sceneSurvey
+            ImGui.TextWrapped("OFF DUTY developer test. Searches around the existing 60 terminal coordinates at 10/20/30 m in eight directions, trying both compact and standard layouts. Geometry and supported landing must pass before any actors spawn. Use a manual test save and exit your vehicle. The full search may take considerable time; begin with the nearest three terminals.")
+            if survey and survey.startDiscovery then
+                ImGui.TextWrapped(survey.discoverySummary())
+                if ImGui.Button("TEST: Discover scenes near 3 closest terminals") then survey.startDiscovery('nearby',true,status) end
+                if ImGui.Button("TEST: Discover scenes near all 60 terminals") then survey.startDiscovery('all',true,status) end
+                if ImGui.Button("Stop discovery and return") then survey.cancel(status) end
+                if ImGui.Button("Recover discovery cleanup and return") then survey.recover(status) end
+                if ImGui.Button("Load discovery results") then survey.loadDiscovery(status) end
+                if ImGui.Button("Export discovery report") then survey.exportDiscovery(status) end
+            end
+            ImGui.TextWrapped("Evidence: scene_discovery_results.jsonl. Export: scene_discovery_report.json, including verified_candidates with actual grounded coordinates, rotation and source terminal. Successful terminal/layout searches are skipped on later runs. Existing recorded surveys, approved dispatch sites and manual waypoints are preserved. Stop/recovery waits for owned actors to detach before any return teleport.")
+        end
+        -- v018g discovery UI end
         -- r4 probe UI begin
         if ImGui.CollapsingHeader("Legacy Coyote marker experiment") then
             local probe = context.markerProbe
@@ -376,7 +392,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18f Scene Arrival and Stray Fire###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18g Scene Discovery###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

@@ -20,6 +20,7 @@ function player:GetWorldOrientation() return {Yaw=s.facing} end
 Quaternion={ToEulerAngles=function(_,value) return value end}
 local locations={s.original}
 for _,p in ipairs(catalog.sites) do locations[#locations+1]=p end
+function s.addLocation(p) locations[#locations+1]=p end
 local function location(p)
  local best,score=nil,math.huge
  for _,q in ipairs(locations) do local d=(q.x-p.x)^2+(q.y-p.y)^2;if d<score then best,score=q,d end end
@@ -29,6 +30,9 @@ function s.live()
  local count=0
  for _,a in ipairs(s.allActors) do if a.attached then count=count+1 end end
  return count
+end
+function GameInstance:FindEntityByID(game,id)
+ for _,a in ipairs(s.allActors) do if a.id.hash==id.hash and a.attached then return a end end
 end
 local tele=GameInstance:GetTeleportationFacility({})
 tele.Teleport=function(_,object,p,angle)
@@ -133,7 +137,8 @@ GameInstance.GetAINavigationSystem=function() return navigation end
 local open=io.open
 io.open=function(name,mode)
  assert(name=='scene_survey_results.jsonl' or name=='scene_survey_report.json'
-  or name=='officer_down_dispatch.jsonl' or name=='officer_down_dispatch_report.json','Unexpected evidence file path: '..tostring(name))
+  or name=='officer_down_dispatch.jsonl' or name=='officer_down_dispatch_report.json'
+  or (s.allowDiscoveryFiles and (name=='scene_discovery_results.jsonl' or name=='scene_discovery_report.json')),'Unexpected evidence file path: '..tostring(name))
  if s.failFile and mode~='r' then return nil,'injected disk failure' end
  return open(name,mode)
 end

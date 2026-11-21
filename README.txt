@@ -1,3 +1,45 @@
+NCPD PATROL v0.18g SCENE DISCOVERY - COMPLETE BRANCH TEST
+
+Developer-only Officer Down location search, available under CET > Testing >
+Scene discovery: terminal offsets. Uses the existing 60 VIP terminal coordinates
+across six districts as search anchors; terminals are not assumed to be suitable
+scene centers. No additional location framework or dataset is required.
+
+Use a MANUAL TEST SAVE, go OFF DUTY, exit your vehicle and start:
+"TEST: Discover scenes near 3 closest terminals". Close CET and leave the game
+running. After checking that pilot, "TEST: Discover scenes near all 60 terminals"
+continues across the dataset, skipping already verified terminal/layout pairs.
+
+Around each anchor the tool checks offsets of 10, 20 and 30 m in eight directions,
+with eight scene rotations and both compact/standard layouts. Search is bounded
+to two passes. Existing ground, navmesh, slope, Static obstruction and full car
+footprint/Vehicle-clearance checks run before any actors spawn. Promising centers
+then use the existing protected ten-actor functional scene survey, including the
+injured officer's actual supported position and a usable walking/aid route.
+Each scene must be physically cleared before another protected transfer.
+
+Results are SEPARATE, inside bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol:
+  scene_discovery_results.jsonl  - append-only trial/placement evidence
+  scene_discovery_report.json   - automatic final export; also exportable in CET
+The report's verified_candidates list contains actual grounded XYZ, rotation,
+layout and source terminal. Keep both files. Existing scene_survey result files,
+17 recorded survey locations and 16 approved production dispatch sites remain.
+New discoveries are NOT automatically added to dispatch. Combat and actual F
+revive execution still need a gameplay check at promising locations.
+
+Stop discovery and return waits for owned actors to detach. After CET reload,
+use Recover discovery cleanup and return in the same session. Save/game reload
+does not automatically resume a tour or reuse old actor IDs. Transfers use the
+existing protected teleport/streaming checks; this does not add a loading screen.
+
+Install this COMPLETE 117-file package and FULLY RESTART THE GAME. Native scene
+discovery API is version 1. Existing production dispatch/markers, rewards,
+progression, partner/backup, arrests and the v0.18f arrival/stray-fire fixes remain.
+29 portable suites plus offline source/API compilation are not an in-game test.
+See docs/SCENE_DISCOVERY_v018g.md for implementation and verification scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18f SCENE ARRIVAL AND STRAY FIRE - COMPLETE BRANCH TEST
 
 Officer Down combat now starts within 50 m of the scene center, including

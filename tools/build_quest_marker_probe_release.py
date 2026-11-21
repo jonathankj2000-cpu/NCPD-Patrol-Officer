@@ -1,34 +1,36 @@
-"""Verify and package Officer Down arrival and bounded accidental police fire.
+"""Verify isolated terminal-offset discovery and package the complete test build.
 
-The established workflow entrypoint is retained. Fixed markers, actor records,
-archives, career ledgers, partner AI and existing shift cleanup stay unchanged.
+The established workflow entrypoint remains. Production dispatch, approved
+sites, marker archives, progression and existing survey evidence stay unchanged.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='82ed62c3987854acb06cbf527d648079b9a086e6'
+BASE='26bd1ec4bc5c709faea4efe1caa3afb8328aa26c'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.18f_Scene_Arrival_and_Stray_Fire_TEST.zip'
-REPORT='NCPD_Patrol_v0.18f_Scene_Arrival_and_Stray_Fire_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py']
+NAME='NCPD_Patrol_v0.18g_Scene_Discovery_TEST.zip'
+REPORT='NCPD_Patrol_v0.18g_Scene_Discovery_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==43 and len(scripts)==44 and len(TESTS)==28
+ assert len(modules)==45 and len(scripts)==44 and len(TESTS)==29
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','officer_down.lua','officer_down_actors.lua','officer_down_scene.lua','scene_survey_functional.lua']}
- changed.update('r6/scripts/NCPDPatrol/'+n for n in ['NCPDPatrolOfficerDownSystem.reds','NCPDPatrolOfficerDownSite.reds','NCPDPatrolPartnerSafety.reds','NCPDPatrolSystem.reds','NCPDPatrolAidAccess.reds'])
- added=set()
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua','scene_survey.lua','scene_survey_store.lua']}
+ changed.add('r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds')
+ added={PREFIX+n for n in ['scene_discovery.lua','scene_discovery_sites.lua']}
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
+ for name in ['LICENSE','THIRD_PARTY_NOTICES.txt','assets/officer_down_sites/catalog.json','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json']:
+  assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Existing data changed: '+name
  paths=[p for d in ['bin','r6','archive'] for p in (ROOT/d).rglob('*') if p.is_file()]+[ROOT/n for n in ['README.txt','LICENSE','THIRD_PARTY_NOTICES.txt']]
  assert {p.relative_to(ROOT).as_posix() for p in paths}==set(previous)|added|{'README.txt','LICENSE','THIRD_PARTY_NOTICES.txt'}
- assert len(paths)==115
+ assert len(paths)==117
  comparisons={
  'dispatch':'tests/dispatch_refactor/check_refactor.py','ui':'tests/cet_ui/check_cet_ui.py',
  'vip':'tests/vip_refactor/check_vip_refactor.py','probe':'tests/quest_marker_probe/check_probe.py',
@@ -36,8 +38,9 @@ def main():
  'officer_down':'tests/officer_down/check_officer_down.py','scene_survey':'tests/scene_survey/check_survey.py',
  'injured_settling':'tests/scene_survey/check_settling.py','injured_placement':'tests/scene_survey/check_staging.py',
  'injured_functional':'tests/scene_survey/check_functional.py','officer_catalog':'tests/officer_down/check_catalog.py',
- 'officer_gameplay':'tests/officer_down/check_gameplay.py','partner_safety':'tests/partner_safety/check_safety.py','officer_repeat':'tests/officer_down/check_repeat.py'}
- with TemporaryDirectory(prefix='ncpd-arrival-stray-fire-release-') as tmp:
+ 'officer_gameplay':'tests/officer_down/check_gameplay.py','partner_safety':'tests/partner_safety/check_safety.py',
+ 'officer_repeat':'tests/officer_down/check_repeat.py','scene_discovery':'tests/scene_survey/check_discovery.py'}
+ with TemporaryDirectory(prefix='ncpd-scene-discovery-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
    args=[sys.executable,str(ROOT/test)]
@@ -47,47 +50,37 @@ def main():
  release=ROOT/'releases'/NAME
  with zipfile.ZipFile(release,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
   for p in sorted(paths):
-   info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,21,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
+   info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,22,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
    z.writestr(info,p.read_bytes(),compresslevel=9)
  with zipfile.ZipFile(release) as z:
-  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==115
+  assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==117
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
-  assert not any(p.endswith('.jsonl') or p.endswith('officer_down_dispatch_report.json') or p.endswith('scene_survey_report.json') for p in z.namelist())
+  assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.18f-scene-arrival-and-stray-fire','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.18g-scene-discovery','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
-  'career_start_end_uses_existing_native_desired_request':True,'career_end_on_all_three_sections':True,
-  'career_pending_duplicate_stale_and_world_guards':True,'career_button_never_directly_finishes_shift':True,
-  'fast_travel_existing_start_end_unchanged':True,'officer_down_test_under_other_dispatch_tests':True,
-  'partner_guard_exact_registered_actor_only':True,'partner_guard_on_duty_ready_world_only':True,
-  'partner_guard_ranged_police_npc_and_vehicle_hits_only':True,'partner_guard_hostile_police_bypass':True,
-  'partner_guard_before_original_on_hit':True,'ordinary_v_and_other_actor_hits_passthrough':True,'v_bounded_stray_police_discharge_exception':True,
-  'global_heat_reset_or_immunity':False,'existing_wanted_termination_unchanged':True,
-  'reference_vehicle_threat_and_combat_hit_paths_found':True,'reported_wanted_cause_proven':False,
-  'reference_game_source_commit':'81d996b584a693e8b0f0b20526a9fa38b5c83fe7',
-  'existing_39_native_scripts_and_eight_archives_unchanged_from_v018e2':True,
-  'scanner_vip_cyberpsycho_markers_survey_profiles_arrest_partner_and_backup_ai_unchanged':True,
-  'all_payment_and_career_ledgers_unchanged':True,'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},
-  'officer_down_sites':16,'officer_down_reward':2000,'officer_down_career_credit':1,
-  'browser_extension_still_optional':True,'actual_game_validation':False,'observed_redscript_dispose_error_guarded':True,'fake_entity_dispose_contract_removed':True,'optional_cet_capability_absence_tested':True,
-  'officer_down_reported_pattern':{'phase':'aftermath','managed_rows':1,'cached_attached_handles':0},
-  'manual_retry_can_end_completed_retention':True,'automatic_retention_seconds':90,'automatic_retention_distance_m':150,
-  'optional_cet_dispose_after_accepted_delete_seconds':5,'vehicle_dispose_requires_id_reference_record_generation_and_receipt':True,
-  'disposal_is_not_physical_cleanup_proof':True,'detached_actor_id_registry_capacity':256,
-  'detached_codeware_actor_id_receipts_are_retained_and_pruned':True,'foreground_actor_id_ownership_kept_until_physical_clear':True,
-  'completed_private_npc_and_vehicle_ids_can_retire_after_detachment':True,'explicit_delete_refusal_receipt_supported_for_completed_scenes':True,'fresh_entity_and_spawning_queries_required':True,'background_cleanup_errors_preserve_successful_quest_and_other_types':True,'runtime_cause_and_engine_acknowledgement_confirmed':False,
-  'officer_down_arrival_radius_m':50,'mounted_arrival_allowed':True,'live_npc_spawn_anchor_precision_removed':True,
-  'initial_binding_and_physical_safety_still_required':True,'fast_arrival_complete_usable_snapshot_required':True,
-  'proven_aid_route_retained_across_vehicle_seat_path_failure':True,'first_live_aid_route_from_scene_center_and_healthy_defender':True,'v018e2_scene_failure_negative_controls':True,
-  'police_stray_discharge_interval_seconds':10,'police_exact_shot_group_seconds':0.5,'recent_hostile_shooter_seconds':6,
-  'police_exception_requires_hostile_combat_and_no_direct_police_aim':True,'police_hit_intent_proven':False,
-  'game_checks_required':['Officer Down mounted arrival at 50 m and natural NPC staging movement',
-    'single stray police gunshot versus direct police aim and repeated gunfire during hostile combat',
-    'repeat completed Officer Down calls through CET and automatic dispatch',
-    'optional CET disposal availability and detached Codeware ID retirement','no visible actors lost from cleanup ownership',
-    'cancel/partial setup/CET reload/save load and refused physical cleanup','existing marker/reward/career behavior'],
+  'existing_43_other_native_scripts_and_eight_archives_unchanged_from_v018f':True,
+  'production_dispatch_markers_rewards_arrest_partner_backup_and_wanted_logic_unchanged':True,
+  'existing_17_survey_sites_and_16_approved_dispatch_sites_unchanged':True,'original_survey_ledgers_preserved':True,
+  'scene_discovery':{'source':'Existing VIP terminal catalogue','anchors':60,'districts':6,
+   'offset_radii_m':[10,20,30],'offset_bearings':8,'headings':[0,90,180,270,45,135,225,315],
+   'layouts':['compact','standard'],'passes':2,'max_geometric_poses_per_terminal_layout':384,
+   'min_geometry_interval_seconds':0.1,'nearby_pilot_terminals':3,'geometry_before_actor_creation':True,
+   'full_ten_actor_functional_validation_required':True,'actual_grounded_candidate_coordinates_exported':True,
+   'navmesh_alone_is_not_approval':True,'dedup_same_elevation_only':True,'automatic_dispatch_import':False,
+   'off_duty_developer_only':True,'uses_existing_protected_teleport_and_recovery':True,'new_loading_screen':False,
+   'native_recovery_mode_tag':True,'fresh_world_actor_lookup_before_discovery_transfer':True,
+   'jsonl':'scene_discovery_results.jsonl','json':'scene_discovery_report.json'},
+  'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'browser_extension_still_optional':True,
+  'observed_redscript_dispose_error_guarded':True,'actual_game_validation':False,
+  'game_checks_required':['Nearest-three-terminal discovery on manual off-duty test save',
+   'actual terrain/streaming support, slopes, nearby vehicles and alternate floors',
+   'actual injured body landing and aid access at found compact/standard centers',
+   'stop and CET reload recovery with no transfer before physical scene cleanup',
+   'separate JSONL/JSON exports and original survey/production behavior',
+   'combat and actual F revive at promising sites before later dispatch catalogue import'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
  (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')

@@ -59,6 +59,7 @@ package.loaded.quest_marker_probe={state=display,startVisual=command('probe.visu
     diagnostics=display,reset=noop,update=noop,finish=noop,
     start=command('probe.start'),cycleMode=command('probe.cycleMode')}
 package.loaded.scene_survey={configure=noop,blocksDuty=function() return f.surveyReserved==true end,summary=display,diagnostics=display,active=no,
+    startDiscovery=command('survey.startDiscovery'),discoverySummary=display,exportDiscovery=command('survey.exportDiscovery'),loadDiscovery=command('survey.loadDiscovery'),
     update=noop,reset=noop,shutdown=noop,start=command('survey.start'),cancel=command('survey.cancel'),recover=command('survey.recover'),
     loadResults=command('survey.loadResults'),export=command('survey.export'),startPilot=command('survey.startPilot'),startPlacementPilot=command('survey.startPlacementPilot'),startFunctional=command('survey.startFunctional')}
 

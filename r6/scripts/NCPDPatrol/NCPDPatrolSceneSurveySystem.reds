@@ -13,9 +13,17 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
     private let m_injuredPlacement: Bool;
     private let m_placementOpen: Bool;
     private let m_injuredAnchor: Vector4;
+    private let m_discovery: Bool;
     public func Version() -> Int32 { return 1; }
     public func PlacementVersion() -> Int32 { return 1; }
     public func FunctionalVersion() -> Int32 { return 1; }
+    public func DiscoveryVersion() -> Int32 { return 1; }
+    public func IsDiscovery() -> Bool { return this.m_active && this.m_discovery; }
+    public func BeginDiscovery() -> Bool {
+        if !this.Begin() { return false; };
+        this.m_discovery = true;
+        return true;
+    }
     public func IsInjuredAidReady(npc: ref<NPCPuppet>) -> Bool {
         return this.SamePlayer() && this.CanRun() && NCPDPatrolAidAccess.IsReady(npc)
             && npc.GetRecordID() == t"Character.NCPDPatrol_OD_Injured"
@@ -30,6 +38,7 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void { this.Forget(); }
     private func Forget() -> Void {
         this.m_active = false; this.m_generation = -1;
+        this.m_discovery = false;
         this.m_injuredPlacement = false;
         this.m_placementOpen = false;
         ArrayClear(this.m_ids); ArrayClear(this.m_objects); ArrayClear(this.m_created);
@@ -66,6 +75,7 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
         if this.m_active || !this.CanRun() || this.IsMenuOpen() || !IsDefined(god) { return false; };
         if !god.AddGodMode(player.GetEntityID(), gameGodModeType.Invulnerable, n"NCPDPatrolSurveyPlayer") { return false; };
         this.m_active = true; this.m_player = player.GetEntityID(); this.m_generation = this.GetSessionGeneration();
+        this.m_discovery = false;
         this.m_return = player.GetWorldPosition(); angle = Quaternion.ToEulerAngles(player.GetWorldOrientation()); this.m_returnYaw = angle.Yaw;
         ArrayClear(this.m_ids); ArrayClear(this.m_objects);
         return true;
@@ -168,7 +178,28 @@ public class NCPDPatrolSceneSurveySystem extends ScriptableSystem {
         let i: Int32 = 0;
         let god: ref<GodModeSystem> = GameInstance.GetGodModeSystem(this.GetGameInstance());
         let npc: wref<NPCPuppet>;
+        let system: ref<DynamicEntitySystem>;
+        let object: ref<GameObject>;
         if !this.SamePlayer() || !IsDefined(god) { return false; };
+        if this.m_discovery {
+            system = GameInstance.GetDynamicEntitySystem();
+            if !IsDefined(system) || !system.IsReady() { return false; };
+            // A CET reload may lose Lua's strong drain handles after Codeware
+            // has forgotten an ID. Query only our current-run exact IDs in the
+            // actual world before authorizing another protected transfer.
+            while i < ArraySize(this.m_created) {
+                if system.IsManaged(this.m_created[i]) || system.IsSpawning(this.m_created[i]) { return false; };
+                object = GameInstance.FindEntityByID(this.GetGameInstance(), this.m_created[i]) as GameObject;
+                if IsDefined(object) && object.IsAttached() { return false; };
+                i += 1;
+            };
+            i = 0;
+            while i < ArraySize(this.m_objects) {
+                if IsDefined(this.m_objects[i]) && this.m_objects[i].IsAttached() { return false; };
+                i += 1;
+            };
+            i = 0;
+        };
         while i < ArraySize(this.m_ids) {
             god.RemoveGodMode(this.m_ids[i], gameGodModeType.Invulnerable, n"NCPDPatrolSurveyActors");
             npc = this.m_objects[i] as NPCPuppet;

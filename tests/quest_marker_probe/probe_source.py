@@ -12,6 +12,11 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    # Scene discovery adds isolated developer controls; existing session routes retain their labels-only comparison.
+    source=source.replace('-- NCPD Patrol v0.18g Scene Discovery | off-duty terminal-offset search and separate placement evidence','-- NCPD Patrol v0.18f Scene Arrival and Stray Fire | 50 m mounted activation and bounded police-hit allowance')
+    source=source.replace('v0.18g Scene Discovery loaded. Testing > Scene discovery searches shifted centers around 60 existing terminals with both layouts. Start with the three closest terminals. Developer test only; approved dispatch sites and original survey results are preserved. Install the complete package and fully restart the game.','v0.18f Scene Arrival and Stray Fire loaded. Officer Down combat starts at 50 m, including from a vehicle; live NPCs use physical safety instead of spawn precision. One stray police discharge per 10 s may be excused during hostile combat; deliberate aim and repeated fire retain normal wanted rules. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18g Scene Discovery###','NCPD Patrol - v0.18f Scene Arrival and Stray Fire###')
+    source=re.sub(r'^        -- v018g discovery UI begin\n.*?^        -- v018g discovery UI end\n','',source,flags=re.M|re.S)
     source=re.sub(r'^                -- v018f police fire UI begin\n.*?^                -- v018f police fire UI end\n','',source,flags=re.M|re.S)
     source=source.replace('-- NCPD Patrol v0.18f Scene Arrival and Stray Fire | 50 m mounted activation and bounded police-hit allowance','-- NCPD Patrol v0.18e2 Detached Actor Cleanup | owned NPC/car ID retirement and fresh world checks')
     source=source.replace('v0.18f Scene Arrival and Stray Fire loaded. Officer Down combat starts at 50 m, including from a vehicle; live NPCs use physical safety instead of spawn precision. One stray police discharge per 10 s may be excused during hostile combat; deliberate aim and repeated fire retain normal wanted rules. Install the complete package and fully restart the game.','v0.18e2 Detached Actor Cleanup loaded. Completed Officer Down scenes can retain detached NPC/car ID bookkeeping without blocking the next call. Fresh entity/spawning checks still protect live actors. Cleanup API v3; install the complete package and fully restart the game.')
@@ -108,4 +113,5 @@ PROBE_BUTTONS.add('TEST: Injured placement pilot (3 sites)')
 PROBE_BUTTONS.update({'Request Officer Down dispatch','Export Officer Down gameplay report'})
 PROBE_BUTTONS.add('TEST: Request Officer Down dispatch')
 PROBE_BUTTONS.add('Log police fire diagnostics')
+PROBE_BUTTONS.update({'TEST: Discover scenes near 3 closest terminals','TEST: Discover scenes near all 60 terminals','Stop discovery and return','Recover discovery cleanup and return','Load discovery results','Export discovery report'})
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})
