@@ -71,6 +71,9 @@ local function deleteActors(status)
     actors=Actors.remove(actors,catalogMode and function(row)
         if not native():MarkDeleteAccepted(row.id) then error('Native deletion acceptance tracking refused') end
         row.deleteAccepted=true
+    end or nil,catalogMode and function(row)
+        if not native():MarkDeleteRefused(row.id) then error('Native deletion refusal tracking refused') end
+        row.deleteRefused=true
     end or nil)
     if catalogMode and cleanupAge>=5 then
         for _,object in ipairs(draining) do
@@ -91,8 +94,8 @@ local function deleteActors(status)
     if catalogMode and #actors>0 then
         local remaining={}
         for _,row in ipairs(actors) do
-            if native():RetireDetachedVehicleID(row.id) then
-                log('detached_vehicle_id_retired',{id=tostring(row.id.hash),kind=row.kind,record=row.record})
+            if native():RetireDetachedActorID(row.id) then
+                log('detached_actor_id_retired',{id=tostring(row.id.hash),kind=row.kind,record=row.record})
             else remaining[#remaining+1]=row end
         end
         actors=remaining
@@ -111,8 +114,21 @@ local function deleteActors(status)
 end
 local function cleanupDetails()
     local attached=0;local pending={};local vehicles,npcs,unknown=0,0,0
+    local liveLookup,spawningLookup,failedLookup=0,0,0
     for _,row in ipairs(actors) do
-        pending[#pending+1]={kind=row.kind or 'recovered',record=row.record,id=tostring(row.id.hash),delete_accepted=row.deleteAccepted}
+        local entry={kind=row.kind or 'recovered',record=row.record,id=tostring(row.id.hash),delete_accepted=row.deleteAccepted,delete_refused=row.deleteRefused}
+        local ok,live,spawning=pcall(function()
+            local system=Game.GetDynamicEntitySystem()
+            if not system or not system:IsReady() then error('Entity system unavailable') end
+            local object=system:GetEntity(row.id)
+            return object~=nil and object:IsAttached(),system:IsSpawning(row.id)
+        end)
+        if ok then
+            entry.lookup_attached,entry.lookup_spawning=live,spawning
+            if live then liveLookup=liveLookup+1 end
+            if spawning then spawningLookup=spawningLookup+1 end
+        else entry.lookup_error=tostring(live);failedLookup=failedLookup+1 end
+        pending[#pending+1]=entry
         if row.car then vehicles=vehicles+1 elseif row.kind then npcs=npcs+1 else unknown=unknown+1 end
     end
     for _,object in ipairs(draining) do
@@ -120,6 +136,7 @@ local function cleanupDetails()
         if ok and present then attached=attached+1 end
     end
     return {phase=phase,seconds=cleanupAge,managed_rows=#actors,retained_handles=#draining,attached_handles=attached,
+        lookup_attached=liveLookup,lookup_spawning=spawningLookup,lookup_errors=failedLookup,
         vehicles=vehicles,npcs=npcs,unknown=unknown,pending=pending,error=cleanupError}
 end
 local function tryDeleteActors(status)
@@ -146,7 +163,8 @@ local function warnPendingCleanup(status)
         cleanupWarned=true;local detail=cleanupDetails()
         log('cleanup_pending',detail,status)
         report('Actor cleanup pending: '..detail.managed_rows..' managed rows, '..detail.attached_handles
-            ..' attached actors. Retrying; other dispatch types remain available during aftermath.',status)
+            ..' cached attached actors; lookup attached/spawning/errors='..detail.lookup_attached..'/'..detail.lookup_spawning..'/'..detail.lookup_errors
+            ..'. Retrying; other dispatch types remain available during aftermath.',status)
     end
 end
 local function clearAftermathForManual(status)
@@ -157,7 +175,8 @@ local function clearAftermathForManual(status)
     if tryDeleteActors(status) then cleanupComplete(status);return true end
     local detail=cleanupDetails()
     report('Previous Officer Down scene cleanup requested: '..detail.managed_rows..' managed rows, '
-        ..detail.attached_handles..' attached actors. Retry after the scene is cleared.',status)
+        ..detail.attached_handles..' cached attached actors; lookup attached/spawning/errors='..detail.lookup_attached..'/'..detail.lookup_spawning..'/'..detail.lookup_errors
+        ..'. Retry after the scene is cleared.',status)
     return false
 end
 function M.state() return label end
@@ -193,10 +212,11 @@ function M.diagnostics()
         ..' | cleanup error='..tostring(cleanupError or 'none')
         ..' | pending vehicles/NPCs/unknown='..cleanup.vehicles..'/'..cleanup.npcs..'/'..cleanup.unknown
         ..' | attached handles='..cleanup.attached_handles
+        ..' | lookup attached/spawning/errors='..cleanup.lookup_attached..'/'..cleanup.lookup_spawning..'/'..cleanup.lookup_errors
         ..' | placement='..tostring(placementReason or 'not attempted')..' | '..tostring(ok and text or text)
 end
 function M.supportsCatalog()
-    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:CleanupVersion()==2 and n:IsCatalogReady() end)
+    local ok,ready=pcall(function() local n=native();return n:CatalogVersion()==1 and n:CleanupVersion()==3 and n:IsCatalogReady() end)
     return ok and ready==true
 end
 function M.logState() return Log.state() end
@@ -270,7 +290,7 @@ function M.requestNearby(patrol,status,sound,voice,source)
         local compatible,ready=pcall(function() return backend:CatalogVersion()==1 and backend:IsCatalogReady() end)
         if not compatible or not ready then error('Install the complete v0.18c Officer Down dispatch package and restart') end
         local cleanupReady,cleanupVersion=pcall(function() return backend:CleanupVersion() end)
-        if not cleanupReady or cleanupVersion~=2 then error('Install the complete v0.18e1 startup fix and fully restart the game') end
+        if not cleanupReady or cleanupVersion~=3 then error('Install the complete v0.18e2 actor cleanup fix and fully restart the game') end
         local system=Game.GetDynamicEntitySystem();if not system or not system:IsReady() then error('Codeware entity system unavailable') end
         local site,d,radius,why=Selection.choose(player:GetWorldPosition())
         if not site then report(why,status);return false end

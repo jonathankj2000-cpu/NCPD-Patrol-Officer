@@ -33,11 +33,19 @@ end
 c.complete(1);observe()
 assert(f.wallet==2000 and d.completed()==1 and c.scene.lifecycle().phase=='aftermath')
 '''
-def case(body,inspect=None,legacy=False):
+def case(body,inspect=None,legacy=False,residual_legacy=False):
     previous=Path.cwd()
     with TemporaryDirectory(prefix='ncpd-officer-repeat-') as temp:
         try:
             os.chdir(temp);lua=runtime()
+            if residual_legacy:
+                from check_officer_down import code
+                native=Path(temp)/'v018e1-native.reds'
+                native.write_text(subprocess.check_output(['git','show','1ba23f29e6f44322935e9a9510890f08414659e9:r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'],cwd=ROOT,text=True))
+                lua.globals().OfficerNative=lua.execute(code(native))
+                lua.execute('function OfficerNative:GetGameInstance() return {} end;OfficerNative:OnAttach()')
+                lua.globals().PreviousOfficerSource=subprocess.check_output(['git','show',f'1ba23f29e6f44322935e9a9510890f08414659e9:{MOD}'],cwd=ROOT,text=True)
+                lua.execute("local old=assert(loadstring(PreviousOfficerSource))();package.loaded.officer_down=old;CF.use(old)")
             if legacy:
                 lua.globals().PreviousOfficerSource=subprocess.check_output(['git','show',f'{BASE}:{MOD}'],cwd=ROOT,text=True)
                 lua.execute("local old=assert(loadstring(PreviousOfficerSource))();package.loaded.officer_down=old;CF.use(old)")
@@ -46,6 +54,59 @@ def case(body,inspect=None,legacy=False):
         finally:os.chdir(previous)
 
 def main():
+    # One managed row and no attached cached actors: an NPC record or an
+    # already-deleted vehicle with no positive receipt could never retire in e1.
+    detached='''local target
+for _,a in pairs(f.objects) do if a.record==TARGET_RECORD then target=a;break end end
+assert(target)
+local remove=f.entities.DeleteEntity;local first=true
+f.entities.DeleteEntity=function(self,id)
+ if id.hash==target.id.hash then
+  f.deletes[#f.deletes+1]=id.hash;target.attached=false;f.objects[id.hash]=nil
+  if first then first=false;return ACCEPT_DELETE end
+  return false
+ end
+ return remove(self,id)
+end
+c.step(96)
+assert(not c.scene.hasCleanup(),'Detached owned actor still blocks repeat | '..c.scene.diagnostics())
+assert(OfficerNative:GetCreatedCount()==0 and OfficerNative:GetRetiredActorCount()==1)
+assert(f.managed[target.id.hash] and f.wallet==2000 and d.completed()==1)
+candidate();assert(d.requestOfficerDownNearby(f.patrol,c.status));finishCurrent(2)
+f.entities.DeleteEntity=remove;c.clear()
+f.managed[target.id.hash]=nil;c.step(2)
+assert(OfficerNative:GetRetiredActorCount()==0 and f.wallet==4000 and f.managed[999])'''
+    def inspect_detached(lua):
+        retired=[r for r in events() if r['kind']=='detached_actor_id_retired']
+        assert len(retired)==1
+    for record,accepted in [('Character.NCPDPatrol_OD_Ganger',True),('Character.NCPDPatrol_OD_Ganger',False),('Vehicle.NCPDPatrol_OD_Police',False)]:
+        body=detached.replace('TARGET_RECORD',json.dumps(record)).replace('ACCEPT_DELETE','true' if accepted else 'false')
+        case(body,inspect_detached)
+        try:case(body,residual_legacy=True)
+        except LuaError as error:
+            assert 'Detached owned actor still blocks repeat' in str(error),str(error)
+            assert 'owned actors=1' in str(error) and 'attached handles=0' in str(error),str(error)
+        else:raise AssertionError('v0.18e1 one-ID/zero-attached stall was not detected')
+    # An old detached wrapper is not proof: fresh lookup or pending spawning
+    # must still hold the assignment until the actual world becomes clear.
+    for guard in ['fresh','spawning']:
+        prefix=detached[:detached.index('c.step(96)')].replace('TARGET_RECORD',json.dumps('Character.NCPDPatrol_OD_Ganger')).replace('ACCEPT_DELETE','false')
+        if guard=='fresh':
+            prefix=prefix.replace('local remove=f.entities.DeleteEntity;local first=true',"local fresh=f:Actor(target.record,target.id,target.pos);local remove=f.entities.DeleteEntity;local first=true")
+            prefix=prefix.replace('f.objects[id.hash]=nil','f.objects[id.hash]=fresh')
+            release='fresh=nil'
+            diagnostic='lookup attached/spawning/errors=1/0/0'
+        else:
+            prefix+='\nf.spawningIDs={[target.id.hash]=true}\n'
+            release='f.spawningIDs={}'
+            diagnostic='lookup attached/spawning/errors=0/1/0'
+        case(prefix+f'''c.step(110)
+assert(c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==10 and OfficerNative:GetRetiredActorCount()==0)
+assert(c.scene.diagnostics():find('{diagnostic}',1,true))
+candidate();assert(not d.requestOfficerDownNearby(f.patrol,c.status))
+{release};c.step(2)
+assert(not c.scene.hasCleanup() and OfficerNative:GetRetiredActorCount()==1)
+assert(d.requestOfficerDownNearby(f.patrol,c.status));f.entities.DeleteEntity=remove;c.clear()''')
     repeat='''local second=candidate()
 assert(d.requestOfficerDownNearby(f.patrol,c.status),'Manual retry stayed blocked after a completed scene')
 assert(OfficerNative:GetStage()==1 and OfficerNative:GetCatalogIndex()==second and OfficerNative:GetCreatedCount()==0)
@@ -150,25 +211,25 @@ candidate();assert(d.requestOfficerDownNearby(f.patrol,c.status));f.entities.Del
     # those ID-only receipts separately, never a live actor or new-call lock.
     stale=stalled_cars[:stalled_cars.index('f.disposeCompletes=true')]+'''
 f.disposeCompletes=true;f.disposeLeavesManaged=true;c.step(104)
-assert(not c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==0 and OfficerNative:GetRetiredVehicleCount()==3)
+assert(not c.scene.hasCleanup() and OfficerNative:GetCreatedCount()==0 and OfficerNative:GetRetiredActorCount()==3)
 local old={};for _,row in ipairs(f.disposals) do
  old[#old+1]=row.id;assert(not row.actor.attached and f.managed[row.id] and not f.objects[row.id])
 end
 candidate();assert(d.requestOfficerDownNearby(f.patrol,c.status));finishCurrent(2)
-f.entities.DeleteEntity=remove;c.clear();assert(OfficerNative:GetRetiredVehicleCount()==3)
+f.entities.DeleteEntity=remove;c.clear();assert(OfficerNative:GetRetiredActorCount()==3)
 for _,id in ipairs(old) do f.managed[id]=nil end
-c.step(2);assert(OfficerNative:GetRetiredVehicleCount()==0 and f.wallet==4000 and f.managed[999])'''
+c.step(2);assert(OfficerNative:GetRetiredActorCount()==0 and f.wallet==4000 and f.managed[999])'''
     def inspect_stale(lua):
-        assert sum(r['kind']=='detached_vehicle_id_retired' for r in events())==3
+        assert sum(r['kind']=='detached_actor_id_retired' for r in events())==3
     case(stale,inspect_stale)
     scoped=stalled_cars[:stalled_cars.index('f.disposeCompletes=true')]+'''
 f.disposeCompletes=true;f.disposeLeavesManaged=true;c.step(104)
-assert(OfficerNative:GetRetiredVehicleCount()==3)
+assert(OfficerNative:GetRetiredActorCount()==3)
 local id=f.disposals[1].id;local before=#f.deletes
 f.generation=f.generation+1;OfficerNative:OnRestored(0,0)
 f.objects[id]=f:Actor('ambient',{hash=id},f.playerPoint);f.managed[id]=true
 c.step(2)
-assert(OfficerNative:GetRetiredVehicleCount()==0 and #f.deletes==before and f.objects[id].record=='ambient')'''
+assert(OfficerNative:GetRetiredActorCount()==0 and #f.deletes==before and f.objects[id].record=='ambient')'''
     case(scoped)
     # Native fallback rejects NPCs, foreign references/IDs, missing deletion
     # receipts, changed records and stale/unready worlds before calling Dispose.
@@ -180,14 +241,14 @@ end
 assert(OfficerNative:CacheCreatedObject(car) and OfficerNative:CacheCreatedObject(npc))
 assert(not OfficerNative:PrepareCreatedVehicleDisposal(car))
 assert(OfficerNative:MarkDeleteAccepted(car.id) and OfficerNative:MarkDeleteAccepted(npc.id))
-assert(not OfficerNative:PrepareCreatedVehicleDisposal(npc) and not OfficerNative:RetireDetachedVehicleID(npc.id))
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(npc) and not OfficerNative:RetireDetachedActorID(npc.id))
 local foreign=f:Actor(car.record,car.id,car.pos)
 assert(not OfficerNative:PrepareCreatedVehicleDisposal(foreign) and not OfficerNative:PrepareCreatedVehicleDisposal(f.objects[999]))
 local record=car.record;car.record='Vehicle.OtherMod'
 assert(not OfficerNative:PrepareCreatedVehicleDisposal(car));car.record=record
 f.ready=false;assert(not OfficerNative:PrepareCreatedVehicleDisposal(car));f.ready=true
 local gen=f.generation;f.generation=gen+1
-assert(not OfficerNative:PrepareCreatedVehicleDisposal(car) and not OfficerNative:RetireDetachedVehicleID(car.id));f.generation=gen
+assert(not OfficerNative:PrepareCreatedVehicleDisposal(car) and not OfficerNative:RetireDetachedActorID(car.id));f.generation=gen
 assert(not f.disposals);c.clear()''')
     # Automatic selection preserves the retained scene and can choose another
     # type while bodies remain. It never shortens retention on its own.
@@ -254,7 +315,7 @@ f.objects[id.hash]=f:Actor('ambient',id,f.playerPoint);f.managed[id.hash]=true
 assert(not d.requestOfficerDownNearby(f.patrol,c.status))
 assert(#f.deletes==oldDeletes and f.objects[id.hash].record=='ambient')
 assert(c.scene.lifecycle().phase=='idle' and OfficerNative:GetCreatedCount()==0 and f.wallet==2000)''')
-    print('PASS: actual Officer Down repeat: reported stage=3/three rows/ten handles reproduced; optional CET disposal with supported/missing capabilities, deferred detach/refusal and native ownership receipts; two prior-version negative controls; three completions/rearmed pin/EUR$6000 once; automatic retention/fallback, error/world/context guards and waypoint ownership (engine boundaries mocked)')
+    print('PASS: actual Officer Down repeat: v0.18e1 one-ID/zero-attached NPC and no-receipt stalls reproduced and rejected; detached owned actor retirement, fresh lookup/spawn guards; prior three-row/CET-disposal regressions; three completions/rearmed pin/EUR$6000 once; automatic retention/fallback and world/ownership guards (engine boundaries mocked)')
     return {'three_sequential_completions':True,'same_site_native_pin_rearmed':True,'previous_silent_refusal_detected':True,
       'manual_retry_shortens_aftermath_only':True,'automatic_retention_and_other_types_preserved':True,
       'physical_cleanup_before_next_token':True,'cleanup_error_does_not_fail_successful_quest':True,

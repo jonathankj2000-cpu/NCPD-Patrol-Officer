@@ -1,3 +1,38 @@
+NCPD PATROL v0.18e2 DETACHED ACTOR CLEANUP - COMPLETE BRANCH TEST
+
+The new report showed one pending managed row and zero attached cached actors
+long after the scene retention interval. The earlier ID retirement path covered
+only vehicles and required a positive deletion acceptance. A detached private
+NPC or a completed scene's already-deleted ID with an explicit refusal could
+therefore remain a permanent repeat-call lock.
+
+Completed catalogue scenes now admit detached private NPC/car IDs into the same
+bounded background bookkeeping. Each ID must have been created and classified
+by this scene in the current world. The code checks cached references, a fresh
+Codeware entity lookup and IsSpawning. Attached or pending-spawn actors keep
+ownership and still block the next Officer Down. Failed/partial scenes retain
+the stricter accepted-deletion rule. No NPC receives a Dispose request.
+
+The status text now distinguishes cached attached actors from fresh lookup,
+spawning and lookup errors. Raw gameplay logs include pending kinds/IDs and
+explicit deletion refusals. No ID is silently discarded: detached IDs remain
+tracked until Codeware clears them or the world generation changes.
+
+Tests reproduce the exact one-row/zero-attached pattern against v0.18e1, then
+complete another incident with the corrected code. Fresh-live and pending-spawn
+controls continue to block, and earlier car/CET-disposal, repeat-call, reward,
+marker and world-change checks remain in the 28-suite package validation.
+All 44 REDscript files also pass corrected offline API checks with BEF both
+present and absent; that is not an actual in-game script-cache compilation.
+
+Install the COMPLETE 115-file package and FULLY RESTART THE GAME. Native cleanup
+API is now version 3. Existing rewards, progression, markers, survey files and
+other dispatch types are preserved. Keep both Officer Down gameplay log files.
+The v0.18e1 startup fix remains; no direct REDscript Dispose call/import is added.
+See docs/DETACHED_ACTOR_CLEANUP_v018e2.md for scope and validation limits.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18e1 STARTUP FIX - COMPLETE BRANCH TEST
 
 Fixes the supplied REDscript startup compilation failure in v0.18e:

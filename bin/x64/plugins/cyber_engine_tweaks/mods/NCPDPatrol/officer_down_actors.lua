@@ -87,7 +87,7 @@ function M.observe(actors,options)
     end
     return samples
 end
-function M.remove(actors,onDeleteAccepted)
+function M.remove(actors,onDeleteAccepted,onDeleteRefused)
     local system=Game.GetDynamicEntitySystem()
     if not system or not system:IsReady() then return actors end
     local remaining={}
@@ -96,6 +96,7 @@ function M.remove(actors,onDeleteAccepted)
             if system:IsManaged(row.id)==false then return true end
             local accepted=system:DeleteEntity(row.id)==true
             if accepted and onDeleteAccepted then onDeleteAccepted(row) end
+            if not accepted and onDeleteRefused and system:IsManaged(row.id)==true then onDeleteRefused(row) end
             return accepted and system:IsManaged(row.id)==false
         end)
         if not ok or not gone then remaining[#remaining+1]=row end

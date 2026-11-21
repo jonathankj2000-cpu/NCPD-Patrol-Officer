@@ -66,6 +66,7 @@ EntityID={IsDefined=function(id) return id and id.hash~=0 end}
 worldNavigationRequestStatus={OK=0}
 TweakDB={GetRecord=function(_,record) return not F.missingRecord end}
 function entities:IsReady() return F.entitiesReady end
+function entities:IsSpawning(id) return F.spawningIDs and F.spawningIDs[id.hash]==true or false end
 function entities:CreateEntity(spec)
  F.creates[#F.creates+1]=spec
  if F.failCreateAt==#F.creates then return {hash=0} end

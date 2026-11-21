@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18e1 Startup Fix | observed REDscript Dispose compatibility
+-- NCPD Patrol v0.18e2 Detached Actor Cleanup | owned NPC/car ID retirement and fresh world checks
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18e1 Startup Fix loaded. Unsupported REDscript Dispose call removed; optional CET disposal is capability-checked. Officer Down ownership, detached vehicle receipts and manual retry are retained. Install the complete package and fully restart the game.")
+    status("v0.18e2 Detached Actor Cleanup loaded. Completed Officer Down scenes can retain detached NPC/car ID bookkeeping without blocking the next call. Fresh entity/spawning checks still protect live actors. Cleanup API v3; install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
