@@ -1,31 +1,31 @@
-"""Package the supplied automatic Voss/V conversation and complete prototype.
+"""Package the local scene identifier fix for the automatic Voss conversation.
 
-The release retains 45 other native scripts and eight other archives exactly.
+The release retains all 46 native scripts and eight other archives exactly.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='59fb2d4898d59909a9540af500bad390815ecab0'
+BASE='c098d02b4c7a23b4dee941bd8a38b21af2550d85'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19g_Voss_Conversation_TEST.zip'
-REPORT='NCPD_Patrol_v0.19g_Voss_Conversation_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py']
+NAME='NCPD_Patrol_v0.19g1_Voss_Scene_ID_Fix_TEST.zip'
+REPORT='NCPD_Patrol_v0.19g1_Voss_Scene_ID_Fix_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py','tests/quest_giver/check_scene_ids.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==46 and len(scripts)==46 and len(TESTS)==35
+ assert len(modules)==46 and len(scripts)==46 and len(TESTS)==36
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','quest_giver_test.lua']}
- changed.update(['archive/pc/mod/NCPDPatrol_QuestGiverTest.archive','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds'])
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
+ changed.add('archive/pc/mod/NCPDPatrol_QuestGiverTest.archive')
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_voss_conversation_branding
+ from probe_source import without_voss_scene_id_branding
  for name in ['init.lua','cet_ui.lua']:
-  current=without_voss_conversation_branding((ROOT/PREFIX/name).read_text())
+  current=without_voss_scene_id_branding((ROOT/PREFIX/name).read_text())
   old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True)
   if name=='cet_ui.lua':
    pattern=r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n'
@@ -34,7 +34,7 @@ def main():
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
- for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/quest_giver.questphase.json','assets/quest_giver_test/subtitles.json.json','assets/quest_giver_test/voss_wait_pose.ent.json']:
+ for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/contract.json','assets/quest_giver_test/media/manifest.json','assets/quest_giver_test/quest_giver.questphase.json','assets/quest_giver_test/quest_giver.journal.json','assets/quest_giver_test/lines.json.json','assets/quest_giver_test/onscreens.json.json','assets/quest_giver_test/vomap.json.json','assets/quest_giver_test/voss.lipmap.json','assets/quest_giver_test/subtitles.json.json','assets/quest_giver_test/voss_wait_pose.ent.json']:
   assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Existing data changed: '+name
  assert (ROOT/'THIRD_PARTY_NOTICES.txt').read_text().startswith(subprocess.check_output(['git','show',f'{BASE}:THIRD_PARTY_NOTICES.txt'],cwd=ROOT,text=True))
  old=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/officer_down_sites/catalog.json'],cwd=ROOT));catalog=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
@@ -51,7 +51,7 @@ def main():
  'injured_functional':'tests/scene_survey/check_functional.py','officer_catalog':'tests/officer_down/check_catalog.py',
  'officer_gameplay':'tests/officer_down/check_gameplay.py','partner_safety':'tests/partner_safety/check_safety.py',
  'officer_repeat':'tests/officer_down/check_repeat.py','scene_discovery':'tests/scene_survey/check_discovery.py',
- 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py','voss_media':'tests/quest_giver/check_voss_media.py','voss_subtitles':'tests/quest_giver/check_subtitles.py'}
+ 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py','voss_media':'tests/quest_giver/check_voss_media.py','voss_subtitles':'tests/quest_giver/check_subtitles.py','scene_ids':'tests/quest_giver/check_scene_ids.py'}
  with TemporaryDirectory(prefix='ncpd-quest-giver-prototype-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
@@ -70,7 +70,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19g-voss-conversation','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19g1-voss-scene-id-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -78,7 +78,7 @@ def main():
   'retired_cet_buttons':results['current_controls']['retired_buttons'],
   'ordinary_request_samples':results['current_controls']['ordinary_request_samples'],
   'independent_fixed_pins':54,'additional_marker_archive_pins':53,'marker_archive_validation':compiled,
-  'all_eight_other_archives_and_45_other_native_scripts_unchanged':True,
+  'all_eight_other_archives_and_all_46_native_scripts_unchanged':True,
   'player_scene_membership_false_rejection_reproduced':results['quest_giver']['previous_scene_membership_false_rejection_reproduced'],
   'start_and_approach_use_dialogue_and_scene_tier_checks':True,
   'owned_actor_scene_release_guard_retained':True,
@@ -91,6 +91,10 @@ def main():
   'voss_native_look_at_slot':'pla_default_tgt','voss_look_at_parts':['Eyes','Head'],
   'voss_pose_ready_before_conversation':results['quest_giver']['workspot_ready_before_conversation'],
   'voss_sms_pose_assets_and_quest_phase_unchanged':True,
+  'v019g_scene_id_contract_failure_rejected':results['scene_ids']['previous_v019g_invalid_layout_rejected'],
+  'packed_dialogue_ids':results['scene_ids']['corrected_packed_dialogue_ids'],
+  'dense_scene_node_ids':results['scene_ids']['dense_scene_node_ids'],
+  'native_crash_cause_confirmed':False,
   'v019f_active_pose_missing_device_user_despawn_reproduced':results['quest_giver']['v019f_active_pose_missing_device_user_despawn_reproduced'],
   'native_activity_without_device_user_completes_automatic_dialogue':results['quest_giver']['native_activity_without_device_user_completes_automatic_dialogue'],
   'native_extended_info_entering_exiting_fields_checked':results['quest_giver']['native_extended_info_entering_exiting_fields_checked'],
@@ -114,7 +118,7 @@ def main():
   'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'officer_down_reward':2000,'career_credit':1,
   'browser_extension_still_optional':True,'existing_in_game_placement_evidence_preserved':True,
   'actual_new_quest_gameplay_validation':False,'observed_redscript_dispose_error_guarded':True,
-  'game_checks_required':['OFF DUTY > Testing > Quest giver prototype > activate; independent journal quest and marker',
+  'game_checks_required':['Use a save made before the old Voss test was activated; OFF DUTY > Testing > Quest giver prototype > activate, then approach once; independent journal quest and marker',
    'incoming native SMS from Lt. Mara Voss; exact supplied text in Messages, private contact/thread and meeting quest attachment',
    'stand near Voss for more than 15 seconds before dialogue; her active pose and Hella must remain without automatic cancellation',
    'clear/replay sends one new notification using the same single message; message history survives cancellation/completion',

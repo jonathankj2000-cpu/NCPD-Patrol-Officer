@@ -1,6 +1,6 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "37778394b18ed3daa357fe91185d8528eac7bc05a0f9715733f3b1502b7bb201",
+  "archive_sha256": "4027fbdef8bb26e2eeb4cb0495f45b704596c43a5f3b97267ac25ef0789b12e1",
   "resources": [
     "conversation.scene",
     "lines.json",
@@ -27,6 +27,7 @@
     "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
     "assets/quest_giver_test/sms-templates.json": "6b0a5ecae835db197b083eff69fa7be70b18bb482cf5d814a62df4475355c228",
     "assets/quest_giver_test/subtitle-controller.reds.template": "9b29e1e08d4fe2af22f597d85b975ff9725c5b337f6b465845baf359ff260aba",
+    "assets/quest_giver_test/scene-id-reference.json": "2dcc4348ddedf1e30cf51d4766586c8a0e44e5313f35a5cb0cb3eb7c15db9264",
     "assets/quest_giver_test/media/manifest.json": "e3c6fe1cf775870dfde81a51bf1ec37224771ced968c75b4d49c366a0f33174a",
     "assets/quest_giver_test/media/vossbriefing03.wem": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
     "assets/quest_giver_test/media/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
@@ -38,7 +39,7 @@
     "assets/quest_giver_test/media/source/Voss03.anims": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c",
     "assets/quest_giver_test/media/source/Voss01.anims": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c",
     "assets/quest_giver_test/media/source/Voss02.anims": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d",
-    "assets/quest_giver_test/conversation.scene.json": "33866300fcf44034fbf1c603a795423bc54c95197fa69813c68f1c0ea9386561",
+    "assets/quest_giver_test/conversation.scene.json": "b71381b01defae04db6cb16f4ec0feca1a46d259faf29d1f080cfdab84c77142",
     "assets/quest_giver_test/quest_giver.questphase.json": "663f4abe50d47be13a06ab356491bf4e0eca147aad23493347f4d3e310476142",
     "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
     "assets/quest_giver_test/onscreens.json.json": "3e875d493f888bf0ecdba1265e20b5a12801296478e6f6b2c0528bcf814af907",

@@ -1,5 +1,17 @@
 # NCPD Patrol
 
+## v0.19g1 — Voss scene ID fix
+
+Corrects malformed local dialogue type/index IDs in v0.19g and restores a dense
+ordered scene graph. All speech, original V string IDs, media and native scripts
+are preserved. The bad v0.19g identifiers are now rejected before packaging.
+
+[Download the complete v0.19g1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19g1_Voss_Scene_ID_Fix_TEST.zip)
+
+Install all 123 files, fully restart and test from a save made before the old
+Voss test was activated. This fixes an identified data error; the reported
+native crash still needs game confirmation. [Details](docs/VOSS_SCENE_ID_FIX_v019g1.md).
+
 ## v0.19g — Voss conversation
 
 The meeting uses the supplied six-part Voss briefing with matching lipsync and

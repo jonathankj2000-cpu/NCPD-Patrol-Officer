@@ -8,6 +8,11 @@ import argparse,copy,hashlib,json,math,shutil,subprocess,tempfile,zlib
 
 ROOT=Path(__file__).resolve().parents[1];DIR=ROOT/'assets/quest_giver_test'
 DEPOT='base\\ncpd_patrol\\quest_giver_test\\'
+SPEECH_NODES=(2,3,4,5,6,7,8,10,13,14)
+RECEIPT_NODE=15
+def screenplay_line_id(index):
+    assert isinstance(index,int) and 0<=index<0x1000000
+    return (index<<8)|1
 def read(name):return json.loads((DIR/name).read_text())
 def tweak_matches(value,name):return value['$value']==name or value['$value']==str(zlib.crc32(name.encode())|(len(name.encode())<<32))
 def cn(s):return {'$type':'CName','$storage':'string','$value':s}
@@ -151,7 +156,7 @@ def scene(c,t):
     presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root'])
     r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v6')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v6_scene_ids_v1')
     workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
     workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
     instance=copy.deepcopy(presentation['workspot_instance']);instance['dataId']['id']=instance['workspotInstanceId']['id']=1;instance['playAtActorLocation']=1
@@ -160,7 +165,7 @@ def scene(c,t):
     actor=r['actors'][0];actor.update(acquisitionPlan='findInWorld',actorName='Lt. Mara Voss',specAppearance=cn(c['appearance']),specCharacterRecordId={'$type':'TweakDBID','$storage':'string','$value':c['npc_record']},lipsyncAnimSet=rid('scnLipsyncAnimSetSRRefId',0),voicetagId={'$type':'scnVoicetagId','id':fnv('ncpd_patrol_qgiver_test_investigator')})
     actor['findActorInWorldParams']['actorRef'].update(type='Tag',names=[cn(c['tag']+'_npc')]);actor['communityParams']['reference']={'$type':'NodeRef','$storage':'uint64','$value':'0'};actor['communityParams']['entryName']=cn('None');actor['spawnDespawnParams'].update(isEnabled=0,spawnOnStart=0)
     def output(target=None,name=0,ordinal=0):
-        dest=[] if target is None else [{'$type':'scnInputSocketId','isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1 if target in [1010,11] else 0},'nodeId':rid('scnNodeId',target)}]
+        dest=[] if target is None else [{'$type':'scnInputSocketId','isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1 if target in [RECEIPT_NODE,11] else 0},'nodeId':rid('scnNodeId',target)}]
         return {'$type':'scnOutputSocket','destinations':dest,'stamp':{'$type':'scnOutputSocketStamp','name':name,'ordinal':ordinal}}
     nodes=[]
     def add(n,x):x['nodeId']=rid('scnNodeId',n);nodes.append({'HandleId':'pending','Data':x});return x
@@ -169,27 +174,27 @@ def scene(c,t):
         request=e['basicData']['requests'][0]['request'];request['additionalParts']['Elements']=[x for x in request['additionalParts']['Elements'] if x['partName']['$value']=='Head']
         return {'HandleId':'pending','Data':e}
     add(1,copy.deepcopy(t['start']))['outputSockets']=[output(12)]
-    intro=copy.deepcopy(t['section']);intro['sectionDuration']['stu']=c['presentation']['intro_ms'];intro['events']=[look_at(12)];intro['outputSockets']=[output(1000),output(name=1),output(name=2)];add(12,intro)
+    intro=copy.deepcopy(t['section']);intro['sectionDuration']['stu']=c['presentation']['intro_ms'];intro['events']=[look_at(12)];intro['outputSockets']=[output(SPEECH_NODES[0]),output(name=1),output(name=2)];add(12,intro)
     ids={}
     for i,row in enumerate(c['conversation']):
-        n=1000+i;item=100001+i;key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row);start=row.get('lead_in_ms',0)
-        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+200;x['outputSockets']=[output(n+1),output(name=1)]
+        n=SPEECH_NODES[i];item=screenplay_line_id(i);key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row);start=row.get('lead_in_ms',0)
+        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+200;x['outputSockets']=[output(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE),output(name=1)]
         e=x['events'][0]['Data'];e.update(startTime=start,duration=duration,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_conversation_event_'+key);e['voParams']['ignoreSpeakerIncapacitation']=0
         x['events'].append(look_at(n));add(n,x)
     # Reuse the private completion receipt expected by the existing quest
     # phase/native bridge. It is set only after all ten automatic turns.
-    add(1010,{'$type':'scnQuestNode','ffStrategy':'automatic','isockMappings':[cn('CutDestination'),cn('In')],'osockMappings':[cn('Out')],'outputSockets':[output(9)],'questNode':{'HandleId':'pending','Data':{'$type':'questFactsDBManagerNodeDefinition','id':1010,'sockets':[{'HandleId':'pending','Data':{'$type':'questSocketDefinition','connections':[],'name':cn(k),'type':typ}} for k,typ in [('CutDestination','CutDestination'),('In','Input'),('Out','Output')]],'type':{'HandleId':'pending','Data':{'$type':'questSetVar_NodeType','factName':c['fact_prefix']+'choice','value':c['completion_receipt'],'setExactValue':1}}}}})
+    add(RECEIPT_NODE,{'$type':'scnQuestNode','ffStrategy':'automatic','isockMappings':[cn('CutDestination'),cn('In')],'osockMappings':[cn('Out')],'outputSockets':[output(9)],'questNode':{'HandleId':'pending','Data':{'$type':'questFactsDBManagerNodeDefinition','id':RECEIPT_NODE,'sockets':[{'HandleId':'pending','Data':{'$type':'questSocketDefinition','connections':[],'name':cn(k),'type':typ}} for k,typ in [('CutDestination','CutDestination'),('In','Input'),('Out','Output')]],'type':{'HandleId':'pending','Data':{'$type':'questSetVar_NodeType','factName':c['fact_prefix']+'choice','value':c['completion_receipt'],'setExactValue':1}}}}})
     add(9,copy.deepcopy(t['end']))['outputSockets']=[]
     # Keep the legacy body node/data for restore cleanup; never activate it.
     pose=copy.deepcopy(presentation['workspot_node']);command=pose['questNode']['Data'];command['id']=11;command['entityReference']=copy.deepcopy(actor['findActorInWorldParams']['actorRef']);command['paramsV1']['Data'].update(workspotInstanceId=rid('scnSceneWorkspotInstanceId',1),enableIdleMode=0,jumpToEntry=0,entryId=rid('workWorkEntryId',4294967295),playAtActorLocation=1);pose['outputSockets']=[output(ordinal=0),output(ordinal=1)];add(11,pose)
-    r['sceneGraph']={'HandleId':'pending','Data':{'$type':'scnSceneGraph','graph':nodes,'startNodes':[rid('scnNodeId',1)],'endNodes':[rid('scnNodeId',9)]}}
+    r['sceneGraph']={'HandleId':'pending','Data':{'$type':'scnSceneGraph','graph':sorted(nodes,key=lambda n:n['Data']['nodeId']['id']),'startNodes':[rid('scnNodeId',1)],'endNodes':[rid('scnNodeId',9)]}}
     r['entryPoints']=[{'$type':'scnEntryPoint','name':cn('conversation_in'),'nodeId':rid('scnNodeId',1)}];r['exitPoints']=[{'$type':'scnExitPoint','name':cn('conversation_out'),'nodeId':rid('scnNodeId',9)}]
     vd=[];vp=[];lines=[]
     for i,row in enumerate(c['conversation']):
         key=row['key']
         for locale in ['en_us','db_db']:
             variant=fnv('NCPDPatrol_QG_'+key+'_'+locale);vd.append({'$type':'scnlocLocStoreEmbeddedVariantDescriptorEntry','localeId':locale,'locstringId':{'$type':'scnlocLocstringId','ruid':ids[key]},'signature':{'$type':'scnlocSignature','val':'3'},'variantId':{'$type':'scnlocVariantId','ruid':variant},'vpeIndex':len(vp)});vp.append({'$type':'scnlocLocStoreEmbeddedVariantPayloadEntry','content':row['text'],'variantId':{'$type':'scnlocVariantId','ruid':variant}})
-        speaker=0 if row['speaker']=='voss' else 1;x=copy.deepcopy(t['line']);x.update(itemId=rid('scnscreenplayItemId',100001+i),speaker=rid('scnActorId',speaker),addressee=rid('scnActorId',1-speaker),locstringId={'$type':'scnlocLocstringId','ruid':ids[key]});clip=row.get('clip','None');x['femaleLipsyncAnimationName']=x['maleLipsyncAnimationName']=cn(clip);lines.append(x)
+        speaker=0 if row['speaker']=='voss' else 1;x=copy.deepcopy(t['line']);x.update(itemId=rid('scnscreenplayItemId',screenplay_line_id(i)),speaker=rid('scnActorId',speaker),addressee=rid('scnActorId',1-speaker),locstringId={'$type':'scnlocLocstringId','ruid':ids[key]});clip=row.get('clip','None');x['femaleLipsyncAnimationName']=x['maleLipsyncAnimationName']=cn(clip);lines.append(x)
     r['locStore']={'$type':'scnlocLocStoreEmbedded','vdEntries':vd,'vpEntries':vp};r['screenplayStore']={'$type':'scnscreenplayStore','lines':lines,'options':[]}
     doc=resource('scnSceneResource');doc['Data']['RootChunk']=r;return renumber(doc),ids
 
@@ -204,7 +209,9 @@ def validate_scene(docs,c):
     assert s['playerActors'][0]['lipsyncAnimSet']['id']==4294967295 and tweak_matches(s['playerActors'][0]['specCharacterRecordId'],'Character.Player_Puppet_Base')
     assert len(s['resouresReferences']['lipsyncAnimSets'])==1 and s['resouresReferences']['lipsyncAnimSets'][0]['asyncRefLipsyncAnimSet']==soft(DEPOT+'voss_conversation.anims')
     def target(n):return nodes[n]['outputSockets'][0]['destinations'][0]['nodeId']['id']
-    assert target(1)==12 and target(12)==1000
+    assert [n['Data']['nodeId']['id'] for n in g]==list(range(1,len(g)+1))
+    assert [line['itemId']['id'] for line in s['screenplayStore']['lines']]==[screenplay_line_id(i) for i in range(len(turns))]
+    assert target(1)==12 and target(12)==SPEECH_NODES[0]
     assert nodes[12]['sectionDuration']['stu']==500 and not nodes[12]['outputSockets'][2]['destinations']
     assert not any(d['nodeId']['id']==11 for n in nodes.values() for o in n.get('outputSockets',[]) for d in o['destinations'])
     assert nodes[11]['questNode']['Data']['paramsV1']['Data']['isPlayer']==0
@@ -212,19 +219,19 @@ def validate_scene(docs,c):
     assert len(s['workspots'])==len(s['workspotInstances'])==1
     assert s['workspots'][0]['Data']['workspotResource']=={**soft(c['presentation']['workspot']),'Flags':'Default'}
     for i,row in enumerate(turns):
-        n=nodes[1000+i];assert n['$type']=='scnSectionNode' and target(1000+i)==1001+i
+        node_id=SPEECH_NODES[i];n=nodes[node_id];assert n['$type']=='scnSectionNode' and target(node_id)==(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE)
         events=[x['Data'] for x in n['events'] if x['Data']['$type']=='scnDialogLineEvent'];assert len(events)==1;e=events[0]
-        assert e['screenplayLineId']['id']==100001+i and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row)
+        assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row)
         assert n['sectionDuration']['stu']==e['startTime']+e['duration']+200
-        line=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==100001+i)
+        line=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==screenplay_line_id(i))
         assert line['speaker']['id']==(0 if row['speaker']=='voss' else 1)
         assert line['locstringId']['ruid']==row.get('string_id',fnv('NCPDPatrol_QG_'+row['key']))
         assert line['maleLipsyncAnimationName']==line['femaleLipsyncAnimationName']==cn(row.get('clip','None'))
         assert line['usage']['playerGenderMask']['mask']==3
-    finish=nodes[1010];assert finish['isockMappings'][1]==cn('In') and nodes[1009]['outputSockets'][0]['destinations'][0]['isockStamp']['ordinal']==1
+    finish=nodes[RECEIPT_NODE];assert finish['isockMappings'][1]==cn('In') and nodes[SPEECH_NODES[-1]]['outputSockets'][0]['destinations'][0]['isockStamp']['ordinal']==1
     assert finish['questNode']['Data']['type']['Data']=={'$type':'questSetVar_NodeType','factName':c['fact_prefix']+'choice','value':1,'setExactValue':1}
-    assert target(1010)==9
-    for n in [12,*range(1000,1010)]:
+    assert target(RECEIPT_NODE)==9
+    for n in [12,*SPEECH_NODES]:
         look=[x['Data'] for x in nodes[n]['events'] if x['Data']['$type']=='scnLookAtEvent'];assert len(look)==1;b=look[0]['basicData']['basic']
         assert b['isStart']==1 and b['performerId']['id']==1 and b['targetPerformerId']['id']==257 and b['targetSlot']==cn('pla_default_tgt')
         request=look[0]['basicData']['requests'][0]['request'];assert [p['partName'] for p in request['additionalParts']['Elements']]==[cn('Head')]
@@ -358,7 +365,7 @@ def main():
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','subtitle-controller.reds.template','media/manifest.json',*[str(p.relative_to(DIR)) for p in (DIR/'media').rglob('*') if p.is_file() and (p.name in media['packaged'] or p.parent.name=='source')],*docs]]+[ROOT/'assets/arrest/arrest_workspot.ent.json']
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','subtitle-controller.reds.template','scene-id-reference.json','media/manifest.json',*[str(p.relative_to(DIR)) for p in (DIR/'media').rglob('*') if p.is_file() and (p.name in media['packaged'] or p.parent.name=='source')],*docs]]+[ROOT/'assets/arrest/arrest_workspot.ent.json']
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
     print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with all seven packaged media files byte-identical')
 if __name__=='__main__':main()

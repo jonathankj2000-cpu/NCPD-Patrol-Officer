@@ -96,7 +96,10 @@ class Machine:
                 event=wrapped['Data']
                 if event['$type']=='scnDialogLineEvent':
                     item=event['screenplayLineId']['id']
-                    line=next(x for x in self.scn['screenplayStore']['lines'] if x['itemId']['id']==item)
+                    assert item&0xFF==1,'Invalid native screenplay item type'
+                    index=item>>8;assert 0<=index<len(self.scn['screenplayStore']['lines']),'Native screenplay line index outside store'
+                    line=self.scn['screenplayStore']['lines'][index]
+                    assert line['itemId']['id']==item,'Native screenplay line array order mismatch'
                     text=next(x['content'] for x in self.scn['locStore']['vpEntries'] if next(v for v in self.scn['locStore']['vdEntries'] if v['variantId']==x['variantId'])['locstringId']==line['locstringId'])
                     self.lines.append(text)
                 elif event['$type']=='scnLookAtEvent':self.look_at=event['basicData']['basic']
@@ -229,7 +232,7 @@ def main():
     m.f.qoverlay=False;m.talk();assert m.lines==[contract['conversation'][0]['text']];m.clear()
     # Cancelling during the uninterrupted briefing uses the same release gate.
     m=runtime(docs);m.start();m.arrive();m.talk();m.step(10)
-    assert m.scene==1000 and m.f.qsceneOwned and not m.choice_ready
+    assert m.scene==assets.SPEECH_NODES[0] and m.f.qsceneOwned and not m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
     assert not m.f.qPoseActive() and m.look_at is None
@@ -322,7 +325,7 @@ def main():
     # The automatic final receipt must enter its fact command, never the cut
     # socket; a displayable subtitle alone is not a completion proof.
     broken=copy.deepcopy(docs)
-    final=next(n['Data'] for n in broken['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph'] if n['Data']['nodeId']['id']==1009)
+    final=next(n['Data'] for n in broken['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph'] if n['Data']['nodeId']['id']==assets.SPEECH_NODES[-1])
     final['outputSockets'][0]['destinations'][0]['isockStamp']['ordinal']=0
     try:assets.validate(broken)
     except AssertionError:pass

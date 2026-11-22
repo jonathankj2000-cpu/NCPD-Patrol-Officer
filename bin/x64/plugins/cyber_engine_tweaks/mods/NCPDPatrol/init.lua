@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19g Voss Conversation | six voiced Voss turns and four automatic native V replies
+-- NCPD Patrol v0.19g1 Voss Scene ID Fix | packed screenplay IDs and canonical scene nodes
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19g Voss Conversation loaded. OFF DUTY: Testing > Quest giver prototype. The meeting uses the supplied six-part Voss briefing, matching lipsync and four automatic original V replies. SMS and grounded waiting pose retained. Clear the old test, install the complete package and fully restart the game.")
+    status("v0.19g1 Voss Scene ID Fix loaded. Corrected local dialogue type/index IDs and scene-node layout. Six-part Voss/V conversation, SMS, waiting pose and all media retained. Install the complete package, fully restart, and test from a save made before activating the previous Voss test.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

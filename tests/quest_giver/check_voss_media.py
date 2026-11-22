@@ -76,12 +76,12 @@ def main():
         bad=copy.deepcopy(docs);s=bad['conversation.scene.json']['Data']['RootChunk'];nodes={n['Data']['nodeId']['id']:n['Data'] for n in s['sceneGraph']['Data']['graph']}
         if kind=='wrong_actor':bad['voss.lipmap.json']['Data']['RootChunk']['sceneEntries'][0]['actorVoiceTags']=['0']
         elif kind=='wrong_clip':s['screenplayStore']['lines'][0]['femaleLipsyncAnimationName']=assets.cn('missing_clip')
-        elif kind=='early_end':nodes[1000]['outputSockets'][0]['destinations'][0]['nodeId']['id']=1010
-        elif kind=='short_event':nodes[1000]['events'][0]['Data']['duration']=3500
-        elif kind=='missing_lead':nodes[1000]['events'][0]['Data']['startTime']=0
+        elif kind=='early_end':nodes[assets.SPEECH_NODES[0]]['outputSockets'][0]['destinations'][0]['nodeId']['id']=assets.RECEIPT_NODE
+        elif kind=='short_event':nodes[assets.SPEECH_NODES[0]]['events'][0]['Data']['duration']=3500
+        elif kind=='missing_lead':nodes[assets.SPEECH_NODES[0]]['events'][0]['Data']['startTime']=0
         elif kind=='wrong_voice':bad['vomap.json.json']['Data']['RootChunk']['root']['Data']['entries'][0]['stringId']='0'
-        elif kind=='root_look_at':nodes[1000]['events'][1]['Data']['basicData']['basic']['targetSlot']=assets.cn('None')
-        elif kind=='wrong_look_actor':nodes[1000]['events'][1]['Data']['basicData']['basic']['targetPerformerId']['id']=1
+        elif kind=='root_look_at':nodes[assets.SPEECH_NODES[0]]['events'][1]['Data']['basicData']['basic']['targetSlot']=assets.cn('None')
+        elif kind=='wrong_look_actor':nodes[assets.SPEECH_NODES[0]]['events'][1]['Data']['basicData']['basic']['targetPerformerId']['id']=1
         elif kind=='wrong_workspot':s['workspots'][0]['Data']['workspotResource']['DepotPath']['$value']='missing.workspot'
         elif kind=='player_workspot':nodes[11]['questNode']['Data']['paramsV1']['Data']['isPlayer']=1
         elif kind=='scene_pose_restart':nodes[12]['outputSockets'][2]['destinations']=[{'$type':'scnInputSocketId','nodeId':assets.rid('scnNodeId',11),'isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1}}]

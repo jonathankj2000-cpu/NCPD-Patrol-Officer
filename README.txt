@@ -1,3 +1,22 @@
+NCPD PATROL v0.19g1 VOSS SCENE ID FIX - COMPLETE BRANCH TEST
+
+Corrects the local scene dialogue IDs introduced in v0.19g. The first ID was
+100001 (type byte 161/index 390 for a ten-line array); it now follows the working
+reference layout: dialogue IDs 1, 257, 513, ... and a dense ordered scene graph.
+Every event/edge and the final completion receipt are checked. The actual
+shipped v0.19g data fails the new schema guard before it can be packaged.
+
+All 46 native scripts, the original V string IDs, all speech/media/captions,
+SMS, waiting pose and quest phase are unchanged. The private scene archive is
+rebuilt. The user's REDscript log showed successful compilation, without a
+native crash stack. The identified data error is fixed; actual crash resolution
+still requires game confirmation.
+
+Install all 123 files and fully restart. Use a save made before activating the
+old Voss test (or clear the old test before updating). OFF DUTY > CET > Testing
+> Quest giver prototype > Activate, then approach Voss once. Check the first
+line starts and the ten-turn automatic conversation reaches journal completion.
+
 NCPD PATROL v0.19g VOSS CONVERSATION - COMPLETE BRANCH TEST
 
 Replaces the placeholder dialogue and two choices with the supplied manuscript:
