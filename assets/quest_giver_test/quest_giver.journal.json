@@ -40,14 +40,14 @@
                             "journalEntryOverrideDataList": [],
                             "entries": [
                               {
-                                "HandleId": "6",
+                                "HandleId": "4",
                                 "Data": {
                                   "$type": "gameJournalQuestObjective",
                                   "id": "talk",
                                   "journalEntryOverrideDataList": [],
                                   "entries": [
                                     {
-                                      "HandleId": "7",
+                                      "HandleId": "5",
                                       "Data": {
                                         "$type": "gameJournalQuestDescription",
                                         "id": "briefing",
@@ -59,7 +59,7 @@
                                       }
                                     },
                                     {
-                                      "HandleId": "8",
+                                      "HandleId": "6",
                                       "Data": {
                                         "$type": "gameJournalQuestMapPin",
                                         "id": "location",
@@ -147,6 +147,86 @@
                     }
                   }
                 ]
+              }
+            },
+            {
+              "HandleId": "7",
+              "Data": {
+                "$type": "gameJournalPrimaryFolderEntry",
+                "entries": [
+                  {
+                    "HandleId": "8",
+                    "Data": {
+                      "$type": "gameJournalContact",
+                      "avatarID": {
+                        "$type": "TweakDBID",
+                        "$storage": "string",
+                        "$value": "PhoneAvatars.Avatar_Unknown"
+                      },
+                      "entries": [
+                        {
+                          "HandleId": "9",
+                          "Data": {
+                            "$type": "gameJournalPhoneConversation",
+                            "entries": [
+                              {
+                                "HandleId": "10",
+                                "Data": {
+                                  "$type": "gameJournalPhoneMessage",
+                                  "attachment": {
+                                    "HandleId": "11",
+                                    "Data": {
+                                      "$type": "gameJournalPath",
+                                      "realPath": "quests/minor_quest/ncpd_patrol_quest_giver_test",
+                                      "fileEntryIndex": 1,
+                                      "className": {
+                                        "$type": "CName",
+                                        "$storage": "string",
+                                        "$value": "gameJournalQuest"
+                                      },
+                                      "editorPath": ""
+                                    }
+                                  },
+                                  "delay": 0,
+                                  "id": "meet_voss",
+                                  "imageId": {
+                                    "$type": "TweakDBID",
+                                    "$storage": "uint64",
+                                    "$value": "0"
+                                  },
+                                  "isQuestImportant": 1,
+                                  "journalEntryOverrideDataList": [],
+                                  "sender": "NPC",
+                                  "text": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_QG_Invitation"
+                                  }
+                                }
+                              }
+                            ],
+                            "id": "invitation",
+                            "journalEntryOverrideDataList": [],
+                            "title": {
+                              "unk1": "0",
+                              "value": "NCPDPatrol_QG_SmsTitle"
+                            }
+                          }
+                        }
+                      ],
+                      "id": "ncpd_patrol_mara_voss",
+                      "isCallableDefault": 0,
+                      "journalEntryOverrideDataList": [],
+                      "name": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_QG_Name"
+                      },
+                      "type": "Texter",
+                      "useFlatMessageLayout": 1
+                    }
+                  }
+                ],
+                "id": "contacts",
+                "journalEntryOverrideDataList": []
               }
             }
           ]

@@ -1,0 +1,74 @@
+{
+  "reference_repository": "andreaolivato/cyberpunk-codes",
+  "reference_commit": "4aeaad5d235e3a0244c0f1857757d1b01cbcd58e",
+  "reference_path": "fixer01/source/raw/mod/fixer01/journal/fixer01.journal.json",
+  "reference_blob": "43e246e0c65f863ba7c4a064289e5d1563c5d9e1",
+  "license": "MIT",
+  "contacts_folder": {
+    "HandleId": "1",
+    "Data": {
+      "$type": "gameJournalPrimaryFolderEntry",
+      "entries": [
+        {
+          "HandleId": "2",
+          "Data": {
+            "$type": "gameJournalContact",
+            "avatarID": {
+              "$type": "TweakDBID",
+              "$storage": "uint64",
+              "$value": "139944452815"
+            },
+            "entries": [
+              {
+                "HandleId": "3",
+                "Data": {
+                  "$type": "gameJournalPhoneConversation",
+                  "entries": [
+                    {
+                      "HandleId": "4",
+                      "Data": {
+                        "$type": "gameJournalPhoneMessage",
+                        "attachment": null,
+                        "delay": 8,
+                        "id": "cc_f01_fixer_msg_card",
+                        "imageId": {
+                          "$type": "TweakDBID",
+                          "$storage": "uint64",
+                          "$value": "0"
+                        },
+                        "isQuestImportant": 0,
+                        "journalEntryOverrideDataList": [],
+                        "sender": "NPC",
+                        "text": {
+                          "unk1": "0",
+                          "value": "cc-f01-msg-card"
+                        }
+                      }
+                    }
+                  ],
+                  "id": "cc_f01_fixer_conv",
+                  "journalEntryOverrideDataList": [],
+                  "title": {
+                    "unk1": "0",
+                    "value": "cc-f01-fixer-conv-title"
+                  }
+                }
+              }
+            ],
+            "id": "cc_f01_fixer",
+            "isCallableDefault": 1,
+            "journalEntryOverrideDataList": [],
+            "name": {
+              "unk1": "0",
+              "value": "cc-f01-fixer-name"
+            },
+            "type": "Caller",
+            "useFlatMessageLayout": 1
+          }
+        }
+      ],
+      "id": "contacts",
+      "journalEntryOverrideDataList": []
+    }
+  }
+}

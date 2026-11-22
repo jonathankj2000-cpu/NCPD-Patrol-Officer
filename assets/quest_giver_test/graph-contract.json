@@ -33,6 +33,30 @@
     [
       4,
       "Out",
+      31,
+      "Active"
+    ],
+    [
+      31,
+      "Out",
+      32,
+      "Active"
+    ],
+    [
+      32,
+      "Out",
+      33,
+      "Inactive"
+    ],
+    [
+      33,
+      "Out",
+      34,
+      "Active"
+    ],
+    [
+      34,
+      "Out",
       5,
       "Active"
     ],

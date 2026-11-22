@@ -1,3 +1,29 @@
+NCPD PATROL v0.19d VOSS SMS INTRO - COMPLETE BRANCH TEST
+
+The existing quest-giver test now starts with the supplied SMS invitation from
+Lt. Mara Voss in the game's native phone Messages app. Her private contact has
+one invitation thread, the exact supplied text, and a link to the meeting quest.
+Receiving the invitation activates the existing meeting objective and marker;
+approaching Voss within 3 m on foot still starts the existing conversation.
+Reading the message is optional; it does not remotely start the dialogue.
+
+Install the full 122-file package and restart. OFF DUTY > CET > Testing >
+Quest giver prototype > TEST: Activate quest giver quest. Close CET to see the
+incoming SMS notification. Open Messages > Lt. Mara Voss to read the invitation,
+then follow the meeting marker. Clear the test before replaying it.
+
+Phone history stays available after clear/completion. Explicit replay sends
+one new notification using the same message entry, without duplicate bubbles.
+Normal updates and save/CET recovery do not resend the invitation. Voss is a
+text-only phone contact for now; there is no callable holocall or SMS reply.
+This is still a manually activated test, without automatic milestone unlocks.
+
+The v0.19c conversation scene, workspot setup, voice/lipsync and all 45 native
+scripts are unchanged. The reported actor height/waiting-pose issue is deferred
+to the next change so this SMS introduction can be verified separately first.
+Andrea Olivato's MIT contact/thread/message schema adaptation is credited in
+THIRD_PARTY_NOTICES.txt. Actual phone rendering/notification requires game testing.
+
 NCPD PATROL v0.19c VOSS PRESENTATION - COMPLETE BRANCH TEST
 
 Adds the requested native workspot and eye contact to the separate Voss test:

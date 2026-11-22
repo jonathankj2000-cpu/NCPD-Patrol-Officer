@@ -153,7 +153,7 @@ function M.start(status)
         if not TweakDB:GetRecord(TweakDBID.new(NPC)) or not TweakDB:GetRecord(TweakDBID.new(CAR)) then error('Private investigator/car records are unavailable; install the full package') end
         if not n:Begin() then error('Quest not ready: install the archive and scripts, then restart outside combat/wanted status') end
         recover=false;phase,age,poll='waiting',0,0;lastFailure=nil
-        say('Quest activated. Travel to the investigator marker; approach within 3 m on foot to start the text-only conversation.',status)
+        say('Voss invitation requested. Check Messages and follow the meeting marker; approach within 3 m on foot to start the conversation.',status)
         return true
     end)
     if not ok then say(tostring(result),status);return false end

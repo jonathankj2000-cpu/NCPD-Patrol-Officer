@@ -13,6 +13,9 @@ def cn(s):return {'$type':'CName','$storage':'string','$value':s}
 def rid(typ,n):return {'$type':typ,'id':n}
 def soft(path):return {'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':path},'Flags':'Soft'}
 def briefing_ms(c):return math.ceil(max(c['briefing']['audio_seconds'],c['briefing']['animation_seconds'])*1000)
+def sms_paths(c):
+    contact='contacts/'+c['sms']['contact_id'];thread=contact+'/'+c['sms']['conversation_id']
+    return contact,thread,thread+'/'+c['sms']['message_id']
 def resource(typ,**fields):
     return {'Header':{'WolvenKitVersion':'9.1.1','WKitJsonVersion':'0.0.9','GameVersion':2500,'DataType':'CR2W'},
         'Data':{'Version':195,'BuildVersion':0,'RootChunk':{'$type':typ,'cookingPlatform':'PLATFORM_PC',**fields},'EmbeddedFiles':[]}}
@@ -71,9 +74,9 @@ def phase(c):
         return g.alloc('questFactsDBCondition',type=t)
     def wait(n,key,comparison,value):
         g.node(n,'questPauseConditionNodeDefinition',[('In','Input'),('Out','Output')],condition=condition(key,comparison,value))
-    def journal(n,path,typ):
+    def journal(n,path,typ,notify=1):
         p=g.alloc('gameJournalPath',realPath=path,fileEntryIndex=1,className=cn(typ),editorPath='')
-        t=g.alloc('questJournalEntry_NodeType',path=p,sendNotification=1)
+        t=g.alloc('questJournalEntry_NodeType',path=p,sendNotification=notify)
         g.node(n,'questJournalNodeDefinition',[(k,'Input') for k in ['Active','Inactive','Succeeded','Failed']]+[('Out','Output')],type=t)
     def cut(n):g.node(n,'questCutControlNodeDefinition',[('In','Input'),('Out','Output'),('CutSource','CutSource')],permanent=0)
     def marker(n):
@@ -95,9 +98,17 @@ def phase(c):
     for n,path,typ in [(21,base+'/main/talk','gameJournalQuestObjective'),(22,base+'/main','gameJournalQuestPhase'),(23,base,'gameJournalQuest')]:journal(n,path,typ)
     setfact(24,'stage',0);setfact(25,'talk',0);setfact(26,'choice',0);setfact(27,'request',0);cut(30)
     for n in [90,91,92]:marker(n)
+    contact,thread,message=sms_paths(c)
+    journal(31,contact,'gameJournalContact',0);journal(32,thread,'gameJournalPhoneConversation',0)
+    journal(33,message,'gameJournalPhoneMessage',0);journal(34,message,'gameJournalPhoneMessage',1)
     g.link(0,'Out',92,'Inactive');g.link(92,'Out',1,'In')
     for a,b in [(1,2),(2,3),(3,4)]:g.link(a,'Out',b,'In')
-    g.link(4,'Out',5,'Active');g.link(5,'Out',6,'Active');g.link(6,'Out',7,'Active');g.link(7,'Out',8,'In')
+    # One private message entry is reused on explicit replay. A silent reset
+    # gives a fresh Direct/Active notification without adding duplicate bubbles.
+    # Nothing touches the player's other contacts or advances from reading SMS.
+    g.link(4,'Out',31,'Active');g.link(31,'Out',32,'Active');g.link(32,'Out',33,'Inactive')
+    g.link(33,'Out',34,'Active');g.link(34,'Out',5,'Active')
+    g.link(5,'Out',6,'Active');g.link(6,'Out',7,'Active');g.link(7,'Out',8,'In')
     g.link(8,'Out',9,'In');g.link(8,'Out',10,'In');g.link(9,'Out',11,'In');g.link(11,'Out',12,'conversation_in')
     g.link(12,'conversation_out',13,'In');g.link(13,'True',14,'In');g.link(13,'False',30,'In')
     g.link(14,'CutSource',10,'CutDestination');g.link(14,'Out',91,'Inactive');g.link(91,'Out',15,'Succeeded')
@@ -217,7 +228,18 @@ def outputs():
         if x.get('$type')=='gameJournalQuestMapPin':
             for k,v in c['position'].items():x['offset'][k.upper()]=v-anchor['position'][k.upper()]+anchor['offset'][k.upper()]
             x['mappinData']['active']=0
-    text={'Title':'NCPD: Investigator Contact (Test)','Objective':'Meet Lieutenant Mara Voss','Description':'Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test.','Name':'Lt. Mara Voss'}
+    folder=copy.deepcopy(read('sms-templates.json')['contacts_folder'])
+    contact=folder['Data']['entries'][0]['Data'];thread=contact['entries'][0]['Data'];message=thread['entries'][0]['Data']
+    contact.update(id=c['sms']['contact_id'],name={'unk1':'0','value':'NCPDPatrol_QG_Name'},type='Texter',
+        avatarID={'$type':'TweakDBID','$storage':'string','$value':c['sms']['avatar']},isCallableDefault=0)
+    thread.update(id=c['sms']['conversation_id'],title={'unk1':'0','value':'NCPDPatrol_QG_SmsTitle'})
+    message.update(id=c['sms']['message_id'],sender='NPC',delay=0,isQuestImportant=1,
+        text={'unk1':'0','value':'NCPDPatrol_QG_Invitation'},
+        attachment={'HandleId':'pending','Data':{'$type':'gameJournalPath','realPath':c['quest_root'],
+            'fileEntryIndex':1,'className':cn('gameJournalQuest'),'editorPath':''}})
+    journal['Data']['RootChunk']['entry']['Data']['entries'].append(folder);renumber(journal)
+    text={'Title':'NCPD: Investigator Contact (Test)','Objective':'Meet Lieutenant Mara Voss','Description':'Lieutenant Mara Voss has sent you a private message. Meet her at the supplied location, listen to her briefing and choose either reply.','Name':'Lt. Mara Voss',
+        'SmsTitle':c['sms']['title'],'Invitation':c['sms']['text']}
     onscreens=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceOnScreenEntries','entries':[{'$type':'localizationPersistenceOnScreenEntry','primaryKey':fnv('NCPDPatrol_QG_'+k),'secondaryKey':'NCPDPatrol_QG_'+k,'femaleVariant':v,'maleVariant':v} for k,v in text.items()]}})
     lines=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleEntries','entries':[{'$type':'localizationPersistenceSubtitleEntry','stringId':ids[k],'femaleVariant':v,'maleVariant':v} for k,v in [('hello',c['hello']),('goodbye',c['goodbye']),('option1',c['choices'][0]),('option2',c['choices'][1]),('briefing',c['briefing']['text'])]]}})
     subtitles=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleMap','entries':[{'$type':'localizationPersistenceSubtitleMapEntry','subtitleFile':{'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':DEPOT+'lines.json'},'Flags':'Soft'},'subtitleGroup':cn('quest')}]}})
@@ -292,6 +314,19 @@ def validate(docs):
     for doc in docs.values():
         handles=[x['HandleId'] for x in walk(doc) if 'HandleId' in x];assert len(handles)==len(set(handles))
         assert all(x['HandleRefId'] in handles for x in walk(doc) if 'HandleRefId' in x)
+    journal=docs['quest_giver.journal.json'];contacts=[x for x in walk(journal) if x.get('$type')=='gameJournalContact']
+    assert len(contacts)==1;contact=contacts[0]
+    assert contact['id']==c['sms']['contact_id'] and contact['type']=='Texter' and contact['isCallableDefault']==0
+    assert contact['name']['value']=='NCPDPatrol_QG_Name' and contact['avatarID']['$value']==c['sms']['avatar']
+    assert len(contact['entries'])==1;thread=contact['entries'][0]['Data']
+    assert thread['$type']=='gameJournalPhoneConversation' and thread['id']==c['sms']['conversation_id']
+    assert len(thread['entries'])==1;message=thread['entries'][0]['Data']
+    assert message['$type']=='gameJournalPhoneMessage' and message['id']==c['sms']['message_id']
+    assert message['sender']=='NPC' and message['delay']==0 and message['isQuestImportant']==1
+    assert message['text']['value']=='NCPDPatrol_QG_Invitation'
+    attachment=message['attachment']['Data'];assert attachment['realPath']==c['quest_root'] and attachment['className']==cn('gameJournalQuest')
+    strings={x['secondaryKey']:x for x in docs['onscreens.json.json']['Data']['RootChunk']['root']['Data']['entries']}
+    assert strings['NCPDPatrol_QG_Invitation']['femaleVariant']==strings['NCPDPatrol_QG_Invitation']['maleVariant']==c['sms']['text']
     # Validate the serialized quest graph as well as its scene: in particular,
     # CutSource connections and named scene outputs must survive compilation.
     qp=docs['quest_giver.questphase.json'];handles={x['HandleId']:x['Data'] for x in walk(qp) if 'HandleId' in x}
@@ -309,6 +344,11 @@ def validate(docs):
                 destination=get(connection)['destination'];k=destination.get('HandleId',destination.get('HandleRefId'))
                 edges.append([n['id'],socket['name']['$value'],*owners[k]])
     assert sorted(edges)==sorted(phase(c)[1]),'Serialized quest graph lost a transition/cut connection'
+    nodes_by_id={x['id']:x for x in nodes}
+    for i,path,kind,notify in [(31,sms_paths(c)[0],'gameJournalContact',0),(32,sms_paths(c)[1],'gameJournalPhoneConversation',0),
+        (33,sms_paths(c)[2],'gameJournalPhoneMessage',0),(34,sms_paths(c)[2],'gameJournalPhoneMessage',1)]:
+        t=get(nodes_by_id[i]['type']);p=get(t['path'])
+        assert p['realPath']==path and p['className']==cn(kind) and t['sendNotification']==notify
     serialized=json.dumps(docs)
     for forbidden in ['mod\\\\fixer01','cc_f01','fixer01.wem','Items.money','CompleteIncident']:assert forbidden not in serialized,forbidden
 
@@ -338,7 +378,7 @@ def main():
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
     print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with both media files byte-identical')
 if __name__=='__main__':main()

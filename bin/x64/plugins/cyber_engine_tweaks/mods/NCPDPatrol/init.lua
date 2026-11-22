@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19c Voss Presentation | native workspot and eye-slot LookAt
+-- NCPD Patrol v0.19d Voss SMS Intro | native phone invitation before the meeting
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19c Voss Presentation loaded. OFF DUTY: Testing > Quest giver prototype. Voss uses the arms-crossed workspot and native eye/head LookAt toward V's pla_default_tgt during dialogue. Voice, choices and silent V replies are retained. Install the complete package and fully restart the game.")
+    status("v0.19d Voss SMS Intro loaded. OFF DUTY: Testing > Quest giver prototype sends the native SMS invitation and activates the meeting marker. Read Messages, meet Mara Voss and use the existing conversation. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

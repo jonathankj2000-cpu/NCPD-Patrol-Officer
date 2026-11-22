@@ -64,7 +64,7 @@ def main():
         except (AssertionError,struct.error):pass
         else:raise AssertionError('Invalid or mistimed audio accepted')
     docs,_=assets.outputs();assets.validate(docs)
-    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice','root_look_at','wrong_look_actor','wrong_workspot','player_workspot','cut_workspot','blocking_pose']:
+    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice','root_look_at','wrong_look_actor','wrong_workspot','player_workspot','cut_workspot','blocking_pose','sms_sender','sms_body','sms_attachment','sms_callable']:
         bad=copy.deepcopy(docs);s=bad['conversation.scene.json']['Data']['RootChunk']
         nodes={n['Data']['nodeId']['id']:n['Data'] for n in s['sceneGraph']['Data']['graph']}
         if kind=='wrong_actor':bad['voss.lipmap.json']['Data']['RootChunk']['sceneEntries'][0]['actorVoiceTags']=['0']
@@ -79,6 +79,14 @@ def main():
         elif kind=='player_workspot':nodes[11]['questNode']['Data']['paramsV1']['Data']['isPlayer']=1
         elif kind=='cut_workspot':nodes[12]['outputSockets'][2]['destinations'][0]['isockStamp']['ordinal']=0
         elif kind=='blocking_pose':nodes[11]['outputSockets'][0]['destinations']=nodes[12]['outputSockets'][0]['destinations']
+        elif kind.startswith('sms_'):
+            journal=bad['quest_giver.journal.json'];contact=next(x for x in assets.walk(journal) if x.get('$type')=='gameJournalContact')
+            message=contact['entries'][0]['Data']['entries'][0]['Data']
+            if kind=='sms_sender':message['sender']='Player'
+            elif kind=='sms_body':
+                entry=next(e for e in bad['onscreens.json.json']['Data']['RootChunk']['root']['Data']['entries'] if e['secondaryKey']=='NCPDPatrol_QG_Invitation');entry['femaleVariant']='Wrong invitation'
+            elif kind=='sms_attachment':message['attachment']['Data']['realPath']='quests/story/foreign'
+            elif kind=='sms_callable':contact['isCallableDefault']=1
         try:assets.validate(bad)
         except AssertionError:pass
         else:raise AssertionError('Broken media binding accepted: '+kind)
@@ -89,6 +97,7 @@ def main():
     # This change must not alter scene cleanup, player guards or actor staging.
     rel='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua'
     current=(ROOT/rel).read_text().replace('hello -> Voss briefing -> two choices -> goodbye.','hello -> two choices -> goodbye.')
+    current=current.replace('Voss invitation requested. Check Messages and follow the meeting marker; approach within 3 m on foot to start the conversation.','Quest activated. Travel to the investigator marker; approach within 3 m on foot to start the text-only conversation.')
     assert current==subprocess.check_output(['git','show','b13576f55e8cce93e339d97fb0e691582432db8f:'+rel],cwd=ROOT,text=True)
     print('PASS: Voss media: real Wwise Vorbis stream/packet bounds, original sample count/rate, byte-identical supplied lipsync bank, matching voice/subtitle/actor/clip links, shared 300 ms lead-in, uninterrupted 42 s event before choices, malformed media/bindings rejected, scene workspot/eye-slot/performer/input/socket invariants and negative controls, V silent; Lua actor lifecycle and player guards unchanged (in-game presentation unverified)')
     return {'audio':audio,'supplied_animation_byte_identical':True,'voice_entries':1,

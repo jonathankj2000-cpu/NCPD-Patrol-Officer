@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -40,5 +40,14 @@
     "look_at_slot": "pla_default_tgt",
     "intro_ms": 500,
     "play_at_actor_location": true
+  },
+  "sms": {
+    "contact_id": "ncpd_patrol_mara_voss",
+    "conversation_id": "invitation",
+    "message_id": "meet_voss",
+    "title": "A discreet proposition",
+    "text": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss",
+    "avatar": "PhoneAvatars.Avatar_Unknown",
+    "automatic_milestone_activation": false
   }
 }

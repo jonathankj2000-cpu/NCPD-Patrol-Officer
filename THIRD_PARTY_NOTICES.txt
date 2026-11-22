@@ -118,3 +118,14 @@ are adapted from that MIT-licensed reference. The Andrea Olivato copyright
 notice and full MIT permission notice already included above apply.
 Voss uses a vanilla game workspot by reference; no fixer01 body animation,
 voice, story, community or streaming assets are distributed.
+
+Additional v0.19d Voss native SMS introduction adaptations
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: fixer01/source/raw/mod/fixer01/journal/fixer01.journal.json
+
+The minimal contacts-folder/contact/conversation/message schemas in
+assets/quest_giver_test/sms-templates.json and their private journal adaptation
+are adapted from that MIT-licensed reference. The Andrea Olivato copyright and
+full MIT permission notice above apply. The invitation text is supplied by the
+NCPD Patrol author; no fixer01 story, portrait or phone audio is included.

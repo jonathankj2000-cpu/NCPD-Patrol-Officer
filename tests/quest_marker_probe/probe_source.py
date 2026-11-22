@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_voss_sms_branding(source):
+    source=source.replace('-- NCPD Patrol v0.19d Voss SMS Intro | native phone invitation before the meeting','-- NCPD Patrol v0.19c Voss Presentation | native workspot and eye-slot LookAt')
+    source=source.replace('v0.19d Voss SMS Intro loaded. OFF DUTY: Testing > Quest giver prototype sends the native SMS invitation and activates the meeting marker. Read Messages, meet Mara Voss and use the existing conversation. Install the complete package and fully restart the game.',"v0.19c Voss Presentation loaded. OFF DUTY: Testing > Quest giver prototype. Voss uses the arms-crossed workspot and native eye/head LookAt toward V's pla_default_tgt during dialogue. Voice, choices and silent V replies are retained. Install the complete package and fully restart the game.")
+    return source.replace('NCPD Patrol - v0.19d Voss SMS Intro###','NCPD Patrol - v0.19c Voss Presentation###')
+
 def without_voss_presentation_branding(source):
+    source=without_voss_sms_branding(source)
     source=source.replace('-- NCPD Patrol v0.19c Voss Presentation | native workspot and eye-slot LookAt','-- NCPD Patrol v0.19b Voss Briefing | isolated native voice and lipsync test')
     source=source.replace("v0.19c Voss Presentation loaded. OFF DUTY: Testing > Quest giver prototype. Voss uses the arms-crossed workspot and native eye/head LookAt toward V's pla_default_tgt during dialogue. Voice, choices and silent V replies are retained. Install the complete package and fully restart the game.",'v0.19b Voss Briefing loaded. OFF DUTY: Testing > Quest giver prototype. Hello, uninterrupted voiced Voss briefing with lipsync, two text choices and goodbye. V remains silent. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19c Voss Presentation###','NCPD Patrol - v0.19b Voss Briefing###')

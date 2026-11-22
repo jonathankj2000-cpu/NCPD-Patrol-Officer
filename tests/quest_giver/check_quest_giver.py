@@ -16,6 +16,15 @@ class Machine:
         self.release=0;self.lines=[];self.choice_ready=False;self.scn_nodes={n['Data']['nodeId']['id']:n['Data'] for n in docs['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph']}
         self.workspot_requested=0;self.workspot_active=False;self.workspot_available=True;self.look_at=None
         self.scn=docs['conversation.scene.json']['Data']['RootChunk']
+        self.phone={};self.sms_notifications=[]
+        def register(ref,parent=''):
+            entry=ref['Data'];path='/'.join(x for x in [parent,entry.get('id','')] if x)
+            if entry['$type'] in ['gameJournalContact','gameJournalPhoneConversation','gameJournalPhoneMessage']:
+                self.phone[path]=(entry,parent)
+                self.f.entries[path]=lua.table_from({'path':path,'kind':entry['$type'],'state':1})
+            for child in entry.get('entries',[]):register(child,path)
+        register(docs['quest_giver.journal.json']['Data']['RootChunk']['entry'])
+        self.onscreens={e['secondaryKey']:e['femaleVariant'] for e in docs['onscreens.json.json']['Data']['RootChunk']['root']['Data']['entries']}
         for x in assets.walk(docs['quest_giver.questphase.json']):
             if 'HandleId' in x:self.handles[x['HandleId']]=x['Data']
         graph=self.resolve(docs['quest_giver.questphase.json']['Data']['RootChunk']['graph'])
@@ -57,8 +66,18 @@ class Machine:
                 else:self.waits.add(i)
             elif typ=='questConditionNodeDefinition':self.emit(i,'True' if self.condition(n['condition']) else 'False')
             elif typ=='questJournalNodeDefinition':
-                t=self.resolve(n['type']);path=self.resolve(t['path'])['realPath'];assert path.startswith(self.f.qroot)
+                t=self.resolve(n['type']);path=self.resolve(t['path'])['realPath'];assert path.startswith(self.f.qroot) or path in self.phone
+                previous=self.f.entries[path].state
                 self.f.entries[path]['state']={'Inactive':1,'Active':2,'Succeeded':3,'Failed':4}[port];self.emit(i,'Out')
+                if path in self.phone:
+                    entry,parent=self.phone[path]
+                    assert self.resolve(t['path'])['className']['$value']==entry['$type']
+                    if entry['$type']=='gameJournalPhoneMessage' and port=='Active' and previous!=2 and t['sendNotification']:
+                        assert entry['sender']=='NPC' and self.f.entries[parent].state==2
+                        thread,contact_path=self.phone[parent];contact,_=self.phone[contact_path]
+                        assert self.f.entries[contact_path].state==2
+                        self.sms_notifications.append({'path':path,'contact':self.onscreens[contact['name']['value']],
+                            'text':self.onscreens[entry['text']['value']],'attachment':entry['attachment']['Data']['realPath']})
             elif typ=='questMappinManagerNodeDefinition':
                 path=self.resolve(n['path'])['realPath'];assert path==self.f.qroot+'/main/talk/location' and not n['disablePreviousMappins']
                 self.f.qpin.active=port=='Active';self.emit(i,'Out')
@@ -158,7 +177,10 @@ def main():
     for path,sha in manifest['authored_inputs'].items():assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==sha,path
     for option in [0,1]:
         m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0
+        assert not m.sms_notifications
         m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
+        assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==assets.read('contract.json')['sms']['text']
+        assert m.sms_notifications[0]['contact']=='Lt. Mara Voss' and m.sms_notifications[0]['attachment']==m.f.qroot
         m.arrive();m.talk();assert m.lines==['quest giver hello']
         assert m.workspot_requested==1 and m.workspot_active
         assert m.look_at['targetSlot']['$value']=='pla_default_tgt' and m.look_at['targetPerformerId']['id']==257
@@ -173,7 +195,15 @@ def main():
         assert not m.workspot_active and m.look_at is None
         assert m.f.qmod.state().startswith('Quest completed after goodbye.')
         assert m.f.wallet==0 and not m.f.qpin.active and m.f.tracked.path=='story'
-        m.f.qtagStale=True;m.clear();m.start();assert m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0;m.clear()
+        sms_path=m.sms_notifications[0]['path'];m.f.qtagStale=True;m.clear()
+        assert len(m.sms_notifications)==1 and m.f.entries[sms_path].state==2
+        m.start();assert m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0 and len(m.sms_notifications)==2
+        assert len([p for p in m.phone if m.phone[p][0]['$type']=='gameJournalPhoneMessage'])==1;m.clear()
+    # Ordinary updates do not resend the SMS. Reading it is optional; the
+    # existing travel/proximity trigger still owns the start of the scene.
+    m=runtime(docs);m.start();m.step(30)
+    assert len(m.sms_notifications)==1 and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and not m.lines
+    m.clear();assert len(m.sms_notifications)==1 and m.f.entries[m.sms_notifications[0]['path']].state==2
     # Cancel at the native choice; actors remain until the scene releases.
     m=runtime(docs);m.start();m.arrive();m.f.qoverlay=True
     m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);m.step(2)
@@ -243,10 +273,12 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, non-blocking scene-owned workspot branch and V eye-slot LookAt, hello/uninterrupted Voss briefing/two choices/silent V reply/goodbye/journal success, pose/LookAt scope at choices/completion/cancellation, missing-workspot non-deadlock, no early choices or completion, correct scene input ordinals, dialogue/tier guards retained, no payout/progress writes, private staging, geometry rejection, scene-release cleanup, replay/load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
+    print('PASS: isolated quest giver: native SMS contact/thread/message activates before the meeting quest, exact text/quest attachment, one notification per explicit start/replay without duplicate bubbles, history retained on clear and no resend on ticks, optional reading with proximity-only conversation, non-blocking scene-owned workspot branch and V eye-slot LookAt, uninterrupted briefing/both choices/silent V reply/goodbye/journal success, presentation release, guards, scoped cleanup and load recovery; existing dispatch/markers unchanged (engine boundaries mocked)')
     return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
         'parallel_scene_workspot_executed':True,'workspot_does_not_gate_conversation':True,
         'native_look_at_target_slot':'pla_default_tgt','presentation_release_on_completion_and_cancel':True,
+        'native_sms_intro':True,'sms_notifications_per_explicit_start':1,'sms_history_retained_on_clear':True,
+        'sms_exact_text_and_quest_attachment':True,'no_duplicate_message_entries':True,
         'spawned_private_actors':2,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
         'cleanup_and_replay':True,'save_cet_recovery':True,'existing_dispatch_unchanged':True,
         'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False,

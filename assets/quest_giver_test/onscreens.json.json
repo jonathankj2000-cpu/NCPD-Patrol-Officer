@@ -34,8 +34,8 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "7635198996431393324",
               "secondaryKey": "NCPDPatrol_QG_Description",
-              "femaleVariant": "Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test.",
-              "maleVariant": "Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test."
+              "femaleVariant": "Lieutenant Mara Voss has sent you a private message. Meet her at the supplied location, listen to her briefing and choose either reply.",
+              "maleVariant": "Lieutenant Mara Voss has sent you a private message. Meet her at the supplied location, listen to her briefing and choose either reply."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
@@ -43,6 +43,20 @@
               "secondaryKey": "NCPDPatrol_QG_Name",
               "femaleVariant": "Lt. Mara Voss",
               "maleVariant": "Lt. Mara Voss"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "10087567953991913779",
+              "secondaryKey": "NCPDPatrol_QG_SmsTitle",
+              "femaleVariant": "A discreet proposition",
+              "maleVariant": "A discreet proposition"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "3208650389888968729",
+              "secondaryKey": "NCPDPatrol_QG_Invitation",
+              "femaleVariant": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss",
+              "maleVariant": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss"
             }
           ]
         }
