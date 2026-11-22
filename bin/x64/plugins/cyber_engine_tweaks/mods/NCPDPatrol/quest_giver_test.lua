@@ -208,8 +208,16 @@ local function preparePose(n,step)
     end
     local user=workspots:GetDeviceUser(pose.anchor.id)
     local info=workspots:GetExtendedInfo(actor)
-    local owned=user and user:GetEntityID().hash==actor:GetEntityID().hash
-    if owned and workspots:IsActorInWorkspot(actor) and info and info.isActive and not info.isEntering and not info.isExiting then
+    local present=workspots:IsActorInWorkspot(actor)
+    -- GetDeviceUser is a device lookup, not a required receipt for an NPC
+    -- workspot. This request started our exact actor from no prior workspot;
+    -- its native activity can be valid even when the helper has no user map.
+    -- A reported different user still prevents confirmation.
+    local matching=not user or user:GetEntityID().hash==actor:GetEntityID().hash
+    pose.observed='present='..tostring(present)..' | active='..tostring(info and info.isActive)
+        ..' | entering='..tostring(info and info.entering)..' | exiting='..tostring(info and info.exiting)
+        ..' | device user='..(user and (matching and 'Voss' or 'other') or 'not registered')
+    if matching and present and info and info.isActive==true and info.entering==false and info.exiting==false then
         pose.stable=(pose.stable or 0)+step
     else pose.stable=0 end
     return pose.stable>=.5
@@ -296,8 +304,17 @@ local function update(delta)
         elseif age>30 then error('Timed out waiting for the two test actors') end
     end
     if phase=='posing' then
-        if preparePose(n,step) then phase='approaching';say('Voss is waiting in the workspot. Approach within 3 m on foot.')
-        elseif age>8 then error('Voss waiting pose did not become active; clear and retry') end
+        local ok,complete=pcall(preparePose,n,step)
+        if ok and complete then phase='approaching';say('Voss is waiting in the workspot. Approach within 3 m on foot.')
+        elseif not ok or age>8 then
+            -- A cosmetic preparation failure must not cancel the SMS quest or
+            -- delete its two actors. Retain our helper until explicit cleanup;
+            -- never stop/restart an actor whose pose may already be playing.
+            pose.warning=ok and ('Waiting pose not confirmed after 8 s | '..tostring(pose.observed or 'no native activity sample')) or tostring(complete)
+            lastFailure=pose.warning
+            phase='approaching'
+            say('Waiting pose could not be confirmed; Voss and the quest are retained. Approach within 3 m on foot to talk. Details: '..pose.warning)
+        end
     end
     if phase=='approaching' then
         local npc=rows[1] and rows[1].object
@@ -317,8 +334,8 @@ function M.update(delta)
 end
 function M.diagnostics()
     local ok,state=pcall(function() return owner():GetDiagnostics() end)
-    local poseState=pose and (pose.requested and 'requested' or 'loading') or 'none'
-    return 'phase='..phase..' | owned actors='..#rows..' | pose='..poseState..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
+    local poseState=pose and (pose.warning and 'unconfirmed' or (pose.requested and 'requested' or 'loading')) or 'none'
+    return 'phase='..phase..' | owned actors='..#rows..' | pose='..poseState..' | pose proof='..tostring(pose and pose.observed or 'none')..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
 end
 function M.shutdown()
     if ready() and M.active() then pcall(function() owner():RequestClear() end) end

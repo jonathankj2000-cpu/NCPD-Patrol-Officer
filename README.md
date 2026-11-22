@@ -1,5 +1,18 @@
 # NCPD Patrol
 
+## v0.19f1 — Voss pose confirmation fix
+
+Fixes the eight-second cancellation that could delete Voss and the Hella even
+while her waiting animation was playing. Native actor activity can confirm the
+pose without a device-user mapping. Cosmetic pose failures now retain the
+actors and meeting quest. SMS, three captions, voice and lipsync are preserved.
+
+[Download the complete v0.19f1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19f1_Voss_Pose_Check_Fix_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Wait at least
+15 seconds near Voss before approaching to talk, then test either reply.
+[Cause, regression and game checks](docs/VOSS_POSE_CHECK_FIX_v019f1.md).
+
 ## v0.19f — Voss subtitles
 
 The briefing displays three timed subtitle blocks while voice and lipsync play

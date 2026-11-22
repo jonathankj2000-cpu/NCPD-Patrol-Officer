@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19f Voss Subtitles | three timed blocks with continuous voice and lipsync
+-- NCPD Patrol v0.19f1 Voss Pose Check Fix | retain the quest when pose confirmation is unavailable
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19f Voss Subtitles loaded. OFF DUTY: Testing > Quest giver prototype. Native SMS and grounded waiting pose retained; the briefing uses three timed subtitle blocks with continuous voice and lipsync. Install the complete package, including the new subtitle script and archive, and fully restart the game.")
+    status("v0.19f1 Voss Pose Check Fix loaded. OFF DUTY: Testing > Quest giver prototype. Native pose activity no longer requires a registered helper user; waiting-pose failures retain Voss, the car and the conversation quest. SMS, three subtitle blocks, voice and lipsync retained. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

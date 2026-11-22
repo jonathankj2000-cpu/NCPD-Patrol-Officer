@@ -1,3 +1,24 @@
+NCPD PATROL v0.19f1 VOSS POSE CHECK FIX - COMPLETE BRANCH TEST
+
+Corrects the eight-second waiting-pose timeout that deleted Voss and her Hella
+even when the animation was visibly playing. Native actor activity can confirm
+the exact requested pose without a registered helper-device user. Uses the real
+entering/exiting fields, with the existing stable-state window.
+
+An unconfirmed/failed cosmetic pose now retains Voss, the car, the SMS and the
+meeting quest; approach on foot to use the original dialogue. No pose stop or
+restart is sent. Explicit Clear quest giver test still releases the helper
+before deleting the actors. Actual actor/quest/world failures keep their guards.
+
+All nine archives and all 46 native scripts are unchanged from v0.19f. The SMS,
+three timed subtitle blocks, voice, lipsync and grounded pose assets are retained.
+
+Clear the previous test, install all 123 files and fully restart. OFF DUTY >
+CET > Testing > Quest giver prototype > Activate. Wait outside the 3 m talk
+radius for at least 15 seconds after Voss appears; she and the car should remain.
+Close CET, approach and test the conversation. Log quest giver diagnostics
+preserves native pose state and any warning. Game confirmation is still needed.
+
 NCPD PATROL v0.19f VOSS SUBTITLES - COMPLETE BRANCH TEST
 
 The briefing displays three successive subtitle blocks, with changes around

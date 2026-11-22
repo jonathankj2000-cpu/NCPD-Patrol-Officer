@@ -160,7 +160,7 @@ class Machine:
         assert self.f.qmod.clear(self.f.qstatus);self.step(2)
         assert not self.f.qmod.active() and self.f.manual==654 and self.f.wallet==0
 
-def runtime(docs,legacy_guard=False):
+def runtime(docs,legacy_guard=False,legacy_pose=False):
     lua=engine_runtime();s=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds')
     s=s.replace('local p = nil','local p = Vector4.new(0,0,0,0)')
     lua.globals().QNative=lua.execute(s)
@@ -169,6 +169,10 @@ def runtime(docs,legacy_guard=False):
         # regression; the current source's two resource getters are additive.
         lua.globals().QNative.Version=lambda _self:1
         previous=subprocess.check_output(['git','show','281ec019319c67e332e1cdc99c1e6bc9f3f22ad9:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
+        lua.globals().PreviousQuestGiver=lua.execute(previous)
+        lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
+    if legacy_pose:
+        previous=subprocess.check_output(['git','show','d9d49cc8084efdcd329d2ddb9572eb2bf254f963:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
         lua.globals().PreviousQuestGiver=lua.execute(previous)
         lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
     lua.execute((HERE/'engine.lua').read_text())
@@ -232,12 +236,39 @@ def main():
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
     assert not m.f.qPoseActive() and m.look_at is None
-    # Resource/playback failures are bounded and clear the private test before
-    # dialogue, rather than leaving an idle/half-started actor indefinitely.
+    # Reproduce the reported v0.19f false negative with its actual Lua: Voss is
+    # in an active pose but no device-user mapping exists, so the old watchdog
+    # incorrectly deletes the complete scene after eight seconds.
+    old=runtime(docs,legacy_pose=True);old.f.qposeNoDeviceUser=True;old.start();old.arrive()
+    assert old.f.qPoseActive() and not old.lines
+    old.step(12);assert not old.f.qmod.active() and not old.f.qPoseActive() and len(old.f.deletes)==3
+    assert 'waiting pose did not become active' in old.f.qmod.diagnostics()
+    for option in [0,1]:
+        m=runtime(docs);m.f.qposeNoDeviceUser=True;m.start();m.arrive();m.step(15)
+        assert m.f.qPoseActive() and len(m.f.deletes)==0 and m.f.qmod.active()
+        assert 'phase=approaching' in m.f.qmod.diagnostics() and 'device user=not registered' in m.f.qmod.diagnostics()
+        assert 'last failure=none' in m.f.qmod.diagnostics()
+        m.talk();m.await_choices();m.choose(option);m.step(7)
+        assert m.f.qmod.state().startswith('Quest completed after goodbye.') and len(m.f.qposeCalls)==1
+        m.clear();assert not m.f.qPoseActive()
+    # Real native entry/exit states cannot be mistaken for a stable pose, and
+    # a different helper user is never counted as confirmation.
+    for flag in ['qposeEntering','qposeExiting','qposeOtherDeviceUser','qposeNoInfo']:
+        m=runtime(docs);setattr(m.f,flag,True);m.start();m.arrive();m.step(3)
+        assert 'phase=posing' in m.f.qmod.diagnostics() and len(m.f.deletes)==0,flag
+        setattr(m.f,flag,False);m.step(1)
+        assert 'phase=approaching' in m.f.qmod.diagnostics() and 'last failure=none' in m.f.qmod.diagnostics(),flag
+        m.clear()
+    # Missing, slow or unconfirmed cosmetic resources/playback have a bounded
+    # preparation phase, but preserve Voss, the Hella, SMS and meeting quest.
     for flag in ['qposeResourcesMissing','qposeLoadFailed','qposeLoadPending','qposePlayFailed']:
         m=runtime(docs);setattr(m.f,flag,True);m.start()
         m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2750.759,204.665,1);m.step(12)
-        assert not m.f.qmod.active() and not m.f.qPoseActive() and not m.lines and m.f.wallet==0,flag
+        assert m.f.qmod.active() and not m.f.qPoseActive() and not m.lines and m.f.wallet==0 and len(m.f.deletes)==0,flag
+        assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and m.f.qpin.active and 'pose=unconfirmed' in m.f.qmod.diagnostics(),flag
+        m.talk();m.await_choices();m.choose(0);m.step(7)
+        assert m.f.qmod.state().startswith('Quest completed after goodbye.') and len(m.f.deletes)==0,flag
+        m.clear()
     # A grounded pose starts at the recorded floor, including small legitimate
     # site-height differences, before V enters the talk radius.
     for height in [-.4,0,.4]:
@@ -299,9 +330,13 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: native SMS invitation/history/replay, grounded private pose device preloaded and active before approach, no +10 cm spawn lift, one body play across waiting/briefing/choices/completion with no scene restart, V eye-slot LookAt, bounded preload/play failures, helper-before-puppet cleanup including refusal/defer/recovery, uninterrupted voice/both choices/journal success; existing dispatch/markers unchanged (engine boundaries mocked)')
+    print('PASS: isolated quest giver: actual v0.19f active-pose/no-device-user despawn reproduced and prevented; real native entering/exiting fields, exact-actor stable activity and no pose restart; cosmetic failures retain both actors/SMS/quest and allow dialogue; explicit helper-before-puppet cleanup, menu/cancel/recovery, uninterrupted voice/both choices/journal success; dispatch/markers unchanged (engine boundaries mocked)')
     return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
         'grounded_waiting_pose_executed':True,'workspot_ready_before_conversation':True,
+        'v019f_active_pose_missing_device_user_despawn_reproduced':True,
+        'native_activity_without_device_user_completes_both_dialogue_paths':True,
+        'native_extended_info_entering_exiting_fields_checked':True,
+        'cosmetic_pose_failure_retains_actors_and_quest':True,
         'native_look_at_target_slot':'pla_default_tgt','look_at_release_on_completion_and_pose_release_on_clear':True,
         'native_sms_intro':True,'sms_notifications_per_explicit_start':1,'sms_history_retained_on_clear':True,
         'sms_exact_text_and_quest_attachment':True,'no_duplicate_message_entries':True,

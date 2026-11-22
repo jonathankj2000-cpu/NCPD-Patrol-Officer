@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_voss_pose_fix_branding(source):
+    source=source.replace('-- NCPD Patrol v0.19f1 Voss Pose Check Fix | retain the quest when pose confirmation is unavailable','-- NCPD Patrol v0.19f Voss Subtitles | three timed blocks with continuous voice and lipsync')
+    source=source.replace('v0.19f1 Voss Pose Check Fix loaded. OFF DUTY: Testing > Quest giver prototype. Native pose activity no longer requires a registered helper user; waiting-pose failures retain Voss, the car and the conversation quest. SMS, three subtitle blocks, voice and lipsync retained. Install the complete package and fully restart the game.','v0.19f Voss Subtitles loaded. OFF DUTY: Testing > Quest giver prototype. Native SMS and grounded waiting pose retained; the briefing uses three timed subtitle blocks with continuous voice and lipsync. Install the complete package, including the new subtitle script and archive, and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.19f1 Voss Pose Check Fix###','NCPD Patrol - v0.19f Voss Subtitles###')
+
 def without_voss_subtitles_branding(source):
+    source=without_voss_pose_fix_branding(source)
     source=source.replace('-- NCPD Patrol v0.19f Voss Subtitles | three timed blocks with continuous voice and lipsync','-- NCPD Patrol v0.19e Voss Waiting Pose | grounded pose before the conversation')
     source=source.replace('v0.19f Voss Subtitles loaded. OFF DUTY: Testing > Quest giver prototype. Native SMS and grounded waiting pose retained; the briefing uses three timed subtitle blocks with continuous voice and lipsync. Install the complete package, including the new subtitle script and archive, and fully restart the game.','v0.19e Voss Waiting Pose loaded. OFF DUTY: Testing > Quest giver prototype. SMS invitation retained; Voss prepares her arms-crossed pose at a grounded anchor before you approach. Greeting keeps the existing body pose. Install the complete package, including scripts/archive, and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19f Voss Subtitles###','NCPD Patrol - v0.19e Voss Waiting Pose###')

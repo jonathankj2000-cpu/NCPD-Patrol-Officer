@@ -86,9 +86,15 @@ function workspots:IsActorInWorkspot(actor)
  for _,user in pairs(f.qposeLinks) do if user==actor then return true end end
  return false
 end
-function workspots:GetDeviceUser(id) return f.qposeLinks[id.hash] end
+function workspots:GetDeviceUser(id)
+ if f.qposeNoDeviceUser then return nil end
+ if f.qposeOtherDeviceUser then return f.player end
+ return f.qposeLinks[id.hash]
+end
 function workspots:GetExtendedInfo(actor)
- return {isActive=self:IsActorInWorkspot(actor),isEntering=f.qposeEntering==true,isExiting=false}
+ if f.qposeNoInfo then return nil end
+ return setmetatable({isActive=self:IsActorInWorkspot(actor),entering=f.qposeEntering==true,exiting=f.qposeExiting==true},
+  {__index=function(_,key) error('Unknown native ExtendedWorkspotInfo property: '..tostring(key)) end})
 end
 function workspots:PlayInDeviceSimple(helper,actor,camera,actorComp,deviceComp,sync,slide,behaviour,recipient)
  assert(helper.poseHelper and actor:GetRecordID()=='Character.NCPDPatrol_QG_Investigator' and actor~=f.player)

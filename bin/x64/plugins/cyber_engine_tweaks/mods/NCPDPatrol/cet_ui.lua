@@ -291,7 +291,7 @@ function M.new(context)
         -- qgiver UI begin
         if ImGui.CollapsingHeader("Quest giver prototype") then
             local test=context.questGiver
-            ImGui.TextWrapped("OFF DUTY test: sends Mara Voss's SMS invitation and activates the meeting marker. Close CET and follow the marker. Voss prepares the arms-crossed pose on the ground while waiting; approaching within 3 m on foot starts the voiced conversation without restarting her body pose. V stays silent. Enable subtitles; clear before replaying. The SMS stays in Messages.")
+            ImGui.TextWrapped("OFF DUTY test: sends Mara Voss's SMS invitation and activates the meeting marker. Close CET and follow the marker. Voss prepares the arms-crossed pose on the ground while waiting; a pose warning retains the actors and meeting quest. Approaching within 3 m on foot starts the voiced conversation without restarting her body pose. V stays silent. Enable subtitles; clear before replaying. The SMS stays in Messages.")
             if test then
                 ImGui.TextWrapped(test.state())
                 if ImGui.Button("TEST: Activate quest giver quest") then test.start(status) end
@@ -366,7 +366,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.19f Voss Subtitles###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.19f1 Voss Pose Check Fix###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end
