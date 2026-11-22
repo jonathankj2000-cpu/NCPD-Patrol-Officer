@@ -1,3 +1,23 @@
+NCPD PATROL v0.19f VOSS SUBTITLES - COMPLETE BRANCH TEST
+
+The briefing displays three successive subtitle blocks, with changes around
+15 and 28.5 seconds into the recording. All dialogue text is retained. The
+existing voice and lipsync play continuously; their files, native scene,
+quest phase, SMS and waiting pose are unchanged from v0.19e.
+
+The native subtitle wrapper is scoped to Voss's private record, exact briefing
+and active conversation. The game's font, speaker name, subtitle settings and
+line lifetime are retained. Stale delayed text writes are guarded on widget
+reuse, clear/completion and detached speakers/controllers.
+
+Clear an old quest-giver test before updating. Install all 123 files, including
+the new NCPDPatrolVossSubtitles.reds and changed quest-giver archive, and fully
+restart. OFF DUTY > CET > Testing > Quest giver prototype > Activate. Read the
+SMS, inspect Voss's waiting pose, then compare the three captions with the voice.
+Game timing/pause behavior and ground alignment still require testing.
+
+Includes all v0.19d SMS and v0.19e waiting-pose changes described below.
+
 NCPD PATROL v0.19e VOSS WAITING POSE - COMPLETE BRANCH TEST
 
 Includes the finished v0.19d SMS introduction and corrects Voss's waiting pose.

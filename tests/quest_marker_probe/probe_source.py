@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_voss_subtitles_branding(source):
+    source=source.replace('-- NCPD Patrol v0.19f Voss Subtitles | three timed blocks with continuous voice and lipsync','-- NCPD Patrol v0.19e Voss Waiting Pose | grounded pose before the conversation')
+    source=source.replace('v0.19f Voss Subtitles loaded. OFF DUTY: Testing > Quest giver prototype. Native SMS and grounded waiting pose retained; the briefing uses three timed subtitle blocks with continuous voice and lipsync. Install the complete package, including the new subtitle script and archive, and fully restart the game.','v0.19e Voss Waiting Pose loaded. OFF DUTY: Testing > Quest giver prototype. SMS invitation retained; Voss prepares her arms-crossed pose at a grounded anchor before you approach. Greeting keeps the existing body pose. Install the complete package, including scripts/archive, and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.19f Voss Subtitles###','NCPD Patrol - v0.19e Voss Waiting Pose###')
+
 def without_voss_waiting_branding(source):
+    source=without_voss_subtitles_branding(source)
     source=source.replace('-- NCPD Patrol v0.19e Voss Waiting Pose | grounded pose before the conversation','-- NCPD Patrol v0.19d Voss SMS Intro | native phone invitation before the meeting')
     source=source.replace('v0.19e Voss Waiting Pose loaded. OFF DUTY: Testing > Quest giver prototype. SMS invitation retained; Voss prepares her arms-crossed pose at a grounded anchor before you approach. Greeting keeps the existing body pose. Install the complete package, including scripts/archive, and fully restart the game.','v0.19d Voss SMS Intro loaded. OFF DUTY: Testing > Quest giver prototype sends the native SMS invitation and activates the meeting marker. Read Messages, meet Mara Voss and use the existing conversation. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19e Voss Waiting Pose###','NCPD Patrol - v0.19d Voss SMS Intro###')

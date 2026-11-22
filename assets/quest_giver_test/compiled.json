@@ -1,6 +1,6 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "9a6982402ab034a846718de243731326e7b180a30f0adb978da098668b106742",
+  "archive_sha256": "9b45a343a70faf544a328c0a0866b08e3760f43273cd155190b731359f9ecd85",
   "resources": [
     "conversation.scene",
     "lines.json",
@@ -17,17 +17,18 @@
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "authored_inputs": {
-    "assets/quest_giver_test/contract.json": "1d85cd43a88d75726d5fdd142333acde3bf019d135e3a8eadef1cb88d110fc97",
+    "assets/quest_giver_test/contract.json": "ccd9f6712e589c965fcedec4f9c7d43f7c6edea3bd3a2c22de4f2ec5824c7422",
     "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
     "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
     "assets/quest_giver_test/sms-templates.json": "6b0a5ecae835db197b083eff69fa7be70b18bb482cf5d814a62df4475355c228",
+    "assets/quest_giver_test/subtitle-controller.reds.template": "37cfe1ae7d0368ed05d95494bd455f62ae0cb079bc81617e15f152e4f77fe59f",
     "assets/quest_giver_test/media/manifest.json": "8eeb1a73c1535c7561216af1fd62aacf042678ec792092e9d07b87ab308170b2",
     "assets/quest_giver_test/media/voss_briefing.anims": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967",
     "assets/quest_giver_test/media/voss_briefing.wem": "489325c1bf2047bf209c4816dd41d733321c311a802d6b921b7b8f254a8e5924",
     "assets/quest_giver_test/conversation.scene.json": "6d51cb60c1d8d4845aac03f3ec28f12f919c52b54690fe81e96abd5ad604f6d6",
     "assets/quest_giver_test/quest_giver.questphase.json": "663f4abe50d47be13a06ab356491bf4e0eca147aad23493347f4d3e310476142",
     "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
-    "assets/quest_giver_test/onscreens.json.json": "4f5dcac535145c8b2f5bf881c51a3dba7f53093b0273c888aa24b82b0203f915",
+    "assets/quest_giver_test/onscreens.json.json": "7c64930ca33dbc2b5efa34c3d968976ea4af75f15fb9ac6303c51f17c5604076",
     "assets/quest_giver_test/lines.json.json": "545dc6df58ef05923ee0874d0752f59ee51e3949e9f59a961058ece1fbbe0f02",
     "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6",
     "assets/quest_giver_test/vomap.json.json": "e68314713a177d74cdc8cf8cef11b3335e7f7e8bac2d5889bf0c81d5b734dda3",

@@ -57,6 +57,34 @@
               "secondaryKey": "NCPDPatrol_QG_Invitation",
               "femaleVariant": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss",
               "maleVariant": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "6279305423213791719",
+              "secondaryKey": "NCPDPatrol_QG_BriefingFull",
+              "femaleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
+              "maleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "8697786178049081202",
+              "secondaryKey": "NCPDPatrol_QG_BriefingPart1",
+              "femaleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives.",
+              "maleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "8697785078537452991",
+              "secondaryKey": "NCPDPatrol_QG_BriefingPart2",
+              "femaleVariant": "Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities.",
+              "maleVariant": "Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "8697783979025824780",
+              "secondaryKey": "NCPDPatrol_QG_BriefingPart3",
+              "femaleVariant": "I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
+              "maleVariant": "I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
             }
           ]
         }

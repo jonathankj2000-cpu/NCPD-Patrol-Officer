@@ -135,3 +135,8 @@ The existing MIT scene LookAt and legacy workspot schema attribution above is
 retained. The new private voss_wait_pose.ent is generated from NCPD Patrol's
 own minimal arrest helper schema, with its own component identity and a vanilla
 workspot reference. No additional Andrea Olivato assets or code are introduced.
+
+v0.19f Voss subtitle update
+The earlier Andrea Olivato MIT attributions remain in effect. This update adds
+an NCPD Patrol UI-only subtitle wrapper using the existing game subtitle/delay
+APIs; no new Andrea Olivato code, story, audio or animation is introduced.

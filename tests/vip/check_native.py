@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[2]
 WORK=ROOT.parent
 base=WORK/'v09a-check'
 compiler=WORK/'redscript/target/debug/ncpd-check'
-originals=[WORK/'v11a-check/game-api.reds']+[base/n for n in ['support-api.reds','playback-api.reds','trunk-api.reds','journal-api.reds']]+[ROOT/'tests/career/contracts'/n for n in ['natives.reds','rewards.reds']]
+originals=[WORK/'v11a-check/game-api.reds']+[base/n for n in ['support-api.reds','playback-api.reds','trunk-api.reds','journal-api.reds']]+[ROOT/'tests/career/contracts'/n for n in ['natives.reds','rewards.reds']]+[ROOT/'tests/quest_giver/subtitle-api.reds']
 source='\n'.join(p.read_text() for p in originals)
 subprocess.run([sys.executable, str(ROOT/'tests/compile_compatibility/check_legacy_api.py')],check=True)
 source=re.sub(r'public enum gamedataNPCHighLevelState \{[^}]+\}', 'public enum gamedataNPCHighLevelState { Alerted = 0, Combat = 2, Dead = 3, Relaxed = 5, Unconscious = 7 }', source)

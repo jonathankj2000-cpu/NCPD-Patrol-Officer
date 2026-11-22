@@ -1,5 +1,18 @@
 # NCPD Patrol
 
+## v0.19f — Voss subtitles
+
+The briefing displays three timed subtitle blocks while voice and lipsync play
+continuously. Includes the native SMS invitation and grounded arms-crossed
+waiting pose from v0.19d/e.
+
+[Download the complete v0.19f test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19f_Voss_Subtitles_TEST.zip)
+
+Clear the old quest-giver test, install all 123 files and fully restart. Use
+OFF DUTY → CET → Testing → Quest giver prototype → Activate. Text changes at
+approximately 15 and 28.5 seconds into the voiced briefing. Actual in-game
+timing and ground alignment need testing. [Details](docs/VOSS_SUBTITLES_v019f.md).
+
 ## v0.19a1 — quest giver scene-guard fix
 
 Corrects the early “Finish the current game scene” rejection. Player scene

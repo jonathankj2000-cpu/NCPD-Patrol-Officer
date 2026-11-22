@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19e Voss Waiting Pose | grounded pose before the conversation
+-- NCPD Patrol v0.19f Voss Subtitles | three timed blocks with continuous voice and lipsync
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19e Voss Waiting Pose loaded. OFF DUTY: Testing > Quest giver prototype. SMS invitation retained; Voss prepares her arms-crossed pose at a grounded anchor before you approach. Greeting keeps the existing body pose. Install the complete package, including scripts/archive, and fully restart the game.")
+    status("v0.19f Voss Subtitles loaded. OFF DUTY: Testing > Quest giver prototype. Native SMS and grounded waiting pose retained; the briefing uses three timed subtitle blocks with continuous voice and lipsync. Install the complete package, including the new subtitle script and archive, and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

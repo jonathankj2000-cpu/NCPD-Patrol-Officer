@@ -13,6 +13,16 @@ def cn(s):return {'$type':'CName','$storage':'string','$value':s}
 def rid(typ,n):return {'$type':typ,'id':n}
 def soft(path):return {'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':path},'Flags':'Soft'}
 def briefing_ms(c):return math.ceil(max(c['briefing']['audio_seconds'],c['briefing']['animation_seconds'])*1000)
+def subtitle_controller(c):
+    parts=c['briefing']['subtitle_parts']
+    assert len(parts)==3 and parts[0]['start_seconds']==0
+    assert ' '.join(p['text'] for p in parts)==c['briefing']['text']
+    assert all(parts[i]['start_seconds']<parts[i+1]['start_seconds'] for i in range(2))
+    assert parts[-1]['start_seconds']<c['briefing']['audio_seconds']
+    source=(DIR/'subtitle-controller.reds.template').read_text()
+    for i in [2,3]:source=source.replace('@@PART'+str(i)+'_SECONDS@@',str(float(parts[i-1]['start_seconds'])))
+    assert '@@' not in source
+    return source
 def sms_paths(c):
     contact='contacts/'+c['sms']['contact_id'];thread=contact+'/'+c['sms']['conversation_id']
     return contact,thread,thread+'/'+c['sms']['message_id']
@@ -249,6 +259,8 @@ def outputs():
     journal['Data']['RootChunk']['entry']['Data']['entries'].append(folder);renumber(journal)
     text={'Title':'NCPD: Investigator Contact (Test)','Objective':'Meet Lieutenant Mara Voss','Description':'Lieutenant Mara Voss has sent you a private message. Meet her at the supplied location, listen to her briefing and choose either reply.','Name':'Lt. Mara Voss',
         'SmsTitle':c['sms']['title'],'Invitation':c['sms']['text']}
+    text['BriefingFull']=c['briefing']['text']
+    for i,part in enumerate(c['briefing']['subtitle_parts'],1):text['BriefingPart'+str(i)]=part['text']
     onscreens=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceOnScreenEntries','entries':[{'$type':'localizationPersistenceOnScreenEntry','primaryKey':fnv('NCPDPatrol_QG_'+k),'secondaryKey':'NCPDPatrol_QG_'+k,'femaleVariant':v,'maleVariant':v} for k,v in text.items()]}})
     lines=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleEntries','entries':[{'$type':'localizationPersistenceSubtitleEntry','stringId':ids[k],'femaleVariant':v,'maleVariant':v} for k,v in [('hello',c['hello']),('goodbye',c['goodbye']),('option1',c['choices'][0]),('option2',c['choices'][1]),('briefing',c['briefing']['text'])]]}})
     subtitles=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleMap','entries':[{'$type':'localizationPersistenceSubtitleMapEntry','subtitleFile':{'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':DEPOT+'lines.json'},'Flags':'Soft'},'subtitleGroup':cn('quest')}]}})
@@ -371,6 +383,10 @@ def validate(docs):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--wk-cli',type=Path);p.add_argument('--check',action='store_true');a=p.parse_args()
     docs,edges=outputs();validate(docs)
+    script=ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds'
+    body=subtitle_controller(read('contract.json'))
+    if a.check:assert script.read_text()==body,'Stale Voss subtitle controller'
+    else:script.write_text(body)
     for name,doc in docs.items():
         body=json.dumps(doc,indent=2)+'\n'
         if a.check:assert (DIR/name).read_text()==body,name
@@ -394,7 +410,7 @@ def main():
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]+[ROOT/'assets/arrest/arrest_workspot.ent.json']
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','subtitle-controller.reds.template','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]+[ROOT/'assets/arrest/arrest_workspot.ent.json']
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
     print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with both media files byte-identical')
 if __name__=='__main__':main()

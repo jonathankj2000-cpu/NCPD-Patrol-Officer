@@ -33,7 +33,21 @@
     "audio_seconds": 41.95265306122449,
     "animation_seconds": 41.9666672,
     "lead_in_ms": 300,
-    "player_voice": false
+    "player_voice": false,
+    "subtitle_parts": [
+      {
+        "start_seconds": 0,
+        "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives."
+      },
+      {
+        "start_seconds": 15.0,
+        "text": "Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities."
+      },
+      {
+        "start_seconds": 28.5,
+        "text": "I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
+      }
+    ]
   },
   "presentation": {
     "workspot": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot",
