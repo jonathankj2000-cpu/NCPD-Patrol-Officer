@@ -1,5 +1,17 @@
 # NCPD Patrol
 
+## v0.19h1 — Voss idle pose
+
+Requests native idle-only mode for Voss's existing arms-crossed workspot once
+it is active, before dialogue. The working v0.19h voice and caption timing,
+lipsync, SMS and all nine archives are retained.
+
+[Download the complete v0.19h1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19h1_Voss_Idle_Pose_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Wait near Voss,
+then approach and let the conversation finish; check the body stays in its
+idle rather than transitioning to walking. [Details](docs/VOSS_IDLE_POSE_v019h1.md).
+
 ## v0.19h — Voss timing
 
 Adds playback headroom before V replies and longer turn-taking pauses. Caption

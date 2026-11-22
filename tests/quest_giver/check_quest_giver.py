@@ -134,6 +134,7 @@ class Machine:
     def step(self,seconds=.25):
         for _ in range(round(seconds/.25)):
             if not self.f.ready or self.f.menu:continue
+            self.f.qAdvanceWorkspot(.25)
             if self.release>0:
                 self.release-=.25
                 if self.release<=0:self.f.qsceneOwned=False;self.look_at=None
@@ -169,9 +170,11 @@ class Machine:
         assert self.f.qmod.clear(self.f.qstatus);self.step(2)
         assert not self.f.qmod.active() and self.f.manual==654 and self.f.wallet==0
 
-def runtime(docs,legacy_guard=False,legacy_pose=False):
+def runtime(docs,legacy_guard=False,legacy_pose=False,legacy_walk=False):
     lua=engine_runtime();s=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds')
     s=s.replace('local p = nil','local p = Vector4.new(0,0,0,0)')
+    s=s.replace('local target = nil','local target = {names={n=0}}').replace('.function','["function"]')
+    for name in ['questUseWorkspotParamsV1','questUseWorkspotNodeDefinition']:s=s.replace('new '+name+'()',name+'()')
     lua.globals().QNative=lua.execute(s)
     if legacy_guard:
         # Keep the original API version for the historical Lua-only guard
@@ -181,7 +184,13 @@ def runtime(docs,legacy_guard=False,legacy_pose=False):
         lua.globals().PreviousQuestGiver=lua.execute(previous)
         lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
     if legacy_pose:
+        lua.globals().QNative.Version=lambda _self:2
         previous=subprocess.check_output(['git','show','d9d49cc8084efdcd329d2ddb9572eb2bf254f963:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
+        lua.globals().PreviousQuestGiver=lua.execute(previous)
+        lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
+    if legacy_walk:
+        lua.globals().QNative.Version=lambda _self:2
+        previous=subprocess.check_output(['git','show','e554a51015ba8fbd302e4c581ec839c522e68704:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
         lua.globals().PreviousQuestGiver=lua.execute(previous)
         lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
     lua.execute((HERE/'engine.lua').read_text())
@@ -199,7 +208,7 @@ def main():
     assert m.lua.eval('QNative:GetPoseResource()')==contract['presentation']['workspot']
     m.lua.execute('QNative.Version=function() return 1 end')
     assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
-    assert 'complete v0.19e' in m.f.qlog[len(m.f.qlog)]
+    assert 'complete v0.19h1' in m.f.qlog[len(m.f.qlog)]
     m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0 and not m.sms_notifications
     m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
     assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==contract['sms']['text']

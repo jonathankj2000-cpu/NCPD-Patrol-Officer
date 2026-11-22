@@ -80,7 +80,10 @@ def main():
     assert non_caption_entries(docs['onscreens.json.json'])==non_caption_entries(old_text)
     for path in subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','r6/scripts/NCPDPatrol'],cwd=ROOT,text=True).splitlines():
         if path=='r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds':continue
-        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),path
+        if path=='r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds':
+            from pose_source import without_idle_only_pose
+            assert without_idle_only_pose((ROOT/path).read_text())==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT,text=True),path
+        else:assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),path
     for kind in ['old_id','option_type','missing_index','reordered_lines','dangling_event','sparse_node','unsorted_nodes','dangling_edge']:
         bad=copy.deepcopy(current)
         if kind in ['old_id','option_type','missing_index']:
@@ -95,8 +98,8 @@ def main():
         elif kind=='dangling_edge':bad['sceneGraph']['Data']['graph'][0]['Data']['outputSockets'][0]['destinations'][0]['nodeId']['id']=999
         message={'reordered_lines':'packed dialogue','dangling_event':'outside line array','sparse_node':'dense ordered','unsorted_nodes':'dense ordered','dangling_edge':'missing node'}[kind]
         rejected(lambda:(check_screenplay(bad),check_graph(bad)),message)
-    result={'reference_commit':reference['source_commit'],'reference_blob':reference['source_git_blob'],'previous_v019g_first_item_id':bad_id,'previous_type_byte':161,'previous_array_index':390,'previous_v019g_invalid_layout_rejected':True,'corrected_packed_dialogue_ids':[(i<<8)|1 for i in range(10)],'dense_scene_node_ids':list(range(1,16)),'all_dialogue_and_graph_references_checked':True,'all_45_other_native_scripts_and_all_media_unchanged':True,'only_caption_text_and_timing_excluded_from_baseline_comparison':True,'actual_native_crash_reproduced':False,'actual_game_validation':False}
+    result={'reference_commit':reference['source_commit'],'reference_blob':reference['source_git_blob'],'previous_v019g_first_item_id':bad_id,'previous_type_byte':161,'previous_array_index':390,'previous_v019g_invalid_layout_rejected':True,'corrected_packed_dialogue_ids':[(i<<8)|1 for i in range(10)],'dense_scene_node_ids':list(range(1,16)),'all_dialogue_and_graph_references_checked':True,'all_44_other_native_scripts_and_all_media_unchanged':True,'only_captions_timing_and_scoped_idle_request_excluded_from_baseline_comparison':True,'actual_native_crash_reproduced':False,'actual_game_validation':False}
     p=argparse.ArgumentParser();p.add_argument('--report',type=Path);a=p.parse_args()
     if a.report:a.report.write_text(json.dumps(result,indent=2)+'\n')
-    print('PASS: reference-backed scene IDs: shipped v0.19g first ID 100001/type161/index390 and sparse graph rejected; ten packed dialogue IDs, dense ordered 15-node graph and every event/edge checked; unsafe-category/index/order/reference controls; speech/media/native V IDs and 45 other scripts unchanged, scoped caption/timing changes allowed (not a native crash reproduction)')
+    print('PASS: reference-backed scene IDs: shipped v0.19g first ID 100001/type161/index390 and sparse graph rejected; ten packed dialogue IDs, dense ordered 15-node graph and every event/edge checked; unsafe-category/index/order/reference controls; speech/media/native V IDs and 44 other scripts unchanged, scoped captions/timing/idle request allowed (not a native crash reproduction)')
 if __name__=='__main__':main()

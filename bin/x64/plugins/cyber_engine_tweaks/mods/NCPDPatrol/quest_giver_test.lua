@@ -21,7 +21,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolQuestGiverTest')
-    if not n or n:Version()~=2 then error('Install the complete v0.19e quest giver package and restart the game') end
+    if not n or n:Version()~=3 then error('Install the complete v0.19h1 quest giver package and restart the game') end
     return n
 end
 local function entities()
@@ -218,6 +218,12 @@ local function preparePose(n,step)
         ..' | entering='..tostring(info and info.entering)..' | exiting='..tostring(info and info.exiting)
         ..' | device user='..(user and (matching and 'Voss' or 'other') or 'not registered')
     if matching and present and info and info.isActive==true and info.entering==false and info.exiting==false then
+        -- idle-only pose begin
+        if not pose.idleRequested then
+            if not n:RequestPoseIdle(actor) then error('Voss idle-only request was not accepted; the existing pose is retained') end
+            pose.idleRequested=true
+        end
+        -- idle-only pose end
         pose.stable=(pose.stable or 0)+step
     else pose.stable=0 end
     return pose.stable>=.5

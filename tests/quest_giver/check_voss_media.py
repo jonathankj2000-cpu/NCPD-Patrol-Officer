@@ -111,7 +111,8 @@ def main():
     current=(ROOT/rel).read_text();old=subprocess.check_output(['git','show','541158bc5cd3b363806813985837da36ede3f694:'+rel],cwd=ROOT,text=True)
     guard=r'local function playerBlockReason\(player\).*?\nend'
     assert re.search(guard,current,re.S)[0]==re.search(guard,old,re.S)[0]
-    native_rel='r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds';native=(ROOT/native_rel).read_text()
+    from pose_source import without_idle_only_pose
+    native_rel='r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds';native=without_idle_only_pose((ROOT/native_rel).read_text())
     prior=subprocess.check_output(['git','show','541158bc5cd3b363806813985837da36ede3f694:'+native_rel],cwd=ROOT,text=True)
     stripped=re.sub(r'^    public func GetPose(?:HelperTemplate|Resource)\(\) -> ResRef \{[^\n]+\}\n','',native,flags=re.M).replace('return 2;','return 1;')
     assert stripped==prior

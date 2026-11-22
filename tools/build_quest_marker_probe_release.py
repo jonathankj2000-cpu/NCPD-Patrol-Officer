@@ -1,31 +1,31 @@
-"""Package guarded turn-taking and later captions for the Voss conversation.
+"""Package a scoped idle-only request for the existing Voss workspot.
 
-The release retains 45 native scripts and eight other archives exactly.
+The release retains 45 native scripts and all nine archives exactly.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='a890a40a9aafb4c6ebf37975d7465bfcf8339cec'
+BASE='e554a51015ba8fbd302e4c581ec839c522e68704'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19h_Voss_Timing_TEST.zip'
-REPORT='NCPD_Patrol_v0.19h_Voss_Timing_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py','tests/quest_giver/check_scene_ids.py','tests/quest_giver/check_timing.py']
+NAME='NCPD_Patrol_v0.19h1_Voss_Idle_Pose_TEST.zip'
+REPORT='NCPD_Patrol_v0.19h1_Voss_Idle_Pose_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py','tests/quest_giver/check_scene_ids.py','tests/quest_giver/check_timing.py','tests/quest_giver/check_pose_idle.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==46 and len(scripts)==46 and len(TESTS)==37
+ assert len(modules)==46 and len(scripts)==46 and len(TESTS)==38
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
- changed.update({'archive/pc/mod/NCPDPatrol_QuestGiverTest.archive','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds'})
+ changed.update({PREFIX+'quest_giver_test.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds'})
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_voss_timing_branding
+ from probe_source import without_voss_idle_branding
  for name in ['init.lua','cet_ui.lua']:
-  current=without_voss_timing_branding((ROOT/PREFIX/name).read_text())
+  current=without_voss_idle_branding((ROOT/PREFIX/name).read_text())
   old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True)
   if name=='cet_ui.lua':
    pattern=r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n'
@@ -34,7 +34,7 @@ def main():
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
- for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/media/manifest.json','assets/quest_giver_test/quest_giver.questphase.json','assets/quest_giver_test/quest_giver.journal.json','assets/quest_giver_test/lines.json.json','assets/quest_giver_test/vomap.json.json','assets/quest_giver_test/voss.lipmap.json','assets/quest_giver_test/subtitles.json.json','assets/quest_giver_test/voss_wait_pose.ent.json']:
+ for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/contract.json','assets/quest_giver_test/conversation.scene.json','assets/quest_giver_test/onscreens.json.json','assets/quest_giver_test/media/manifest.json','assets/quest_giver_test/quest_giver.questphase.json','assets/quest_giver_test/quest_giver.journal.json','assets/quest_giver_test/lines.json.json','assets/quest_giver_test/vomap.json.json','assets/quest_giver_test/voss.lipmap.json','assets/quest_giver_test/subtitles.json.json','assets/quest_giver_test/voss_wait_pose.ent.json']:
   assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Existing data changed: '+name
  assert (ROOT/'THIRD_PARTY_NOTICES.txt').read_text().startswith(subprocess.check_output(['git','show',f'{BASE}:THIRD_PARTY_NOTICES.txt'],cwd=ROOT,text=True))
  old=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/officer_down_sites/catalog.json'],cwd=ROOT));catalog=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
@@ -51,7 +51,7 @@ def main():
  'injured_functional':'tests/scene_survey/check_functional.py','officer_catalog':'tests/officer_down/check_catalog.py',
  'officer_gameplay':'tests/officer_down/check_gameplay.py','partner_safety':'tests/partner_safety/check_safety.py',
  'officer_repeat':'tests/officer_down/check_repeat.py','scene_discovery':'tests/scene_survey/check_discovery.py',
- 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py','voss_media':'tests/quest_giver/check_voss_media.py','voss_subtitles':'tests/quest_giver/check_subtitles.py','scene_ids':'tests/quest_giver/check_scene_ids.py','voss_timing':'tests/quest_giver/check_timing.py'}
+ 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py','voss_media':'tests/quest_giver/check_voss_media.py','voss_subtitles':'tests/quest_giver/check_subtitles.py','scene_ids':'tests/quest_giver/check_scene_ids.py','voss_timing':'tests/quest_giver/check_timing.py','voss_pose_idle':'tests/quest_giver/check_pose_idle.py'}
  with TemporaryDirectory(prefix='ncpd-quest-giver-prototype-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
@@ -62,7 +62,7 @@ def main():
  release=ROOT/'releases'/NAME
  with zipfile.ZipFile(release,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
   for p in sorted(paths):
-   info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,22,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
+   info=zipfile.ZipInfo(p.relative_to(ROOT).as_posix(),(2026,11,23,0,0,0));info.compress_type=zipfile.ZIP_DEFLATED;info.create_system=3;info.external_attr=0o100644<<16
    z.writestr(info,p.read_bytes(),compresslevel=9)
  with zipfile.ZipFile(release) as z:
   assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==123
@@ -70,7 +70,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19h-voss-timing','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19h1-voss-idle-pose','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -78,7 +78,8 @@ def main():
   'retired_cet_buttons':results['current_controls']['retired_buttons'],
   'ordinary_request_samples':results['current_controls']['ordinary_request_samples'],
   'independent_fixed_pins':54,'additional_marker_archive_pins':53,'marker_archive_validation':compiled,
-  'all_eight_other_archives_and_45_native_scripts_unchanged':True,
+  'all_nine_archives_and_45_native_scripts_unchanged':True,
+  'voss_idle_pose':results['voss_pose_idle'],
   'voss_timing':results['voss_timing'],
   'voss_timing_policy':json.loads((ROOT/'assets/quest_giver_test/contract.json').read_text())['timing'],
   'player_scene_membership_false_rejection_reproduced':results['quest_giver']['previous_scene_membership_false_rejection_reproduced'],
@@ -106,7 +107,7 @@ def main():
   'voss_grounded_waiting_pose_executed':results['quest_giver']['grounded_waiting_pose_executed'],
   'voss_pose_device_detaches_before_puppet_deletion':results['quest_giver']['pose_device_detaches_before_puppet_deletion'],
   'voss_no_body_pose_restart_at_greeting':results['quest_giver']['no_body_pose_restart_at_greeting'],
-  'voss_native_helper_api_version':2,'voss_spawn_height_offset_metres':0.0,
+  'voss_native_helper_api_version':3,'voss_spawn_height_offset_metres':0.0,
   'andrea_mit_presentation_adaptation_credited':True,
   'voss_native_sms_intro':results['quest_giver']['native_sms_intro'],
   'voss_sms_history_retained_on_clear':results['quest_giver']['sms_history_retained_on_clear'],
@@ -122,7 +123,7 @@ def main():
   'actual_new_quest_gameplay_validation':False,'observed_redscript_dispose_error_guarded':True,
   'game_checks_required':['Use a save made before the old Voss test was activated; OFF DUTY > Testing > Quest giver prototype > activate, then approach once; independent journal quest and marker',
    'incoming native SMS from Lt. Mara Voss; exact supplied text in Messages, private contact/thread and meeting quest attachment',
-   'stand near Voss for more than 15 seconds before dialogue; her active pose and Hella must remain without automatic cancellation',
+   'stand near Voss for 60 seconds before dialogue; her active crossed-arms pose and Hella must remain without walking or automatic cancellation',
    'clear/replay sends one new notification using the same single message; message history survives cancellation/completion',
    'both actors at supplied XYZ/yaw, exact investigator appearance, side-on Hella 4 m behind',
    'ten automatic speech turns in supplied manuscript order: six complete Voss voice/lipsync clips and four exact original V string IDs; no choice UI',
@@ -131,6 +132,7 @@ def main():
    'test voice routing and facial/head compatibility for both player genders; matching source rig remains unmodified',
    'Voss uses the native arms-crossed workspot at her own position; look at V eye-height slot through all dialogue turns when V moves slightly',
    'Voss already poses while waiting outside 3 m; feet align to ground and greeting does not lift/restart her body',
+   'existing workspot stays in crossed-arms idle through all dialogue turns and post-conversation retention; Clear/replay releases it normally',
    'clear/replay and save/CET recovery retire the pose device before NPC/car after scene release',
    'journal succeeds only after the last supplied Voss line; no career/payout',
    'clear/replay, cancellation during NPC or V speech, CET reload/save-load recovery with scoped cleanup'],

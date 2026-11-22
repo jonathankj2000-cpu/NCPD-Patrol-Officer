@@ -1,3 +1,16 @@
+NCPD PATROL v0.19h1 VOSS IDLE POSE - COMPLETE BRANCH TEST
+
+Requests native idle-only mode once after Voss's existing crossed-arms pose
+becomes active, before dialogue. This targets the ambient transition into
+walking without restarting the workspot. All v0.19h archives, voice, lipsync,
+subtitles and conversation timings are retained.
+
+Clear the old quest-giver test, install all 123 files and fully restart. The
+updated native bridge uses API version 3. Activate the same OFF DUTY test,
+wait outside the 3 m talk radius, then let the whole conversation finish.
+Check Voss stays in crossed-arms idle, feet remain planted, and Clear/replay
+still works. Native animation behavior requires game confirmation.
+
 NCPD PATROL v0.19h VOSS TIMING - COMPLETE BRANCH TEST
 
 Gives Voss extra playback time before the next automatic reply and increases

@@ -8,6 +8,11 @@ f.qroot='quests/minor_quest/ncpd_patrol_quest_giver_test'
 f.qpoint=Vector4.new(1424.737,-2754.759,204.665,1)
 f.qlog={};f.qtagStale=false;f.qpending={}
 f.qposeLinks={};f.qposeCalls={};f.qposeLoads=0
+f.qposeIdleCalls={};f.qposeWalks=0
+gameEntityReferenceType={EntityRef=0,Tag=1,SlotID=2,SceneActorContextName=3}
+questUseWorkspotNodeFunctions={UseWorkspot=0,JumpWorkspot=1,StopWorkspot=2,IdleOnlyMode=3}
+questUseWorkspotNodeDefinition=function() return {kind='quest-workspot'} end
+questUseWorkspotParamsV1=function() return {['function']=0} end
 QNative.GetGameInstance=function() return {} end
 NCPDPatrolQuestGiverTest=QNative
 local qs=GameInstance:GetQuestsSystem({})
@@ -15,6 +20,23 @@ function qs:GetFactStr(key) return f.qfacts[key] or 0 end
 function qs:SetFactStr(key,value)
  assert(key:find('ncpd_patrol_qgiver_test_',1,true)==1,'Unrelated quest fact written')
  f.qfacts[key]=value
+end
+local executeNode=qs.ExecuteNode
+function qs:ExecuteNode(node,input)
+ if node.kind~='quest-workspot' then return executeNode(self,node,input) end
+ if f.qposeIdleExecuteThrows then error('Native idle-mode request rejected') end
+ local p,ref=node.paramsV1,node.entityReference
+ assert(input=='In' and node.id==0 and p['function']==3 and p.enableIdleMode==true)
+ assert(not p.changeWorkspot and not p.teleport and not p.jumpToEntry and not p.isPlayer)
+ assert(ref.type==1 and ref.names.n==1 and ref.names[0]=='ncpd_patrol_qgiver_test_npc')
+ local actor
+ for _,user in pairs(f.qposeLinks) do
+  assert(not actor and user~=f.player and user:GetRecordID()=='Character.NCPDPatrol_QG_Investigator')
+  actor=user
+ end
+ assert(actor and actor:IsAttached(),'Idle mode requested before the owned workspot was active')
+ actor.qposeIdleOnly=true
+ f.qposeIdleCalls[#f.qposeIdleCalls+1]={node=node,input=input,actor=actor}
 end
 local box=Game.GetScriptableSystemsContainer();local oldGet=box.Get
 function box:Get(name)
@@ -105,6 +127,22 @@ function workspots:PlayInDeviceSimple(helper,actor,camera,actorComp,deviceComp,s
  if not f.qposePlayFailed then f.qposeLinks[helper:GetEntityID().hash]=actor;actor.pos=helper:GetWorldPosition() end
 end
 Game.GetWorkspotSystem=function() return workspots end
+GameInstance.GetWorkspotSystem=function(_,game)
+ if f.qposeNoNativeSystem then return nil end
+ return workspots
+end
+function f.qAdvanceWorkspot(seconds)
+ -- A deliberately simple branch-selection boundary, not an animation or
+ -- root-motion emulator. Tests opt in to an ambient walking branch.
+ if not f.qposeModelWalkAfter then return end
+ for _,actor in pairs(f.qposeLinks) do
+  actor.qposeAge=(actor.qposeAge or 0)+seconds
+  if actor.qposeAge>=f.qposeModelWalkAfter and not actor.qposeIdleOnly and not actor.qposeWalked then
+   actor.qposeWalked=true;f.qposeWalks=f.qposeWalks+1
+   local p=actor:GetWorldPosition();actor.pos=Vector4.new(p.x+1,p.y,p.z,1)
+  end
+ end
+end
 Game.GetResourceDepot=function() return {
  ResourceExists=function(_,path) return f.qposeResourcesMissing~=true end,
  LoadResource=function(_,path)
