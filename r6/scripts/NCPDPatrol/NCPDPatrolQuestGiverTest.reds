@@ -7,7 +7,9 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_marker = null; this.m_previous = null; this.m_tracking = false;
     }
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
+    public func GetPoseHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\quest_giver_test\\voss_wait_pose.ent"; }
+    public func GetPoseResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot"; }
     public func IsMenuOpen() -> Bool {
         let board: ref<IBlackboard> = GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_System);
         return !IsDefined(board) || board.GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);

@@ -129,3 +129,9 @@ assets/quest_giver_test/sms-templates.json and their private journal adaptation
 are adapted from that MIT-licensed reference. The Andrea Olivato copyright and
 full MIT permission notice above apply. The invitation text is supplied by the
 NCPD Patrol author; no fixer01 story, portrait or phone audio is included.
+
+v0.19e Voss waiting-pose update
+The existing MIT scene LookAt and legacy workspot schema attribution above is
+retained. The new private voss_wait_pose.ent is generated from NCPD Patrol's
+own minimal arrest helper schema, with its own component identity and a vanilla
+workspot reference. No additional Andrea Olivato assets or code are introduced.

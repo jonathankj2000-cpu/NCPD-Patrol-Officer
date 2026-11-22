@@ -7,6 +7,7 @@ PlayerPuppet={GetSceneTier=function(player) assert(player==f.player);return f.qs
 f.qroot='quests/minor_quest/ncpd_patrol_quest_giver_test'
 f.qpoint=Vector4.new(1424.737,-2754.759,204.665,1)
 f.qlog={};f.qtagStale=false;f.qpending={}
+f.qposeLinks={};f.qposeCalls={};f.qposeLoads=0
 QNative.GetGameInstance=function() return {} end
 NCPDPatrolQuestGiverTest=QNative
 local qs=GameInstance:GetQuestsSystem({})
@@ -35,10 +36,22 @@ EulerAngles.new=function(roll,pitch,yaw)
 end
 local e=f.entities;local create,delete=e.CreateEntity,e.DeleteEntity
 function e:CreateEntity(spec)
- assert(spec.recordID=='Character.NCPDPatrol_QG_Investigator' or spec.recordID=='Vehicle.NCPDPatrol_QG_Hella')
- assert(spec.persistSpawn and not spec.persistState and spec.active and not spec.alwaysSpawned)
+ local helper=spec.templatePath==QNative:GetPoseHelperTemplate()
+ assert(helper or spec.recordID=='Character.NCPDPatrol_QG_Investigator' or spec.recordID=='Vehicle.NCPDPatrol_QG_Hella')
+ assert(spec.persistSpawn==not helper and not spec.persistState and spec.active and not spec.alwaysSpawned)
  local id=create(self,spec)
- if id.hash~=0 then f.qtags[id.hash]=spec.tags;f.qids[id.hash]=id end
+ if id.hash~=0 then
+  f.qtags[id.hash]=spec.tags;f.qids[id.hash]=id
+  local object=f.objects[id.hash]
+  if helper then
+   object.poseHelper=true
+   function object:FindComponentByType(kind)
+    assert(kind=='workWorkspotResourceComponent')
+    if f.qposeNoComponent then return nil end
+    return {name=f.qposeWrongComponent and 'ForeignComponent' or 'NCPDPatrolVossWaitPose'}
+   end
+  end
+ end
  return id
 end
 function e:GetTaggedIDs(tag)
@@ -55,15 +68,48 @@ end
 function e:IsSpawned(id) return f.objects[id.hash]~=nil and f.objects[id.hash].attached end
 function e:DeleteEntity(id)
  assert(not f.qsceneOwned,'Actor deleted while still owned by the native scene')
+ for _,user in pairs(f.qposeLinks) do assert(user:GetEntityID().hash~=id.hash,'NPC deleted before its pose device detached') end
  local a=f.objects[id.hash];local accepted=delete(self,id)
  if accepted and a then
-  if f.deleteDeferred then f.qpending[id.hash]=a else a.attached=false end
+  if f.deleteDeferred then f.qpending[id.hash]=a else a.attached=false;f.qposeLinks[id.hash]=nil end
  end
  return accepted
 end
 function f.qCompleteDeletes()
- for hash,a in pairs(f.qpending) do a.attached=false;f.objects[hash]=nil;f.managed[hash]=nil end
+ for hash,a in pairs(f.qpending) do a.attached=false;f.objects[hash]=nil;f.managed[hash]=nil;f.qposeLinks[hash]=nil end
  f.qpending={}
+end
+WorkspotSlidingBehaviour={PlayAtResourcePosition='ground_anchor'}
+local workspots={}
+function workspots:IsActorInWorkspot(actor)
+ if f.qforeignPose then return true end
+ for _,user in pairs(f.qposeLinks) do if user==actor then return true end end
+ return false
+end
+function workspots:GetDeviceUser(id) return f.qposeLinks[id.hash] end
+function workspots:GetExtendedInfo(actor)
+ return {isActive=self:IsActorInWorkspot(actor),isEntering=f.qposeEntering==true,isExiting=false}
+end
+function workspots:PlayInDeviceSimple(helper,actor,camera,actorComp,deviceComp,sync,slide,behaviour,recipient)
+ assert(helper.poseHelper and actor:GetRecordID()=='Character.NCPDPatrol_QG_Investigator' and actor~=f.player)
+ assert(not camera and actorComp=='NCPDPatrolVossWaitPose' and deviceComp=='None' and sync=='None')
+ assert(behaviour=='ground_anchor' and slide==.25 and recipient==nil)
+ assert(not f.qsceneOwned,'Waiting pose was delayed until dialogue start')
+ f.qposeCalls[#f.qposeCalls+1]={helper=helper,actor=actor,position=helper:GetWorldPosition()}
+ if not f.qposePlayFailed then f.qposeLinks[helper:GetEntityID().hash]=actor;actor.pos=helper:GetWorldPosition() end
+end
+Game.GetWorkspotSystem=function() return workspots end
+Game.GetResourceDepot=function() return {
+ ResourceExists=function(_,path) return f.qposeResourcesMissing~=true end,
+ LoadResource=function(_,path)
+  assert(path==QNative:GetPoseResource());f.qposeLoads=f.qposeLoads+1
+  return {IsFailed=function() return f.qposeLoadFailed==true end,IsLoaded=function() return not f.qposeLoadPending and not f.qposeLoadFailed end,
+   GetResource=function() return {workspotTree={rootEntry={}}} end}
+ end,
+} end
+function f.qPoseActive()
+ for _,actor in pairs(f.qposeLinks) do if actor:IsAttached() then return true end end
+ return false
 end
 local spatial={}
 function spatial:SyncRaycastByCollisionGroup(a,b,group,staticOnly,dynamicOnly)

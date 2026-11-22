@@ -1,16 +1,16 @@
-"""Package the native Voss SMS introduction with production systems intact.
+"""Package the grounded Voss waiting pose with SMS/production systems intact.
 
-The release retains all 45 native scripts and eight other archives exactly.
+The release retains 44 other native scripts and eight other archives exactly.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='83667c684608f5f98e32c81a0f612a439df3a816'
+BASE='541158bc5cd3b363806813985837da36ede3f694'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19d_Voss_SMS_Intro_TEST.zip'
-REPORT='NCPD_Patrol_v0.19d_Voss_SMS_Intro_verification.json'
+NAME='NCPD_Patrol_v0.19e_Voss_Waiting_Pose_TEST.zip'
+REPORT='NCPD_Patrol_v0.19e_Voss_Waiting_Pose_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
@@ -22,10 +22,11 @@ def main():
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  changed={PREFIX+n for n in ['init.lua','cet_ui.lua','quest_giver_test.lua']}
  changed.add('archive/pc/mod/NCPDPatrol_QuestGiverTest.archive')
+ changed.add('r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds')
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_voss_sms_branding
+ from probe_source import without_voss_waiting_branding
  for name in ['init.lua','cet_ui.lua']:
-  current=without_voss_sms_branding((ROOT/PREFIX/name).read_text())
+  current=without_voss_waiting_branding((ROOT/PREFIX/name).read_text())
   old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True)
   if name=='cet_ui.lua':
    pattern=r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n'
@@ -34,7 +35,7 @@ def main():
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
- for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/media/voss_briefing.anims','assets/quest_giver_test/media/voss_briefing.wem','assets/quest_giver_test/conversation.scene.json']:
+ for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/media/voss_briefing.anims','assets/quest_giver_test/media/voss_briefing.wem','assets/quest_giver_test/quest_giver.questphase.json','assets/quest_giver_test/quest_giver.journal.json','assets/quest_giver_test/onscreens.json.json']:
   assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Existing data changed: '+name
  assert (ROOT/'THIRD_PARTY_NOTICES.txt').read_text().startswith(subprocess.check_output(['git','show',f'{BASE}:THIRD_PARTY_NOTICES.txt'],cwd=ROOT,text=True))
  old=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/officer_down_sites/catalog.json'],cwd=ROOT));catalog=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
@@ -70,7 +71,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19d-voss-sms-intro','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19e-voss-waiting-pose','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -78,10 +79,10 @@ def main():
   'retired_cet_buttons':results['current_controls']['retired_buttons'],
   'ordinary_request_samples':results['current_controls']['ordinary_request_samples'],
   'independent_fixed_pins':54,'additional_marker_archive_pins':53,'marker_archive_validation':compiled,
-  'all_eight_other_archives_and_45_native_scripts_unchanged':True,
+  'all_eight_other_archives_and_44_other_native_scripts_unchanged':True,
   'player_scene_membership_false_rejection_reproduced':results['quest_giver']['previous_scene_membership_false_rejection_reproduced'],
   'start_and_approach_use_dialogue_and_scene_tier_checks':True,
-  'owned_actor_scene_release_check_unchanged':True,
+  'owned_actor_scene_release_guard_retained':True,
   'production_dispatch_facade_unchanged':True,
   'separate_native_scene_quest_and_private_actors':True,
   'quest_giver_choices':2,'quest_giver_english_voice_and_lipsync_bundled':True,'quest_giver_automatic_activation':False,
@@ -89,15 +90,20 @@ def main():
   'voss_shared_audio_lipsync_lead_in_ms':300,'voss_source_animation_byte_identical':True,'player_voice':False,
   'voss_native_workspot':'base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot',
   'voss_native_look_at_slot':'pla_default_tgt','voss_look_at_parts':['Eyes','Head'],
-  'voss_parallel_pose_does_not_gate_dialogue':True,'voss_media_and_conversation_scene_unchanged':True,
-  'voss_lua_lifecycle_unchanged':True,'andrea_mit_presentation_adaptation_credited':True,
+  'voss_pose_ready_before_conversation':results['quest_giver']['workspot_ready_before_conversation'],
+  'voss_media_sms_and_quest_phase_unchanged':True,
+  'voss_grounded_waiting_pose_executed':results['quest_giver']['grounded_waiting_pose_executed'],
+  'voss_pose_device_detaches_before_puppet_deletion':results['quest_giver']['pose_device_detaches_before_puppet_deletion'],
+  'voss_no_body_pose_restart_at_greeting':results['quest_giver']['no_body_pose_restart_at_greeting'],
+  'voss_native_helper_api_version':2,'voss_spawn_height_offset_metres':0.0,
+  'andrea_mit_presentation_adaptation_credited':True,
   'voss_native_sms_intro':results['quest_giver']['native_sms_intro'],
   'voss_sms_history_retained_on_clear':results['quest_giver']['sms_history_retained_on_clear'],
   'voss_no_duplicate_message_entries':results['quest_giver']['no_duplicate_message_entries'],
   'voss_sms_exact_text_and_quest_attachment':results['quest_giver']['sms_exact_text_and_quest_attachment'],
   'voss_sms_milestone_activation':False,
   'quest_giver_actual_game_validation':False,
-  'runtime_selection_scene_marker_cleanup_code_unchanged':True,
+  'production_runtime_selection_scene_marker_cleanup_code_unchanged':True,
   'recorded_survey_discovery_and_gameplay_logs_preserved':True,
   'all_payment_career_and_runtime_evidence_ledgers_unchanged':True,
   'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},'officer_down_reward':2000,'career_credit':1,
@@ -110,6 +116,8 @@ def main():
    'hello subtitle, 300 ms shared lead-in, uninterrupted 42 s Voss voice and lipsync, two native choices, silent V reply and goodbye subtitle',
    'test voice routing and facial/head compatibility for both player genders; matching source rig remains unmodified',
    'Voss uses the native arms-crossed workspot at her own position; look at V eye-height slot through lines/choices when V moves slightly',
+   'Voss already poses while waiting outside 3 m; feet align to ground and greeting does not lift/restart her body',
+   'clear/replay and save/CET recovery retire the pose device before NPC/car after scene release',
    'journal succeeds only after goodbye, either choice; no career/payout',
    'clear/replay, cancellation during the briefing or at a choice, CET reload/save-load recovery with scoped cleanup'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),

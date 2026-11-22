@@ -26,7 +26,7 @@
         "$type": "scnSceneSolutionHash",
         "sceneSolutionHash": {
           "$type": "scnSceneSolutionHashHash",
-          "sceneSolutionHashDate": "780624133941726735"
+          "sceneSolutionHashDate": "4391742792261567270"
         }
       },
       "version": 5,
@@ -2260,26 +2260,6 @@
                   {
                     "HandleId": "43",
                     "Data": {
-                      "$type": "scneventsSocket",
-                      "duration": 0,
-                      "executionTagFlags": 0,
-                      "id": {
-                        "$type": "scnSceneEventId",
-                        "id": "11950717827359084229"
-                      },
-                      "osockStamp": {
-                        "$type": "scnOutputSocketStamp",
-                        "name": 2,
-                        "ordinal": 0
-                      },
-                      "scalingData": null,
-                      "startTime": 0,
-                      "type": "0"
-                    }
-                  },
-                  {
-                    "HandleId": "44",
-                    "Data": {
                       "$type": "scnLookAtEvent",
                       "basicData": {
                         "$type": "scnLookAtBasicEventData",
@@ -2424,20 +2404,7 @@
                   },
                   {
                     "$type": "scnOutputSocket",
-                    "destinations": [
-                      {
-                        "$type": "scnInputSocketId",
-                        "isockStamp": {
-                          "$type": "scnInputSocketStamp",
-                          "name": 0,
-                          "ordinal": 1
-                        },
-                        "nodeId": {
-                          "$type": "scnNodeId",
-                          "id": 11
-                        }
-                      }
-                    ],
+                    "destinations": [],
                     "stamp": {
                       "$type": "scnOutputSocketStamp",
                       "name": 2,

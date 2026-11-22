@@ -14,7 +14,7 @@ class Machine:
     def __init__(self,lua,docs):
         self.lua=lua;self.f=lua.globals().F;self.handles={};self.queue=deque();self.waits=set();self.scene=None
         self.release=0;self.lines=[];self.choice_ready=False;self.scn_nodes={n['Data']['nodeId']['id']:n['Data'] for n in docs['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph']}
-        self.workspot_requested=0;self.workspot_active=False;self.workspot_available=True;self.look_at=None
+        self.legacy_workspot_requests=0;self.look_at=None
         self.scn=docs['conversation.scene.json']['Data']['RootChunk']
         self.phone={};self.sms_notifications=[]
         def register(ref,parent=''):
@@ -111,11 +111,11 @@ class Machine:
             command=n['questNode']['Data']
             if command['$type']=='questUseWorkspotNodeDefinition':
                 assert command['paramsV1']['Data']['isPlayer']==0
-                self.workspot_requested+=1;self.workspot_active=self.workspot_available
+                self.legacy_workspot_requests+=1
             else:
                 t=command['type']['Data'];self.f.qfacts[t['factName']]=t['value'];self.scn_emit(n)
         elif typ=='scnEndNode':
-            self.scene=None;self.f.qsceneOwned=False;self.workspot_active=False;self.look_at=None;self.emit(12,'conversation_out');self.run()
+            self.scene=None;self.f.qsceneOwned=False;self.look_at=None;self.emit(12,'conversation_out');self.run()
         else:raise AssertionError(typ)
     def scn_emit(self,n,option=0,name=0):
         out=next(s for s in n['outputSockets'] if s['stamp']['name']==name and s['stamp']['ordinal']==option)
@@ -133,7 +133,7 @@ class Machine:
             if not self.f.ready or self.f.menu:continue
             if self.release>0:
                 self.release-=.25
-                if self.release<=0:self.f.qsceneOwned=False;self.workspot_active=False;self.look_at=None
+                if self.release<=0:self.f.qsceneOwned=False;self.look_at=None
             for i in list(self.waits):
                 if self.condition(self.nodes[i]['condition']):self.waits.remove(i);self.emit(i,'Out')
             self.run()
@@ -145,11 +145,14 @@ class Machine:
         assert self.f.qmod.start(self.f.qstatus);self.step(.5)
     def arrive(self):
         self.f.playerPoint=self.lua.globals().Vector4.new(1424.737,-2750.759,204.665,1);self.step(1)
-        assert len(self.f.creates)==2
+        assert len(self.f.creates)==3
         npc,car=self.f.creates[1],self.f.creates[2]
         assert npc.appearanceName=='corpo__ncpd_wa_investigator__lvl3_02'
         assert abs(npc.orientation.Yaw+143.376)<.0001 and abs(car.orientation.Yaw+53.376)<.0001
         assert abs(((npc.position.x-car.position.x)**2+(npc.position.y-car.position.y)**2)**.5-4)<.0001
+        assert npc.position.z==self.f.qpoint.z+self.f.surfaceOffset
+        assert self.f.creates[3].position.z==npc.position.z and self.f.qPoseActive()
+        assert len(self.f.qposeCalls)==1 and not self.f.qsceneOwned
     def talk(self):
         self.f.playerPoint=self.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);self.step(1)
         assert self.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
@@ -162,6 +165,9 @@ def runtime(docs,legacy_guard=False):
     s=s.replace('local p = nil','local p = Vector4.new(0,0,0,0)')
     lua.globals().QNative=lua.execute(s)
     if legacy_guard:
+        # Keep the original API version for the historical Lua-only guard
+        # regression; the current source's two resource getters are additive.
+        lua.globals().QNative.Version=lambda _self:1
         previous=subprocess.check_output(['git','show','281ec019319c67e332e1cdc99c1e6bc9f3f22ad9:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
         lua.globals().PreviousQuestGiver=lua.execute(previous)
         lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
@@ -175,6 +181,12 @@ def main():
     assert manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']
     assert hashlib.sha256((ROOT/manifest['archive_path']).read_bytes()).hexdigest()==manifest['archive_sha256']
     for path,sha in manifest['authored_inputs'].items():assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==sha,path
+    m=runtime(docs);contract=assets.read('contract.json')
+    assert m.lua.eval('QNative:GetPoseHelperTemplate()')==contract['presentation']['helper_template']
+    assert m.lua.eval('QNative:GetPoseResource()')==contract['presentation']['workspot']
+    m.lua.execute('QNative.Version=function() return 1 end')
+    assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
+    assert 'complete v0.19e' in m.f.qlog[len(m.f.qlog)]
     for option in [0,1]:
         m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0
         assert not m.sms_notifications
@@ -182,17 +194,17 @@ def main():
         assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==assets.read('contract.json')['sms']['text']
         assert m.sms_notifications[0]['contact']=='Lt. Mara Voss' and m.sms_notifications[0]['attachment']==m.f.qroot
         m.arrive();m.talk();assert m.lines==['quest giver hello']
-        assert m.workspot_requested==1 and m.workspot_active
+        assert len(m.f.qposeCalls)==1 and m.f.qPoseActive() and m.legacy_workspot_requests==0
         assert m.look_at['targetSlot']['$value']=='pla_default_tgt' and m.look_at['targetPerformerId']['id']==257
         m.step(4);assert not m.choice_ready and m.lines==['quest giver hello',assets.read('contract.json')['briefing']['text']]
         m.step(35);assert not m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
         assert m.f.entries[m.f.qroot].state==2 and m.f.wallet==0
         m.await_choices();assert m.choice_ready and len(m.lines)==2
-        m.step(10);assert m.choice_ready and m.workspot_active and m.look_at['isStart']==1
+        m.step(10);assert m.choice_ready and m.f.qPoseActive() and len(m.f.qposeCalls)==1 and m.look_at['isStart']==1
         m.choose(option);m.step(2.5);assert m.lines[-1]=='quest giver goodbye'
         assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2 and m.f.entries[m.f.qroot].state==2
         m.step(4);assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3 and m.f.entries[m.f.qroot].state==3
-        assert not m.workspot_active and m.look_at is None
+        assert m.f.qPoseActive() and len(m.f.qposeCalls)==1 and m.look_at is None
         assert m.f.qmod.state().startswith('Quest completed after goodbye.')
         assert m.f.wallet==0 and not m.f.qpin.active and m.f.tracked.path=='story'
         sms_path=m.sms_notifications[0]['path'];m.f.qtagStale=True;m.clear()
@@ -214,17 +226,31 @@ def main():
     assert m.scene==10 and m.f.qsceneOwned and not m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
-    assert not m.workspot_active and m.look_at is None
+    assert not m.f.qPoseActive() and m.look_at is None
     m=runtime(docs);m.start();m.arrive();m.talk();m.await_choices()
     assert m.f.qsceneOwned and m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
-    assert not m.workspot_active and m.look_at is None
-    # The pose is a parallel scene command: a missing workspot start must not
-    # deadlock the previously working voice/choice flow on infinite Success.
-    m=runtime(docs);m.workspot_available=False;m.start();m.arrive();m.talk();m.await_choices()
-    assert m.workspot_requested==1 and not m.workspot_active and m.choice_ready
-    m.choose(0);m.step(7);assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
+    assert not m.f.qPoseActive() and m.look_at is None
+    # Resource/playback failures are bounded and clear the private test before
+    # dialogue, rather than leaving an idle/half-started actor indefinitely.
+    for flag in ['qposeResourcesMissing','qposeLoadFailed','qposeLoadPending','qposePlayFailed']:
+        m=runtime(docs);setattr(m.f,flag,True);m.start()
+        m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2750.759,204.665,1);m.step(12)
+        assert not m.f.qmod.active() and not m.f.qPoseActive() and not m.lines and m.f.wallet==0,flag
+    # A grounded pose starts at the recorded floor, including small legitimate
+    # site-height differences, before V enters the talk radius.
+    for height in [-.4,0,.4]:
+        m=runtime(docs);m.f.surfaceOffset=height;m.start();m.arrive();m.step(30)
+        assert m.f.qPoseActive() and len(m.f.qposeCalls)==1 and not m.lines
+        m.talk();assert len(m.f.qposeCalls)==1 and m.f.qPoseActive();m.clear()
+    # A menu pauses the setup budget. Cancelling a pending load cannot create
+    # a late helper after the private actors have already been cleared.
+    m=runtime(docs);m.f.qposeLoadPending=True;m.start()
+    m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2750.759,204.665,1);m.step(4)
+    m.f.menu=True;m.step(90);assert m.f.qmod.active() and len(m.f.creates)==2
+    m.f.menu=False;m.clear();m.f.qposeLoadPending=False;m.step(5)
+    assert len(m.f.creates)==2 and not m.f.qmod.active() and not m.f.qPoseActive()
     # Refused/deferred deletion must retain ownership and prevent a new test.
     for deferred in [False,True]:
         m=runtime(docs);m.start();m.arrive();m.f.deleteDeferred=deferred;m.f.deleteOK=deferred
@@ -273,13 +299,14 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: native SMS contact/thread/message activates before the meeting quest, exact text/quest attachment, one notification per explicit start/replay without duplicate bubbles, history retained on clear and no resend on ticks, optional reading with proximity-only conversation, non-blocking scene-owned workspot branch and V eye-slot LookAt, uninterrupted briefing/both choices/silent V reply/goodbye/journal success, presentation release, guards, scoped cleanup and load recovery; existing dispatch/markers unchanged (engine boundaries mocked)')
+    print('PASS: isolated quest giver: native SMS invitation/history/replay, grounded private pose device preloaded and active before approach, no +10 cm spawn lift, one body play across waiting/briefing/choices/completion with no scene restart, V eye-slot LookAt, bounded preload/play failures, helper-before-puppet cleanup including refusal/defer/recovery, uninterrupted voice/both choices/journal success; existing dispatch/markers unchanged (engine boundaries mocked)')
     return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
-        'parallel_scene_workspot_executed':True,'workspot_does_not_gate_conversation':True,
-        'native_look_at_target_slot':'pla_default_tgt','presentation_release_on_completion_and_cancel':True,
+        'grounded_waiting_pose_executed':True,'workspot_ready_before_conversation':True,
+        'native_look_at_target_slot':'pla_default_tgt','look_at_release_on_completion_and_pose_release_on_clear':True,
         'native_sms_intro':True,'sms_notifications_per_explicit_start':1,'sms_history_retained_on_clear':True,
         'sms_exact_text_and_quest_attachment':True,'no_duplicate_message_entries':True,
-        'spawned_private_actors':2,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
+        'spawned_private_actors':2,'spawned_private_pose_devices':1,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
+        'pose_device_detaches_before_puppet_deletion':True,'no_body_pose_restart_at_greeting':True,
         'cleanup_and_replay':True,'save_cet_recovery':True,'existing_dispatch_unchanged':True,
         'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False,
         'previous_scene_membership_false_rejection_reproduced':True,

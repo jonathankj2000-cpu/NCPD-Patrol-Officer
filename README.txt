@@ -1,3 +1,35 @@
+NCPD PATROL v0.19e VOSS WAITING POSE - COMPLETE BRANCH TEST
+
+Includes the finished v0.19d SMS introduction and corrects Voss's waiting pose.
+Voss prepares the supplied arms-crossed workspot when her actors are staged,
+before V enters the 3 m dialogue radius. The conversation keeps that body pose
+instead of starting a second workspot at hello. Eye/head LookAt still targets
+V's pla_default_tgt during dialogue; the voice and lipsync files are unchanged.
+
+The previous NPC spawn added 0.10 m above the sampled ground. This addition is
+removed. A private invisible workspot device sits at the actual ground sample,
+with no component-height offset, and uses PlayAtResourcePosition alignment.
+The vanilla workspot is preloaded before its device is created. Normal dialogue
+waits for confirmed native device-user/activity; failed setup is bounded.
+
+Clear an active old quest-giver test before updating, or use a test save made
+before activating it. Install all 122 files, including the changed archive and
+quest-giver REDscript file, and fully restart. OFF DUTY > CET > Testing > Quest
+giver prototype > TEST: Activate quest giver quest. Read the SMS, travel to
+Voss and inspect her pose/feet before approaching. Then test the conversation
+and Clear quest giver test. Actual footwear/ground alignment needs game testing.
+
+The pose device stays with the private test and is deleted before the puppet,
+after the dialogue scene releases ownership. Refused/deferred deletion retains
+the handles; save/CET recovery only collects the current world's private tags.
+No generic stop command is sent to ambient NPC workspots. The old inactive
+scene-workspot node/data remain available for saved-scene cleanup compatibility.
+
+Native bridge API v2 adds two resource-path getters; its quest/marker logic is
+unchanged. Source/API compilation was checked with Browser Extension present
+and absent; this is not an actual game-cache compilation. The other 44 native
+scripts, eight archives and production dispatch systems remain unchanged.
+
 NCPD PATROL v0.19d VOSS SMS INTRO - COMPLETE BRANCH TEST
 
 The existing quest-giver test now starts with the supplied SMS invitation from

@@ -16,6 +16,16 @@ def briefing_ms(c):return math.ceil(max(c['briefing']['audio_seconds'],c['briefi
 def sms_paths(c):
     contact='contacts/'+c['sms']['contact_id'];thread=contact+'/'+c['sms']['conversation_id']
     return contact,thread,thread+'/'+c['sms']['message_id']
+def pose_helper(c):
+    # Mod-owned minimal device schema already used by the arrest helper. The
+    # Voss device has its own identity and references the unmodified vanilla bank.
+    doc=json.loads((ROOT/'assets/arrest/arrest_workspot.ent.json').read_text())
+    root=doc['Data']['RootChunk'];root['compiledData']['Data']['CruidDict']['1']='19005001'
+    for component in walk(root):
+        if component.get('$type')=='workWorkspotResourceComponent':
+            component.update(id='19005001',name=cn(c['presentation']['helper_component']),
+                workspotResource={**soft(c['presentation']['workspot']),'Flags':'Default'})
+    return doc
 def resource(typ,**fields):
     return {'Header':{'WolvenKitVersion':'9.1.1','WKitJsonVersion':'0.0.9','GameVersion':2500,'DataType':'CR2W'},
         'Data':{'Version':195,'BuildVersion':0,'RootChunk':{'$type':typ,'cookingPlatform':'PLATFORM_PC',**fields},'EmbeddedFiles':[]}}
@@ -126,7 +136,7 @@ def scene(c,t):
     presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root']);r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},
         actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],workspotInstances=[],workspots=[],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v3_presentation')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v4_grounded_wait_pose')
     workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
     workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
     instance=copy.deepcopy(presentation['workspot_instance'])
@@ -179,9 +189,9 @@ def scene(c,t):
     # One event owns both voice and facial animation. Delay both together;
     # padding only the audio would offset the supplied matching lipsync bank.
     line(10,1025,3,briefing_ms(c),c['briefing']['lead_in_ms'])
-    # Like the MIT reference, a socket event starts a scene-owned workspot
-    # branch. Dialogue advances independently; an infinite pose must not block
-    # hello waiting for a workspot "Success" that only arrives on exit.
+    # Retain the old, now unreachable workspot node/data for saved-scene
+    # compatibility. New scenes never fire it: the grounded device already owns
+    # Voss's body while she waits, so greeting must not restart/snap her pose.
     pose=copy.deepcopy(presentation['workspot_node'])
     command=pose['questNode']['Data'];command['id']=11
     command['entityReference']=copy.deepcopy(actor['findActorInWorldParams']['actorRef'])
@@ -191,9 +201,8 @@ def scene(c,t):
     pose['outputSockets']=[output(ordinal=0),output(ordinal=1)]
     add(11,pose)
     intro=copy.deepcopy(t['section']);intro['sectionDuration']['stu']=c['presentation']['intro_ms']
-    socket=copy.deepcopy(presentation['socket_event']);socket['id']['id']=fnv('qgiver_workspot_socket')
-    intro['events']=[{'HandleId':'pending','Data':socket},look_at(12)]
-    intro['outputSockets']=[output(2),output(name=1),output(11,name=2)]
+    intro['events']=[look_at(12)]
+    intro['outputSockets']=[output(2),output(name=1),output(name=2)]
     add(12,intro)
     r['sceneGraph']={'HandleId':'pending','Data':{'$type':'scnSceneGraph','graph':nodes,'startNodes':[rid('scnNodeId',1)],'endNodes':[rid('scnNodeId',9)]}}
     r['entryPoints']=[{'$type':'scnEntryPoint','name':cn('conversation_in'),'nodeId':rid('scnNodeId',1)}]
@@ -248,7 +257,7 @@ def outputs():
     lipmap=resource('animLipsyncMapping',languageCodeName=cn('en-us'),
         sceneEntries=[{'$type':'animLipsyncMappingSceneEntry','actorVoiceTags':[fnv('ncpd_patrol_qgiver_test_investigator')],'animSets':[soft(DEPOT+'voss_briefing.anims')]}],
         scenePaths=[fnv(scene_path)],scenePreviewPaths=[fnv(scene_path+'preview')])
-    return {'conversation.scene.json':scn,'quest_giver.questphase.json':qp,'quest_giver.journal.json':journal,'onscreens.json.json':onscreens,'lines.json.json':lines,'subtitles.json.json':subtitles,'vomap.json.json':vomap,'voss.lipmap.json':lipmap},edges
+    return {'conversation.scene.json':scn,'quest_giver.questphase.json':qp,'quest_giver.journal.json':journal,'onscreens.json.json':onscreens,'lines.json.json':lines,'subtitles.json.json':subtitles,'vomap.json.json':vomap,'voss.lipmap.json':lipmap,'voss_wait_pose.ent.json':pose_helper(c)},edges
 
 def validate(docs):
     c=read('contract.json');s=docs['conversation.scene.json']['Data']['RootChunk'];g=s['sceneGraph']['Data']['graph'];byid={n['Data']['nodeId']['id']:n['Data'] for n in g}
@@ -263,15 +272,22 @@ def validate(docs):
     assert byid[1]['outputSockets'][0]['destinations'][0]['nodeId']['id']==12
     intro=byid[12];assert intro['sectionDuration']['stu']==c['presentation']['intro_ms']==500
     assert intro['outputSockets'][0]['destinations'][0]['nodeId']['id']==2
-    socket=next(e['Data'] for e in intro['events'] if e['Data']['$type']=='scneventsSocket')
-    assert socket['startTime']==0 and socket['osockStamp']=={'$type':'scnOutputSocketStamp','name':2,'ordinal':0}
-    out=next(o for o in intro['outputSockets'] if o['stamp']==socket['osockStamp'])
-    assert out['destinations'][0]['nodeId']['id']==11 and out['destinations'][0]['isockStamp']['ordinal']==1
+    assert all(e['Data']['$type']=='scnLookAtEvent' for e in intro['events'])
+    assert not intro['outputSockets'][2]['destinations']
+    assert not any(d['nodeId']['id']==11 for n in g for o in n['Data'].get('outputSockets',[]) for d in o['destinations'])
     pose=byid[11];assert pose['isockMappings'][1]==cn('In') and not any(o['destinations'] for o in pose['outputSockets'])
     command=pose['questNode']['Data'];params=command['paramsV1']['Data']
     assert command['$type']=='questUseWorkspotNodeDefinition' and command['entityReference']==ref
     assert params['function']=='UseWorkspot' and params['playAtActorLocation']==params['isWorkspotInfinite']==1
     assert params['isPlayer']==params['enableIdleMode']==params['jumpToEntry']==0 and params['workspotInstanceId']['id']==1
+    helper=docs['voss_wait_pose.ent.json']['Data']['RootChunk']
+    components=[x for x in walk(helper) if x.get('$type')=='workWorkspotResourceComponent']
+    assert len(components)==2
+    for component in components:
+        assert component['id']=='19005001' and component['name']==cn(c['presentation']['helper_component'])
+        assert component['workspotResource']=={**soft(c['presentation']['workspot']),'Flags':'Default'}
+        assert all(p['Bits']==0 for p in component['localTransform']['Position'].values() if isinstance(p,dict))
+    assert c['presentation']['spawn_height_offset']==0 and not c['presentation']['scene_restarts_pose']
     for n in [12,2,10,6,7,8]:
         events=[e['Data'] for e in byid[n]['events'] if e['Data']['$type']=='scnLookAtEvent'];assert len(events)==1
         event=events[0];basic=event['basicData']['basic']
@@ -378,7 +394,7 @@ def main():
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','sms-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]+[ROOT/'assets/arrest/arrest_workspot.ent.json']
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
     print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with both media files byte-identical')
 if __name__=='__main__':main()

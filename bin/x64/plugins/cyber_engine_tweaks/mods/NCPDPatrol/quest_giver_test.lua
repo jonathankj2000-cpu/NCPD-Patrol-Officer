@@ -5,7 +5,9 @@ local SITE={x=1424.737,y=-2754.759,z=204.665,yaw=-143.376}
 local TAG='ncpd_patrol_qgiver_test'
 local NPC='Character.NCPDPatrol_QG_Investigator'
 local CAR='Vehicle.NCPDPatrol_QG_Hella'
+local POSE_COMPONENT='NCPDPatrolVossWaitPose'
 local context,rows,retired={},{},{}
+local pose=nil
 local phase,label='idle','Ready: activate the quest giver test while OFF DUTY.'
 local recover,poll,age=true,0,0
 local lastFailure=nil
@@ -19,7 +21,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolQuestGiverTest')
-    if not n or n:Version()~=1 then error('Install the complete v0.19a quest giver package and restart the game') end
+    if not n or n:Version()~=2 then error('Install the complete v0.19e quest giver package and restart the game') end
     return n
 end
 local function entities()
@@ -57,6 +59,41 @@ end
 local function cleanup()
     collect()
     local system=entities();local remaining={}
+    -- Release the invisible device before its puppet, after the native scene
+    -- releases ALL private entities. No generic workspot stop is sent to NPCs.
+    local anchors,actors={},{}
+    for _,row in ipairs(rows) do
+        local object=row.object or system:GetEntity(row.id)
+        if object and object:IsAttached() and inScene(row.id) then return false end
+        local helper=row.helper or system:IsTagged(row.id,CName.new(TAG..'_pose'))
+        row.helper=helper
+        if object and object:IsAttached() then
+            if not system:IsTagged(row.id,CName.new(TAG)) and not (helper and row.accepted) then error('Refusing cleanup of an unowned entity') end
+            if helper then
+                local component=object:FindComponentByType(CName.new('workWorkspotResourceComponent'))
+                if not component or component.name~=CName.new(POSE_COMPONENT) then error('Unexpected tagged pose helper; retained') end
+            else
+                local record=object:GetRecordID()
+                if record~=TweakDBID.new(NPC) and record~=TweakDBID.new(CAR) then error('Unexpected record on a tagged test entity') end
+            end
+        end
+        if helper then anchors[#anchors+1]=row else actors[#actors+1]=row end
+    end
+    if #anchors>0 then
+        for _,row in ipairs(anchors) do
+            local object=row.object or system:GetEntity(row.id)
+            if not row.accepted then row.accepted=system:DeleteEntity(row.id)==true end
+            row.object=object
+            if system:IsSpawning(row.id) or (object and object:IsAttached())
+                or (not row.accepted and system:IsSpawned(row.id)) then actors[#actors+1]=row
+            else retired[tostring(row.id.hash)]=true end
+        end
+        rows=actors
+        pose=nil
+        -- Leave one update for the device's detach to release its native user.
+        return #rows==0
+    end
+    pose=nil
     for _,row in ipairs(rows) do
         local object=row.object or system:GetEntity(row.id)
         if object and object:IsAttached() and inScene(row.id) then return false end
@@ -112,7 +149,7 @@ local function layout(player)
     local route=nav:FindPointInSphereForCharacter(npcGround,1.0,player)
     if not route or route.status~=worldNavigationRequestStatus.OK or not route.point
         or distance(route.point,npcGround)>1.0 then error('Investigator position has no nearby navigation support') end
-    return {{record=NPC,position=Vector4.new(npcGround.x,npcGround.y,npcGround.z+.1,1),yaw=SITE.yaw,tag=TAG..'_npc',npc=true},
+    return {{record=NPC,position=Vector4.new(npcGround.x,npcGround.y,npcGround.z,1),yaw=SITE.yaw,tag=TAG..'_npc',npc=true},
         {record=CAR,position=Vector4.new(carGround.x,carGround.y,carGround.z+.15,1),yaw=carYaw,tag=TAG..'_car'}}
 end
 local function spawn(player)
@@ -131,11 +168,57 @@ local function spawn(player)
     phase,age='spawning',0
     say('Investigator and Hella requested; waiting for both actors to attach.')
 end
+local function preparePose(n,step)
+    local actor=pose.actor
+    if not actor or not actor:IsAttached() or actor:IsDead() then error('Investigator unavailable while preparing the waiting pose') end
+    if not pose.load then
+        local depot=Game.GetResourceDepot()
+        if not depot:ResourceExists(n:GetPoseHelperTemplate()) or not depot:ResourceExists(n:GetPoseResource()) then
+            error('Voss pose resources unavailable; install the complete package and restart')
+        end
+        pose.load=depot:LoadResource(n:GetPoseResource())
+        if not pose.load then error('Voss pose resource load returned no token') end
+    end
+    if pose.load:IsFailed() then error('Voss pose resource load failed') end
+    if not pose.load:IsLoaded() then return false end
+    local resource=pose.load:GetResource()
+    if not resource or not resource.workspotTree or not resource.workspotTree.rootEntry then return false end
+    if not pose.anchor then
+        local spec=DynamicEntitySpec.new()
+        spec.templatePath=n:GetPoseHelperTemplate();spec.position=pose.ground
+        spec.orientation=EulerAngles.new(0,0,SITE.yaw):ToQuat()
+        spec.persistState=false;spec.persistSpawn=false;spec.alwaysSpawned=false
+        spec.spawnInView=true;spec.active=true;spec.tags={CName.new(TAG),CName.new(TAG..'_pose')}
+        local id=entities():CreateEntity(spec)
+        if not id or id.hash==0 then error('Voss pose helper creation was rejected') end
+        pose.anchor={id=id,position=pose.ground,helper=true};rows[#rows+1]=pose.anchor
+    end
+    local helper=entities():GetEntity(pose.anchor.id)
+    if not helper or not helper:IsAttached() then return false end
+    pose.anchor.object=helper
+    local workspots=Game.GetWorkspotSystem()
+    if not workspots then error('Workspot system unavailable') end
+    if not pose.requested then
+        local component=helper:FindComponentByType(CName.new('workWorkspotResourceComponent'))
+        if not component or component.name~=CName.new(POSE_COMPONENT) then error('Voss pose helper component unavailable') end
+        if workspots:IsActorInWorkspot(actor) then error('Voss is already using another workspot; pose not replaced') end
+        pose.requested=true
+        workspots:PlayInDeviceSimple(helper,actor,false,CName.new(POSE_COMPONENT),CName.new('None'),CName.new('None'),.25,
+            WorkspotSlidingBehaviour.PlayAtResourcePosition)
+    end
+    local user=workspots:GetDeviceUser(pose.anchor.id)
+    local info=workspots:GetExtendedInfo(actor)
+    local owned=user and user:GetEntityID().hash==actor:GetEntityID().hash
+    if owned and workspots:IsActorInWorkspot(actor) and info and info.isActive and not info.isEntering and not info.isExiting then
+        pose.stable=(pose.stable or 0)+step
+    else pose.stable=0 end
+    return pose.stable>=.5
+end
 function M.configure(value) context=value or {};recover=true end
 function M.state() return label end
 function M.active() return phase~='idle' end
 function M.blocksDuty() return phase~='idle' and phase~='complete' end
-function M.reset() rows={};retired={};phase,poll,age='idle',0,0;recover=true;lastFailure=nil end
+function M.reset() rows={};retired={};pose=nil;phase,poll,age='idle',0,0;recover=true;lastFailure=nil end
 function M.start(status)
     local ok,result=pcall(function()
         if not ready() then error('Load a save and wait for the game session') end
@@ -207,8 +290,14 @@ local function update(delta)
                 r.object=object;attached=attached+1
             end
         end
-        if attached==2 then phase='approaching';say('Both actors ready. Approach the investigator within 3 m on foot.')
+        if attached==2 then
+            pose={actor=rows[1].object,ground=rows[1].position}
+            phase,age='posing',0;say('Both actors ready; preparing Voss at the grounded waiting anchor.')
         elseif age>30 then error('Timed out waiting for the two test actors') end
+    end
+    if phase=='posing' then
+        if preparePose(n,step) then phase='approaching';say('Voss is waiting in the workspot. Approach within 3 m on foot.')
+        elseif age>8 then error('Voss waiting pose did not become active; clear and retry') end
     end
     if phase=='approaching' then
         local npc=rows[1] and rows[1].object
@@ -228,7 +317,8 @@ function M.update(delta)
 end
 function M.diagnostics()
     local ok,state=pcall(function() return owner():GetDiagnostics() end)
-    return 'phase='..phase..' | owned actors='..#rows..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
+    local poseState=pose and (pose.requested and 'requested' or 'loading') or 'none'
+    return 'phase='..phase..' | owned actors='..#rows..' | pose='..poseState..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
 end
 function M.shutdown()
     if ready() and M.active() then pcall(function() owner():RequestClear() end) end

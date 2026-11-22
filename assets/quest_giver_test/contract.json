@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -39,7 +39,12 @@
     "workspot": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot",
     "look_at_slot": "pla_default_tgt",
     "intro_ms": 500,
-    "play_at_actor_location": true
+    "play_at_actor_location": false,
+    "pose_owner": "private_ground_anchor",
+    "helper_template": "base\\ncpd_patrol\\quest_giver_test\\voss_wait_pose.ent",
+    "helper_component": "NCPDPatrolVossWaitPose",
+    "spawn_height_offset": 0.0,
+    "scene_restarts_pose": false
   },
   "sms": {
     "contact_id": "ncpd_patrol_mara_voss",

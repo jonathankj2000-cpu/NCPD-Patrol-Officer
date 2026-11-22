@@ -4,7 +4,7 @@ This checks the real WEM container and user-supplied CR2W bank, not a mocked
 audio player. Actual NPC head compatibility/playback still requires the game.
 """
 from pathlib import Path
-import argparse,copy,hashlib,json,math,struct,subprocess,sys
+import argparse,copy,hashlib,json,math,re,struct,subprocess,sys
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools'))
@@ -64,7 +64,7 @@ def main():
         except (AssertionError,struct.error):pass
         else:raise AssertionError('Invalid or mistimed audio accepted')
     docs,_=assets.outputs();assets.validate(docs)
-    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice','root_look_at','wrong_look_actor','wrong_workspot','player_workspot','cut_workspot','blocking_pose','sms_sender','sms_body','sms_attachment','sms_callable']:
+    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice','root_look_at','wrong_look_actor','wrong_workspot','player_workspot','scene_pose_restart','blocking_pose','helper_workspot','helper_lift','helper_identity','sms_sender','sms_body','sms_attachment','sms_callable']:
         bad=copy.deepcopy(docs);s=bad['conversation.scene.json']['Data']['RootChunk']
         nodes={n['Data']['nodeId']['id']:n['Data'] for n in s['sceneGraph']['Data']['graph']}
         if kind=='wrong_actor':bad['voss.lipmap.json']['Data']['RootChunk']['sceneEntries'][0]['actorVoiceTags']=['0']
@@ -77,8 +77,13 @@ def main():
         elif kind=='wrong_look_actor':nodes[10]['events'][1]['Data']['basicData']['basic']['targetPerformerId']['id']=1
         elif kind=='wrong_workspot':s['workspots'][0]['Data']['workspotResource']['DepotPath']['$value']='missing.workspot'
         elif kind=='player_workspot':nodes[11]['questNode']['Data']['paramsV1']['Data']['isPlayer']=1
-        elif kind=='cut_workspot':nodes[12]['outputSockets'][2]['destinations'][0]['isockStamp']['ordinal']=0
+        elif kind=='scene_pose_restart':nodes[12]['outputSockets'][2]['destinations']=[{'$type':'scnInputSocketId','nodeId':assets.rid('scnNodeId',11),'isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1}}]
         elif kind=='blocking_pose':nodes[11]['outputSockets'][0]['destinations']=nodes[12]['outputSockets'][0]['destinations']
+        elif kind.startswith('helper_'):
+            component=next(x for x in assets.walk(bad['voss_wait_pose.ent.json']) if x.get('$type')=='workWorkspotResourceComponent')
+            if kind=='helper_workspot':component['workspotResource']['DepotPath']['$value']='missing.workspot'
+            elif kind=='helper_lift':component['localTransform']['Position']['z']['Bits']=256
+            elif kind=='helper_identity':component['name']=assets.cn('foreign_component')
         elif kind.startswith('sms_'):
             journal=bad['quest_giver.journal.json'];contact=next(x for x in assets.walk(journal) if x.get('$type')=='gameJournalContact')
             message=contact['entries'][0]['Data']['entries'][0]['Data']
@@ -94,15 +99,20 @@ def main():
     assert 'vomaps:\n    en-us: '+assets.DEPOT+'vomap.json' in xl
     assert 'lipmaps:\n    en-us: '+assets.DEPOT+'voss.lipmap' in xl
     assert len(docs['vomap.json.json']['Data']['RootChunk']['root']['Data']['entries'])==1
-    # This change must not alter scene cleanup, player guards or actor staging.
+    # Keep the player's established dialogue/tier guard verbatim. The pose
+    # device lifecycle is intentionally changed and covered by runtime tests.
     rel='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua'
-    current=(ROOT/rel).read_text().replace('hello -> Voss briefing -> two choices -> goodbye.','hello -> two choices -> goodbye.')
-    current=current.replace('Voss invitation requested. Check Messages and follow the meeting marker; approach within 3 m on foot to start the conversation.','Quest activated. Travel to the investigator marker; approach within 3 m on foot to start the text-only conversation.')
-    assert current==subprocess.check_output(['git','show','b13576f55e8cce93e339d97fb0e691582432db8f:'+rel],cwd=ROOT,text=True)
-    print('PASS: Voss media: real Wwise Vorbis stream/packet bounds, original sample count/rate, byte-identical supplied lipsync bank, matching voice/subtitle/actor/clip links, shared 300 ms lead-in, uninterrupted 42 s event before choices, malformed media/bindings rejected, scene workspot/eye-slot/performer/input/socket invariants and negative controls, V silent; Lua actor lifecycle and player guards unchanged (in-game presentation unverified)')
+    current=(ROOT/rel).read_text();old=subprocess.check_output(['git','show','541158bc5cd3b363806813985837da36ede3f694:'+rel],cwd=ROOT,text=True)
+    guard=r'local function playerBlockReason\(player\).*?\nend'
+    assert re.search(guard,current,re.S)[0]==re.search(guard,old,re.S)[0]
+    native_rel='r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds';native=(ROOT/native_rel).read_text()
+    prior=subprocess.check_output(['git','show','541158bc5cd3b363806813985837da36ede3f694:'+native_rel],cwd=ROOT,text=True)
+    stripped=re.sub(r'^    public func GetPose(?:HelperTemplate|Resource)\(\) -> ResRef \{[^\n]+\}\n','',native,flags=re.M).replace('return 2;','return 1;')
+    assert stripped==prior
+    print('PASS: Voss media: original voice/lipsync bytes and timing, native eye-slot/actor bindings, private floor-level workspot helper identity/resource, no scene entry restarts the body pose, legacy node retained for restore compatibility, SMS schema/text/attachment, malformed bindings rejected; player guards and native quest bridge preserved except two resource getters/API version (game rendering unverified)')
     return {'audio':audio,'supplied_animation_byte_identical':True,'voice_entries':1,
         'shared_event_lead_in_ms':300,'uninterrupted_briefing':True,'player_voice':False,
-        'npc_lifecycle_and_player_guards_unchanged':True,'actual_game_validation':False}
+        'player_guards_unchanged':True,'grounded_private_pose_helper':True,'no_scene_pose_restart':True,'actual_game_validation':False}
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();report=main()
