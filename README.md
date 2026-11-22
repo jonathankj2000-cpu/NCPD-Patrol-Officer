@@ -1,5 +1,17 @@
 # NCPD Patrol
 
+## v0.19g — Voss conversation
+
+The meeting uses the supplied six-part Voss briefing with matching lipsync and
+four automatic original V replies. There is no choice menu. SMS, the grounded
+waiting pose and the v0.19f1 pose-confirmation fix remain included.
+
+[Download the complete v0.19g test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19g_Voss_Conversation_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Activate the same
+quest-giver test and approach Voss. Verify V's original voices and timing in
+the game. [Details](docs/VOSS_CONVERSATION_v019g.md).
+
 ## v0.19f1 — Voss pose confirmation fix
 
 Fixes the eight-second cancellation that could delete Voss and the Hella even

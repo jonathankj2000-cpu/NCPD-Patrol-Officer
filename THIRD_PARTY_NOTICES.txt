@@ -140,3 +140,11 @@ v0.19f Voss subtitle update
 The earlier Andrea Olivato MIT attributions remain in effect. This update adds
 an NCPD Patrol UI-only subtitle wrapper using the existing game subtitle/delay
 APIs; no new Andrea Olivato code, story, audio or animation is introduced.
+
+v0.19g automatic Voss/V conversation
+The original V speech pattern in fixer01/source/raw/mod/fixer01/scenes/
+fixer01_face.scene.json at the previously pinned Andrea Olivato MIT reference
+is reused for the native player actor and original string-ID replies. The full
+Andrea Olivato copyright/license notice above applies. No fixer01 story/media
+or original game V audio is redistributed. New story, Voss recordings and
+facial banks are supplied by the NCPD Patrol author.

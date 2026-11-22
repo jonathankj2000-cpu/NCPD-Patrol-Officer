@@ -18,33 +18,39 @@
           "entries": [
             {
               "$type": "localizationPersistenceSubtitleEntry",
-              "stringId": "989770642547505666",
-              "femaleVariant": "quest giver hello",
-              "maleVariant": "quest giver hello"
+              "stringId": "7936178618028821476",
+              "femaleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I've been going through your recent scanner reports. You've been rather busy. Some of your methods are... unconventional. Care to comment?",
+              "maleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I've been going through your recent scanner reports. You've been rather busy. Some of your methods are... unconventional. Care to comment?"
             },
             {
               "$type": "localizationPersistenceSubtitleEntry",
-              "stringId": "16947971204428947025",
-              "femaleVariant": "quest giver goodbye",
-              "maleVariant": "quest giver goodbye"
+              "stringId": "7936181916563706109",
+              "femaleVariant": "Of course not. Let's make sure the paperwork continues to reflect that. I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear. I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge.",
+              "maleVariant": "Of course not. Let's make sure the paperwork continues to reflect that. I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear. I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
             },
             {
               "$type": "localizationPersistenceSubtitleEntry",
-              "stringId": "3740344461717354858",
-              "femaleVariant": "option 1",
-              "maleVariant": "option 1"
+              "stringId": "7936180817052077898",
+              "femaleVariant": "If anything, corruption's become rather more efficient. The people responsible know exactly which strings to pull. And who's holding the other end.",
+              "maleVariant": "If anything, corruption's become rather more efficient. The people responsible know exactly which strings to pull. And who's holding the other end."
             },
             {
               "$type": "localizationPersistenceSubtitleEntry",
-              "stringId": "3740343362205726647",
-              "femaleVariant": "option 2",
-              "maleVariant": "option 2"
+              "stringId": "7936175319493936843",
+              "femaleVariant": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department. The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances. I need that shard, V. But there's something else. I need you to eliminate him. Permanently. This isn't an arrest. I'm asking you to do wet work.",
+              "maleVariant": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department. The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances. I need that shard, V. But there's something else. I need you to eliminate him. Permanently. This isn't an arrest. I'm asking you to do wet work."
             },
             {
               "$type": "localizationPersistenceSubtitleEntry",
-              "stringId": "2933361649594161950",
-              "femaleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
-              "maleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
+              "stringId": "7936174219982308632",
+              "femaleVariant": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting. But once it's over, I'll do everything in my power to make sure your name disappears from the incident report. I can't promise you a clean escape. Only that I'll do what I can afterward.",
+              "maleVariant": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting. But once it's over, I'll do everything in my power to make sure your name disappears from the incident report. I can't promise you a clean escape. Only that I'll do what I can afterward."
+            },
+            {
+              "$type": "localizationPersistenceSubtitleEntry",
+              "stringId": "7936177518517193265",
+              "femaleVariant": "Good. I'll send you his location. Retrieve the shard before anyone else gets their hands on it. And V? Whatever happens out there, we never had this conversation.",
+              "maleVariant": "Good. I'll send you his location. Retrieve the shard before anyone else gets their hands on it. And V? Whatever happens out there, we never had this conversation."
             }
           ]
         }

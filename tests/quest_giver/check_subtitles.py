@@ -1,55 +1,38 @@
-"""Execute the actual subtitle wrapper/callback; native UI/delay are boundaries.
+"""Execute the actual six-turn subtitle wrapper and native callback code.
 
-The existing scene/audio/lipsync payload is compared with the preceding build.
-This is not an in-game subtitle/rendering test.
+Engine UI/delay are recording boundaries, not a game rendering/voice test.
 """
 from pathlib import Path
 import argparse,json,re,subprocess,sys,tempfile
 from lupa.luajit21 import LuaRuntime
-
 ROOT=Path(__file__).resolve().parents[2]
-BASE='6605d15f0a5f251ef89024dac66f54f0a0b4e5c5'
-sys.path.insert(0,str(ROOT/'tools'))
-import build_quest_giver_assets as assets
-sys.path.insert(0,str(ROOT/'tests/arrests'))
-from translate import translate
+sys.path.insert(0,str(ROOT/'tools'));import build_quest_giver_assets as assets
+sys.path.insert(0,str(ROOT/'tests/arrests'));from translate import translate
 
 def main():
-    c=assets.read('contract.json');parts=c['briefing']['subtitle_parts']
-    source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds').read_text()
-    assert source==assets.subtitle_controller(c)
-    assert len(parts)==3 and ' '.join(p['text'] for p in parts)==c['briefing']['text']
-    assert [p['start_seconds'] for p in parts]==[0,15.0,28.5]
+    c=assets.read('contract.json');npcs=[t for t in c['conversation'] if t['speaker']=='voss']
+    source=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds').read_text();assert source==assets.subtitle_controller(c)
     docs,_=assets.outputs();assets.validate(docs)
-    entries=docs['onscreens.json.json']['Data']['RootChunk']['root']['Data']['entries']
-    texts={e['secondaryKey']:e['femaleVariant'] for e in entries}
-    assert all(e['femaleVariant']==e['maleVariant'] for e in entries)
-    assert texts['NCPDPatrol_QG_BriefingFull']==c['briefing']['text']
-    assert [texts['NCPDPatrol_QG_BriefingPart'+str(i)] for i in [1,2,3]]==[p['text'] for p in parts]
-    # Rebuilding the archive must not change the single native speech event,
-    # the scene graph, phone intro, body workspot or any original media.
-    unchanged=['conversation.scene.json','quest_giver.questphase.json','quest_giver.journal.json',
-        'lines.json.json','subtitles.json.json','vomap.json.json','voss.lipmap.json','voss_wait_pose.ent.json',
-        'media/voss_briefing.wem','media/voss_briefing.anims']
-    for name in unchanged:
+    entries=docs['onscreens.json.json']['Data']['RootChunk']['root']['Data']['entries'];texts={e['secondaryKey']:e['femaleVariant'] for e in entries};assert all(e['femaleVariant']==e['maleVariant'] for e in entries)
+    for row in npcs:
+        assert ' '.join(p['text'] for p in row['subtitle_parts'])==row['text']
+        assert texts['NCPDPatrol_QG_'+row['key']+'_Full']==row['text']
+    # The new conversation changes its scene/text/media, while keeping phone
+    # history, quest graph and grounded body helper exactly as in v0.19f1.
+    base='59fb2d4898d59909a9540af500bad390815ecab0'
+    for name in ['quest_giver.questphase.json','voss_wait_pose.ent.json','sms-templates.json']:
         path='assets/quest_giver_test/'+name
-        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),name
-    for path in subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','r6/scripts/NCPDPatrol'],cwd=ROOT,text=True).splitlines():
-        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),path
-    # Translate only actual authored method bodies; adapt casts, constructors
-    # and the wrap intrinsic at their native boundaries, not the policy.
+        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{base}:{path}'],cwd=ROOT)
+    old=json.loads(subprocess.check_output(['git','show',f'{base}:assets/quest_giver_test/contract.json'],cwd=ROOT));assert c['sms']==old['sms'] and c['presentation']==old['presentation']
     head,callback=source.split('public class NCPDPatrolVossSubtitleStep extends DelayCallback',1)
     head=re.sub(r'@(?:addField|wrapMethod|addMethod)\(SubtitleLineLogicController\)\s*','',head)
     head=head.replace('data.speaker as NPCPuppet','AsNPC(data.speaker)').replace('this.m_lineData.speaker as NPCPuppet','AsNPC(this.m_lineData.speaker)')
     head=head.replace('wrappedMethod(', 'WrappedMethod(this, ').replace('new NCPDPatrolVossSubtitleStep()', 'NewSubtitleStep()')
     lua=LuaRuntime(unpack_returned_tuples=True)
     with tempfile.TemporaryDirectory(prefix='ncpd-voss-subtitles-') as d:
-        p=Path(d)/'fixture.reds';p.write_text('public class Fixture extends IScriptable {\n'+head+'\n}')
-        lua.globals().Subtitle=lua.execute(translate(p))
-        p.write_text('public class Callback extends DelayCallback'+callback)
-        lua.globals().Step=lua.execute(translate(p))
-    lua.globals().Localized=lua.table_from(texts)
-    lua.globals().Full=c['briefing']['text']
+        p=Path(d)/'fixture.reds';p.write_text('public class Fixture extends IScriptable {\n'+head+'\n}');lua.globals().Subtitle=lua.execute(translate(p))
+        p.write_text('public class Callback extends DelayCallback'+callback);lua.globals().Step=lua.execute(translate(p))
+    lua.globals().Localized=lua.table_from(texts);lua.globals().Turns=lua.table_from(npcs,recursive=True)
     lua.execute('''
         function IsDefined(x) return type(x)=='table' and not x.destroyed end
         function AsNPC(x) if IsDefined(x) and x.kind=='npc' then return x end end
@@ -57,87 +40,78 @@ def main():
         function Deref(d) local out={};for k,v in pairs(d) do out[k]=v end;return out end
         function GetLocalizedTextByKey(key) return assert(Localized[key],key) end
         function WrappedMethod(self,data)
-            self.originalCalls=self.originalCalls+1
-            self.m_lineData=Deref(data)
-            self.m_targetTextWidgetRef.text=data.text
-            self.rendered[#self.rendered+1]=data.text
+            self.originalCalls=self.originalCalls+1;self.m_lineData=Deref(data);self.m_targetTextWidgetRef.text=data.text
         end
         inkTextRef={SetText=function(_,widget,text) widget.text=text;widget.writes=widget.writes+1 end}
-        GameInstance={GetQuestsSystem=function(_,game) return game end,
-            GetDelaySystem=function(_,game) return game end}
+        GameInstance={GetQuestsSystem=function(_,game) return game end,GetDelaySystem=function(_,game) return game end}
         function NewSubtitleStep() return setmetatable({}, {__index=Step}) end
-        function Fixture()
+        function Fixture(row)
             local game={stage=2,now=0,pending={},paused=false}
             function game:GetFactStr(name) assert(name=='ncpd_patrol_qgiver_test_stage');return self.stage end
-            function game:DelayCallback(cb,delay,dilation)
-                assert(dilation==false);self.pending[#self.pending+1]={cb=cb,at=self.now+delay}
-            end
+            function game:DelayCallback(cb,delay,dilation) assert(not dilation);self.pending[#self.pending+1]={cb=cb,at=self.now+delay} end
             function game:advance(seconds)
                 if self.paused then return end
                 self.now=self.now+seconds
-                for _,row in ipairs(self.pending) do if not row.done and row.at<=self.now then row.done=true;row.cb:Call() end end
+                for _,q in ipairs(self.pending) do if not q.done and q.at<=self.now then q.done=true;q.cb:Call() end end
             end
             local actor={kind='npc',attached=true,record='Character.NCPDPatrol_QG_Investigator'}
             function actor:IsAttached() return self.attached end
             function actor:GetRecordID() return self.record end
             function actor:GetGame() return game end
-            local ui=setmetatable({originalCalls=0,rendered={},m_targetTextWidgetRef={writes=0}}, {__index=Subtitle})
-            local data={id='original-line-id',text=Full,speaker=actor,speakerName='Lt. Mara Voss',duration=41.967,type='Regular',isPersistent=false}
+            local ui=setmetatable({originalCalls=0,m_targetTextWidgetRef={writes=0}}, {__index=Subtitle})
+            local data={id='original-line-id',text=row.text,speaker=actor,speakerName='Lt. Mara Voss',duration=row.audio_seconds,type='Regular',isPersistent=false}
             return game,actor,ui,data
         end
-        function Part(i) return Localized['NCPDPatrol_QG_BriefingPart'..i] end
-        local game,actor,ui,data=Fixture()
-        ui:SetLineData(data)
-        assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.text==Part(1))
-        assert(data.text==Full and ui.m_lineData.id==data.id and ui.m_lineData.duration==data.duration)
-        assert(ui.m_lineData.speaker==actor and ui.m_lineData.type==data.type and ui.m_lineData.speakerName==data.speakerName)
-        assert(#game.pending==2 and game.pending[1].at==15.0 and game.pending[2].at==28.5)
-        game:advance(14.99);assert(ui.m_targetTextWidgetRef.text==Part(1))
-        game.paused=true;game:advance(60);assert(ui.m_targetTextWidgetRef.text==Part(1))
-        game.paused=false;game:advance(.02);assert(ui.m_targetTextWidgetRef.text==Part(2))
-        game:advance(13.48);assert(ui.m_targetTextWidgetRef.text==Part(2))
-        game:advance(.02);assert(ui.m_targetTextWidgetRef.text==Part(3))
-        game:advance(60);assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.writes==2)
-        -- Exact text, actor, attachment and quest-stage scope; unrelated calls
-        -- retain their original data and schedule no callbacks.
-        for _,case in ipairs({'npc','vehicle','missing','hello','option','inactive','completed','detached'}) do
-            game,actor,ui,data=Fixture()
-            if case=='npc' then actor.record='Character.Other' end
-            if case=='vehicle' then actor.kind='vehicle' end
-            if case=='missing' then data.speaker=nil end
-            if case=='hello' then data.text='quest giver hello' end
-            if case=='option' then data.text='option 1' end
-            if case=='inactive' then game.stage=0 end
-            if case=='completed' then game.stage=3 end
-            if case=='detached' then actor.attached=false end
-            ui:SetLineData(data)
-            assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.text==data.text and #game.pending==0,case)
+        for _,row in ipairs(Turns) do
+            local game,actor,ui,data=Fixture(row);ui:SetLineData(data)
+            assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.text==row.subtitle_parts[1].text)
+            assert(data.text==row.text and ui.m_lineData.id==data.id and ui.m_lineData.duration==data.duration)
+            assert(ui.m_lineData.speaker==actor and ui.m_lineData.type==data.type and ui.m_lineData.speakerName==data.speakerName)
+            assert(#game.pending==#row.subtitle_parts-1)
+            for i=2,#row.subtitle_parts do
+                local part=row.subtitle_parts[i];assert(game.pending[i-1].at==part.start_seconds)
+                game:advance(part.start_seconds-game.now-.01);assert(ui.m_targetTextWidgetRef.text==row.subtitle_parts[i-1].text)
+                game.paused=true;game:advance(60);assert(ui.m_targetTextWidgetRef.text==row.subtitle_parts[i-1].text)
+                game.paused=false;game:advance(.02);assert(ui.m_targetTextWidgetRef.text==part.text)
+            end
+            game:advance(60);assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.writes==#row.subtitle_parts-1)
+            for _,case in ipairs({'npc','player','missing','other-line','inactive','completed','detached'}) do
+                game,actor,ui,data=Fixture(row)
+                if case=='npc' then actor.record='Character.Other' end
+                if case=='player' then actor.kind='player' end
+                if case=='missing' then data.speaker=nil end
+                if case=='other-line' then data.text='Unrelated dialogue' end
+                if case=='inactive' then game.stage=0 end
+                if case=='completed' then game.stage=3 end
+                if case=='detached' then actor.attached=false end
+                ui:SetLineData(data);assert(ui.originalCalls==1 and ui.m_targetTextWidgetRef.text==data.text and #game.pending==0,case)
+            end
+            for _,case in ipairs({'reuse','cancel','complete','detach','destroy'}) do
+                game,actor,ui,data=Fixture(row);ui:SetLineData(data)
+                if case=='reuse' then local d=Deref(data);d.text='V original reply';ui:SetLineData(d) end
+                if case=='cancel' then game.stage=0 end
+                if case=='complete' then game.stage=3 end
+                if case=='detach' then actor.attached=false end
+                if case=='destroy' then ui.destroyed=true end
+                local before=ui.m_targetTextWidgetRef.text;game:advance(60)
+                assert(ui.m_targetTextWidgetRef.text==before and ui.m_targetTextWidgetRef.writes==0,case)
+            end
         end
-        -- Reused widgets, cancelled/completed scenes, detached speakers and
-        -- destroyed controllers must ignore old delayed writes.
-        for _,case in ipairs({'reuse','cancel','complete','detach','destroy','new-generation'}) do
-            game,actor,ui,data=Fixture();ui:SetLineData(data)
-            if case=='reuse' then local nextData=Deref(data);nextData.text='Another subtitle';ui:SetLineData(nextData) end
-            if case=='cancel' then game.stage=0 end
-            if case=='complete' then game.stage=3 end
-            if case=='detach' then actor.attached=false end
-            if case=='destroy' then ui.destroyed=true end
-            if case=='new-generation' then game:advance(1);ui:SetLineData(data) end
-            local prior=ui.m_targetTextWidgetRef.text
-            if case=='new-generation' then
-                game:advance(14.01);assert(ui.m_targetTextWidgetRef.text==Part(1))
-                game:advance(1);assert(ui.m_targetTextWidgetRef.text==Part(2))
-            else game:advance(50);assert(ui.m_targetTextWidgetRef.text==prior and ui.m_targetTextWidgetRef.writes==0,case) end
-        end
+        -- Reuse one widget for two different Voss turns. The earlier line's
+        -- timers cannot inject an old caption into the new speech.
+        local first,second=Turns[1],Turns[6]
+        local game,actor,ui,data=Fixture(first);ui:SetLineData(data)
+        local oldCallbacks=game.pending
+        local nextData=Deref(data);nextData.text=second.text;nextData.duration=second.audio_seconds
+        ui:SetLineData(nextData)
+        for i=1,#first.subtitle_parts-1 do oldCallbacks[i].cb:Call() end
+        assert(ui.m_targetTextWidgetRef.text==second.subtitle_parts[1].text and ui.m_targetTextWidgetRef.writes==0)
+        game:advance(60);assert(ui.m_targetTextWidgetRef.text==second.subtitle_parts[#second.subtitle_parts].text)
     ''')
-    result={'subtitle_parts':parts,'continuous_original_media_and_scene_unchanged':True,
-        'native_ui_wrapper_executed':True,'original_method_once_per_line':True,
-        'exact_private_actor_text_stage_scope':True,'line_metadata_and_duration_preserved':True,
-        'stale_reuse_cancel_completion_detach_and_destroy_guards':True,
-        'native_font_speaker_and_settings_retained':True,'actual_game_validation':False,
-        'native_delay_pause_and_rendering_require_game_check':True}
+    parts={t['key']:t['subtitle_parts'] for t in npcs}
+    result={'subtitle_parts':parts,'voss_turns':6,'caption_blocks':sum(len(v) for v in parts.values()),'complete_original_media_per_turn':True,'native_ui_wrapper_executed':True,'original_method_once_per_line':True,'exact_private_actor_text_stage_scope':True,'line_metadata_and_duration_preserved':True,'stale_reuse_cancel_completion_detach_and_destroy_guards':True,'native_font_speaker_and_settings_retained':True,'actual_game_validation':False,'native_delay_pause_and_rendering_require_game_check':True}
     parser=argparse.ArgumentParser();parser.add_argument('--report',type=Path);args=parser.parse_args()
     if args.report:args.report.write_text(json.dumps(result,indent=2)+'\n')
-    print('PASS: actual Voss subtitle wrapper/callback: three complete timed blocks, native method once, unchanged line identity/duration and continuous scene/voice/lipsync; exact actor/text/stage scope, stale widget/reuse/cancel/completion/detach/destroy guards (native UI/delay boundaries mocked; game timing unverified)')
+    print('PASS: actual six-turn Voss subtitle wrapper/callback: 23 complete timed blocks, native method once, unchanged line identity/duration; exact actor/text/stage scope, native V fallthrough, stale callbacks across different speech turns/reuse/cancel/completion/detach/destroy (native UI/delay boundaries mocked)')
 
 if __name__=='__main__':main()

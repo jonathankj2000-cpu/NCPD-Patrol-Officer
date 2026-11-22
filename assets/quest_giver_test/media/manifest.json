@@ -1,28 +1,203 @@
 {
-  "version": 1,
+  "version": 2,
+  "source_upload": {
+    "file": "VossBriefing.zip",
+    "sha256": "842320f23bfe1b778bbb42bd7e2f158da9f760da1282d6a60c36840d4d39ea95"
+  },
   "source_uploads": {
-    "Mara_Voss.anims": {
-      "bytes": 313359,
-      "sha256": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967"
+    "Voss01.anims": {
+      "bytes": 337459,
+      "sha256": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c"
     },
-    "voss_Briefing.wav": {
-      "bytes": 3700302,
-      "sha256": "f70dafc6f729ea74cc092038f6e100b3bacba2c1e94545cefb859408acadb6a6",
+    "Voss02.anims": {
+      "bytes": 368921,
+      "sha256": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d"
+    },
+    "Voss03.anims": {
+      "bytes": 84371,
+      "sha256": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c"
+    },
+    "VossBriefing01.wav": {
+      "bytes": 1223502,
+      "sha256": "e0d041ce24fcb96908aa39f543a7909c7b19e9838f9f3ac296bd8d433766d45c",
       "sample_rate": 44100,
       "channels": 1,
-      "sample_frames": 1850112,
-      "duration_seconds": 41.95265306122449
+      "sample_frames": 611712,
+      "duration_seconds": 13.871020408163265
+    },
+    "VossBriefing02.wav": {
+      "bytes": 1767246,
+      "sha256": "67f6bd10a22e6db09aa79fad329283ece8fcf7755fb7f7037cc246016310a32f",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 883584,
+      "duration_seconds": 20.035918367346937
+    },
+    "VossBriefing03.wav": {
+      "bytes": 850254,
+      "sha256": "ff16918133290ee234e30ecbdfdbde6d2c2b102d9c4ac27a557e0a0ddc42d04d",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 425088,
+      "duration_seconds": 9.639183673469388
+    },
+    "VossBriefing04.wav": {
+      "bytes": 2396238,
+      "sha256": "05ad6e8ab41611b15cae781de4f1274e989e2a13cf9afa940933c0a29459f4eb",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 1198080,
+      "duration_seconds": 27.16734693877551
+    },
+    "VossBriefing05.wav": {
+      "bytes": 1767246,
+      "sha256": "dace5851416148c6a7779c830c14a6df8520d7f785ebaaf790fef89e0f5a0da8",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 883584,
+      "duration_seconds": 20.035918367346937
+    },
+    "VossBriefing06.wav": {
+      "bytes": 935502,
+      "sha256": "bc4dc1b07420daca8a80cf8263a37ceaf194777214fb0477707e0363e63a05db",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 467712,
+      "duration_seconds": 10.605714285714285
+    },
+    "VOSS.docx": {
+      "bytes": 16187,
+      "sha256": "591f33e2c917152830cf6b22dd4fd67fc2e183e4e9a62cca44a712458a1ca661"
     }
   },
   "packaged": {
-    "voss_briefing.anims": {
-      "bytes": 313359,
-      "sha256": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967"
+    "voss_conversation.anims": {
+      "bytes": 787983,
+      "sha256": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370"
     },
-    "voss_briefing.wem": {
-      "bytes": 408099,
-      "sha256": "489325c1bf2047bf209c4816dd41d733321c311a802d6b921b7b8f254a8e5924"
+    "vossbriefing01.wem": {
+      "bytes": 127410,
+      "sha256": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb"
+    },
+    "vossbriefing02.wem": {
+      "bytes": 186371,
+      "sha256": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547"
+    },
+    "vossbriefing03.wem": {
+      "bytes": 88177,
+      "sha256": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3"
+    },
+    "vossbriefing04.wem": {
+      "bytes": 251505,
+      "sha256": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5"
+    },
+    "vossbriefing05.wem": {
+      "bytes": 186916,
+      "sha256": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627"
+    },
+    "vossbriefing06.wem": {
+      "bytes": 97549,
+      "sha256": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8"
     }
+  },
+  "lipsync_merge": {
+    "source_banks": [
+      "Voss01.anims",
+      "Voss02.anims",
+      "Voss03.anims"
+    ],
+    "merged_bank": "voss_conversation.anims",
+    "rig": {
+      "DepotPath": {
+        "$type": "ResourcePath",
+        "$storage": "string",
+        "$value": "base\\characters\\head\\ma\\h0_017_ma_b__middle\\h0_017_ma_b__middle_skeleton.rig"
+      },
+      "Flags": "Default"
+    },
+    "clips": [
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0001",
+        "duration_seconds": 13.8999996,
+        "num_frames": 417,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "b606e56eada9149305bb0086ac88e40729673b02691fd30b2a305690e27ee214",
+        "original_data_chunk_sha256": "fa4dcd2db54e931ed67557680e8c973ef670122b34f62a9ebbc1124ab01a2ee9",
+        "merged_data_chunk_index": 0,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0002",
+        "duration_seconds": 20.0666676,
+        "num_frames": 603,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "a2531f5d32fbafea7adef788465a46eaa234fffa52402192981fac9a0d9908a7",
+        "original_data_chunk_sha256": "e1c194f250846aaf6731f4f5e916dda559ebb1b37a4709be857bb52adb3887fe",
+        "merged_data_chunk_index": 1,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0003",
+        "duration_seconds": 9.66666698,
+        "num_frames": 291,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "9f17e04f3c9f3e51df6bac383f5c999d79aac0c158f8634ec4bdc71731611729",
+        "original_data_chunk_sha256": "6ec31c18d406cc0c0cc4d9cb3de92e7f082490c8cf673be42a78fb5b888e4574",
+        "merged_data_chunk_index": 2,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss02.anims",
+        "clip": "f_00000000CAFE0004",
+        "duration_seconds": 27.2000008,
+        "num_frames": 817,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "281c35687f9ca02ad7d4171e7f06b12ee24bd0b21f8ef0d0e9d1ce7b03eb5112",
+        "original_data_chunk_sha256": "589bfafb9a5e144ddb390e38c996001d2a0c4f988a147ac15a93e79354138223",
+        "merged_data_chunk_index": 3,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss02.anims",
+        "clip": "f_00000000CAFE0005",
+        "duration_seconds": 20.0666676,
+        "num_frames": 603,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "36b0b8446e08a1352a63e50a700dc50d6672180d2689a339c88ac8069773d21a",
+        "original_data_chunk_sha256": "99adc990ab1cf26994055ba03c63ac51a12f29b30a46134053db68a58ba5a780",
+        "merged_data_chunk_index": 4,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss03.anims",
+        "clip": "f_00000000CAFE0006",
+        "duration_seconds": 10.6333332,
+        "num_frames": 319,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "61f0e22ce9205b06fcaa0da663d0ce66196a500f92f786d068639515f5dc78db",
+        "original_data_chunk_sha256": "bdf9b318a2b2f280b02f8dca2748edac681f05ca30c4d4b2590a3103b07adf2d",
+        "merged_data_chunk_index": 5,
+        "all_animation_payload_fields_preserved": true
+      }
+    ],
+    "roundtrip_validated": true,
+    "all_animation_payload_fields_preserved": true,
+    "only_handle_buffer_ids_and_chunk_indices_relocated": true
   },
   "conversion": {
     "codec": "Wwise Vorbis (0xFFFF), aoTuV b6.03 quality 4",
@@ -37,37 +212,14 @@
   },
   "timing": {
     "lead_in_ms": 300,
-    "method": "Delay the shared native dialogue event: audio and lipsync start together; do not offset only one media file."
+    "method": "Each Voss dialogue event owns its complete matching voice/lipsync; subtitles only update the native UI text. V slots are initial conservative timings."
   },
-  "lipsync": {
-    "clip": "f_00000000CAFE0001",
-    "duration_seconds": 41.9666672,
-    "num_frames": 1260,
-    "num_joints": 344,
-    "num_tracks": 414,
-    "animation_type": "AdditiveFromRefPose",
-    "rig": "base\\characters\\head\\ma\\h0_017_ma_b__middle\\h0_017_ma_b__middle_skeleton.rig",
-    "source_bank_byte_identical": true,
-    "target_head_compatibility_verified_in_game": false
-  },
-  "actual_game_validation": false,
-  "independent_verification": {
-    "decoder_repository": "https://github.com/hcs64/ww2ogg",
-    "decoder_commit": "14ed9b0dd62e815a38702b5f03c57006cbe2501b",
-    "decoder_completed": true,
-    "original_frames": 1850112,
-    "direct_vorbis_decode_frames": 1850112,
-    "wem_reconstructed_decode_frames": 1849152,
-    "common_pcm_samples_identical": true,
-    "snr_db_against_original": 21.57483916777037,
-    "sample_rate": 44100,
-    "channels": 1,
-    "actual_game_validation": false,
-    "audio_packet_count": 3644,
-    "reconstructed_ogg_tail_note": "ww2ogg writes zero Ogg page granules. With the WEM sample count on the final Ogg page, ffmpeg emits 64 extra tail samples; the complete declared 1850112-sample range is byte-identical to direct Vorbis decoding. No packaged WEM bytes were changed.",
-    "reconstructed_with_declared_granule_frames": 1850176,
-    "declared_sample_range_pcm_identical": true,
-    "declared_sample_frames_compared": 1850112,
-    "decoder_container_extra_tail_samples": 64
-  }
+  "vanilla_v_string_ids": [
+    "1938843197804515328",
+    "1895381798296993792",
+    "1938900123686932480",
+    "1714373979483803648"
+  ],
+  "vanilla_v_audio_redistributed": false,
+  "actual_game_validation": false
 }

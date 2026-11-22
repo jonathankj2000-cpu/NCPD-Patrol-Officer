@@ -1,0 +1,78 @@
+VOSS_ Briefing
+**VOSS:** VossBriefing01.wav f_00000000CAFE0001
+
+"V. Glad you could make it. Lieutenant Mara Voss, NCPD."
+
+"I've been going through your recent scanner reports. You've been rather busy."
+
+"Some of your methods are... unconventional. Care to comment?" 
+
+**V:** ID String: 1938843197804515328 
+
+"I wouldn't know. I'm no criminal." 
+
+**VOSS:** VossBriefing02.wav f_00000000CAFE0002
+
+"Of course not."
+
+"Let's make sure the paperwork continues to reflect that."
+
+*[Brief pause]*
+
+"I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear."
+
+"I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
+
+**V:** ID string: 1895381798296993792
+
+"Guessin' things at the NCPD haven't changed a lick, huh?" 
+
+**VOSS:** VossBriefing03.wav f_00000000CAFE0003
+
+"If anything, corruption's become rather more efficient."
+
+"The people responsible know exactly which strings to pull. And who's holding the other end."
+
+**V:** ID String: 1938900123686932480
+
+"There even a single clean badge in this city?" 
+
+**VOSS:** VossBriefing04.wav f_00000000CAFE0004
+
+"A few of us, yes."
+
+"Unfortunately, being honest doesn't make you particularly influential in this department."
+
+*[She pauses before continuing.]*
+
+"The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances."
+
+"I need that shard, V."
+
+"But there's something else."
+
+"I need you to eliminate him. Permanently."
+
+"This isn't an arrest. I'm asking you to do wet work."
+
+**VOSS:** VossBriefing05.wav f_00000000CAFE0005
+
+"He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting."
+
+"But once it's over, I'll do everything in my power to make sure your name disappears from the incident report."
+
+"I can't promise you a clean escape. Only that I'll do what I can afterward."
+
+**V:** ID String: 1714373979483803648
+
+"Well, sounds like a suicide run, but done dumber shit than this, so..." 
+
+**VOSS:** VossBriefing06.wav f_00000000CAFE0006
+
+"Good. I'll send you his location."
+
+"Retrieve the shard before anyone else gets their hands on it."
+
+"And V?"
+
+"Whatever happens out there, we never had this conversation."

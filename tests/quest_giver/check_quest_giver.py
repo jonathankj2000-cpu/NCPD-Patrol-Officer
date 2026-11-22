@@ -156,6 +156,12 @@ class Machine:
     def talk(self):
         self.f.playerPoint=self.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);self.step(1)
         assert self.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
+    def finish_conversation(self):
+        for _ in range(1200):
+            assert not self.choice_ready,'Automatic dialogue exposed a choice'
+            if self.f.qfacts['ncpd_patrol_qgiver_test_stage']==3:return
+            self.step(.25)
+        raise AssertionError('Automatic conversation did not finish')
     def clear(self):
         assert self.f.qmod.clear(self.f.qstatus);self.step(2)
         assert not self.f.qmod.active() and self.f.manual==654 and self.f.wallet==0
@@ -191,48 +197,44 @@ def main():
     m.lua.execute('QNative.Version=function() return 1 end')
     assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
     assert 'complete v0.19e' in m.f.qlog[len(m.f.qlog)]
-    for option in [0,1]:
-        m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0
-        assert not m.sms_notifications
-        m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
-        assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==assets.read('contract.json')['sms']['text']
-        assert m.sms_notifications[0]['contact']=='Lt. Mara Voss' and m.sms_notifications[0]['attachment']==m.f.qroot
-        m.arrive();m.talk();assert m.lines==['quest giver hello']
-        assert len(m.f.qposeCalls)==1 and m.f.qPoseActive() and m.legacy_workspot_requests==0
-        assert m.look_at['targetSlot']['$value']=='pla_default_tgt' and m.look_at['targetPerformerId']['id']==257
-        m.step(4);assert not m.choice_ready and m.lines==['quest giver hello',assets.read('contract.json')['briefing']['text']]
-        m.step(35);assert not m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
-        assert m.f.entries[m.f.qroot].state==2 and m.f.wallet==0
-        m.await_choices();assert m.choice_ready and len(m.lines)==2
-        m.step(10);assert m.choice_ready and m.f.qPoseActive() and len(m.f.qposeCalls)==1 and m.look_at['isStart']==1
-        m.choose(option);m.step(2.5);assert m.lines[-1]=='quest giver goodbye'
-        assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2 and m.f.entries[m.f.qroot].state==2
-        m.step(4);assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3 and m.f.entries[m.f.qroot].state==3
-        assert m.f.qPoseActive() and len(m.f.qposeCalls)==1 and m.look_at is None
-        assert m.f.qmod.state().startswith('Quest completed after goodbye.')
-        assert m.f.wallet==0 and not m.f.qpin.active and m.f.tracked.path=='story'
-        sms_path=m.sms_notifications[0]['path'];m.f.qtagStale=True;m.clear()
-        assert len(m.sms_notifications)==1 and m.f.entries[sms_path].state==2
-        m.start();assert m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0 and len(m.sms_notifications)==2
-        assert len([p for p in m.phone if m.phone[p][0]['$type']=='gameJournalPhoneMessage'])==1;m.clear()
+    m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0 and not m.sms_notifications
+    m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
+    assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==contract['sms']['text']
+    assert m.sms_notifications[0]['contact']=='Lt. Mara Voss' and m.sms_notifications[0]['attachment']==m.f.qroot
+    m.arrive();m.talk();assert m.lines==[contract['conversation'][0]['text']]
+    assert len(m.f.qposeCalls)==1 and m.f.qPoseActive() and m.legacy_workspot_requests==0
+    assert m.look_at['targetSlot']['$value']=='pla_default_tgt' and m.look_at['targetPerformerId']['id']==257
+    m.step(8);assert not m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0
+    assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2 and m.f.entries[m.f.qroot].state==2 and m.f.wallet==0
+    m.finish_conversation()
+    assert m.lines==[row['text'] for row in contract['conversation']] and not m.choice_ready
+    assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3 and m.f.qfacts['ncpd_patrol_qgiver_test_choice']==1 and m.f.entries[m.f.qroot].state==3
+    assert m.f.qPoseActive() and len(m.f.qposeCalls)==1 and m.look_at is None
+    assert m.f.qmod.state().startswith('Quest completed after goodbye.')
+    assert m.f.wallet==0 and not m.f.qpin.active and m.f.tracked.path=='story'
+    m.step(30);assert len(m.f.deletes)==0 and m.f.qPoseActive()
+    sms_path=m.sms_notifications[0]['path'];m.f.qtagStale=True;m.clear()
+    assert len(m.sms_notifications)==1 and m.f.entries[sms_path].state==2
+    m.start();assert m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0 and len(m.sms_notifications)==2
+    assert len([p for p in m.phone if m.phone[p][0]['$type']=='gameJournalPhoneMessage'])==1;m.clear()
     # Ordinary updates do not resend the SMS. Reading it is optional; the
     # existing travel/proximity trigger still owns the start of the scene.
     m=runtime(docs);m.start();m.step(30)
     assert len(m.sms_notifications)==1 and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and not m.lines
     m.clear();assert len(m.sms_notifications)==1 and m.f.entries[m.sms_notifications[0]['path']].state==2
-    # Cancel at the native choice; actors remain until the scene releases.
+    # Overlay blocks proximity dialogue; cancellation waits for scene release.
     m=runtime(docs);m.start();m.arrive();m.f.qoverlay=True
     m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);m.step(2)
     assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and not m.lines
-    m.f.qoverlay=False;m.talk();assert m.lines==['quest giver hello'];m.clear()
+    m.f.qoverlay=False;m.talk();assert m.lines==[contract['conversation'][0]['text']];m.clear()
     # Cancelling during the uninterrupted briefing uses the same release gate.
     m=runtime(docs);m.start();m.arrive();m.talk();m.step(10)
-    assert m.scene==10 and m.f.qsceneOwned and not m.choice_ready
+    assert m.scene==1000 and m.f.qsceneOwned and not m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
     assert not m.f.qPoseActive() and m.look_at is None
-    m=runtime(docs);m.start();m.arrive();m.talk();m.await_choices()
-    assert m.f.qsceneOwned and m.choice_ready
+    m=runtime(docs);m.start();m.arrive();m.talk();m.step(35)
+    assert m.f.qsceneOwned and not m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
     assert not m.f.qPoseActive() and m.look_at is None
@@ -243,12 +245,12 @@ def main():
     assert old.f.qPoseActive() and not old.lines
     old.step(12);assert not old.f.qmod.active() and not old.f.qPoseActive() and len(old.f.deletes)==3
     assert 'waiting pose did not become active' in old.f.qmod.diagnostics()
-    for option in [0,1]:
+    for attempt in [0,1]:
         m=runtime(docs);m.f.qposeNoDeviceUser=True;m.start();m.arrive();m.step(15)
         assert m.f.qPoseActive() and len(m.f.deletes)==0 and m.f.qmod.active()
         assert 'phase=approaching' in m.f.qmod.diagnostics() and 'device user=not registered' in m.f.qmod.diagnostics()
         assert 'last failure=none' in m.f.qmod.diagnostics()
-        m.talk();m.await_choices();m.choose(option);m.step(7)
+        m.talk();m.finish_conversation()
         assert m.f.qmod.state().startswith('Quest completed after goodbye.') and len(m.f.qposeCalls)==1
         m.clear();assert not m.f.qPoseActive()
     # Real native entry/exit states cannot be mistaken for a stable pose, and
@@ -266,7 +268,7 @@ def main():
         m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2750.759,204.665,1);m.step(12)
         assert m.f.qmod.active() and not m.f.qPoseActive() and not m.lines and m.f.wallet==0 and len(m.f.deletes)==0,flag
         assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and m.f.qpin.active and 'pose=unconfirmed' in m.f.qmod.diagnostics(),flag
-        m.talk();m.await_choices();m.choose(0);m.step(7)
+        m.talk();m.finish_conversation()
         assert m.f.qmod.state().startswith('Quest completed after goodbye.') and len(m.f.deletes)==0,flag
         m.clear()
     # A grounded pose starts at the recorded floor, including small legitimate
@@ -300,8 +302,8 @@ def main():
     old=runtime(docs,legacy_guard=True);old.f.qforeignScene=True
     assert not old.f.qmod.start(old.f.qstatus)
     assert 'Finish the current game scene' in old.f.qlog[len(old.f.qlog)]
-    m=runtime(docs);m.f.qforeignScene=True;m.start();m.arrive();m.talk();m.await_choices()
-    assert m.choice_ready;m.choose(0);m.step(7);assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
+    m=runtime(docs);m.f.qforeignScene=True;m.start();m.arrive();m.talk();m.step(35)
+    m.finish_conversation();assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
     # Real conversations/restricted tiers still block both entry points.
     for tier in [2,3,4,5]:
         m=runtime(docs);m.f.qsceneTier=tier
@@ -317,24 +319,25 @@ def main():
     m.f.ready=True;m.step(3);assert not m.f.qmod.active() and m.f.managed[999] and m.f.wallet==0
     m=runtime(docs);m.f.failCreateAt=2;m.start();m.f.playerPoint=m.f.qpoint;m.step(3)
     assert not m.f.qmod.active() and len(m.f.deletes)==1 and m.f.managed[999]
-    # A malformed scene socket must fail validation, rather than pretending a
-    # clickable choice proves that the next dialogue node will execute.
-    broken=copy.deepcopy(docs);choice=broken['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph'][2]['Data']
-    choice['outputSockets'][0]['destinations'][0]['isockStamp']['ordinal']=0
+    # The automatic final receipt must enter its fact command, never the cut
+    # socket; a displayable subtitle alone is not a completion proof.
+    broken=copy.deepcopy(docs)
+    final=next(n['Data'] for n in broken['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph'] if n['Data']['nodeId']['id']==1009)
+    final['outputSockets'][0]['destinations'][0]['isockStamp']['ordinal']=0
     try:assets.validate(broken)
     except AssertionError:pass
-    else:raise AssertionError('Wrong scene quest-input ordinal accepted')
+    else:raise AssertionError('Wrong completion-receipt quest-input ordinal accepted')
     sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui
     _,f=ui(ROOT/PREFIX)
     for label,event in [('TEST: Activate quest giver quest','questGiver.start'),('Clear quest giver test','questGiver.clear')]:
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: actual v0.19f active-pose/no-device-user despawn reproduced and prevented; real native entering/exiting fields, exact-actor stable activity and no pose restart; cosmetic failures retain both actors/SMS/quest and allow dialogue; explicit helper-before-puppet cleanup, menu/cancel/recovery, uninterrupted voice/both choices/journal success; dispatch/markers unchanged (engine boundaries mocked)')
-    return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
+    print('PASS: isolated quest giver: actual v0.19f active-pose/no-device-user despawn reproduced and prevented; real native entering/exiting fields, exact-actor stable activity and no pose restart; cosmetic failures retain both actors/SMS/quest and allow dialogue; explicit helper-before-puppet cleanup, menu/cancel/recovery, all ten automatic speech turns/final receipt/journal success; dispatch/markers unchanged (engine boundaries mocked)')
+    return {'npc_briefing_voice':True,'player_voice':True,'automatic_replies':True,'speech_turns':10,'native_v_replies':4,'choices':0,'dialogue_paths_executed':1,'complete_only_after_goodbye':True,
         'grounded_waiting_pose_executed':True,'workspot_ready_before_conversation':True,
         'v019f_active_pose_missing_device_user_despawn_reproduced':True,
-        'native_activity_without_device_user_completes_both_dialogue_paths':True,
+        'native_activity_without_device_user_completes_automatic_dialogue':True,
         'native_extended_info_entering_exiting_fields_checked':True,
         'cosmetic_pose_failure_retains_actors_and_quest':True,
         'native_look_at_target_slot':'pla_default_tgt','look_at_release_on_completion_and_pose_release_on_clear':True,

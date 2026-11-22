@@ -1,3 +1,28 @@
+NCPD PATROL v0.19g VOSS CONVERSATION - COMPLETE BRANCH TEST
+
+Replaces the placeholder dialogue and two choices with the supplied manuscript:
+six complete Voss voice/lipsync turns and four automatic original V replies.
+The scene flows without a choice menu and completes after the last Voss line.
+This remains the standalone briefing test, without the contractor combat quest.
+
+All six facial clips are consolidated from the three supplied banks, preserving
+their animation payloads and rig. All six voice files keep their sample counts.
+Voss's captions use short paragraph blocks while each full voice/lipsync plays.
+
+V uses the four supplied original game string IDs and native player actor.
+No original V audio or global voice/subtitle overrides are bundled. Initial V
+scene slots are conservative; actual voice variants/playback/timing need game
+verification. Voss timing is measured from the files.
+
+SMS, grounded arms-crossed waiting pose, eye-height LookAt and the v0.19f1
+pose-check/fallback fix are included. Actors remain until Clear quest giver test.
+Production dispatch and rewards are unchanged.
+
+Clear an old test, install all 123 files and fully restart. OFF DUTY > CET >
+Testing > Quest giver prototype > Activate. Read the SMS, visit Voss, close CET
+and approach on foot. Check all ten turns, V's voices, facial clips, short
+captions and final journal completion.
+
 NCPD PATROL v0.19f1 VOSS POSE CHECK FIX - COMPLETE BRANCH TEST
 
 Corrects the eight-second waiting-pose timeout that deleted Voss and her Hella

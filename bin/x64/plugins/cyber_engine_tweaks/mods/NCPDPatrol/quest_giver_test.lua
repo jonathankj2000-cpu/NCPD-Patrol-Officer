@@ -278,7 +278,7 @@ local function update(delta)
     if stage==3 then
         if phase~='complete' then
             if not n:IsSucceeded() then error('Scene ended without a proven journal completion') end
-            phase='complete';say('Quest completed after goodbye. Selected option '..tostring(n:GetChoice())..'. Clear the test before trying the other option.')
+            phase='complete';say('Quest completed after goodbye. Briefing finished. Clear the test before replaying the conversation.')
         end
         return
     end
@@ -321,7 +321,7 @@ local function update(delta)
         if not npc or not npc:IsAttached() or npc:IsDead() then error('Investigator unavailable') end
         if context.overlayOpen and context.overlayOpen() then return end
         if not Game.GetMountedVehicle(player) and not playerBlockReason(player) and distance(player:GetWorldPosition(),npc:GetWorldPosition())<=3 then
-            if n:RequestTalk(npc) then phase,age='dialogue',0;say('Native conversation requested: hello -> Voss briefing -> two choices -> goodbye.') end
+            if n:RequestTalk(npc) then phase,age='dialogue',0;say('Native conversation requested: Voss briefing with automatic replies from V.') end
         end
     end
 end

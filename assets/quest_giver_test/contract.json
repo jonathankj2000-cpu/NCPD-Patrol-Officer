@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -18,37 +18,8 @@
   "car_yaw_offset": 90.0,
   "spawn_radius": 120.0,
   "talk_radius": 3.0,
-  "hello": "quest giver hello",
-  "choices": [
-    "option 1",
-    "option 2"
-  ],
-  "goodbye": "quest giver goodbye",
-  "subtitle_ms": 3500,
   "automatic_dispatch": false,
   "rewards": false,
-  "briefing": {
-    "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
-    "clip": "f_00000000CAFE0001",
-    "audio_seconds": 41.95265306122449,
-    "animation_seconds": 41.9666672,
-    "lead_in_ms": 300,
-    "player_voice": false,
-    "subtitle_parts": [
-      {
-        "start_seconds": 0,
-        "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives."
-      },
-      {
-        "start_seconds": 15.0,
-        "text": "Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities."
-      },
-      {
-        "start_seconds": 28.5,
-        "text": "I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
-      }
-    ]
-  },
   "presentation": {
     "workspot": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot",
     "look_at_slot": "pla_default_tgt",
@@ -68,5 +39,211 @@
     "text": "V. Lieutenant Mara Voss, NCPD.\nI've been following your recent work. Impressive, though I doubt the department would approve of all your methods.\nI have a proposition for you. Something I'd rather discuss in person.\nI've sent you a location. Come alone, and keep this between us.\n\u2014 Lt. Mara Voss",
     "avatar": "PhoneAvatars.Avatar_Unknown",
     "automatic_milestone_activation": false
-  }
+  },
+  "conversation": [
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing01.wav",
+      "clip": "f_00000000CAFE0001",
+      "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I've been going through your recent scanner reports. You've been rather busy. Some of your methods are... unconventional. Care to comment?",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD."
+        },
+        {
+          "start_seconds": 4.98,
+          "text": "I've been going through your recent scanner reports. You've been rather busy."
+        },
+        {
+          "start_seconds": 9.54,
+          "text": "Some of your methods are... unconventional. Care to comment?"
+        }
+      ],
+      "key": "Voss01",
+      "audio_seconds": 13.871020408163265,
+      "animation_seconds": 13.8999996,
+      "wem": "vossbriefing01.wem",
+      "lead_in_ms": 300
+    },
+    {
+      "speaker": "v",
+      "string_id": "1938843197804515328",
+      "text": "I wouldn't know. I'm no criminal.",
+      "key": "V1",
+      "event_seconds": 4.0,
+      "timing": "Conservative initial scene slot; original voice duration/gender variants need game verification"
+    },
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing02.wav",
+      "clip": "f_00000000CAFE0002",
+      "text": "Of course not. Let's make sure the paperwork continues to reflect that. I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear. I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge.",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "Of course not."
+        },
+        {
+          "start_seconds": 1.5,
+          "text": "Let's make sure the paperwork continues to reflect that."
+        },
+        {
+          "start_seconds": 5.46,
+          "text": "I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear."
+        },
+        {
+          "start_seconds": 12.36,
+          "text": "I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
+        }
+      ],
+      "key": "Voss02",
+      "audio_seconds": 20.035918367346937,
+      "animation_seconds": 20.0666676,
+      "wem": "vossbriefing02.wem",
+      "lead_in_ms": 300
+    },
+    {
+      "speaker": "v",
+      "string_id": "1895381798296993792",
+      "text": "Guessin' things at the NCPD haven't changed a lick, huh?",
+      "key": "V2",
+      "event_seconds": 5.5,
+      "timing": "Conservative initial scene slot; original voice duration/gender variants need game verification"
+    },
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing03.wav",
+      "clip": "f_00000000CAFE0003",
+      "text": "If anything, corruption's become rather more efficient. The people responsible know exactly which strings to pull. And who's holding the other end.",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "If anything, corruption's become rather more efficient."
+        },
+        {
+          "start_seconds": 4.04,
+          "text": "The people responsible know exactly which strings to pull. And who's holding the other end."
+        }
+      ],
+      "key": "Voss03",
+      "audio_seconds": 9.639183673469388,
+      "animation_seconds": 9.66666698,
+      "wem": "vossbriefing03.wem",
+      "lead_in_ms": 300
+    },
+    {
+      "speaker": "v",
+      "string_id": "1938900123686932480",
+      "text": "There even a single clean badge in this city?",
+      "key": "V3",
+      "event_seconds": 4.5,
+      "timing": "Conservative initial scene slot; original voice duration/gender variants need game verification"
+    },
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing04.wav",
+      "clip": "f_00000000CAFE0004",
+      "text": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department. The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances. I need that shard, V. But there's something else. I need you to eliminate him. Permanently. This isn't an arrest. I'm asking you to do wet work.",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "A few of us, yes."
+        },
+        {
+          "start_seconds": 2.48,
+          "text": "Unfortunately, being honest doesn't make you particularly influential in this department."
+        },
+        {
+          "start_seconds": 8.2,
+          "text": "The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances."
+        },
+        {
+          "start_seconds": 17.16,
+          "text": "I need that shard, V."
+        },
+        {
+          "start_seconds": 19.14,
+          "text": "But there's something else."
+        },
+        {
+          "start_seconds": 20.76,
+          "text": "I need you to eliminate him. Permanently."
+        },
+        {
+          "start_seconds": 23.86,
+          "text": "This isn't an arrest. I'm asking you to do wet work."
+        }
+      ],
+      "key": "Voss04",
+      "audio_seconds": 27.16734693877551,
+      "animation_seconds": 27.2000008,
+      "wem": "vossbriefing04.wem",
+      "lead_in_ms": 300
+    },
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing05.wav",
+      "clip": "f_00000000CAFE0005",
+      "text": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting. But once it's over, I'll do everything in my power to make sure your name disappears from the incident report. I can't promise you a clean escape. Only that I'll do what I can afterward.",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting."
+        },
+        {
+          "start_seconds": 8.6,
+          "text": "But once it's over, I'll do everything in my power to make sure your name disappears from the incident report."
+        },
+        {
+          "start_seconds": 15.32,
+          "text": "I can't promise you a clean escape. Only that I'll do what I can afterward."
+        }
+      ],
+      "key": "Voss05",
+      "audio_seconds": 20.035918367346937,
+      "animation_seconds": 20.0666676,
+      "wem": "vossbriefing05.wem",
+      "lead_in_ms": 300
+    },
+    {
+      "speaker": "v",
+      "string_id": "1714373979483803648",
+      "text": "Well, sounds like a suicide run, but done dumber shit than this, so...",
+      "key": "V4",
+      "event_seconds": 7.5,
+      "timing": "Conservative initial scene slot; original voice duration/gender variants need game verification"
+    },
+    {
+      "speaker": "voss",
+      "source_wav": "VossBriefing06.wav",
+      "clip": "f_00000000CAFE0006",
+      "text": "Good. I'll send you his location. Retrieve the shard before anyone else gets their hands on it. And V? Whatever happens out there, we never had this conversation.",
+      "subtitle_parts": [
+        {
+          "start_seconds": 0,
+          "text": "Good. I'll send you his location."
+        },
+        {
+          "start_seconds": 2.5,
+          "text": "Retrieve the shard before anyone else gets their hands on it."
+        },
+        {
+          "start_seconds": 6.18,
+          "text": "And V?"
+        },
+        {
+          "start_seconds": 6.98,
+          "text": "Whatever happens out there, we never had this conversation."
+        }
+      ],
+      "key": "Voss06",
+      "audio_seconds": 10.605714285714285,
+      "animation_seconds": 10.6333332,
+      "wem": "vossbriefing06.wem",
+      "lead_in_ms": 300
+    }
+  ],
+  "automatic_replies": true,
+  "completion_receipt": 1
 }

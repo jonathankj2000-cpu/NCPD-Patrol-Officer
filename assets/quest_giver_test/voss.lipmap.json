@@ -27,7 +27,7 @@
               "DepotPath": {
                 "$type": "ResourcePath",
                 "$storage": "string",
-                "$value": "base\\ncpd_patrol\\quest_giver_test\\voss_briefing.anims"
+                "$value": "base\\ncpd_patrol\\quest_giver_test\\voss_conversation.anims"
               },
               "Flags": "Soft"
             }
