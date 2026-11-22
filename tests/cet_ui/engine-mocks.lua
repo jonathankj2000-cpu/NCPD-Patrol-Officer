@@ -35,8 +35,8 @@ local dispatch={state=display,isBusy=function() return f.busy end,isAutomatic=fu
     mixDescription=display,vipState=display,vipDiagnostics=display,cyberpsychoState=display,
     cyberpsychoDiagnostics=display,cyberpsychoVariantState=display,vipAmbushState=display,
     rewardDiagnostics=display,schedulerStatus=display,schedulerDiagnostics=display,
-    navigationState=display,lastOutcome=display,journalDiagnostics=display,hudState=display,officerDownState=display,officerDownLogState=display}
-for _,name in ipairs({'requestMixed','request','requestCyberpsycho','requestVIP','requestVIPAmbush','requestOfficerDownNearby','exportOfficerDownLog',
+    navigationState=display,lastOutcome=display,journalDiagnostics=display,hudState=display,officerDownState=display,officerDownLogState=display,officerDownCatalogueInfo=display,officerDownDiagnostics=display}
+for _,name in ipairs({'requestMixed','request','requestCyberpsycho','requestVIP','requestVIPAmbush','requestOfficerDownNearby','reviveOfficerDown','clearOfficerDown','exportOfficerDownLog',
     'cycleCyberpsychoVariant','randomCyberpsychoVariants','cycleVIPAmbushCars','cancel',
     'refreshVIPWaypoint','armTimeoutTest','testAudio','init','start','finish','reset','update','shutdown'}) do
     dispatch[name]=command('dispatch.'..name)

@@ -47,6 +47,11 @@ def phase_model(doc):
 
 def main():
     for name in ['init.lua','cet_ui.lua']:
+        if name=='cet_ui.lua':
+            # The menu cleanup intentionally retires probe launchers. Keep a
+            # strict reviewed-source pin plus separate current/retired routes.
+            assert hashlib.sha256((ROOT/PREFIX/name).read_bytes()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1'
+            continue
         old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}/{name}'],cwd=ROOT,text=True)
         assert without_probe((ROOT/PREFIX/name).read_text())==old,name
     src=ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds'
@@ -79,15 +84,15 @@ def main():
     lua.execute((HERE/'native-mocks.lua').read_text());lua.execute((HERE/'scenarios.lua').read_text())
     sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime,click
     _,f=runtime(ROOT/PREFIX);f.Frame(f,'Testing',None);assert f.Events(f)==''
-    for label,needle in {'TEST: Start static quest marker':'probe.start',
-                         'TEST: Andrea visual marker':'probe.visual',
-                         'TEST: Relocate native marker near V':'probe.relocate',
-                         'Log legacy Coyote test diagnostics':'Quest marker test | fixture'}.items():
-        assert needle in click(ROOT/PREFIX,False,False,'Testing',label)
+    from probe_source import RETIRED_BUTTONS
+    for label in RETIRED_BUTTONS:
+        for tab in ['Patrol','Dispatch','Career','Settings','Diagnostics','Testing']:
+            f.ClearEvents(f);f.Frame(f,tab,label)
+            assert f.clicks==0 and f.Events(f)=='',label
     assert 'Fixed markers | Fixed marker backend unavailable' in click(ROOT/PREFIX,False,False,'Diagnostics','Log active dispatch marker diagnostics')
     ui,f=runtime(ROOT/PREFIX)
-    ui.execute('package.loaded.quest_marker_probe.finish=function() UIFixture.probeRemoved=true end')
-    f.Frame(f,'Testing','Remove quest marker test');assert f.clicks==1 and f.probeRemoved
+    ui.execute('package.loaded.quest_marker_probe.finish=function() UIFixture.probeRemoved=(UIFixture.probeRemoved or 0)+1 end')
+    f.Frame(f,'Diagnostics','Clear leftover quest marker experiment');assert f.clicks==1 and f.probeRemoved==1
     spec=importlib.util.spec_from_file_location('probe_assets',ROOT/'tools/build_quest_marker_probe_assets.py')
     builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
     names=['probe.journal','probe_onscreens.json','probe_anchor.ent','probe.questphase']
@@ -128,9 +133,9 @@ def main():
       'normal_dispatch_unchanged':True,'no_dynamic_entity_spawning':True,
       'menu_pauses_lifetime':True,'confirmed_phase_and_actor_free_marker_cleanup_before_restart':True,
       'phase_is_rearmable_without_restart':True,'save_restore_forgets_old_handles':True,
-      'ui_controls':sorted(PROBE_BUTTONS),
+      'ui_controls':sorted(PROBE_BUTTONS-RETIRED_BUTTONS),'retired_controls_absent':sorted(RETIRED_BUTTONS),
       'assets_roundtrip_and_extraction':manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']}
-    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and five CET routes plus ownership-scoped MIT visual control; actual game execution still requires testing')
+    print('PASS: actual authored 22-node phase data + native/Lua controller: passive boot, missing-phase rejection, asynchronous start/stop, no-pin false-success rejection, hash/type/position/objective proof, scoped fallback cleanup, save/menu/duty/rearm guards and two current CET controls, retired-launcher absence plus ownership-scoped MIT visual backend; actual game execution still requires testing')
     return report
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()

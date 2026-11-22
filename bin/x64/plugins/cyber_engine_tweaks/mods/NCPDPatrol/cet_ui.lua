@@ -80,9 +80,10 @@ function M.new(context)
         -- Officer Down catalogue UI begin
         if ImGui.Button("Request Officer Down dispatch") then
             if Dispatch.requestOfficerDownNearby then Dispatch.requestOfficerDownNearby(getPatrolSystem(), status)
-            else status("Install the complete v0.18c dispatch files and restart") end
+            else status("Officer Down dispatch module unavailable; install the complete package and restart") end
         end
         if Dispatch.officerDownState then ImGui.TextWrapped("Officer Down: " .. Dispatch.officerDownState()) end
+        if Dispatch.officerDownCatalogueInfo then ImGui.TextWrapped(Dispatch.officerDownCatalogueInfo()) end
         -- Officer Down catalogue UI end
         if ImGui.Button("Cancel active dispatch") then Dispatch.cancel(getPatrolSystem(), status) end
         if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
@@ -97,7 +98,7 @@ function M.new(context)
             ImGui.TextWrapped("Scanner search expands from 1 km to 1.5 km and 2 km; empty searches retry after 30 seconds. Scanner response deadline: 3 minutes, paused in menus and cleared On scene.")
             ImGui.TextWrapped("Scanner bonus: EUR$1000. An attended scanner dispatch adds EUR$500 with a separate receipt. VIP delivery: EUR$2000. Cyberpsycho: EUR$3000, plus EUR$500 for non-lethal neutralization.")
             -- Officer Down catalogue UI begin
-            ImGui.TextWrapped("Officer Down: EUR$2000 and one career incident after both rescue and neutralization. Surveyed City Center/Watson sites; search expands from 1 km to 2 km and 5 km. Natural injured landings are checked for ground and aid access.")
+            ImGui.TextWrapped("Officer Down: EUR$2000 and one career incident after both rescue and neutralization. Search expands from 1 km to 2 km and 5 km. Natural injured landings are checked for ground and aid access.")
             -- Officer Down catalogue UI end
             ImGui.TextWrapped("VIP delivery unlocks after boarding an owned police car. Stop at the destination and let the witness exit. Cyberpsycho threats spawn when you arrive at the assigned scene.")
             ImGui.TextWrapped("GPS may require opening and closing the map. Marker recovery and detailed state are under Diagnostics; typed dispatch tests are under Testing.")
@@ -187,19 +188,32 @@ function M.new(context)
             ImGui.TextWrapped("Objective display: " .. Dispatch.hudState())
             ImGui.TextWrapped("VIP ambush: " .. Dispatch.vipAmbushState())
             if ImGui.Button("Log automatic dispatch diagnostics") then status("Automatic dispatch | " .. Dispatch.schedulerDiagnostics(getPatrolSystem())) end
-            -- Officer Down catalogue UI begin
-            if Dispatch.officerDownLogState then ImGui.TextWrapped(Dispatch.officerDownLogState()) end
-            if ImGui.Button("Export Officer Down gameplay report") then
-                if Dispatch.exportOfficerDownLog then Dispatch.exportOfficerDownLog(status)
-                else status("Install the complete v0.18c dispatch files and restart") end
-            end
-            -- Officer Down catalogue UI end
             if ImGui.Button("Log dispatch journal diagnostics") then status("Dispatch journal | " .. Dispatch.journalDiagnostics()) end
             if ImGui.Button("Log VIP diagnostics") then status("VIP | " .. Dispatch.vipDiagnostics()) end
             if ImGui.Button("Log cyberpsycho diagnostics") then status("Cyberpsycho | " .. Dispatch.cyberpsychoDiagnostics()) end
             if ImGui.Button("Log incident reward diagnostics") then status("Incident rewards | " .. Dispatch.rewardDiagnostics()) end
             if ImGui.Button("Rebuild VIP waypoint") then Dispatch.refreshVIPWaypoint(getPatrolSystem(), status) end
         end
+        -- Officer Down catalogue UI begin
+        if ImGui.CollapsingHeader("Officer Down: current dispatch") then
+            if Dispatch.officerDownCatalogueInfo then ImGui.TextWrapped(Dispatch.officerDownCatalogueInfo()) end
+            if Dispatch.officerDownState then ImGui.TextWrapped(Dispatch.officerDownState()) end
+            if Dispatch.officerDownLogState then ImGui.TextWrapped(Dispatch.officerDownLogState()) end
+            if ImGui.Button("Log Officer Down diagnostics") then status("Officer Down | " .. Dispatch.officerDownDiagnostics()) end
+            if ImGui.Button("Export Officer Down gameplay report") then
+                if Dispatch.exportOfficerDownLog then Dispatch.exportOfficerDownLog(status)
+                else status("Officer Down dispatch module unavailable; install the complete package and restart") end
+            end
+            if ImGui.Button("Clear Officer Down scene") then Dispatch.clearOfficerDown(getPatrolSystem(), status) end
+            ImGui.TextWrapped("Clear cancels the current Officer Down assignment and requests cleanup. Use a normal dispatch request to select a nearby catalogue location.")
+        end
+        -- Officer Down catalogue UI end
+        -- v018i legacy recovery UI begin
+        if ImGui.CollapsingHeader("Older marker test recovery") then
+            ImGui.TextWrapped("For a leftover marker from an older experimental build. Removes only that experiment through its existing cleanup routine.")
+            if context.markerProbe and ImGui.Button("Clear leftover quest marker experiment") then context.markerProbe.finish(status) end
+        end
+        -- v018i legacy recovery UI end
         if ImGui.CollapsingHeader("Partner AI and officer readiness") then
             if ImGui.Button("Check partner state") then status(Partner.state()) end
             if ImGui.Button("Log partner AI diagnostics") then
@@ -255,44 +269,45 @@ function M.new(context)
     end
 
     local function drawTesting()
-        -- Officer Down UI begin
-        if ImGui.CollapsingHeader("Officer Down prototype") then
-            ImGui.TextWrapped("Fixed test intersection: -490.911377, -173.816315, 7.887070. Request from 100-5000 m away while on duty. One injured officer, one defender, two gang cars and five suspects. Both rescue and neutralization are required.")
-            if ImGui.Button("TEST: Waypoint to Officer Down intersection") then
-                local ok, result = pcall(function()
-                    local player = Game.GetPlayer()
-                    if not context.navigation.worldReady() or not player or not player:IsAttached() then error("Load a save before placing the test waypoint") end
-                    local scene = require("officer_down_scene")
-                    local point = Vector4.new(scene.x, scene.y, scene.z, 1)
-                    local map = Game.GetMappinSystem()
-                    if not map then error("Map system unavailable") end
-                    for _, pin in ipairs(map:GetAllMappins()) do
-                        local inspected, exists = pcall(function()
-                            return pin:GetVariant() == gamedataMappinVariant.CustomPositionVariant and pin:IsActive()
-                                and Vector4.Distance(pin:GetWorldPosition(), point) <= 1
-                        end)
-                        if inspected and exists then return "Test waypoint already present at the intersection. Open the world map to locate or track it." end
-                    end
-                    local data = MappinData.new()
-                    data.mappinType = TweakDBID.new("Mappins.DefaultStaticMappin")
-                    data.variant = gamedataMappinVariant.CustomPositionVariant
-                    data.active, data.visibleThroughWalls = true, true
-                    data.debugCaption = "OFFICER DOWN TEST INTERSECTION"
-                    local id = map:RegisterMappin(data, point)
-                    if not id or id.value == nil or id.value == 0 then error("Test waypoint registration rejected") end
-                    return "Test intersection waypoint requested. Open the world map to find it; open/close the map if the GPS line is missing."
-                end)
-                status("Officer Down locator | " .. (ok and tostring(result) or ("Failed: " .. tostring(result))))
+        ImGui.TextWrapped("Use a test save. Test grants and claimed rewards remain if you save. Session unlocks leave your real incident count unchanged.")
+        if ImGui.CollapsingHeader("Dispatch scenarios") then
+            if ImGui.Button("TEST: Request scanner dispatch") then Dispatch.request(getPatrolSystem(), status) end
+            if ImGui.Button("Test timeout: 15 s left (on route)") then Dispatch.armTimeoutTest(getPatrolSystem(), status) end
+            if ImGui.Button("TEST: Request VIP transport") then Dispatch.requestVIP(getPatrolSystem(), status) end
+            if ImGui.Button("TEST: Trigger VIP ambush") then Dispatch.requestVIPAmbush(status) end
+            if ImGui.Button("TEST: Request cyberpsycho dispatch") then Dispatch.requestCyberpsycho(getPatrolSystem(), status) end
+            -- Officer Down catalogue UI begin
+            if ImGui.Button("TEST: Request Officer Down dispatch") then
+                if Dispatch.requestOfficerDownNearby then Dispatch.requestOfficerDownNearby(getPatrolSystem(), status)
+                else status("Officer Down dispatch module unavailable") end
             end
-            ImGui.TextWrapped("The locator places a normal custom waypoint and may replace your current manual waypoint. It works off duty and starts no incident. Change/remove it from the world map.")
-            if Dispatch.officerDownState then ImGui.TextWrapped(Dispatch.officerDownState()) end
-            if ImGui.Button("TEST: Request Officer Down") then if Dispatch.requestOfficerDown then Dispatch.requestOfficerDown(getPatrolSystem(), status) end end
-            if ImGui.Button("TEST: Rotate Officer Down scene 90 degrees") then if Dispatch.rotateOfficerDown then Dispatch.rotateOfficerDown(status) end end
-            if ImGui.Button("Revive scene officer (nearby)") then if Dispatch.reviveOfficerDown then Dispatch.reviveOfficerDown(status) end end
-            if ImGui.Button("Clear Officer Down scene") then if Dispatch.clearOfficerDown then Dispatch.clearOfficerDown(getPatrolSystem(), status) end end
-            if ImGui.Button("Log Officer Down diagnostics") then if Dispatch.officerDownDiagnostics then status("Officer Down | "..Dispatch.officerDownDiagnostics()) end end
-            ImGui.TextWrapped("Original fixed-intersection test. Compact scene: 12 m between police/gang lines; gang cars remain at +/-5.5 m. Preparation starts at 250 m and tries four rotations. Use F beside the injured officer and remain within 2.5 m for 3 seconds. Normal multi-site dispatch is available on the Dispatch tab, with gameplay logs under Diagnostics.")
+            if ImGui.Button("Revive scene officer (nearby)") then Dispatch.reviveOfficerDown(status) end
+            -- Officer Down catalogue UI end
+            ImGui.TextWrapped("Next cyberpsycho: " .. Dispatch.cyberpsychoVariantState())
+            if ImGui.Button("TEST: Next cyberpsycho variant") then Dispatch.cycleCyberpsychoVariant(status) end
+            if ImGui.Button("Use random cyberpsycho variants") then Dispatch.randomCyberpsychoVariants(status) end
+            ImGui.TextWrapped("Typed requests retain normal assignment and cleanup guards. They do not replace a current dispatch.")
         end
+        if ImGui.CollapsingHeader("Partner recovery") then
+            if ImGui.Button("Test: down partner") then
+                local support = getSupportSystem()
+                if support then support:DownPartner() end
+            end
+            ImGui.TextWrapped("Revive using the in-game interaction or Revive partner (nearby) under Patrol.")
+        end
+        if ImGui.CollapsingHeader("Reward equipment") then
+            if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
+            if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
+            if ImGui.Button("TEST: Give tiered reward weapons") then careerAction("weapons") end
+            if ImGui.Button("TEST: Give Bean Bagger (Tier 2)") then careerAction("beanbagger") end
+            ImGui.TextWrapped("Tiered tests need session unlocks: Bean Bagger T2, Lexington T2, Masamune T3 and Defender T5. The separate Bean Bagger button needs no unlock override. One test copy per weapon per session; claim receipts stay unchanged.")
+        end
+        if ImGui.CollapsingHeader("Audio previews") then
+            if ImGui.Button("Test dispatch alert") then Dispatch.testAudio(getPatrolSystem(), false, status) end
+            if ImGui.Button("Preview police radio (in vehicle)") then Dispatch.testAudio(getPatrolSystem(), true, status) end
+        end
+        heading("SCENE DEVELOPMENT - OFF DUTY")
+        -- Officer Down UI begin
         if ImGui.CollapsingHeader("Scene survey: recorded sites") then
             local survey=context.sceneSurvey
             ImGui.TextWrapped("Recorded-site survey; current coverage is shown below. Use a manual test save, go OFF DUTY and exit your vehicle. The test moves V between recorded centers, spawns one protected scene, checks functional placement, confirms cleanup and returns to your start. Close CET and leave the game running. New candidates can be added to the survey catalogue before a later dispatch build.")
@@ -307,11 +322,6 @@ function M.new(context)
                 if ImGui.Button("Load saved survey results") then survey.loadResults(status) end
                 if ImGui.Button("Export scene survey report") then survey.export(status) end
                 if ImGui.Button("Log scene survey diagnostics") then status('Scene survey | '..survey.diagnostics()) end
-                if ImGui.CollapsingHeader("Previous injured-placement comparisons") then
-                    if ImGui.Button("TEST: Injured placement pilot (3 sites)") then survey.startPlacementPilot(status) end
-                    if ImGui.Button("TEST: Injured settling pilot (3 sites)") then survey.startPilot(status) end
-                    ImGui.TextWrapped("Historical three-site protocols retain their old precision rules for comparison. Normal full-survey buttons above use functional validation.")
-                end
                 ImGui.TextWrapped("Evidence: scene_survey_results.jsonl. Export: scene_survey_report.json. Both are inside the NCPDPatrol CET folder. Proven rotations are reused first on later tests. Temporary blockage remains eligible for retry. Cleanup must finish before another teleport. After a CET reload, use recovery; a saved-game reload never resumes the tour automatically. Transfers use controlled teleport and ground/navmesh checks; a memory-purging loading screen is not claimed.")
             end
         end
@@ -332,55 +342,6 @@ function M.new(context)
             ImGui.TextWrapped("Evidence: scene_discovery_results.jsonl. Export: scene_discovery_report.json, including verified_candidates with actual grounded coordinates, rotation and source terminal. Successful terminal/layout searches are skipped on later runs. Existing recorded surveys, approved dispatch sites and manual waypoints are preserved. Keep your previous discovery files: successful variants remain compatible. Stop/recovery waits for owned actors to detach before any return teleport; the reason stays visible during return and is included in last_run in the report.")
         end
         -- v018g discovery UI end
-        -- r4 probe UI begin
-        if ImGui.CollapsingHeader("Legacy Coyote marker experiment") then
-            local probe = context.markerProbe
-            ImGui.TextWrapped("Legacy controls: r4d static passed; r4e relocation failed in game. Normal dispatch uses fixed site pins. OFF DUTY test: the MIT reference quest uses the El Coyote Cojo world anchor (-1259.60, -989.17, 12.04). Inspect the world map alongside your manual waypoint. This does not replace dispatch markers or award credits.")
-            ImGui.TextWrapped(probe.state())
-            if ImGui.Button("TEST: Start static quest marker") then probe.start(status) end
-            if ImGui.Button("TEST: Relocate native marker near V") then probe.relocate(status) end
-            if ImGui.Button("TEST: Andrea visual marker") then probe.startVisual(status) end
-            if ImGui.Button("Remove quest marker test") then probe.finish(status) end
-            if ImGui.Button("Log legacy Coyote test diagnostics") then status("Quest marker test | " .. probe.diagnostics()) end
-            ImGui.TextWrapped("After static confirmation, Relocate moves that same native pin 150 m east of V. Wait 5 active seconds and inspect the world map plus quest-log location. Remove between independent tests. The static test requires journal proof. The Andrea visual control only checks rendering; it does not prove a journal link or GPS. If not confirmed after five seconds, log graph ready/stage and native pin count, then remove the test. No game-engine success is assumed.")
-        end
-        -- r4 probe UI end
-        ImGui.TextWrapped("Use a test save. Test grants and claimed rewards remain if you save. Session unlocks leave your real incident count unchanged.")
-        if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
-        if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
-        if ImGui.CollapsingHeader("Dispatch scenarios") then
-            if ImGui.Button("TEST: Request scanner dispatch") then Dispatch.request(getPatrolSystem(), status) end
-            if ImGui.Button("Test timeout: 15 s left (on route)") then Dispatch.armTimeoutTest(getPatrolSystem(), status) end
-            if ImGui.Button("TEST: Request VIP transport") then Dispatch.requestVIP(getPatrolSystem(), status) end
-            if ImGui.Button("TEST: Trigger VIP ambush") then Dispatch.requestVIPAmbush(status) end
-            if ImGui.Button("TEST: Request cyberpsycho dispatch") then Dispatch.requestCyberpsycho(getPatrolSystem(), status) end
-            -- Officer Down catalogue UI begin
-            if ImGui.Button("TEST: Request Officer Down dispatch") then
-                if Dispatch.requestOfficerDownNearby then Dispatch.requestOfficerDownNearby(getPatrolSystem(), status)
-                else status("Officer Down dispatch module unavailable") end
-            end
-            -- Officer Down catalogue UI end
-            ImGui.TextWrapped("Next cyberpsycho: " .. Dispatch.cyberpsychoVariantState())
-            if ImGui.Button("TEST: Next cyberpsycho variant") then Dispatch.cycleCyberpsychoVariant(status) end
-            if ImGui.Button("Use random cyberpsycho variants") then Dispatch.randomCyberpsychoVariants(status) end
-            ImGui.TextWrapped("Typed requests retain normal assignment and cleanup guards. They do not replace a current dispatch.")
-        end
-        if ImGui.CollapsingHeader("Partner recovery") then
-            if ImGui.Button("Test: down partner") then
-                local support = getSupportSystem()
-                if support then support:DownPartner() end
-            end
-            ImGui.TextWrapped("Revive using the in-game interaction or Revive partner (nearby) under Patrol.")
-        end
-        if ImGui.CollapsingHeader("Reward equipment") then
-            if ImGui.Button("TEST: Give tiered reward weapons") then careerAction("weapons") end
-            if ImGui.Button("TEST: Give Bean Bagger (Tier 2)") then careerAction("beanbagger") end
-            ImGui.TextWrapped("Tiered tests need session unlocks: Bean Bagger T2, Lexington T2, Masamune T3 and Defender T5. The separate Bean Bagger button needs no unlock override. One test copy per weapon per session; claim receipts stay unchanged.")
-        end
-        if ImGui.CollapsingHeader("Audio previews") then
-            if ImGui.Button("Test dispatch alert") then Dispatch.testAudio(getPatrolSystem(), false, status) end
-            if ImGui.Button("Preview police radio (in vehicle)") then Dispatch.testAudio(getPatrolSystem(), true, status) end
-        end
     end
 
     local tabs = {
@@ -392,7 +353,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18h Expanded Officer Down###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18i CET Menu Cleanup###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18h Expanded Officer Down | 38 imported compact placements, 54 stable dispatch sites
+-- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18h Expanded Officer Down loaded. 38 approved compact discovery placements added; 54 dispatch sites total across City Center, Heywood, Pacifica, Santo Domingo and Watson. Existing 10% frequency, rewards and scene lifecycle remain. Install the complete package and fully restart the game.")
+    status("v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

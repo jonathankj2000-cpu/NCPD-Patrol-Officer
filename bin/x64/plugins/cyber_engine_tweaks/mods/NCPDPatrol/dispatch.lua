@@ -287,6 +287,16 @@ function M.requestOfficerDownNearby(patrol,status,source)
     return accepted
 end
 function M.officerDownLogState() return OfficerDown.logState() end
+-- v018i catalogue metadata begin
+function M.officerDownCatalogueInfo()
+    local catalog = require("officer_down_sites")
+    local enabled = 0
+    for _, site in ipairs(catalog.sites) do
+        if site.enabled then enabled = enabled + 1 end
+    end
+    return tostring(enabled) .. " enabled locations | " .. catalog.coverage
+end
+-- v018i catalogue metadata end
 function M.exportOfficerDownLog(status) return OfficerDown.exportLog(status) end
 function M.officerDownState() return OfficerDown.state() end
 function M.officerDownDiagnostics() return OfficerDown.diagnostics() end

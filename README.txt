@@ -1,3 +1,28 @@
+NCPD PATROL v0.18i CET MENU CLEANUP - COMPLETE BRANCH TEST
+
+CET Testing opens with the current Dispatch scenarios group. Officer Down
+requests on Dispatch and Testing use the existing nearby 54-site catalogue.
+The Dispatch tab displays the enabled count and current five-district coverage.
+Officer Down diagnostics, gameplay export and scene cleanup are together under
+Diagnostics > Officer Down: current dispatch. Milestone unlocks are grouped
+with Reward equipment; recorded-site survey and terminal discovery stay under
+SCENE DEVELOPMENT - OFF DUTY.
+
+Removed the fixed Kryss 1 request/rotation/locator, obsolete injured-placement
+pilots and legacy Coyote marker launchers from CET. A single cleanup control
+for leftover experimental markers remains under Diagnostics > Older marker
+test recovery. Existing save-compatible native resources stay installed.
+
+All 54 approved sites, fixed quest markers, scene/cleanup procedures, automatic
+weights, rewards, career progress and saved survey/discovery evidence remain
+unchanged. No production lock to Kryss 1 was reproduced in the code fixtures.
+The removed fixed-site launcher did intentionally always select that site.
+
+Install the complete package and fully restart the game. Browser Extension is
+still optional. Automated checks use mocked engine boundaries; verify the new
+menu and site selection in game. Never overwrite your runtime .jsonl/report
+files when updating. Use a manual test save for grants or developer tours.
+
 NCPD PATROL v0.18h EXPANDED OFFICER DOWN - COMPLETE BRANCH TEST
 
 Adds the 38 compact scene placements approved by the supplied Scene Discovery

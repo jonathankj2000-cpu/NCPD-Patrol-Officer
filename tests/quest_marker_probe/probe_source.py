@@ -12,6 +12,12 @@ def without_location_exclusion(source):
     return source
 
 def without_probe(source):
+    # v0.18i changes the menu and adds read-only catalogue metadata only.
+    source=source.replace('-- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary','-- NCPD Patrol v0.18h Expanded Officer Down | 38 imported compact placements, 54 stable dispatch sites')
+    source=source.replace('v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.','v0.18h Expanded Officer Down loaded. 38 approved compact discovery placements added; 54 dispatch sites total across City Center, Heywood, Pacifica, Santo Domingo and Watson. Existing 10% frequency, rewards and scene lifecycle remain. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.18i CET Menu Cleanup###','NCPD Patrol - v0.18h Expanded Officer Down###')
+    source=re.sub(r'^-- v018i catalogue metadata begin\n.*?^-- v018i catalogue metadata end\n','',source,flags=re.M|re.S)
+    source=re.sub(r'^        -- v018i legacy recovery UI begin\n.*?^        -- v018i legacy recovery UI end\n','',source,flags=re.M|re.S)
     source=source.replace('-- NCPD Patrol v0.18h Expanded Officer Down | 38 imported compact placements, 54 stable dispatch sites','-- NCPD Patrol v0.18g1 Discovery Landing Fix | supported offset staging and retained stop reasons')
     source=source.replace('v0.18h Expanded Officer Down loaded. 38 approved compact discovery placements added; 54 dispatch sites total across City Center, Heywood, Pacifica, Santo Domingo and Watson. Existing 10% frequency, rewards and scene lifecycle remain. Install the complete package and fully restart the game.','v0.18g1 Discovery Landing Fix loaded. Terminal-offset searches use safe nearby staging when the terminal itself lacks navmesh. Existing successful discovery results remain compatible; stop reasons stay visible during return. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.18h Expanded Officer Down###','NCPD Patrol - v0.18g1 Discovery Landing Fix###')
@@ -121,3 +127,13 @@ PROBE_BUTTONS.add('TEST: Request Officer Down dispatch')
 PROBE_BUTTONS.add('Log police fire diagnostics')
 PROBE_BUTTONS.update({'TEST: Discover scenes near 3 closest terminals','TEST: Discover scenes near all 60 terminals','Stop discovery and return','Recover discovery cleanup and return','Load discovery results','Export discovery report'})
 PROBE_BUTTONS.update({'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees','Revive scene officer (nearby)','Clear Officer Down scene','Log Officer Down diagnostics','TEST: Waypoint to Officer Down intersection'})
+
+# Retired menu launchers remain classified for historical-oracle filtering;
+# current UI must not expose them. Backend ownership/cleanup tests still run.
+RETIRED_BUTTONS={
+ 'TEST: Request Officer Down','TEST: Rotate Officer Down scene 90 degrees',
+ 'TEST: Waypoint to Officer Down intersection',
+ 'TEST: Injured placement pilot (3 sites)','TEST: Injured settling pilot (3 sites)',
+ 'TEST: Start static quest marker','TEST: Relocate native marker near V',
+ 'TEST: Andrea visual marker','Remove quest marker test','Log legacy Coyote test diagnostics'}
+PROBE_BUTTONS.add('Clear leftover quest marker experiment')

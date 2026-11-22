@@ -144,7 +144,7 @@ def main():
  assert(tour.summary():find('proven compact=17/17',1,true) and tour.summary():find('settling pilot=3/3',1,true));s.assertNoGameplay()''')
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui_runtime
  _,f=ui_runtime(ROOT/PREFIX);f.Frame(f,'Testing','TEST: Injured settling pilot (3 sites)')
- assert f.clicks==1 and 'survey.startPilot' in f.Events(f)
+ assert f.clicks==0 and f.Events(f)=='','Historical pilot launcher must remain retired'
  print('PASS: opt-in three-site injured settling pilot, transient 1.8 m motion vs unchanged legacy rejection, original 1.5 m final bound, 0.15 m anchor stability, per-frame local/world positions, strict other actors/ground/clearance, pause/cancel/disk cleanup, isolated pilot evidence and exact legacy 17-site runtime/evidence comparison (engine boundaries mocked)')
  return {'profile':PROFILE,'pilot_sites':['kryss_04','kryss_11','kryss_15'],'settle_active_seconds':4,
   'observe_active_seconds':3,'final_original_position_limit_m':1.5,'observation_anchor_drift_m':.15,

@@ -1,6 +1,6 @@
 """Byte-preservation guards for a mechanical extraction, not gameplay replicas."""
 from pathlib import Path
-import subprocess,textwrap,sys
+import hashlib,subprocess,textwrap,sys
 sys.path.insert(0,str(__import__('pathlib').Path(__file__).resolve().parents[1]/'quest_marker_probe'))
 from probe_source import without_probe,without_location_exclusion
 BASE='a9b654fed01145dd908ffe82de6e097bf2917c56'
@@ -65,6 +65,12 @@ def verify(root):
     current=current.replace('Waypoint.update(delta,patrol,status)','checkWaypoint(delta,patrol,status)')
     assert current==old,'Unrelated transport/AI/cleanup statements changed'
     for name,replacements in BRANDING.items():
+        if name=='cet_ui.lua':
+            # The explicitly requested v0.18i menu cleanup changes layout.
+            # Pin the reviewed complete UI; retained action equivalence is
+            # exercised by check_cet_ui, and retired/current routes separately.
+            assert hashlib.sha256((mods/name).read_bytes()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1','Unreviewed CET menu change'
+            continue
         expected=original(root,name)
         for before,after in replacements:
             assert expected.count(before)==1

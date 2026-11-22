@@ -10,7 +10,7 @@ BASE='3c20841bba35d69289e5f70784b3202a5fbf8881'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
 TABS=['Patrol','Dispatch','Career','Settings','Diagnostics','Testing']
 sys.path.insert(0,str(HERE.parent/'quest_marker_probe'))
-from probe_source import without_probe,PROBE_BUTTONS
+from probe_source import without_probe,PROBE_BUTTONS,RETIRED_BUTTONS
 
 def base_file(name):
     return subprocess.check_output(['git','show',f'{BASE}:{PREFIX}/{name}'],cwd=ROOT,text=True)
@@ -68,7 +68,8 @@ def check_routes(reference,current):
     total=0;inventory=[]
     for duty,enabled in [(False,False),(True,False),(True,True)]:
         old=buttons(reference,duty,enabled);new=buttons(current,duty,enabled)
-        assert PROBE_BUTTONS<=set(new),'The isolated probe controls must remain available'
+        assert PROBE_BUTTONS-RETIRED_BUTTONS<=set(new),'Current added controls must remain available'
+        assert not RETIRED_BUTTONS & set(new),'Retired launchers reappeared'
         new={label:tab for label,tab in new.items() if label not in PROBE_BUTTONS}
         assert set(old)==set(new),{'missing':sorted(set(old)-set(new)),'added':sorted(set(new)-set(old))}
         for label,tab in sorted(new.items()):
@@ -95,7 +96,7 @@ def check_layout(current):
     assert 'Request backup patrol' in normal['Patrol'] and 'Request new partner' in normal['Patrol']
     assert 'Request dispatch now' in normal['Dispatch'] and 'Cancel active dispatch' in normal['Dispatch']
     assert 'Claim next milestone reward' in normal['Career']
-    assert 'TEST: Unlock all milestones (session)' in normal['Testing']
+    assert not any(label.startswith(('TEST:','Test:','Test timeout:')) for label in normal['Testing']),'Test actions must be grouped in collapsed feature panels'
     # A collapsed window/tab bar or clipped content still requires the native
     # matching End calls; hidden controls must not execute a queued click.
     for property in ['windowVisible','tabBarVisible','contentVisible']:
@@ -131,6 +132,7 @@ def check_layout(current):
     f.hotkeys.ncpdpatrol_toggle_duty();f.ClearEvents(f)
     assert any(row['label']=='End Shift' for row in rows(f.Frame(f,'Patrol',None)))
     f.Frame(f,'Patrol','Spawn partner');assert 'partner.spawn|true|<callback>' in f.Events(f)
+    f.openHeaders=True
     f.ClearEvents(f);f.Frame(f,'Testing','TEST: Unlock all milestones (session)')
     f.ClearEvents(f)
     for tab in TABS:

@@ -133,7 +133,7 @@ def main():
  assert(not tour.start('compact',true));assert(tour.export());s.assertNoGameplay(true)''')
  sys.path.insert(0,str(HERE.parent/'cet_ui'));from check_cet_ui import runtime as ui_runtime
  _,f=ui_runtime(MOD);f.Frame(f,'Testing','TEST: Injured placement pilot (3 sites)')
- assert f.clicks==1 and 'survey.startPlacementPilot' in f.Events(f)
+ assert f.clicks==0 and f.Events(f)=='','Historical pilot launcher must remain retired'
  print('PASS: three-site injured placement pilot; production-style bounded correction, target support/clearance, native ownership/phase guards, correction disabled before release and final observation, actual position readback, unchanged 1.5 m bound and 0.15 m stability, continued drift/ignored teleport rejected, independent legacy/passive/placement evidence, paused clocks and cancel/disk/CET recovery (engine boundaries mocked)')
  return {'profile':PROFILE,'pilot_sites':['kryss_04','kryss_11','kryss_15'],'staging_active_seconds':4,
   'uncorrected_release_seconds':.5,'uncorrected_observation_seconds':3,'final_original_position_limit_m':1.5,

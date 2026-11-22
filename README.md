@@ -1,5 +1,24 @@
 # NCPD Patrol
 
+## v0.18i — CET menu cleanup
+
+Officer Down requests on **Dispatch** and **Testing → Dispatch scenarios** use
+all **54 enabled catalogue locations**. The menu now displays the count and
+coverage. Current Officer Down state, logging, export and cleanup are grouped
+under **Diagnostics → Officer Down: current dispatch**.
+
+Removed the fixed Kryss 1 launcher/rotation/locator, obsolete injured-placement
+pilot controls and old marker experiment launchers. Existing recorded-site
+survey and terminal discovery tools remain; milestone test unlocks are grouped
+with Reward equipment. One guarded cleanup button remains for old marker tests.
+
+[Download the complete v0.18i test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.18i_CET_Menu_Cleanup_TEST.zip)
+
+Install all 117 files and fully restart. All 54 locations, native scripts,
+archives, dispatch behavior, rewards and saved results are unchanged.
+[Scope, catalogue audit and game checks](docs/CET_MENU_CLEANUP_v018i.md).
+
+
 ## v0.17e2 — arrest initialization test
 
 Prepares and reads back the private arrest animation bindings **before helper
