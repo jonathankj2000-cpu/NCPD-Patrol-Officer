@@ -14,6 +14,7 @@ class Machine:
     def __init__(self,lua,docs):
         self.lua=lua;self.f=lua.globals().F;self.handles={};self.queue=deque();self.waits=set();self.scene=None
         self.release=0;self.lines=[];self.choice_ready=False;self.scn_nodes={n['Data']['nodeId']['id']:n['Data'] for n in docs['conversation.scene.json']['Data']['RootChunk']['sceneGraph']['Data']['graph']}
+        self.workspot_requested=0;self.workspot_active=False;self.workspot_available=True;self.look_at=None
         self.scn=docs['conversation.scene.json']['Data']['RootChunk']
         for x in assets.walk(docs['quest_giver.questphase.json']):
             if 'HandleId' in x:self.handles[x['HandleId']]=x['Data']
@@ -71,19 +72,34 @@ class Machine:
         n=self.scn_nodes[i];typ=n['$type'];self.scene=i
         if typ=='scnStartNode':self.scn_emit(n)
         elif typ=='scnSectionNode':
-            event=n['events'][0]['Data'];item=event['screenplayLineId']['id']
-            line=next(x for x in self.scn['screenplayStore']['lines'] if x['itemId']['id']==item)
-            text=next(x['content'] for x in self.scn['locStore']['vpEntries'] if next(v for v in self.scn['locStore']['vdEntries'] if v['variantId']==x['variantId'])['locstringId']==line['locstringId'])
-            self.lines.append(text);self.remaining=n['sectionDuration']['stu']/1000
+            self.remaining=n['sectionDuration']['stu']/1000
+            for wrapped in n['events']:
+                event=wrapped['Data']
+                if event['$type']=='scnDialogLineEvent':
+                    item=event['screenplayLineId']['id']
+                    line=next(x for x in self.scn['screenplayStore']['lines'] if x['itemId']['id']==item)
+                    text=next(x['content'] for x in self.scn['locStore']['vpEntries'] if next(v for v in self.scn['locStore']['vdEntries'] if v['variantId']==x['variantId'])['locstringId']==line['locstringId'])
+                    self.lines.append(text)
+                elif event['$type']=='scnLookAtEvent':self.look_at=event['basicData']['basic']
+                elif event['$type']=='scneventsSocket':
+                    # A scene socket forks a background command without
+                    # replacing the main dialogue section or waiting on exit.
+                    self.scn_emit(n,event['osockStamp']['ordinal'],event['osockStamp']['name']);self.scene=i
+                else:raise AssertionError(event['$type'])
         elif typ=='scnChoiceNode':self.choice_ready=True
         elif typ=='scnQuestNode':
             assert n['isockMappings'][ordinal]['$value']=='In','Scene routed choice into CutDestination'
-            t=n['questNode']['Data']['type']['Data'];self.f.qfacts[t['factName']]=t['value'];self.scn_emit(n)
+            command=n['questNode']['Data']
+            if command['$type']=='questUseWorkspotNodeDefinition':
+                assert command['paramsV1']['Data']['isPlayer']==0
+                self.workspot_requested+=1;self.workspot_active=self.workspot_available
+            else:
+                t=command['type']['Data'];self.f.qfacts[t['factName']]=t['value'];self.scn_emit(n)
         elif typ=='scnEndNode':
-            self.scene=None;self.f.qsceneOwned=False;self.emit(12,'conversation_out');self.run()
+            self.scene=None;self.f.qsceneOwned=False;self.workspot_active=False;self.look_at=None;self.emit(12,'conversation_out');self.run()
         else:raise AssertionError(typ)
-    def scn_emit(self,n,option=0):
-        out=next(s for s in n['outputSockets'] if s['stamp']['name']==0 and s['stamp']['ordinal']==option)
+    def scn_emit(self,n,option=0,name=0):
+        out=next(s for s in n['outputSockets'] if s['stamp']['name']==name and s['stamp']['ordinal']==option)
         dest=out['destinations'][0];self.enter_scene(dest['nodeId']['id'],dest['isockStamp']['ordinal'])
     def choose(self,option):
         assert self.choice_ready and option in [0,1]
@@ -98,7 +114,7 @@ class Machine:
             if not self.f.ready or self.f.menu:continue
             if self.release>0:
                 self.release-=.25
-                if self.release<=0:self.f.qsceneOwned=False
+                if self.release<=0:self.f.qsceneOwned=False;self.workspot_active=False;self.look_at=None
             for i in list(self.waits):
                 if self.condition(self.nodes[i]['condition']):self.waits.remove(i);self.emit(i,'Out')
             self.run()
@@ -144,13 +160,17 @@ def main():
         m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0
         m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
         m.arrive();m.talk();assert m.lines==['quest giver hello']
+        assert m.workspot_requested==1 and m.workspot_active
+        assert m.look_at['targetSlot']['$value']=='pla_default_tgt' and m.look_at['targetPerformerId']['id']==257
         m.step(4);assert not m.choice_ready and m.lines==['quest giver hello',assets.read('contract.json')['briefing']['text']]
         m.step(35);assert not m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
         assert m.f.entries[m.f.qroot].state==2 and m.f.wallet==0
         m.await_choices();assert m.choice_ready and len(m.lines)==2
+        m.step(10);assert m.choice_ready and m.workspot_active and m.look_at['isStart']==1
         m.choose(option);m.step(2.5);assert m.lines[-1]=='quest giver goodbye'
         assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2 and m.f.entries[m.f.qroot].state==2
         m.step(4);assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3 and m.f.entries[m.f.qroot].state==3
+        assert not m.workspot_active and m.look_at is None
         assert m.f.qmod.state().startswith('Quest completed after goodbye.')
         assert m.f.wallet==0 and not m.f.qpin.active and m.f.tracked.path=='story'
         m.f.qtagStale=True;m.clear();m.start();assert m.f.qfacts['ncpd_patrol_qgiver_test_choice']==0;m.clear()
@@ -164,10 +184,17 @@ def main():
     assert m.scene==10 and m.f.qsceneOwned and not m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
+    assert not m.workspot_active and m.look_at is None
     m=runtime(docs);m.start();m.arrive();m.talk();m.await_choices()
     assert m.f.qsceneOwned and m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
+    assert not m.workspot_active and m.look_at is None
+    # The pose is a parallel scene command: a missing workspot start must not
+    # deadlock the previously working voice/choice flow on infinite Success.
+    m=runtime(docs);m.workspot_available=False;m.start();m.arrive();m.talk();m.await_choices()
+    assert m.workspot_requested==1 and not m.workspot_active and m.choice_ready
+    m.choose(0);m.step(7);assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
     # Refused/deferred deletion must retain ownership and prevent a new test.
     for deferred in [False,True]:
         m=runtime(docs);m.start();m.arrive();m.f.deleteDeferred=deferred;m.f.deleteOK=deferred
@@ -216,8 +243,10 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, hello/uninterrupted Voss briefing/two choices/silent V reply/goodbye/journal success, no early choices or completion, correct scene input ordinals, background-scene activation with dialogue/tier guards retained, no payout/progress writes, private two-actor staging, geometry rejection, cancellation during briefing and choices with scene-release gate, refused/deferred/tag-tombstone cleanup, replay and load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
+    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, non-blocking scene-owned workspot branch and V eye-slot LookAt, hello/uninterrupted Voss briefing/two choices/silent V reply/goodbye/journal success, pose/LookAt scope at choices/completion/cancellation, missing-workspot non-deadlock, no early choices or completion, correct scene input ordinals, dialogue/tier guards retained, no payout/progress writes, private staging, geometry rejection, scene-release cleanup, replay/load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
     return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
+        'parallel_scene_workspot_executed':True,'workspot_does_not_gate_conversation':True,
+        'native_look_at_target_slot':'pla_default_tgt','presentation_release_on_completion_and_cancel':True,
         'spawned_private_actors':2,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
         'cleanup_and_replay':True,'save_cet_recovery':True,'existing_dispatch_unchanged':True,
         'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False,

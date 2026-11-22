@@ -112,9 +112,15 @@ def phase(c):
     return resource('questQuestPhaseResource',graph=g.emit(graph),inplacePhases=[],phasePrefabs=[]),g.edges
 
 def scene(c,t):
+    presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root']);r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},
         actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],workspotInstances=[],workspots=[],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v2_voss')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v3_presentation')
+    workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
+    workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
+    instance=copy.deepcopy(presentation['workspot_instance'])
+    instance['dataId']['id']=1;instance['workspotInstanceId']['id']=1;instance['playAtActorLocation']=1
+    r['workspots']=[workspot];r['workspotInstances']=[instance]
     r['resouresReferences']['lipsyncAnimSets']=[{'$type':'scnLipsyncAnimSetSRRef',
         'asyncRefLipsyncAnimSet':soft(DEPOT+'voss_briefing.anims'),
         'lipsyncAnimSet':{'DepotPath':{'$type':'ResourcePath','$storage':'uint64','$value':'0'},'Flags':'Default'}}]
@@ -124,15 +130,27 @@ def scene(c,t):
     actor['communityParams']['reference']={'$type':'NodeRef','$storage':'uint64','$value':'0'}
     actor['communityParams']['entryName']=cn('None');actor['spawnDespawnParams'].update(isEnabled=0,spawnOnStart=0)
     def output(target=None,name=0,ordinal=0):
-        dest=[] if target is None else [{'$type':'scnInputSocketId','isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1 if target in [4,5] else 0},'nodeId':rid('scnNodeId',target)}]
+        dest=[] if target is None else [{'$type':'scnInputSocketId','isockStamp':{'$type':'scnInputSocketStamp','name':0,'ordinal':1 if target in [4,5,11] else 0},'nodeId':rid('scnNodeId',target)}]
         return {'$type':'scnOutputSocket','destinations':dest,'stamp':{'$type':'scnOutputSocketStamp','name':name,'ordinal':ordinal}}
     nodes=[]
     def add(n,x):x['nodeId']=rid('scnNodeId',n);nodes.append({'HandleId':'pending','Data':x});return x
-    start=add(1,copy.deepcopy(t['start']));start['outputSockets']=[output(2)]
+    start=add(1,copy.deepcopy(t['start']));start['outputSockets']=[output(12)]
+    def look_at(n):
+        event=copy.deepcopy(presentation['look_at_event'])
+        event['id']['id']=fnv('qgiver_look_at_'+str(n))
+        basic=event['basicData']['basic']
+        basic['performerId']['id']=1 # actor 0: Voss
+        basic['targetPerformerId']['id']=257 # actor 1: V, resolved every frame
+        basic['targetSlot']=cn(c['presentation']['look_at_slot'])
+        # Eye/head tracking must not animate the chest or unfold her arms.
+        request=event['basicData']['requests'][0]['request']
+        request['additionalParts']['Elements']=[x for x in request['additionalParts']['Elements'] if x['partName']['$value']=='Head']
+        return {'HandleId':'pending','Data':event}
     def line(n,item,target,ms,start_ms=0):
         x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start_ms+ms+300;x['outputSockets']=[output(target),output(name=1)]
         e=x['events'][0]['Data'];e.update(startTime=start_ms,duration=ms,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_event_'+str(n))
         e['voParams']['ignoreSpeakerIncapacitation']=0
+        x['events'].append(look_at(n))
         add(n,x)
     line(2,1,10,c['subtitle_ms'])
     choice=add(3,copy.deepcopy(t['choice']));choice['options']=choice['options'][:2]
@@ -150,6 +168,22 @@ def scene(c,t):
     # One event owns both voice and facial animation. Delay both together;
     # padding only the audio would offset the supplied matching lipsync bank.
     line(10,1025,3,briefing_ms(c),c['briefing']['lead_in_ms'])
+    # Like the MIT reference, a socket event starts a scene-owned workspot
+    # branch. Dialogue advances independently; an infinite pose must not block
+    # hello waiting for a workspot "Success" that only arrives on exit.
+    pose=copy.deepcopy(presentation['workspot_node'])
+    command=pose['questNode']['Data'];command['id']=11
+    command['entityReference']=copy.deepcopy(actor['findActorInWorldParams']['actorRef'])
+    params=command['paramsV1']['Data']
+    params.update(workspotInstanceId=rid('scnSceneWorkspotInstanceId',1),
+        enableIdleMode=0,jumpToEntry=0,entryId=rid('workWorkEntryId',4294967295),playAtActorLocation=1)
+    pose['outputSockets']=[output(ordinal=0),output(ordinal=1)]
+    add(11,pose)
+    intro=copy.deepcopy(t['section']);intro['sectionDuration']['stu']=c['presentation']['intro_ms']
+    socket=copy.deepcopy(presentation['socket_event']);socket['id']['id']=fnv('qgiver_workspot_socket')
+    intro['events']=[{'HandleId':'pending','Data':socket},look_at(12)]
+    intro['outputSockets']=[output(2),output(name=1),output(11,name=2)]
+    add(12,intro)
     r['sceneGraph']={'HandleId':'pending','Data':{'$type':'scnSceneGraph','graph':nodes,'startNodes':[rid('scnNodeId',1)],'endNodes':[rid('scnNodeId',9)]}}
     r['entryPoints']=[{'$type':'scnEntryPoint','name':cn('conversation_in'),'nodeId':rid('scnNodeId',1)}]
     r['exitPoints']=[{'$type':'scnExitPoint','name':cn('conversation_out'),'nodeId':rid('scnNodeId',9)}]
@@ -196,16 +230,41 @@ def outputs():
 
 def validate(docs):
     c=read('contract.json');s=docs['conversation.scene.json']['Data']['RootChunk'];g=s['sceneGraph']['Data']['graph'];byid={n['Data']['nodeId']['id']:n['Data'] for n in g}
-    assert len(g)==10 and s['actors'][0]['acquisitionPlan']=='findInWorld'
+    assert len(g)==12 and s['actors'][0]['acquisitionPlan']=='findInWorld'
     ref=s['actors'][0]['findActorInWorldParams']['actorRef'];assert ref['type']=='Tag' and ref['names']==[cn(c['tag']+'_npc')]
-    assert s['actors'][0]['spawnDespawnParams']['isEnabled']==0 and not s['workspots']
+    assert s['actors'][0]['spawnDespawnParams']['isEnabled']==0
+    assert len(s['workspots'])==len(s['workspotInstances'])==1
+    workspot=s['workspots'][0]['Data'];instance=s['workspotInstances'][0]
+    assert workspot['workspotResource']=={**soft(c['presentation']['workspot']),'Flags':'Default'}
+    assert workspot['dataId']['id']==instance['dataId']['id']==instance['workspotInstanceId']['id']==1
+    assert instance['playAtActorLocation']==1
+    assert byid[1]['outputSockets'][0]['destinations'][0]['nodeId']['id']==12
+    intro=byid[12];assert intro['sectionDuration']['stu']==c['presentation']['intro_ms']==500
+    assert intro['outputSockets'][0]['destinations'][0]['nodeId']['id']==2
+    socket=next(e['Data'] for e in intro['events'] if e['Data']['$type']=='scneventsSocket')
+    assert socket['startTime']==0 and socket['osockStamp']=={'$type':'scnOutputSocketStamp','name':2,'ordinal':0}
+    out=next(o for o in intro['outputSockets'] if o['stamp']==socket['osockStamp'])
+    assert out['destinations'][0]['nodeId']['id']==11 and out['destinations'][0]['isockStamp']['ordinal']==1
+    pose=byid[11];assert pose['isockMappings'][1]==cn('In') and not any(o['destinations'] for o in pose['outputSockets'])
+    command=pose['questNode']['Data'];params=command['paramsV1']['Data']
+    assert command['$type']=='questUseWorkspotNodeDefinition' and command['entityReference']==ref
+    assert params['function']=='UseWorkspot' and params['playAtActorLocation']==params['isWorkspotInfinite']==1
+    assert params['isPlayer']==params['enableIdleMode']==params['jumpToEntry']==0 and params['workspotInstanceId']['id']==1
+    for n in [12,2,10,6,7,8]:
+        events=[e['Data'] for e in byid[n]['events'] if e['Data']['$type']=='scnLookAtEvent'];assert len(events)==1
+        event=events[0];basic=event['basicData']['basic']
+        assert event['startTime']==0 and basic['isStart']==1 and basic['targetType']=='Actor'
+        assert basic['performerId']['id']==1 and basic['targetPerformerId']['id']==257
+        assert basic['targetSlot']==cn('pla_default_tgt') and basic['targetOffsetEntitySpace']=={'$type':'Vector4','W':0,'X':0,'Y':0,'Z':0}
+        requests=event['basicData']['requests'];assert len(requests)==1 and requests[0]['bodyPart']==cn('Eyes')
+        assert [x['partName'] for x in requests[0]['request']['additionalParts']['Elements']]==[cn('Head')]
     refs=s['resouresReferences'];assert len(refs['lipsyncAnimSets'])==1
     assert refs['lipsyncAnimSets'][0]['asyncRefLipsyncAnimSet']==soft(DEPOT+'voss_briefing.anims')
     assert not any(v for k,v in refs.items() if k not in ['$type','lipsyncAnimSets'])
     assert s['actors'][0]['lipsyncAnimSet']['id']==0 and s['playerActors'][0]['lipsyncAnimSet']['id']==4294967295
     assert byid[2]['outputSockets'][0]['destinations'][0]['nodeId']['id']==10
     assert byid[10]['outputSockets'][0]['destinations'][0]['nodeId']['id']==3
-    events=byid[10]['events'];assert len(events)==1
+    events=[e for e in byid[10]['events'] if e['Data']['$type']=='scnDialogLineEvent'];assert len(events)==1
     event=events[0]['Data'];assert event['screenplayLineId']['id']==1025
     assert event['startTime']==c['briefing']['lead_in_ms']==300 and event['duration']==briefing_ms(c)
     assert byid[10]['sectionDuration']['stu']==event['startTime']+event['duration']+300
@@ -279,7 +338,7 @@ def main():
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','presentation-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
     print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with both media files byte-identical')
 if __name__=='__main__':main()

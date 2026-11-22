@@ -1,4 +1,4 @@
-"""Package the isolated voiced Voss briefing with the production systems intact.
+"""Package the isolated Voss workspot/LookAt test with production systems intact.
 
 The release retains all 45 native scripts and eight other archives exactly.
 """
@@ -7,10 +7,10 @@ from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='b13576f55e8cce93e339d97fb0e691582432db8f'
+BASE='9ae63916c29f4dd736128357d59018ad7e80c0e6'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19b_Voss_Briefing_TEST.zip'
-REPORT='NCPD_Patrol_v0.19b_Voss_Briefing_verification.json'
+NAME='NCPD_Patrol_v0.19c_Voss_Presentation_TEST.zip'
+REPORT='NCPD_Patrol_v0.19c_Voss_Presentation_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
@@ -20,12 +20,12 @@ def main():
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','quest_giver_test.lua']}
- changed.update({'archive/pc/mod/NCPDPatrol_QuestGiverTest.archive','archive/pc/mod/NCPDPatrol_QuestGiverTest.archive.xl'})
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
+ changed.add('archive/pc/mod/NCPDPatrol_QuestGiverTest.archive')
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_voss_briefing_branding
+ from probe_source import without_voss_presentation_branding
  for name in ['init.lua','cet_ui.lua']:
-  current=without_voss_briefing_branding((ROOT/PREFIX/name).read_text())
+  current=without_voss_presentation_branding((ROOT/PREFIX/name).read_text())
   old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True)
   if name=='cet_ui.lua':
    pattern=r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n'
@@ -34,7 +34,7 @@ def main():
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
- for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json']:
+ for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/quest_giver_test/media/voss_briefing.anims','assets/quest_giver_test/media/voss_briefing.wem','assets/quest_giver_test/quest_giver.questphase.json']:
   assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Existing data changed: '+name
  assert (ROOT/'THIRD_PARTY_NOTICES.txt').read_text().startswith(subprocess.check_output(['git','show',f'{BASE}:THIRD_PARTY_NOTICES.txt'],cwd=ROOT,text=True))
  old=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/officer_down_sites/catalog.json'],cwd=ROOT));catalog=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
@@ -70,7 +70,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19b-voss-briefing','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19c-voss-presentation','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -87,6 +87,10 @@ def main():
   'quest_giver_choices':2,'quest_giver_english_voice_and_lipsync_bundled':True,'quest_giver_automatic_activation':False,
   'voss_briefing_seconds':results['voss_media']['audio']['duration_seconds'],
   'voss_shared_audio_lipsync_lead_in_ms':300,'voss_source_animation_byte_identical':True,'player_voice':False,
+  'voss_native_workspot':'base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot',
+  'voss_native_look_at_slot':'pla_default_tgt','voss_look_at_parts':['Eyes','Head'],
+  'voss_parallel_pose_does_not_gate_dialogue':True,'voss_media_and_quest_phase_unchanged':True,
+  'voss_lua_lifecycle_unchanged':True,'andrea_mit_presentation_adaptation_credited':True,
   'quest_giver_actual_game_validation':False,
   'runtime_selection_scene_marker_cleanup_code_unchanged':True,
   'recorded_survey_discovery_and_gameplay_logs_preserved':True,
@@ -98,6 +102,7 @@ def main():
    'both actors at supplied XYZ/yaw, exact investigator appearance, side-on Hella 4 m behind',
    'hello subtitle, 300 ms shared lead-in, uninterrupted 42 s Voss voice and lipsync, two native choices, silent V reply and goodbye subtitle',
    'test voice routing and facial/head compatibility for both player genders; matching source rig remains unmodified',
+   'Voss uses the native arms-crossed workspot at her own position; look at V eye-height slot through lines/choices when V moves slightly',
    'journal succeeds only after goodbye, either choice; no career/payout',
    'clear/replay, cancellation during the briefing or at a choice, CET reload/save-load recovery with scoped cleanup'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -34,5 +34,11 @@
     "animation_seconds": 41.9666672,
     "lead_in_ms": 300,
     "player_voice": false
+  },
+  "presentation": {
+    "workspot": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot",
+    "look_at_slot": "pla_default_tgt",
+    "intro_ms": 500,
+    "play_at_actor_location": true
   }
 }

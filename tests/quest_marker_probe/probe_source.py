@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_voss_presentation_branding(source):
+    source=source.replace('-- NCPD Patrol v0.19c Voss Presentation | native workspot and eye-slot LookAt','-- NCPD Patrol v0.19b Voss Briefing | isolated native voice and lipsync test')
+    source=source.replace("v0.19c Voss Presentation loaded. OFF DUTY: Testing > Quest giver prototype. Voss uses the arms-crossed workspot and native eye/head LookAt toward V's pla_default_tgt during dialogue. Voice, choices and silent V replies are retained. Install the complete package and fully restart the game.",'v0.19b Voss Briefing loaded. OFF DUTY: Testing > Quest giver prototype. Hello, uninterrupted voiced Voss briefing with lipsync, two text choices and goodbye. V remains silent. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.19c Voss Presentation###','NCPD Patrol - v0.19b Voss Briefing###')
+
 def without_voss_briefing_branding(source):
+    source=without_voss_presentation_branding(source)
     source=source.replace('-- NCPD Patrol v0.19b Voss Briefing | isolated native voice and lipsync test','-- NCPD Patrol v0.19a1 Scene Guard Fix | precise dialogue and scene-tier player guards')
     source=source.replace('v0.19b Voss Briefing loaded. OFF DUTY: Testing > Quest giver prototype. Hello, uninterrupted voiced Voss briefing with lipsync, two text choices and goodbye. V remains silent. Install the complete package and fully restart the game.','v0.19a1 Scene Guard Fix loaded. Quest giver activation and greeting allow normal gameplay with background scene membership. Active dialogue and restricted scene tiers still pause the test. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19b Voss Briefing###','NCPD Patrol - v0.19a1 Scene Guard Fix###')

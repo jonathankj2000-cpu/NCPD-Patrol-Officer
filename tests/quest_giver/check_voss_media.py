@@ -64,7 +64,7 @@ def main():
         except (AssertionError,struct.error):pass
         else:raise AssertionError('Invalid or mistimed audio accepted')
     docs,_=assets.outputs();assets.validate(docs)
-    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice']:
+    for kind in ['wrong_actor','wrong_clip','early_choices','short_event','missing_lead','wrong_voice','root_look_at','wrong_look_actor','wrong_workspot','player_workspot','cut_workspot','blocking_pose']:
         bad=copy.deepcopy(docs);s=bad['conversation.scene.json']['Data']['RootChunk']
         nodes={n['Data']['nodeId']['id']:n['Data'] for n in s['sceneGraph']['Data']['graph']}
         if kind=='wrong_actor':bad['voss.lipmap.json']['Data']['RootChunk']['sceneEntries'][0]['actorVoiceTags']=['0']
@@ -73,6 +73,12 @@ def main():
         elif kind=='short_event':nodes[10]['events'][0]['Data']['duration']=3500
         elif kind=='missing_lead':nodes[10]['events'][0]['Data']['startTime']=0
         elif kind=='wrong_voice':bad['vomap.json.json']['Data']['RootChunk']['root']['Data']['entries'][0]['stringId']='0'
+        elif kind=='root_look_at':nodes[10]['events'][1]['Data']['basicData']['basic']['targetSlot']=assets.cn('None')
+        elif kind=='wrong_look_actor':nodes[10]['events'][1]['Data']['basicData']['basic']['targetPerformerId']['id']=1
+        elif kind=='wrong_workspot':s['workspots'][0]['Data']['workspotResource']['DepotPath']['$value']='missing.workspot'
+        elif kind=='player_workspot':nodes[11]['questNode']['Data']['paramsV1']['Data']['isPlayer']=1
+        elif kind=='cut_workspot':nodes[12]['outputSockets'][2]['destinations'][0]['isockStamp']['ordinal']=0
+        elif kind=='blocking_pose':nodes[11]['outputSockets'][0]['destinations']=nodes[12]['outputSockets'][0]['destinations']
         try:assets.validate(bad)
         except AssertionError:pass
         else:raise AssertionError('Broken media binding accepted: '+kind)
@@ -84,7 +90,7 @@ def main():
     rel='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua'
     current=(ROOT/rel).read_text().replace('hello -> Voss briefing -> two choices -> goodbye.','hello -> two choices -> goodbye.')
     assert current==subprocess.check_output(['git','show','b13576f55e8cce93e339d97fb0e691582432db8f:'+rel],cwd=ROOT,text=True)
-    print('PASS: Voss media: real Wwise Vorbis stream/packet bounds, original sample count/rate, byte-identical supplied lipsync bank, matching voice/subtitle/actor/clip links, shared 300 ms lead-in, uninterrupted 42 s event before choices, malformed media/bindings rejected, V silent; actor lifecycle and player guards unchanged (in-game playback/head compatibility unverified)')
+    print('PASS: Voss media: real Wwise Vorbis stream/packet bounds, original sample count/rate, byte-identical supplied lipsync bank, matching voice/subtitle/actor/clip links, shared 300 ms lead-in, uninterrupted 42 s event before choices, malformed media/bindings rejected, scene workspot/eye-slot/performer/input/socket invariants and negative controls, V silent; Lua actor lifecycle and player guards unchanged (in-game presentation unverified)')
     return {'audio':audio,'supplied_animation_byte_identical':True,'voice_entries':1,
         'shared_event_lead_in_ms':300,'uninterrupted_briefing':True,'player_voice':False,
         'npc_lifecycle_and_player_guards_unchanged':True,'actual_game_validation':False}

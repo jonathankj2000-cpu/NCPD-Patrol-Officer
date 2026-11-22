@@ -1,3 +1,30 @@
+NCPD PATROL v0.19c VOSS PRESENTATION - COMPLETE BRANCH TEST
+
+Adds the requested native workspot and eye contact to the separate Voss test:
+base\workspots\common\ground\generic__stand_ground_arms_crossed__stand_around__02.workspot
+
+The scene starts this workspot at Voss's own location. It runs as a parallel
+scene-owned command, so its infinite loop does not block the conversation.
+Native LookAt targets V's pla_default_tgt attachment slot, not the player root.
+Eyes and head track that slot; the request does not override the chest/arms.
+
+Install the full 122-file package and fully restart the game. OFF DUTY > CET >
+Testing > Quest giver prototype > TEST: Activate quest giver quest. Close CET
+and approach within 3 m on foot. Watch the pose and eye contact during hello,
+the uninterrupted briefing and the two choices; move slightly to either side.
+Use Clear quest giver test before replaying. Test cancellation during dialogue
+as well. Actual body animation and look direction must be confirmed in game.
+
+The working voice/lipsync files, dialogue text, 300 ms briefing lead-in,
+quest phase, Lua actor lifecycle, all 45 REDscript files and production systems
+are retained. Native scene setup has a short 500 ms presentation section.
+There is no player camera lock or forced player pose.
+
+Presentation schemas are adapted from Andrea Olivato's MIT fixer01 scene:
+https://github.com/andreaolivato/cyberpunk-codes
+See THIRD_PARTY_NOTICES.txt and assets/quest_giver_test/presentation-templates.json
+for the pinned source, attribution and license. The package adds no dependency.
+
 NCPD PATROL v0.19b VOSS BRIEFING - COMPLETE BRANCH TEST
 
 Adds the supplied voss_Briefing.wav and Mara_Voss.anims to the separate quest

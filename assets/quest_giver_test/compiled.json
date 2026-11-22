@@ -1,6 +1,6 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "4dcf723aa2e262e1628cd668efa436068fb49fcd9c75236978e503565950ad82",
+  "archive_sha256": "b64ba4734276162009a32371d037b7c7f793a99bc606bf84d45593a36d1da80c",
   "resources": [
     "conversation.scene",
     "lines.json",
@@ -16,12 +16,13 @@
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "authored_inputs": {
-    "assets/quest_giver_test/contract.json": "d2f8a5121d9c4c95e18b80c1889e529e169c21befca6536cb796457d825a0101",
+    "assets/quest_giver_test/contract.json": "8d559365e7328155019dece224ef4f142dd8d9cda94add8535e86ce29f2357e6",
     "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
+    "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
     "assets/quest_giver_test/media/manifest.json": "8eeb1a73c1535c7561216af1fd62aacf042678ec792092e9d07b87ab308170b2",
     "assets/quest_giver_test/media/voss_briefing.anims": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967",
     "assets/quest_giver_test/media/voss_briefing.wem": "489325c1bf2047bf209c4816dd41d733321c311a802d6b921b7b8f254a8e5924",
-    "assets/quest_giver_test/conversation.scene.json": "fbe27a1a5df46286cd04c97f2798d505dc591e8be3fe55a2e55bc367c472f436",
+    "assets/quest_giver_test/conversation.scene.json": "6676d6eea1b4203219a4500160e0d08268666e572c5d538c74878dd26b34d90d",
     "assets/quest_giver_test/quest_giver.questphase.json": "a0a57fdf338e9b6739a518533342b31821e265076e6ed8c1bbe269c31d21344a",
     "assets/quest_giver_test/quest_giver.journal.json": "fe06c1790faedfdcece0d0f41609c00c65aacb9fab955f6f1bc74f40ce2c2e55",
     "assets/quest_giver_test/onscreens.json.json": "8cf9a94b8c420a922dd89fc16225357bc56d37dffd551f1bb6580af25d1cdfbe",

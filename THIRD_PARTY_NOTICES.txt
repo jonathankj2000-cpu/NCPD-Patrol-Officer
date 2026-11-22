@@ -105,3 +105,16 @@ Audio authoring provenance (tools are not installed or distributed by the mod):
   https://github.com/hcs64/ww2ogg (independent conversion verification only).
 Source/media checksums and conversion details are recorded in
 assets/quest_giver_test/media/manifest.json in the source repository.
+
+Additional v0.19c Voss workspot and LookAt presentation adaptations
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: fixer01/source/raw/mod/fixer01/scenes/fixer01_face.scene.json
+
+The workspot resource/instance, scene quest-node/socket and LookAt event schemas
+in assets/quest_giver_test/presentation-templates.json, their adaptation in
+tools/build_quest_giver_assets.py, and generated private conversation.scene
+are adapted from that MIT-licensed reference. The Andrea Olivato copyright
+notice and full MIT permission notice already included above apply.
+Voss uses a vanilla game workspot by reference; no fixer01 body animation,
+voice, story, community or streaming assets are distributed.
