@@ -1,15 +1,15 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive",
-  "archive_sha256": "0d51089ec37648b436c81aee90ff7c34e364632d06398f7f180a0d37319b79e9",
-  "new_fixed_pins": 15,
-  "total_catalog_sites": 16,
+  "archive_sha256": "ed5f603259e589fa92ca948f07456b40941f1567ef1fc643aa7b3c9b4150d286",
+  "new_fixed_pins": 53,
+  "total_catalog_sites": 54,
   "original_archive_unchanged": true,
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "all_new_pins_authored_inactive": true,
   "authored_inputs": {
-    "assets/officer_down_sites/catalog.json": "c2180bc011693d2f4ae1d29ea52b7511e21de752972acf833966c5a07050a3f7",
-    "assets/officer_down_sites/officer_down_sites.journal.json": "503cc10e0dd7e9e6a0b5d44c329dd79bdcd0b5c74084c8986a1c33729682d46b",
+    "assets/officer_down_sites/catalog.json": "4275e96fe7059d716edca1f55b9a1e6609f5dec06f918f057a62e30b5214bcfa",
+    "assets/officer_down_sites/officer_down_sites.journal.json": "d60b619560a588bd3e729d017b9ac97c345194859713aeadcfe8c6c56c615626",
     "assets/officer_down/officer_down.journal.json": "cf6c366619c02be3bd6c2d442eadf103be5b167f2427f40ab10f07071ad60583",
     "assets/quest_marker_probe/reference-contract.json": "6df54971748be1650eb101d9c2d3b3a89e37715de8d0b2a36b9295e6a228b052"
   },

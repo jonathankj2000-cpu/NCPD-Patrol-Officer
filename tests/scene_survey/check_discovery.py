@@ -5,6 +5,7 @@ import argparse,importlib.util,json,os,subprocess,sys
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE));from check_survey import runtime as survey_runtime
 BASE='26bd1ec4bc5c709faea4efe1caa3afb8328aa26c'
+APPROVED=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
 SETUP='''local s,f=SurveyFixture,F;s.allowDiscoveryFiles=true
 for _,p in ipairs(require('scene_discovery_sites').sites) do s.addLocation(p) end
 local t=require('scene_survey')
@@ -46,7 +47,7 @@ assert(#f.creates==0 and s.moves==0);s.assertNoGameplay()''')
             assert row['site'].startswith(row['source_anchor']+'_r')
         report=json.loads(Path('scene_discovery_report.json').read_text())
         assert report['verified_count']==6 and report['search']['production_sites_changed'] is False
-        assert report['search']['original_approved_dispatch_sites']==16
+        assert report['search']['original_approved_dispatch_sites']==len(APPROVED['sites'])
         for row in report['verified_candidates']:
             assert row['position']!=row['anchor_position'] and row['radius'] in [10,20,30]
             assert row['variant'] in ['standard','compact'] and row['cleanup_confirmed']
@@ -154,7 +155,9 @@ assert(#f.creates==0);s.assertNoGameplay()''',lambda lua:assert_no_validated())
 local moves=s.moves;f.generation=f.generation+1;SurveyNative:OnRestored(0,0);s.step(.5)
 assert(not t.active() and s.moves==moves and f.managed[999])''')
     # Source preservation is stronger than comparing only selected outcomes.
-    unchanged=['assets/officer_down_sites/catalog.json','assets/scene_survey/sites.json',
+    original_approved=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/officer_down_sites/catalog.json'],cwd=ROOT))
+    assert APPROVED['sites'][:len(original_approved['sites'])]==original_approved['sites']
+    unchanged=['assets/scene_survey/sites.json',
       'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down.lua',
       'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_layout.lua']
     for name in unchanged:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),name
@@ -167,7 +170,7 @@ assert(not t.active() and s.moves==moves and f.managed[999])''')
         _,ui=ui_runtime(mod);ui.Frame(ui,'Testing',label);assert ui.clicks==1 and expected in ui.Events(ui)
     print('PASS: actual 60-terminal offset discovery: 10/20/30 m, eight bearings/headings and bounded passes; both layouts and 120 full scenes, geometry-only rejection, functional access, physical cleanup/CET recovery tag, original ledgers/catalogue preserved, retry/load/menu/world guards and new CET routes (engine boundaries mocked)')
     return {'anchors':60,'offsets_per_anchor':24,'headings_per_offset':8,'passes':2,'variants':['compact','standard'],
-      'full_120_scene_lifecycle_fixture':True,'existing_approved_sites':16,'production_dispatch_unchanged':True,
+      'full_120_scene_lifecycle_fixture':True,'existing_approved_sites':len(APPROVED['sites']),'production_dispatch_logic_unchanged':True,
       'old_results_preserved':True,'separate_jsonl_and_json':True,'cleanup_and_reload_protection':True,'actual_game_validation':False}
 def assert_no_validated():
     assert not any(r['kind']=='site_result' and r['status']=='validated' for r in events())

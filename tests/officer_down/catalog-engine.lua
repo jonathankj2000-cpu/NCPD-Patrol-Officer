@@ -4,6 +4,7 @@ local catalog=require('officer_down_sites')
 f.duty=true
 local byPath,byHash={},{}
 for _,site in ipairs(catalog.sites) do
+ s.addLocation(site) -- terrain boundary for every authored catalogue location
  local root=NCPDPatrolOfficerDownCatalog:Root(site.index)
  local path=root..'/main/assist/location'
  local p=Vector4.new(site.x,site.y,site.z,1)

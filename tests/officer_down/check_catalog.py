@@ -25,12 +25,12 @@ def main():
  spec=importlib.util.spec_from_file_location('od_sites',ROOT/'tools/build_officer_down_sites.py');b=importlib.util.module_from_spec(spec);spec.loader.exec_module(b)
  for path,body in b.outputs().items():assert path.read_text()==body,path
  catalog=json.loads((ROOT/'assets/officer_down_sites/catalog.json').read_text())
- assert len(catalog['sites'])==16 and not any(s['id']=='kryss_13' for s in catalog['sites'])
+ count=len(catalog['sites']);assert count>=16 and not any(s['id']=='kryss_13' for s in catalog['sites'])
  manifest=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- assert manifest['new_fixed_pins']==15 and manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']
+ assert manifest['new_fixed_pins']==count-1 and manifest['total_catalog_sites']==count and manifest['roundtrip_validated'] and manifest['extracted_resource_bytes_compared']
  assert hashlib.sha256((ROOT/manifest['archive_path']).read_bytes()).hexdigest()==manifest['archive_sha256']
  for path,digest in manifest['authored_inputs'].items():assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,path
- # All sixteen actual authored targets execute create/activate/revive/dual
+ # Every actual authored target executes create/activate/revive/dual
  # completion/payment/cleanup, keeping the manual waypoint and other pins.
  for site in catalog['sites']:
   def inspect_ok(lua,site=site):
@@ -39,8 +39,8 @@ def main():
    for k in ['assigned','placement_checked','spawn_created','actors_bound','ready','arrived','completed','cleanup_confirmed']:assert k in kinds,(site['id'],k,kinds)
    assert kinds.count('completed')==1 and kinds.count('assigned')==1 and 'failed' not in kinds
   case(f"CF.complete({site['index']});CF.clear();assert(F.wallet==2000 and IncidentNative:GetCompletedCount()==1)",inspect_ok)
- print('PASS: 16 surveyed Officer Down catalogue sites, 15 new inactive fixed quest pins plus original, actual native selection/create/combat/revive/dual completion/EUR$2000 once/cleanup and waypoint ownership (engine boundaries mocked)')
- return {'sites':16,'excluded_unverified':['kryss_13'],'new_native_pins':15,'actual_all_site_gameplay_fixture':True,'actual_game_validation':False}
+ print(f'PASS: {count} surveyed Officer Down catalogue sites, {count-1} inactive fixed quest pins plus original, actual native selection/create/combat/revive/dual completion/EUR$2000 once/cleanup and waypoint ownership (engine boundaries mocked)')
+ return {'sites':count,'excluded_unverified':['kryss_13'],'new_native_pins':count-1,'actual_all_site_gameplay_fixture':True,'actual_game_validation':False}
 if __name__=='__main__':
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();r=main()
  if a.report:a.report.write_text(json.dumps(r,indent=2)+'\n')

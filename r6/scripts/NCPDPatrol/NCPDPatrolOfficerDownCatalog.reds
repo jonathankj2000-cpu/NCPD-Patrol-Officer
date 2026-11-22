@@ -1,6 +1,6 @@
 // Generated from assets/officer_down_sites/catalog.json. Stable indices and authored pins.
 public class NCPDPatrolOfficerDownCatalog extends IScriptable {
-    public static func Count() -> Int32 { return 16; }
+    public static func Count() -> Int32 { return 54; }
     public static func Root(index: Int32) -> String {
         if index == 1 { return "quests/minor_quest/ncpd_patrol_officer_down"; };
         if index == 2 { return "quests/minor_quest/ncpd_patrol_officer_down_kryss_02"; };
@@ -18,6 +18,44 @@ public class NCPDPatrolOfficerDownCatalog extends IScriptable {
         if index == 14 { return "quests/minor_quest/ncpd_patrol_officer_down_kryss_15"; };
         if index == 15 { return "quests/minor_quest/ncpd_patrol_officer_down_kryss_16"; };
         if index == 16 { return "quests/minor_quest/ncpd_patrol_officer_down_kryss_17"; };
+        if index == 17 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_133_r10_b180"; };
+        if index == 18 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_152_r10_b135"; };
+        if index == 19 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_153_r10_b0"; };
+        if index == 20 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_154_r10_b0"; };
+        if index == 21 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_156_r10_b270"; };
+        if index == 22 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_157_r10_b0"; };
+        if index == 23 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_164_r10_b0"; };
+        if index == 24 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_165_r10_b0"; };
+        if index == 25 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_166_r10_b0"; };
+        if index == 26 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_180_r10_b45"; };
+        if index == 27 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_181_r10_b45"; };
+        if index == 28 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_182_r10_b225"; };
+        if index == 29 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_183_r10_b135"; };
+        if index == 30 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_184_r10_b135"; };
+        if index == 31 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_191_r10_b0"; };
+        if index == 32 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_197_r10_b0"; };
+        if index == 33 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_205_r10_b135"; };
+        if index == 34 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_209_r10_b45"; };
+        if index == 35 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_210_r10_b90"; };
+        if index == 36 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_211_r30_b45"; };
+        if index == 37 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_212_r10_b90"; };
+        if index == 38 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_213_r10_b0"; };
+        if index == 39 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_214_r10_b90"; };
+        if index == 40 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_216_r10_b0"; };
+        if index == 41 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_217_r10_b90"; };
+        if index == 42 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_218_r10_b270"; };
+        if index == 43 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_225_r10_b270"; };
+        if index == 44 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_226_r10_b0"; };
+        if index == 45 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_227_r10_b90"; };
+        if index == 46 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_228_r10_b0"; };
+        if index == 47 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_229_r10_b45"; };
+        if index == 48 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_232_r10_b0"; };
+        if index == 49 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_252_r10_b135"; };
+        if index == 50 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_254_r10_b180"; };
+        if index == 51 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_255_r10_b90"; };
+        if index == 52 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_257_r10_b0"; };
+        if index == 53 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_261_r10_b45"; };
+        if index == 54 { return "quests/minor_quest/ncpd_patrol_officer_down_terminal_262_r10_b0"; };
         return "";
     }
     public static func Enabled(index: Int32) -> Bool {
@@ -37,6 +75,44 @@ public class NCPDPatrolOfficerDownCatalog extends IScriptable {
         if index == 14 { return true; };
         if index == 15 { return true; };
         if index == 16 { return true; };
+        if index == 17 { return true; };
+        if index == 18 { return true; };
+        if index == 19 { return true; };
+        if index == 20 { return true; };
+        if index == 21 { return true; };
+        if index == 22 { return true; };
+        if index == 23 { return true; };
+        if index == 24 { return true; };
+        if index == 25 { return true; };
+        if index == 26 { return true; };
+        if index == 27 { return true; };
+        if index == 28 { return true; };
+        if index == 29 { return true; };
+        if index == 30 { return true; };
+        if index == 31 { return true; };
+        if index == 32 { return true; };
+        if index == 33 { return true; };
+        if index == 34 { return true; };
+        if index == 35 { return true; };
+        if index == 36 { return true; };
+        if index == 37 { return true; };
+        if index == 38 { return true; };
+        if index == 39 { return true; };
+        if index == 40 { return true; };
+        if index == 41 { return true; };
+        if index == 42 { return true; };
+        if index == 43 { return true; };
+        if index == 44 { return true; };
+        if index == 45 { return true; };
+        if index == 46 { return true; };
+        if index == 47 { return true; };
+        if index == 48 { return true; };
+        if index == 49 { return true; };
+        if index == 50 { return true; };
+        if index == 51 { return true; };
+        if index == 52 { return true; };
+        if index == 53 { return true; };
+        if index == 54 { return true; };
         return false;
     }
     public static func Position(index: Int32) -> Vector4 {
@@ -58,6 +134,44 @@ public class NCPDPatrolOfficerDownCatalog extends IScriptable {
         if index == 14 { point.X = -868.048889000; point.Y = -290.759155000; point.Z = 7.695068000; return point; };
         if index == 15 { point.X = -967.523193000; point.Y = -218.141068000; point.Z = 7.250000000; return point; };
         if index == 16 { point.X = -1295.443359000; point.Y = -167.141464000; point.Z = 7.931709000; return point; };
+        if index == 17 { point.X = -1157.680053711; point.Y = 136.106597900; point.Z = 7.484228516; return point; };
+        if index == 18 { point.X = -1761.603881836; point.Y = 192.454254150; point.Z = 16.566511536; return point; };
+        if index == 19 { point.X = -1850.685668945; point.Y = 674.925720215; point.Z = 10.900001907; return point; };
+        if index == 20 { point.X = -2345.150146484; point.Y = 431.906707764; point.Z = 7.828752899; return point; };
+        if index == 21 { point.X = -1520.701416016; point.Y = 683.786315918; point.Z = 9.139767075; return point; };
+        if index == 22 { point.X = -2105.132812500; point.Y = 261.095520020; point.Z = 8.325991058; return point; };
+        if index == 23 { point.X = -1879.367675781; point.Y = -574.458557129; point.Z = 7.910715485; return point; };
+        if index == 24 { point.X = -1850.255249023; point.Y = -1206.401000977; point.Z = 20.221767807; return point; };
+        if index == 25 { point.X = -1709.902099609; point.Y = -886.142089844; point.Z = 8.623073959; return point; };
+        if index == 26 { point.X = -590.656738281; point.Y = -114.321510315; point.Z = 7.900001907; return point; };
+        if index == 27 { point.X = -915.824584961; point.Y = 112.204124451; point.Z = 7.563064003; return point; };
+        if index == 28 { point.X = -989.915710449; point.Y = -604.389343262; point.Z = 8.100037003; return point; };
+        if index == 29 { point.X = -664.254211426; point.Y = -427.815032959; point.Z = 8.100000763; return point; };
+        if index == 30 { point.X = -1229.575561523; point.Y = -440.082916260; point.Z = 8.200001144; return point; };
+        if index == 31 { point.X = -2392.853515625; point.Y = -71.031929016; point.Z = 8.456024551; return point; };
+        if index == 32 { point.X = -2400.059814453; point.Y = -960.999877930; point.Z = 8.100000763; return point; };
+        if index == 33 { point.X = -1314.290527344; point.Y = -1664.478637695; point.Z = 44.200003052; return point; };
+        if index == 34 { point.X = -2651.537109375; point.Y = -2480.403808594; point.Z = 17.400001907; return point; };
+        if index == 35 { point.X = 120.749145508; point.Y = -622.462341309; point.Z = 7.499999905; return point; };
+        if index == 36 { point.X = -188.248718262; point.Y = -830.980102539; point.Z = 7.700012112; return point; };
+        if index == 37 { point.X = -736.022766113; point.Y = -969.369628906; point.Z = 7.800001049; return point; };
+        if index == 38 { point.X = -671.625244141; point.Y = -1253.220458984; point.Z = 8.800001526; return point; };
+        if index == 39 { point.X = -966.773254395; point.Y = -1762.523925781; point.Z = 11.100006485; return point; };
+        if index == 40 { point.X = 693.466796875; point.Y = -592.349121094; point.Z = 9.800001526; return point; };
+        if index == 41 { point.X = -505.422180176; point.Y = -750.396118164; point.Z = 7.569588089; return point; };
+        if index == 42 { point.X = -1066.044189453; point.Y = -1240.353393555; point.Z = 12.200001144; return point; };
+        if index == 43 { point.X = 60.155742645; point.Y = -1937.084106445; point.Z = 2.600002193; return point; };
+        if index == 44 { point.X = 712.479980469; point.Y = -980.238891602; point.Z = 28.900001907; return point; };
+        if index == 45 { point.X = -498.177764893; point.Y = -1840.802856445; point.Z = 7.499999905; return point; };
+        if index == 46 { point.X = 446.225585938; point.Y = -2147.127441406; point.Z = 14.900001907; return point; };
+        if index == 47 { point.X = 372.285949707; point.Y = -1682.024047852; point.Z = 9.434973145; return point; };
+        if index == 48 { point.X = 322.578338623; point.Y = -1420.839721680; point.Z = 15.100000763; return point; };
+        if index == 49 { point.X = -2165.243408203; point.Y = 1999.322265625; point.Z = 18.500000381; return point; };
+        if index == 50 { point.X = -1223.035400391; point.Y = 1881.310791016; point.Z = 22.517034912; return point; };
+        if index == 51 { point.X = -1054.571533203; point.Y = 1582.058715820; point.Z = 2.800048733; return point; };
+        if index == 52 { point.X = -1145.413818359; point.Y = 1160.886352539; point.Z = 17.400001907; return point; };
+        if index == 53 { point.X = -1081.091064453; point.Y = 1319.612304688; point.Z = 5.200012112; return point; };
+        if index == 54 { point.X = -1062.730590820; point.Y = 2176.779541016; point.Z = 13.100002670; return point; };
         return point;
     }
 }

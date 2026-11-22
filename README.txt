@@ -1,3 +1,53 @@
+NCPD PATROL v0.18h EXPANDED OFFICER DOWN - COMPLETE BRANCH TEST
+
+Adds the 38 compact scene placements approved by the supplied Scene Discovery
+report to normal Officer Down dispatch. The original 16 sites retain exactly
+the same indices, IDs, coordinates, headings, quest roots and enabled states.
+The catalogue now contains 54 enabled sites.
+
+Added coverage: City Center 6, Heywood 10, Pacifica 2, Santo Domingo 14, Watson 6.
+Each new site uses its actual approved grounded XYZ and successful compact
+heading, with one independent fixed quest marker. The original 15 additional
+quest chunks remain identical; 38 new chunks extend that archive to 53 pins
+plus the original legacy pin. Only the selected site's objective is activated.
+No runtime marker relocation or manual-waypoint replacement is introduced.
+
+Officer Down remains 10% of automatic dispatch: 45% scanner / 27% VIP /
+18% cyberpsycho / 10% Officer Down. Selection still checks 500-1000 m first,
+then 2 km and 5 km; recent-site avoidance and temporary failure cooldown remain.
+Live geometry/traffic validation, 50 m mounted arrival, combat, revive, both
+completion conditions, EUR$2000 reward, one career credit and cleanup are
+unchanged. The standard survey variants are not additional production sites.
+
+For testing: install the COMPLETE 117-file ZIP and FULLY RESTART THE GAME,
+start a shift and use CET > Dispatch > Request Officer Down dispatch. The
+existing direct test under Testing > Dispatch scenarios also uses the catalogue.
+Ordinary automatic dispatch and the trunk's Request new dispatch can select it.
+Try the expanded districts during normal play; the scene and fixed marker should
+match the newly imported location rather than the source terminal coordinate.
+
+Keep your existing survey/discovery and Officer Down gameplay log files. The
+existing logger automatically records the new site IDs and actual runtime
+outcomes. CET > Diagnostics > Export Officer Down gameplay report includes them.
+The developer survey/discovery tools and their evidence formats are unchanged.
+
+Only validated compact functional proofs with all ten actors, safe ground and
+aid access, three seconds of readiness and confirmed physical cleanup enter
+the import. Grand Imperial Mall, Woodhaven Street, interrupted Allen Street and
+untested locations are not added. Other existing catalogue sites stay enabled.
+No new dependency or progression reset is required.
+
+31 portable suites cover all 54 targets through native marker activation,
+spawning/combat/revive/dual completion/payment/cleanup, append-only import,
+malformed proof rejection and final-index CET/save cleanup. The changed native
+catalogue passes offline source/API checks with Browser Extension present and
+absent. The compiled journal is round-tripped and extracted byte-identically.
+The imported placements were tested in-game off duty; full live dispatch and
+new marker rendering still require gameplay validation.
+See docs/EXPANDED_OFFICER_DOWN_v018h.md for provenance and exact scope.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18g1 DISCOVERY LANDING FIX - COMPLETE BRANCH TEST
 
 Fixes an observed false rejection in v0.18g Scene Discovery: the tool required
