@@ -1,5 +1,17 @@
 # NCPD Patrol
 
+## v0.19h — Voss timing
+
+Adds playback headroom before V replies and longer turn-taking pauses. Caption
+changes occur later; short adjoining phrases are grouped into 19 blocks.
+Original media, dialogue and the working scene identifiers are preserved.
+
+[Download the complete v0.19h test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19h_Voss_Timing_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Let the ten-turn
+conversation finish without skipping, checking overlap and caption timing.
+[Timing policy and validation limits](docs/VOSS_TIMING_v019h.md).
+
 ## v0.19g1 — Voss scene ID fix
 
 Corrects malformed local dialogue type/index IDs in v0.19g and restores a dense

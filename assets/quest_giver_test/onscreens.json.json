@@ -97,27 +97,20 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "10366489473266693354",
               "secondaryKey": "NCPDPatrol_QG_Voss02_Part1",
-              "femaleVariant": "Of course not.",
-              "maleVariant": "Of course not."
+              "femaleVariant": "Of course not. Let's make sure the paperwork continues to reflect that.",
+              "maleVariant": "Of course not. Let's make sure the paperwork continues to reflect that."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "10366488373755065143",
               "secondaryKey": "NCPDPatrol_QG_Voss02_Part2",
-              "femaleVariant": "Let's make sure the paperwork continues to reflect that.",
-              "maleVariant": "Let's make sure the paperwork continues to reflect that."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "10366487274243436932",
-              "secondaryKey": "NCPDPatrol_QG_Voss02_Part3",
               "femaleVariant": "I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear.",
               "maleVariant": "I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "10366486174731808721",
-              "secondaryKey": "NCPDPatrol_QG_Voss02_Part4",
+              "primaryKey": "10366487274243436932",
+              "secondaryKey": "NCPDPatrol_QG_Voss02_Part3",
               "femaleVariant": "I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge.",
               "maleVariant": "I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
             },
@@ -153,48 +146,34 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "16540276601716131832",
               "secondaryKey": "NCPDPatrol_QG_Voss04_Part1",
-              "femaleVariant": "A few of us, yes.",
-              "maleVariant": "A few of us, yes."
+              "femaleVariant": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department.",
+              "maleVariant": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "16540279900251016465",
               "secondaryKey": "NCPDPatrol_QG_Voss04_Part2",
-              "femaleVariant": "Unfortunately, being honest doesn't make you particularly influential in this department.",
-              "maleVariant": "Unfortunately, being honest doesn't make you particularly influential in this department."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "16540278800739388254",
-              "secondaryKey": "NCPDPatrol_QG_Voss04_Part3",
               "femaleVariant": "The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances.",
               "maleVariant": "The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "16540278800739388254",
+              "secondaryKey": "NCPDPatrol_QG_Voss04_Part3",
+              "femaleVariant": "I need that shard, V. But there's something else.",
+              "maleVariant": "I need that shard, V. But there's something else."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "16540282099274272887",
               "secondaryKey": "NCPDPatrol_QG_Voss04_Part4",
-              "femaleVariant": "I need that shard, V.",
-              "maleVariant": "I need that shard, V."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "16540280999762644676",
-              "secondaryKey": "NCPDPatrol_QG_Voss04_Part5",
-              "femaleVariant": "But there's something else.",
-              "maleVariant": "But there's something else."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "16540284298297529309",
-              "secondaryKey": "NCPDPatrol_QG_Voss04_Part6",
               "femaleVariant": "I need you to eliminate him. Permanently.",
               "maleVariant": "I need you to eliminate him. Permanently."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "16540283198785901098",
-              "secondaryKey": "NCPDPatrol_QG_Voss04_Part7",
+              "primaryKey": "16540280999762644676",
+              "secondaryKey": "NCPDPatrol_QG_Voss04_Part5",
               "femaleVariant": "This isn't an arrest. I'm asking you to do wet work.",
               "maleVariant": "This isn't an arrest. I'm asking you to do wet work."
             },
@@ -251,15 +230,8 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "8176126334922738056",
               "secondaryKey": "NCPDPatrol_QG_Voss06_Part3",
-              "femaleVariant": "And V?",
-              "maleVariant": "And V?"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "primaryKey": "8176134031504135533",
-              "secondaryKey": "NCPDPatrol_QG_Voss06_Part4",
-              "femaleVariant": "Whatever happens out there, we never had this conversation.",
-              "maleVariant": "Whatever happens out there, we never had this conversation."
+              "femaleVariant": "And V? Whatever happens out there, we never had this conversation.",
+              "maleVariant": "And V? Whatever happens out there, we never had this conversation."
             }
           ]
         }

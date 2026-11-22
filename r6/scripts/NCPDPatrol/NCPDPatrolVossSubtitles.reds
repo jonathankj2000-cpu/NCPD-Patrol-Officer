@@ -37,33 +37,29 @@ public func SetLineData(const lineData: script_ref<scnDialogLineData>) -> Void {
     if turn == 6 { data.text = GetLocalizedTextByKey(n"NCPDPatrol_QG_Voss06_Part1"); };
     wrappedMethod(data);
     if turn == 1 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss01_Part2", 4.98);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss01_Part3", 9.54);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss01_Part2", 6.08);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss01_Part3", 10.64);
     };
     if turn == 2 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss02_Part2", 1.5);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss02_Part3", 5.46);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss02_Part4", 12.36);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss02_Part2", 6.56);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss02_Part3", 13.46);
     };
     if turn == 3 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss03_Part2", 4.04);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss03_Part2", 5.14);
     };
     if turn == 4 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part2", 2.48);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part3", 8.2);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part4", 17.16);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part5", 19.14);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part6", 20.76);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part7", 23.86);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part2", 9.3);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part3", 18.26);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part4", 21.86);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss04_Part5", 24.96);
     };
     if turn == 5 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss05_Part2", 8.6);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss05_Part3", 15.32);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss05_Part2", 9.7);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss05_Part3", 16.42);
     };
     if turn == 6 {
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss06_Part2", 2.5);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss06_Part3", 6.18);
-        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss06_Part4", 6.98);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss06_Part2", 3.6);
+        this.NCPDVossQueueSubtitle(speaker, n"NCPDPatrol_QG_Voss06_Part3", 7.28);
     };
 }
 

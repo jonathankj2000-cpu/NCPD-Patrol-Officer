@@ -1,6 +1,6 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "4027fbdef8bb26e2eeb4cb0495f45b704596c43a5f3b97267ac25ef0789b12e1",
+  "archive_sha256": "07c22d3a764e27cd8f2ac601207ec5dc70b2bf8af1de662a69040c5630808448",
   "resources": [
     "conversation.scene",
     "lines.json",
@@ -22,7 +22,7 @@
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "authored_inputs": {
-    "assets/quest_giver_test/contract.json": "b8060219082d29b206c00d9257784afe93ec430ada9458e67e1615130c4ee088",
+    "assets/quest_giver_test/contract.json": "162089643dd23bb0c8a3cefea6596b6f18378bb8df6efce48049eaac87362b6f",
     "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
     "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
     "assets/quest_giver_test/sms-templates.json": "6b0a5ecae835db197b083eff69fa7be70b18bb482cf5d814a62df4475355c228",
@@ -39,10 +39,10 @@
     "assets/quest_giver_test/media/source/Voss03.anims": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c",
     "assets/quest_giver_test/media/source/Voss01.anims": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c",
     "assets/quest_giver_test/media/source/Voss02.anims": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d",
-    "assets/quest_giver_test/conversation.scene.json": "b71381b01defae04db6cb16f4ec0feca1a46d259faf29d1f080cfdab84c77142",
+    "assets/quest_giver_test/conversation.scene.json": "23ee921f84bc7301bd05f14f57d182287e491d062752454568b599069fdd1366",
     "assets/quest_giver_test/quest_giver.questphase.json": "663f4abe50d47be13a06ab356491bf4e0eca147aad23493347f4d3e310476142",
     "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
-    "assets/quest_giver_test/onscreens.json.json": "3e875d493f888bf0ecdba1265e20b5a12801296478e6f6b2c0528bcf814af907",
+    "assets/quest_giver_test/onscreens.json.json": "5c0fb4fee610113c957f1fb6827454b824d0dced746e7f2aa2e982bc327d9601",
     "assets/quest_giver_test/lines.json.json": "604910f2220b71266c6a25c07d35cb9fb7b250cbb7862a07c7d5a2c1b62cf652",
     "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6",
     "assets/quest_giver_test/vomap.json.json": "166498a6d2867e3b2524fd22250063677a019b29620171a8aa834682ccfe35c7",

@@ -33,6 +33,7 @@ def main():
         p=Path(d)/'fixture.reds';p.write_text('public class Fixture extends IScriptable {\n'+head+'\n}');lua.globals().Subtitle=lua.execute(translate(p))
         p.write_text('public class Callback extends DelayCallback'+callback);lua.globals().Step=lua.execute(translate(p))
     lua.globals().Localized=lua.table_from(texts);lua.globals().Turns=lua.table_from(npcs,recursive=True)
+    lua.globals().SubtitleDelay=c['timing']['subtitle_delay_ms']/1000
     lua.execute('''
         function IsDefined(x) return type(x)=='table' and not x.destroyed end
         function AsNPC(x) if IsDefined(x) and x.kind=='npc' then return x end end
@@ -69,8 +70,9 @@ def main():
             assert(ui.m_lineData.speaker==actor and ui.m_lineData.type==data.type and ui.m_lineData.speakerName==data.speakerName)
             assert(#game.pending==#row.subtitle_parts-1)
             for i=2,#row.subtitle_parts do
-                local part=row.subtitle_parts[i];assert(game.pending[i-1].at==part.start_seconds)
-                game:advance(part.start_seconds-game.now-.01);assert(ui.m_targetTextWidgetRef.text==row.subtitle_parts[i-1].text)
+                local part=row.subtitle_parts[i];local at=part.start_seconds+SubtitleDelay
+                assert(math.abs(game.pending[i-1].at-at)<.00001)
+                game:advance(at-game.now-.01);assert(ui.m_targetTextWidgetRef.text==row.subtitle_parts[i-1].text)
                 game.paused=true;game:advance(60);assert(ui.m_targetTextWidgetRef.text==row.subtitle_parts[i-1].text)
                 game.paused=false;game:advance(.02);assert(ui.m_targetTextWidgetRef.text==part.text)
             end
@@ -109,9 +111,9 @@ def main():
         game:advance(60);assert(ui.m_targetTextWidgetRef.text==second.subtitle_parts[#second.subtitle_parts].text)
     ''')
     parts={t['key']:t['subtitle_parts'] for t in npcs}
-    result={'subtitle_parts':parts,'voss_turns':6,'caption_blocks':sum(len(v) for v in parts.values()),'complete_original_media_per_turn':True,'native_ui_wrapper_executed':True,'original_method_once_per_line':True,'exact_private_actor_text_stage_scope':True,'line_metadata_and_duration_preserved':True,'stale_reuse_cancel_completion_detach_and_destroy_guards':True,'native_font_speaker_and_settings_retained':True,'actual_game_validation':False,'native_delay_pause_and_rendering_require_game_check':True}
+    result={'subtitle_parts':parts,'subtitle_delay_ms':c['timing']['subtitle_delay_ms'],'voss_turns':6,'caption_blocks':sum(len(v) for v in parts.values()),'complete_original_media_per_turn':True,'native_ui_wrapper_executed':True,'original_method_once_per_line':True,'exact_private_actor_text_stage_scope':True,'line_metadata_and_duration_preserved':True,'stale_reuse_cancel_completion_detach_and_destroy_guards':True,'native_font_speaker_and_settings_retained':True,'actual_game_validation':False,'native_delay_pause_and_rendering_require_game_check':True}
     parser=argparse.ArgumentParser();parser.add_argument('--report',type=Path);args=parser.parse_args()
     if args.report:args.report.write_text(json.dumps(result,indent=2)+'\n')
-    print('PASS: actual six-turn Voss subtitle wrapper/callback: 23 complete timed blocks, native method once, unchanged line identity/duration; exact actor/text/stage scope, native V fallthrough, stale callbacks across different speech turns/reuse/cancel/completion/detach/destroy (native UI/delay boundaries mocked)')
+    print('PASS: actual six-turn Voss subtitle wrapper/callback: 19 complete timed blocks, delayed switches, native method once, unchanged line identity/duration; exact actor/text/stage scope, native V fallthrough, stale callbacks across different speech turns/reuse/cancel/completion/detach/destroy (native UI/delay boundaries mocked)')
 
 if __name__=='__main__':main()

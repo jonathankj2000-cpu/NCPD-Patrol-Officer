@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -52,11 +52,11 @@
           "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD."
         },
         {
-          "start_seconds": 4.98,
+          "start_seconds": 5.08,
           "text": "I've been going through your recent scanner reports. You've been rather busy."
         },
         {
-          "start_seconds": 9.54,
+          "start_seconds": 9.64,
           "text": "Some of your methods are... unconventional. Care to comment?"
         }
       ],
@@ -82,18 +82,14 @@
       "subtitle_parts": [
         {
           "start_seconds": 0,
-          "text": "Of course not."
+          "text": "Of course not. Let's make sure the paperwork continues to reflect that."
         },
         {
-          "start_seconds": 1.5,
-          "text": "Let's make sure the paperwork continues to reflect that."
-        },
-        {
-          "start_seconds": 5.46,
+          "start_seconds": 5.56,
           "text": "I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear."
         },
         {
-          "start_seconds": 12.36,
+          "start_seconds": 12.46,
           "text": "I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
         }
       ],
@@ -122,7 +118,7 @@
           "text": "If anything, corruption's become rather more efficient."
         },
         {
-          "start_seconds": 4.04,
+          "start_seconds": 4.14,
           "text": "The people responsible know exactly which strings to pull. And who's holding the other end."
         }
       ],
@@ -148,30 +144,22 @@
       "subtitle_parts": [
         {
           "start_seconds": 0,
-          "text": "A few of us, yes."
+          "text": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department."
         },
         {
-          "start_seconds": 2.48,
-          "text": "Unfortunately, being honest doesn't make you particularly influential in this department."
-        },
-        {
-          "start_seconds": 8.2,
+          "start_seconds": 8.3,
           "text": "The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances."
         },
         {
-          "start_seconds": 17.16,
-          "text": "I need that shard, V."
+          "start_seconds": 17.26,
+          "text": "I need that shard, V. But there's something else."
         },
         {
-          "start_seconds": 19.14,
-          "text": "But there's something else."
-        },
-        {
-          "start_seconds": 20.76,
+          "start_seconds": 20.86,
           "text": "I need you to eliminate him. Permanently."
         },
         {
-          "start_seconds": 23.86,
+          "start_seconds": 23.96,
           "text": "This isn't an arrest. I'm asking you to do wet work."
         }
       ],
@@ -192,11 +180,11 @@
           "text": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting."
         },
         {
-          "start_seconds": 8.6,
+          "start_seconds": 8.7,
           "text": "But once it's over, I'll do everything in my power to make sure your name disappears from the incident report."
         },
         {
-          "start_seconds": 15.32,
+          "start_seconds": 15.42,
           "text": "I can't promise you a clean escape. Only that I'll do what I can afterward."
         }
       ],
@@ -225,16 +213,12 @@
           "text": "Good. I'll send you his location."
         },
         {
-          "start_seconds": 2.5,
+          "start_seconds": 2.6,
           "text": "Retrieve the shard before anyone else gets their hands on it."
         },
         {
-          "start_seconds": 6.18,
-          "text": "And V?"
-        },
-        {
-          "start_seconds": 6.98,
-          "text": "Whatever happens out there, we never had this conversation."
+          "start_seconds": 6.28,
+          "text": "And V? Whatever happens out there, we never had this conversation."
         }
       ],
       "key": "Voss06",
@@ -245,5 +229,10 @@
     }
   ],
   "automatic_replies": true,
-  "completion_receipt": 1
+  "completion_receipt": 1,
+  "timing": {
+    "voss_playback_guard_ms": 2250,
+    "section_tail_ms": 500,
+    "subtitle_delay_ms": 1000
+  }
 }

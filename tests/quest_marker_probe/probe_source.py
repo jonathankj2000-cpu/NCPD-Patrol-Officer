@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_voss_timing_branding(source):
+    source=source.replace('-- NCPD Patrol v0.19h Voss Timing | delayed captions and guarded automatic turns','-- NCPD Patrol v0.19g1 Voss Scene ID Fix | packed screenplay IDs and canonical scene nodes')
+    source=source.replace('v0.19h Voss Timing loaded. Longer Voss turn windows and pauses; 19 subtitle blocks with later switches. Clear the old quest-giver test, install the complete package and fully restart the game.','v0.19g1 Voss Scene ID Fix loaded. Corrected local dialogue type/index IDs and scene-node layout. Six-part Voss/V conversation, SMS, waiting pose and all media retained. Install the complete package, fully restart, and test from a save made before activating the previous Voss test.')
+    return source.replace('NCPD Patrol - v0.19h Voss Timing###','NCPD Patrol - v0.19g1 Voss Scene ID Fix###')
+
 def without_voss_scene_id_branding(source):
+    source=without_voss_timing_branding(source)
     source=source.replace('-- NCPD Patrol v0.19g1 Voss Scene ID Fix | packed screenplay IDs and canonical scene nodes','-- NCPD Patrol v0.19g Voss Conversation | six voiced Voss turns and four automatic native V replies')
     source=source.replace('v0.19g1 Voss Scene ID Fix loaded. Corrected local dialogue type/index IDs and scene-node layout. Six-part Voss/V conversation, SMS, waiting pose and all media retained. Install the complete package, fully restart, and test from a save made before activating the previous Voss test.','v0.19g Voss Conversation loaded. OFF DUTY: Testing > Quest giver prototype. The meeting uses the supplied six-part Voss briefing, matching lipsync and four automatic original V replies. SMS and grounded waiting pose retained. Clear the old test, install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19g1 Voss Scene ID Fix###','NCPD Patrol - v0.19g Voss Conversation###')

@@ -1,3 +1,16 @@
+NCPD PATROL v0.19h VOSS TIMING - COMPLETE BRANCH TEST
+
+Gives Voss extra playback time before the next automatic reply and increases
+turn-taking pauses. Captions switch later and short adjoining phrases stay
+together: 19 blocks instead of 23. Original audio, lipsync, words and V lines
+are retained. Includes the working v0.19g1 scene identifier correction.
+
+Clear the old quest-giver test, install all 123 files and fully restart. Use
+OFF DUTY > CET > Testing > Quest giver prototype > Activate. Let all ten turns
+finish without skipping. Check V waits for Voss and captions follow her voice.
+Actual game timing still needs verification; the new checks model up to two
+seconds of playback startup, rather than claiming a native completion signal.
+
 NCPD PATROL v0.19g1 VOSS SCENE ID FIX - COMPLETE BRANCH TEST
 
 Corrects the local scene dialogue IDs introduced in v0.19g. The first ID was

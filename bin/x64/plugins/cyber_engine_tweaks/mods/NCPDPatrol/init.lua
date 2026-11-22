@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19g1 Voss Scene ID Fix | packed screenplay IDs and canonical scene nodes
+-- NCPD Patrol v0.19h Voss Timing | delayed captions and guarded automatic turns
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19g1 Voss Scene ID Fix loaded. Corrected local dialogue type/index IDs and scene-node layout. Six-part Voss/V conversation, SMS, waiting pose and all media retained. Install the complete package, fully restart, and test from a save made before activating the previous Voss test.")
+    status("v0.19h Voss Timing loaded. Longer Voss turn windows and pauses; 19 subtitle blocks with later switches. Clear the old quest-giver test, install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

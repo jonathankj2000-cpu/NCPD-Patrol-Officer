@@ -18,7 +18,14 @@ def tweak_matches(value,name):return value['$value']==name or value['$value']==s
 def cn(s):return {'$type':'CName','$storage':'string','$value':s}
 def rid(typ,n):return {'$type':typ,'id':n}
 def soft(path):return {'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':path},'Flags':'Soft'}
-def turn_ms(row):return math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000) if row['speaker']=='voss' else math.ceil(row['event_seconds']*1000)
+def media_ms(row):
+    return math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000) if row['speaker']=='voss' else math.ceil(row['event_seconds']*1000)
+def turn_ms(row,timing):
+    # A file's duration does not include native playback startup. Keep the
+    # complete VO/lipsync event alive, then leave a separate turn-taking pause.
+    return media_ms(row)+(timing['voss_playback_guard_ms'] if row['speaker']=='voss' else 0)
+def subtitle_delay(part,timing):
+    return round(part['start_seconds']+timing['subtitle_delay_ms']/1000,3)
 def subtitle_controller(c):
     npcs=[row for row in c['conversation'] if row['speaker']=='voss']
     initial=[];first=[];schedule=[]
@@ -26,7 +33,7 @@ def subtitle_controller(c):
         prefix='NCPDPatrol_QG_'+row['key']
         initial.append('    if Equals(data.text, GetLocalizedTextByKey(n"'+prefix+'_Full")) { turn = '+str(i)+'; };')
         first.append('    if turn == '+str(i)+' { data.text = GetLocalizedTextByKey(n"'+prefix+'_Part1"); };')
-        calls=['        this.NCPDVossQueueSubtitle(speaker, n"'+prefix+'_Part'+str(j)+'", '+str(float(p['start_seconds']))+');' for j,p in enumerate(row['subtitle_parts'][1:],2)]
+        calls=['        this.NCPDVossQueueSubtitle(speaker, n"'+prefix+'_Part'+str(j)+'", '+str(float(subtitle_delay(p,c['timing'])))+');' for j,p in enumerate(row['subtitle_parts'][1:],2)]
         schedule.append('    if turn == '+str(i)+' {\n'+'\n'.join(calls)+'\n    };')
     source=(DIR/'subtitle-controller.reds.template').read_text()
     for key,value in [('INITIAL',initial),('FIRST',first),('SCHEDULE',schedule)]:source=source.replace('@@'+key+'@@','\n'.join(value))
@@ -156,7 +163,7 @@ def scene(c,t):
     presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root'])
     r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v6_scene_ids_v1')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v7_timing_v1')
     workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
     workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
     instance=copy.deepcopy(presentation['workspot_instance']);instance['dataId']['id']=instance['workspotInstanceId']['id']=1;instance['playAtActorLocation']=1
@@ -177,8 +184,8 @@ def scene(c,t):
     intro=copy.deepcopy(t['section']);intro['sectionDuration']['stu']=c['presentation']['intro_ms'];intro['events']=[look_at(12)];intro['outputSockets']=[output(SPEECH_NODES[0]),output(name=1),output(name=2)];add(12,intro)
     ids={}
     for i,row in enumerate(c['conversation']):
-        n=SPEECH_NODES[i];item=screenplay_line_id(i);key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row);start=row.get('lead_in_ms',0)
-        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+200;x['outputSockets']=[output(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE),output(name=1)]
+        n=SPEECH_NODES[i];item=screenplay_line_id(i);key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row,c['timing']);start=row.get('lead_in_ms',0)
+        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+c['timing']['section_tail_ms'];x['outputSockets']=[output(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE),output(name=1)]
         e=x['events'][0]['Data'];e.update(startTime=start,duration=duration,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_conversation_event_'+key);e['voParams']['ignoreSpeakerIncapacitation']=0
         x['events'].append(look_at(n));add(n,x)
     # Reuse the private completion receipt expected by the existing quest
@@ -221,8 +228,8 @@ def validate_scene(docs,c):
     for i,row in enumerate(turns):
         node_id=SPEECH_NODES[i];n=nodes[node_id];assert n['$type']=='scnSectionNode' and target(node_id)==(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE)
         events=[x['Data'] for x in n['events'] if x['Data']['$type']=='scnDialogLineEvent'];assert len(events)==1;e=events[0]
-        assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row)
-        assert n['sectionDuration']['stu']==e['startTime']+e['duration']+200
+        assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row,c['timing'])
+        assert n['sectionDuration']['stu']==e['startTime']+e['duration']+c['timing']['section_tail_ms']
         line=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==screenplay_line_id(i))
         assert line['speaker']['id']==(0 if row['speaker']=='voss' else 1)
         assert line['locstringId']['ruid']==row.get('string_id',fnv('NCPDPatrol_QG_'+row['key']))
@@ -250,6 +257,7 @@ def validate_scene(docs,c):
     for row in npcs:
         parts=row['subtitle_parts'];assert parts[0]['start_seconds']==0 and ' '.join(p['text'] for p in parts)==row['text']
         assert all(parts[i]['start_seconds']<parts[i+1]['start_seconds'] for i in range(len(parts)-1)) and parts[-1]['start_seconds']<row['audio_seconds']
+        assert subtitle_delay(parts[-1],c['timing'])<turn_ms(row,c['timing'])/1000
         assert strings['NCPDPatrol_QG_'+row['key']+'_Full']['femaleVariant']==row['text']
         for i,p in enumerate(parts,1):assert strings['NCPDPatrol_QG_'+row['key']+'_Part'+str(i)]['femaleVariant']==p['text']
 

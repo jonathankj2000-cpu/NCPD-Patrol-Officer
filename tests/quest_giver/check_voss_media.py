@@ -63,7 +63,8 @@ def main():
         body=(assets.DIR/'media'/row['wem']).read_bytes();audio=wem_info(body);source=m['source_uploads'][row['source_wav']]
         assert audio['sample_frames']==source['sample_frames'] and audio['sample_rate']==source['sample_rate']
         assert audio['duration_seconds']==row['audio_seconds'] and abs(audio['duration_seconds']-row['animation_seconds'])<1/30
-        assert assets.turn_ms(row)==math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000)
+        assert assets.media_ms(row)==math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000)
+        assert assets.turn_ms(row,c['timing'])>=math.ceil(audio['duration_seconds']*1000)+2000
         audios[row['key']]=audio
     for broken in [body[:-1],b'OggS'+body[4:],body[:20]+b'\x01\x00'+body[22:],body[:44]+b'\x00'*4+body[48:]]:
         try:wem_info(broken)
