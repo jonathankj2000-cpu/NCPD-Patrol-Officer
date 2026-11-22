@@ -319,7 +319,7 @@ function M.new(context)
         -- v018g discovery UI begin
         if ImGui.CollapsingHeader("Scene discovery: terminal offsets") then
             local survey=context.sceneSurvey
-            ImGui.TextWrapped("OFF DUTY developer test. Searches around the existing 60 terminal coordinates at 10/20/30 m in eight directions, trying both compact and standard layouts. Geometry and supported landing must pass before any actors spawn. Use a manual test save and exit your vehicle. The full search may take considerable time; begin with the nearest three terminals.")
+            ImGui.TextWrapped("OFF DUTY developer test. Searches around the existing 60 terminal coordinates at 10/20/30 m in eight directions, trying both compact and standard layouts. Geometry and supported landing must pass before any actors spawn. Use a manual test save and exit your vehicle. The terminal itself need not have navmesh: a nearby supported staging point is checked first. Progress counts terminal/layout pairs, up to 120 for 60 anchors. The full search may take considerable time; begin with the nearest three terminals.")
             if survey and survey.startDiscovery then
                 ImGui.TextWrapped(survey.discoverySummary())
                 if ImGui.Button("TEST: Discover scenes near 3 closest terminals") then survey.startDiscovery('nearby',true,status) end
@@ -329,7 +329,7 @@ function M.new(context)
                 if ImGui.Button("Load discovery results") then survey.loadDiscovery(status) end
                 if ImGui.Button("Export discovery report") then survey.exportDiscovery(status) end
             end
-            ImGui.TextWrapped("Evidence: scene_discovery_results.jsonl. Export: scene_discovery_report.json, including verified_candidates with actual grounded coordinates, rotation and source terminal. Successful terminal/layout searches are skipped on later runs. Existing recorded surveys, approved dispatch sites and manual waypoints are preserved. Stop/recovery waits for owned actors to detach before any return teleport.")
+            ImGui.TextWrapped("Evidence: scene_discovery_results.jsonl. Export: scene_discovery_report.json, including verified_candidates with actual grounded coordinates, rotation and source terminal. Successful terminal/layout searches are skipped on later runs. Existing recorded surveys, approved dispatch sites and manual waypoints are preserved. Keep your previous discovery files: successful variants remain compatible. Stop/recovery waits for owned actors to detach before any return teleport; the reason stays visible during return and is included in last_run in the report.")
         end
         -- v018g discovery UI end
         -- r4 probe UI begin
@@ -392,7 +392,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.18g Scene Discovery###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.18g1 Discovery Landing Fix###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

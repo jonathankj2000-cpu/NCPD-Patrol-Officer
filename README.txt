@@ -1,3 +1,46 @@
+NCPD PATROL v0.18g1 DISCOVERY LANDING FIX - COMPLETE BRANCH TEST
+
+Fixes an observed false rejection in v0.18g Scene Discovery: the tool required
+navmesh at the exact terminal coordinate before it searched nearby offsets.
+In the supplied run, 26 of 28 unsuccessful layout tests failed this staging gate,
+so 13 terminal areas never had their surrounding scene positions tested.
+Six validated variants represented three actual source locations.
+
+Discovery now probes a supported staging point at or around the terminal after
+collision streaming. V must safely settle there before nearby layout search.
+The terminal's exact navmesh is no longer a prerequisite. Full ground/elevation,
+Static/Vehicle clearance, ten-actor placement and injured aid access checks stay
+unchanged. Failed actor trials return to the supported staging point. No broad
+navmesh/elevation snapping or relaxed scene approval is added.
+
+Keep scene_discovery_results.jsonl and scene_discovery_report.json. Existing
+successful variants remain compatible and are skipped. Rejected/unverified
+terminal/layout pairs are retried. A new full run therefore need not retest the
+six already approved variants. Existing recorded survey and dispatch files stay
+unchanged. No discovered site is automatically imported into live dispatch.
+
+CET > Testing > Scene discovery: terminal offsets has the same nearest-three
+and full-60 test buttons. The counter now explicitly says terminal/layout pairs:
+60 anchors with two layouts means up to 120 pairs, not 120 distinct locations.
+The report adds verified_anchor_count and last_run, distinguishing a completed
+tour, explicit stop and a partial export with no recorded final reason.
+
+Stop reasons are written before cleanup and retained in the return message.
+Duty/combat/wanted/mount interruptions include read-only state observations.
+The supplied files ended during pair 35 without a stop/completion event: its
+actual stop cause is NOT proven. No 35-pair limit is present or introduced.
+Existing safety stops and physical cleanup/reload protections remain.
+
+Use a MANUAL TEST SAVE, go OFF DUTY and exit your vehicle. Install the COMPLETE
+117-file package and FULLY RESTART THE GAME. No new dependency or native script
+change is required. All 44 REDscript files and production dispatch/markers,
+rewards, partner/backup and arrests are byte-identical to v0.18g.
+30 portable suites include a v0.18g negative control and full 120-pair offset
+staging regression; engine boundaries are mocked, so actual terrain still needs
+a new in-game run. See docs/DISCOVERY_LANDING_FIX_v018g1.md.
+
+PREVIOUS BUILD NOTES
+
 NCPD PATROL v0.18g SCENE DISCOVERY - COMPLETE BRANCH TEST
 
 Developer-only Officer Down location search, available under CET > Testing >

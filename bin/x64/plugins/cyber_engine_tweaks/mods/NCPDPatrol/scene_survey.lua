@@ -18,6 +18,8 @@ local heading,samples,pending,afterCleanup,stopReason,lastError
 local done,passed=0,0
 local moved=false
 local anchor=nil
+local discoveryStage=nil
+local loggedStop=nil
 local discoveryScope=nil
 local profile=Functional.profile
 local pilotState=nil
@@ -75,6 +77,11 @@ local function detached()
     return true
 end
 local function cleanup(action)
+    if discovery and (action=='return' or action=='finish-here') and loggedStop~=stopReason then
+        loggedStop=stopReason
+        pcall(function() evidence({kind='stop_requested',reason=stopReason or 'Return requested',site=site and site.id,
+            variant=variant,phase=phase,pair_index=index,completed_pairs=done,queued_pairs=#queue}) end)
+    end
     afterCleanup=action
     captureDrain()
     enter('cleanup')
@@ -96,8 +103,9 @@ end
 local function advanceAngle()
     if discovery then
         site=anchor;samples=nil;observedMax=0;pilotState=nil
-        if not backend:SetOrigin(point(anchor)) or not backend:MovePlayer(point(anchor),anchor.heading) then error('Discovery anchor return refused') end
-        enter('landing');return
+        if not discoveryStage or not backend:SetOrigin(point(discoveryStage))
+            or not backend:MovePlayer(point(discoveryStage),discoveryStage.heading) then error('Discovery staging return refused') end
+        enter('discovery-stage-landing');return
     end
     angleIndex=angleIndex+1
     if angleIndex>#angles then
@@ -132,6 +140,7 @@ function M.summary()
     return label..'\nPhase: '..phase..' | '..Catalog.coverage
         ..' | functional compact='..storage:count('compact',Functional.profile)..'/'..total..' | functional standard='..storage:count('standard',Functional.profile)..'/'..total
         ..' | proven compact='..storage:count('compact')..'/'..total..' | proven standard='..storage:count('standard')..'/'..total
+        ..(discovery and (' | terminal/layout pairs completed='..done..'/'..#queue..' | current pair='..index) or '')
         ..(discovery and '' or (' | settling pilot='..storage:count('compact',Settling.profile)..'/3'
         ..' | placement pilot='..storage:count('compact',Staging.profile)..'/3'))
 end
@@ -179,6 +188,7 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         if #queue==0 then say('All '..#Catalog.sites..' sites already have a successful latest test for '..requestedVariant,status);return false end
         variant=requestedVariant;index=1;done,passed=0,0;actors,draining={},{}
         stopReason,lastError,pending=nil,nil,nil;moved=false
+        anchor,discoveryStage,loggedStop=nil,nil,nil
         run=((os and os.date) and os.date('!%Y%m%dT%H%M%S') or 'run')..'-'..(#storage.events+1)
         evidence({kind='run_started',variant=variant,queued=#queue,coverage=Catalog.coverage})
         local began
@@ -188,7 +198,7 @@ function M.start(requestedVariant,onlyUnverified,status,pilot)
         backend=owner;generation=owner:GetRunGeneration()
         local p=owner:GetReturnPosition();origin=copy(p);origin.heading=owner:GetReturnYaw()
         enter('travel')
-        say('Started '..variant..' | '..#queue..' sites | automatic movement; close CET and leave the game running',status)
+        say('Started '..variant..' | '..#queue..(discovery and ' terminal/layout pairs' or ' sites')..' | automatic movement; close CET and leave the game running',status)
         return true
     end)
     if not ok then say('Start failed: '..tostring(reason),status);return false end
@@ -251,13 +261,25 @@ local function update(delta)
     end
     if not stopReason and not backend:CanRun() then
         stopReason='Survey interrupted by duty, combat, wanted status, vehicle entry or player state'
+        if discovery then
+            local facts={}
+            local function check(name,probe)
+                local ok,value=pcall(probe);facts[#facts+1]=name..'='..(ok and tostring(value) or 'unavailable')
+            end
+            check('combat',function() return player:IsInCombat() end)
+            check('dead',function() return player:IsDead() end)
+            check('wanted',function() return Game.GetScriptableSystemsContainer():Get('NCPDPatrolSystem'):HasWantedLevel() end)
+            check('on duty',function() return Game.GetScriptableSystemsContainer():Get('NCPDPatrolSystem'):IsOnDuty() end)
+            check('mounted',function() return Game.GetMountedVehicle(player)~=nil end)
+            stopReason=stopReason..' | '..table.concat(facts,' | ')
+        end
         pending=nil;cleanup('return');return true
     end
     if phase=='travel' then
         if #actors>0 or #draining>0 then error('Previous actor ownership not cleared before travel') end
         site=queue[index];failures={};angleIndex,pass=1,1;samples=nil;observedMax=0;pilotState=nil
         if discovery then
-            anchor=site;variant=site.variant
+            anchor=site;variant=site.variant;discoveryStage=nil
             discovery:begin(anchor,variant)
         end
         local preferred=storage:preferred(site,variant,profile)
@@ -271,7 +293,50 @@ local function update(delta)
         heading=angles[1]
         if not backend:SetOrigin(point(site)) or not backend:MovePlayer(point(site),site.heading) then error('Survey transfer refused') end
         moved=true;trialEvent('site_arrival','Transfer requested; awaiting actual ground/navmesh')
-        enter('landing');say('Moving to '..site.label..' | '..index..'/'..#queue)
+        enter(discovery and 'discovery-staging' or 'landing')
+        say('Moving to '..site.label..' | '..(discovery and 'terminal/layout pair ' or '')..index..'/'..#queue)
+    elseif phase=='discovery-staging' then
+        if poll>=.25 then
+            poll=0
+            -- Existing protected hold while local collision streams. The
+            -- terminal itself may lack navmesh; that cannot reject its offsets.
+            if distance(player:GetWorldPosition(),anchor)>1 or clock<5 then
+                if not backend:MovePlayer(point(anchor),anchor.heading) then error('Discovery streaming hold refused') end
+            end
+            if clock>=5 then
+                local candidate,stagePass=discovery:nextStaging()
+                if not candidate then
+                    site=anchor;resultAndNext(siteResult('unverified','No supported staging point at or around terminal after three passes; see staging rejections'));return true
+                end
+                local landing,reason=Layout.landing(candidate,player)
+                local supported=landing and discovery:grounded(candidate,landing)
+                if supported then
+                    supported.heading=anchor.heading;discoveryStage=supported
+                    if not backend:SetOrigin(point(supported)) or not backend:MovePlayer(landing,supported.heading) then error('Discovery supported staging transfer refused') end
+                    evidence({kind='staging_passed',site=candidate.id,variant=variant,position=copy(supported),pass=stagePass,
+                        reason='Supported nearby staging point; terminal exact-position navmesh is not a scene requirement'})
+                    enter('discovery-stage-landing')
+                else
+                    evidence({kind='staging_rejected',site=candidate.id,variant=variant,position=copy(candidate),pass=stagePass,
+                        reason=reason or 'Staging grounding changed road level/position'})
+                end
+            end
+        end
+    elseif phase=='discovery-stage-landing' then
+        if poll>=.25 then
+            local elapsed=poll;poll=0
+            local landing,reason=Layout.landing(discoveryStage,player)
+            if distance(player:GetWorldPosition(),discoveryStage)>1 then
+                if not backend:MovePlayer(point(discoveryStage),discoveryStage.heading) then error('Discovery staging hold refused') end
+            end
+            if landing and clock>=1 then stable=stable+elapsed else stable=0 end
+            if stable>=1 then
+                if not backend:MovePlayer(landing,discoveryStage.heading) then error('Discovery stable staging transfer refused') end
+                enter('searching-offsets');poll=1
+            elseif clock>=10 then
+                site=anchor;resultAndNext(siteResult('unverified','Nearby staging did not remain safe: '..tostring(reason)))
+            end
+        end
     elseif phase=='landing' then
         -- Short re-positioning prevents falling while local collision streams.
         -- No actor is created until the central landing and full layout pass.
@@ -291,7 +356,7 @@ local function update(delta)
             end
         end
     elseif phase=='searching-offsets' then
-        if distance(player:GetWorldPosition(),anchor)>3 then stopReason='V moved away during terminal search';cleanup('return');return true end
+        if distance(player:GetWorldPosition(),discoveryStage)>3 then stopReason='V moved away from the supported staging point during terminal search';cleanup('return');return true end
         if poll>=discovery.interval then
             poll=0
             local candidate,yaw,trialPass=discovery:next()
@@ -453,7 +518,11 @@ local function update(delta)
         if not moved then
             if #actors>0 or #draining>0 then error('Cannot return with pending survey actors') end
             if not backend:EndActors() or not backend:MovePlayer(point(origin),origin.heading) then error('Return transfer refused') end
-            moved=true;clock,poll,stable=0,0,0;say('Returning to the original position; awaiting supported landing')
+            moved=true;clock,poll,stable=0,0,0
+            if discovery then
+                pcall(function() evidence({kind='return_started',reason=stopReason or 'Tour complete',completed_pairs=done,queued_pairs=#queue,pair_index=index}) end)
+            end
+            say('Returning to the original position; awaiting supported landing'..(discovery and (' | reason: '..(stopReason or 'Tour complete')) or ''))
         elseif poll>=.25 then
             local elapsed=poll;poll=0
             local landing=Layout.landing(origin,player)

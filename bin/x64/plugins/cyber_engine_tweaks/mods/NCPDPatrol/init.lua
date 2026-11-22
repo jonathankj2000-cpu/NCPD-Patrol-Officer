@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18g Scene Discovery | off-duty terminal-offset search and separate placement evidence
+-- NCPD Patrol v0.18g1 Discovery Landing Fix | supported offset staging and retained stop reasons
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -324,7 +324,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18g Scene Discovery loaded. Testing > Scene discovery searches shifted centers around 60 existing terminals with both layouts. Start with the three closest terminals. Developer test only; approved dispatch sites and original survey results are preserved. Install the complete package and fully restart the game.")
+    status("v0.18g1 Discovery Landing Fix loaded. Terminal-offset searches use safe nearby staging when the terminal itself lacks navmesh. Existing successful discovery results remain compatible; stop reasons stay visible during return. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

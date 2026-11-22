@@ -29,7 +29,7 @@ function M.new()
         end
     end
     local catalogue={revision=Anchors.revision..'/offset-search-v1',coverage=Anchors.coverage,sites=all}
-    local state={anchor=nil,variant=nil,cursor=0,attempts=0,passes=2,posesPerPass=24*#headings}
+    local state={anchor=nil,variant=nil,cursor=0,stageCursor=0,attempts=0,passes=2,posesPerPass=24*#headings}
     local function winners(store)
         local found={}
         for _,row in pairs(store.functionalBest) do
@@ -59,8 +59,26 @@ function M.new()
             end
             report.tool='Officer Down terminal-offset discovery'
             report.search={anchors=#Anchors.sites,radii_metres=radii,bearings=8,headings=headings,passes=2,
+                staging='Supported point at or around the terminal; exact-terminal navmesh is not required',staging_passes=3,
                 original_approved_dispatch_sites=#Approved.sites,production_sites_changed=false}
             report.verified_candidates=verified;report.verified_count=#verified
+            local verifiedAnchors={};for _,row in ipairs(verified) do verifiedAnchors[row.anchor_id]=true end
+            report.verified_anchor_count=0;for _ in pairs(verifiedAnchors) do report.verified_anchor_count=report.verified_anchor_count+1 end
+            local lastRun
+            for _,row in ipairs(self.events) do
+                if row.kind=='run_started' then lastRun={id=row.run,status='incomplete',queued_pairs=row.queued,completed_pairs=0,reason='No final stop/completion event recorded'} end
+                if lastRun and row.run==lastRun.id then
+                    lastRun.last_event=row.kind;lastRun.last_timestamp=row.timestamp;lastRun.last_anchor=row.source_anchor or lastRun.last_anchor
+                    if row.kind=='site_result' then lastRun.completed_pairs=lastRun.completed_pairs+1 end
+                    if row.kind=='stop_requested' or row.kind=='return_started' or row.kind=='run_error' or row.kind=='run_interrupted' then
+                        lastRun.status=row.kind;lastRun.reason=row.reason
+                    elseif row.kind=='run_finished' then
+                        lastRun.status=row.reason=='Tour complete' and 'completed' or 'stopped';lastRun.reason=row.reason
+                        lastRun.returned_to_origin=row.returned_to_origin
+                    end
+                end
+            end
+            report.last_run=lastRun
             report.event_count=#self.events;report.events=nil
             report.scope='Developer placement evidence only. Full ten-actor/aid-access test, no actual combat or revive. Not a production dispatch catalogue.'
         end})
@@ -100,7 +118,15 @@ function M.new()
         return queue
     end
     function self:begin(anchor,variant)
-        state.anchor,state.variant,state.cursor,state.attempts=anchor,variant,0,0
+        state.anchor,state.variant,state.cursor,state.stageCursor,state.attempts=anchor,variant,0,0,0
+    end
+    function self:nextStaging()
+        -- A terminal marker is only a search anchor. Probe supported nearby
+        -- ground before requiring V to stand on any exact terminal coordinate.
+        local perPass=1+#offsets[state.anchor.id]
+        if state.stageCursor>=perPass*3 then return nil end
+        local i=state.stageCursor%perPass;state.stageCursor=state.stageCursor+1
+        return i==0 and state.anchor or offsets[state.anchor.id][i],math.floor((state.stageCursor-1)/perPass)+1
     end
     function self:next()
         if state.cursor>=state.posesPerPass*state.passes then return nil end
