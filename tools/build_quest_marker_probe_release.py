@@ -1,17 +1,16 @@
-"""Verify and package the separate silent quest-giver prototype.
+"""Package the quest-giver player scene-guard hotfix with existing assets intact.
 
-Keeps the established workflow entrypoint and every production dispatch,
-scene catalogue, reward, existing native script and archive unchanged.
+The release retains all 45 native scripts and nine compiled archives exactly.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='b30655074198aa958a289fb826b6e1e180907e2e'
+BASE='281ec019319c67e332e1cdc99c1e6bc9f3f22ad9'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19a_Quest_Giver_Prototype_TEST.zip'
-REPORT='NCPD_Patrol_v0.19a_Quest_Giver_Prototype_verification.json'
+NAME='NCPD_Patrol_v0.19a1_Scene_Guard_Fix_TEST.zip'
+REPORT='NCPD_Patrol_v0.19a1_Scene_Guard_Fix_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
@@ -21,13 +20,12 @@ def main():
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua','quest_giver_test.lua']}
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_quest_giver
+ from probe_source import without_quest_giver_guard_fix
  for name in ['init.lua','cet_ui.lua']:
-  assert without_quest_giver((ROOT/PREFIX/name).read_text())==subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True),name
- added={PREFIX+'quest_giver_test.lua','r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds',
-  'r6/tweaks/NCPDPatrol_QuestGiverTest.yaml','archive/pc/mod/NCPDPatrol_QuestGiverTest.archive','archive/pc/mod/NCPDPatrol_QuestGiverTest.archive.xl'}
+  assert without_quest_giver_guard_fix((ROOT/PREFIX/name).read_text())==subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True),name
+ added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
  for name in ['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json']:
@@ -66,7 +64,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19a-quest-giver-prototype','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19a1-scene-guard-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -74,7 +72,10 @@ def main():
   'retired_cet_buttons':results['current_controls']['retired_buttons'],
   'ordinary_request_samples':results['current_controls']['ordinary_request_samples'],
   'independent_fixed_pins':54,'additional_marker_archive_pins':53,'marker_archive_validation':compiled,
-  'all_eight_archives_and_44_native_scripts_unchanged':True,
+  'all_nine_archives_and_45_native_scripts_unchanged':True,
+  'player_scene_membership_false_rejection_reproduced':results['quest_giver']['previous_scene_membership_false_rejection_reproduced'],
+  'start_and_approach_use_dialogue_and_scene_tier_checks':True,
+  'owned_actor_scene_release_check_unchanged':True,
   'production_dispatch_facade_unchanged':True,
   'separate_native_scene_quest_and_private_actors':True,
   'quest_giver_choices':2,'quest_giver_audio_required':False,'quest_giver_automatic_activation':False,

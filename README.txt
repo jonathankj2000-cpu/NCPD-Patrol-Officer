@@ -1,3 +1,20 @@
+NCPD PATROL v0.19a1 SCENE GUARD FIX - COMPLETE BRANCH TEST
+
+Fixes the quest giver test rejecting normal gameplay with the message
+Finish the current game scene before testing the quest giver.
+Activation and greeting now check actual dialogue and restricted scene tiers;
+general background scene membership alone is allowed. Private actor cleanup
+still waits for scene ownership release before deleting the NPC or car.
+
+Install the complete 122-file package and restart. OFF DUTY > CET > Testing >
+Quest giver prototype > TEST: Activate quest giver quest. Close CET and follow
+the marker; approach within 3 m on foot with subtitles enabled.
+
+All nine compiled archives and 45 REDscript files are identical to v0.19a.
+Scene layout, dialogue, journal graph, rewards and production dispatch retain
+their behavior. This hotfix has automated coverage including the original
+false rejection; the investigator conversation still needs in-game testing.
+
 NCPD PATROL v0.19a QUEST GIVER PROTOTYPE - COMPLETE BRANCH TEST
 
 Install all 122 files and fully restart the game. Required frameworks are the

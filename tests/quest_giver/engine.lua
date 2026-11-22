@@ -2,6 +2,8 @@
 -- execution below are driven from the authored resources by the test harness.
 local f=F
 f.duty=false;f.qfacts={};f.qtags={};f.qids={};f.qsceneOwned=false
+f.qsceneTier=1
+PlayerPuppet={GetSceneTier=function(player) assert(player==f.player);return f.qsceneTier end}
 f.qroot='quests/minor_quest/ncpd_patrol_quest_giver_test'
 f.qpoint=Vector4.new(1424.737,-2754.759,204.665,1)
 f.qlog={};f.qtagStale=false;f.qpending={}
@@ -25,6 +27,8 @@ function f.player:GetEntityID() return {hash=111} end
 Game.GetMountedVehicle=function() return f.mounted and {} or nil end
 Game.GetSceneSystem=function() return {GetScriptInterface=function() return {IsEntityInScene=function(_,id)
  return (id.hash==111 and f.qforeignScene) or (f.qsceneOwned and (id.hash==111 or f.qtags[id.hash]~=nil)) or false
+end,IsEntityInDialogue=function(_,id)
+ return (id.hash==111 and f.qforeignDialogue) or (f.qsceneOwned and (id.hash==111 or f.qtags[id.hash]~=nil)) or false
 end} end} end
 EulerAngles.new=function(roll,pitch,yaw)
  return {Roll=roll,Pitch=pitch,Yaw=yaw,__vector='EulerAngles',ToQuat=function(self) return self end}

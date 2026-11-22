@@ -117,10 +117,15 @@ class Machine:
         assert self.f.qmod.clear(self.f.qstatus);self.step(2)
         assert not self.f.qmod.active() and self.f.manual==654 and self.f.wallet==0
 
-def runtime(docs):
+def runtime(docs,legacy_guard=False):
     lua=engine_runtime();s=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds')
     s=s.replace('local p = nil','local p = Vector4.new(0,0,0,0)')
-    lua.globals().QNative=lua.execute(s);lua.execute((HERE/'engine.lua').read_text())
+    lua.globals().QNative=lua.execute(s)
+    if legacy_guard:
+        previous=subprocess.check_output(['git','show','281ec019319c67e332e1cdc99c1e6bc9f3f22ad9:'+PREFIX+'quest_giver_test.lua'],cwd=ROOT,text=True)
+        lua.globals().PreviousQuestGiver=lua.execute(previous)
+        lua.execute("package.loaded.quest_giver_test=PreviousQuestGiver")
+    lua.execute((HERE/'engine.lua').read_text())
     return Machine(lua,docs)
 
 def main():
@@ -161,8 +166,24 @@ def main():
     for key,value in [('noGround',True),('lowerFloor',True),('normalZ',.5),('obstruction',True),('vehiclePresent',True),('noNav',True)]:
         m=runtime(docs);setattr(m.f,key,value);m.start();m.f.playerPoint=m.f.qpoint;m.step(2)
         assert len(m.f.creates)==0 and m.f.wallet==0 and not m.f.qmod.active(),key
-    for key in ['duty','wanted','combat','menu','qforeignScene','qsurvey','qdispatch']:
+    for key in ['duty','wanted','combat','menu','qforeignDialogue','qsurvey','qdispatch']:
         m=runtime(docs);setattr(m.f,key,True);assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0,key
+    # Reproduce v0.19a's rejection using its actual previous module. Mere
+    # membership in a background scene must allow activation and greeting.
+    old=runtime(docs,legacy_guard=True);old.f.qforeignScene=True
+    assert not old.f.qmod.start(old.f.qstatus)
+    assert 'Finish the current game scene' in old.f.qlog[len(old.f.qlog)]
+    m=runtime(docs);m.f.qforeignScene=True;m.start();m.arrive();m.talk();m.step(4)
+    assert m.choice_ready;m.choose(0);m.step(7);assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
+    # Real conversations/restricted tiers still block both entry points.
+    for tier in [2,3,4,5]:
+        m=runtime(docs);m.f.qsceneTier=tier
+        assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0,tier
+    for key,value in [('qforeignDialogue',True),('qsceneTier',3)]:
+        m=runtime(docs);m.start();m.arrive();setattr(m.f,key,value)
+        m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);m.step(2)
+        assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and not m.lines,key
+        setattr(m.f,key,False if key=='qforeignDialogue' else 1);m.talk();m.clear()
     # Loading/CET recovery works from the current world's private tags only.
     m=runtime(docs);m.start();m.arrive();m.talk()
     m.f.ready=False;m.f.qmod.reset();m.step(5);assert len(m.f.deletes)==0
@@ -182,11 +203,14 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, hello/two choices/V reply/goodbye/journal success, correct scene input ordinals, no payout/progress writes, private two-actor staging, geometry rejection, cancellation with scene-release gate, refused/deferred/tag-tombstone cleanup, replay and load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
+    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, hello/two choices/V reply/goodbye/journal success, correct scene input ordinals, previous broad-scene rejection reproduced and background-scene activation/greeting corrected with dialogue/tier guards retained, no payout/progress writes, private two-actor staging, geometry rejection, cancellation with scene-release gate, refused/deferred/tag-tombstone cleanup, replay and load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
     return {'native_silent_scene':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
         'spawned_private_actors':2,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
         'cleanup_and_replay':True,'save_cet_recovery':True,'existing_dispatch_unchanged':True,
-        'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False}
+        'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False,
+        'previous_scene_membership_false_rejection_reproduced':True,
+        'background_scene_membership_allows_start_and_greeting':True,
+        'actual_dialogue_and_restricted_tiers_block_both_entry_points':True}
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--report',type=Path);a=p.parse_args();report=main()

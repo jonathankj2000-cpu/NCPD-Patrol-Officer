@@ -1,5 +1,19 @@
 # NCPD Patrol
 
+## v0.19a1 — quest giver scene-guard fix
+
+Corrects the early “Finish the current game scene” rejection. Player scene
+membership alone no longer blocks activation or the investigator greeting.
+Both gates use actual dialogue state and restricted scene tiers. The broader
+ownership check still protects the private actors during cleanup.
+
+[Download the complete v0.19a1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19a1_Scene_Guard_Fix_TEST.zip)
+
+Install all 122 files and fully restart. Then use the same OFF DUTY quest-giver
+test button. All nine archives and 45 native scripts are unchanged.
+[Fix evidence and checks](docs/QUEST_GIVER_SCENE_GUARD_v019a1.md).
+
+
 ## v0.19a — quest giver prototype
 
 Adds an **explicit OFF DUTY test** under **Testing → Quest giver prototype**.

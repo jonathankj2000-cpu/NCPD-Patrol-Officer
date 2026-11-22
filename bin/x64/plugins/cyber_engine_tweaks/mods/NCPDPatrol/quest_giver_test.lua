@@ -28,11 +28,23 @@ local function entities()
     return system
 end
 local function ready() return context.worldReady and context.worldReady() end
-local function inScene(id)
+local function sceneInterface()
     local scene=Game.GetSceneSystem()
     local interface=scene and scene:GetScriptInterface()
     if not interface then error('Scene ownership service unavailable; test actors are retained') end
-    return interface:IsEntityInScene(id)
+    return interface
+end
+local function inScene(id) return sceneInterface():IsEntityInScene(id) end
+local function playerBlockReason(player)
+    if not player or not player:IsAttached() then return 'Load a save before testing the quest giver' end
+    -- Scene membership also covers background scenes. Vanilla distinguishes
+    -- active dialogue and restricted tiers from Tier 1 full gameplay.
+    if sceneInterface():IsEntityInDialogue(player:GetEntityID()) then
+        return 'Finish the active conversation before testing the quest giver'
+    end
+    local tier=PlayerPuppet.GetSceneTier(player)
+    if tier>1 then return 'Return to normal gameplay before testing the quest giver (scene tier '..tostring(tier)..')' end
+    return nil
 end
 local function collect()
     local system=entities()
@@ -136,7 +148,8 @@ function M.start(status)
         if #rows>0 or n:GetStage()~=0 then error('Use Clear quest giver test to remove previous test state') end
         if n:IsMenuOpen() then error('Close in-game menus before starting this test') end
         local player=Game.GetPlayer()
-        if not player or inScene(player:GetEntityID()) then error('Finish the current game scene before testing the quest giver') end
+        local blocked=playerBlockReason(player)
+        if blocked then error(blocked) end
         if not TweakDB:GetRecord(TweakDBID.new(NPC)) or not TweakDB:GetRecord(TweakDBID.new(CAR)) then error('Private investigator/car records are unavailable; install the full package') end
         if not n:Begin() then error('Quest not ready: install the archive and scripts, then restart outside combat/wanted status') end
         recover=false;phase,age,poll='waiting',0,0;lastFailure=nil
@@ -201,7 +214,7 @@ local function update(delta)
         local npc=rows[1] and rows[1].object
         if not npc or not npc:IsAttached() or npc:IsDead() then error('Investigator unavailable') end
         if context.overlayOpen and context.overlayOpen() then return end
-        if not Game.GetMountedVehicle(player) and not inScene(player:GetEntityID()) and distance(player:GetWorldPosition(),npc:GetWorldPosition())<=3 then
+        if not Game.GetMountedVehicle(player) and not playerBlockReason(player) and distance(player:GetWorldPosition(),npc:GetWorldPosition())<=3 then
             if n:RequestTalk(npc) then phase,age='dialogue',0;say('Native conversation requested: hello -> two choices -> goodbye.') end
         end
     end

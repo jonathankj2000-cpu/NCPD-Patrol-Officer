@@ -11,7 +11,13 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_quest_giver_guard_fix(source):
+    source=source.replace('-- NCPD Patrol v0.19a1 Scene Guard Fix | precise dialogue and scene-tier player guards','-- NCPD Patrol v0.19a Quest Giver Prototype | isolated silent native dialogue test')
+    source=source.replace('v0.19a1 Scene Guard Fix loaded. Quest giver activation and greeting allow normal gameplay with background scene membership. Active dialogue and restricted scene tiers still pause the test. Install the complete package and fully restart the game.','v0.19a Quest Giver Prototype loaded. OFF DUTY: Testing > Quest giver prototype activates the separate investigator quest. Silent native subtitles, two choices and goodbye complete the quest. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.19a1 Scene Guard Fix###','NCPD Patrol - v0.19a Quest Giver Prototype###')
+
 def without_quest_giver(source):
+    source=without_quest_giver_guard_fix(source)
     source=source.replace('-- NCPD Patrol v0.19a Quest Giver Prototype | isolated silent native dialogue test','-- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary')
     source=source.replace('v0.19a Quest Giver Prototype loaded. OFF DUTY: Testing > Quest giver prototype activates the separate investigator quest. Silent native subtitles, two choices and goodbye complete the quest. Install the complete package and fully restart the game.','v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.19a Quest Giver Prototype###','NCPD Patrol - v0.18i CET Menu Cleanup###')

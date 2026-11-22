@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19a Quest Giver Prototype | isolated silent native dialogue test
+-- NCPD Patrol v0.19a1 Scene Guard Fix | precise dialogue and scene-tier player guards
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19a Quest Giver Prototype loaded. OFF DUTY: Testing > Quest giver prototype activates the separate investigator quest. Silent native subtitles, two choices and goodbye complete the quest. Install the complete package and fully restart the game.")
+    status("v0.19a1 Scene Guard Fix loaded. Quest giver activation and greeting allow normal gameplay with background scene membership. Active dialogue and restricted scene tiers still pause the test. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
