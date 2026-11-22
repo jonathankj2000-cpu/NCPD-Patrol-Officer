@@ -1,0 +1,46 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "animLipsyncMapping",
+      "cookingPlatform": "PLATFORM_PC",
+      "languageCodeName": {
+        "$type": "CName",
+        "$storage": "string",
+        "$value": "en-us"
+      },
+      "sceneEntries": [
+        {
+          "$type": "animLipsyncMappingSceneEntry",
+          "actorVoiceTags": [
+            "2767342836597038837"
+          ],
+          "animSets": [
+            {
+              "DepotPath": {
+                "$type": "ResourcePath",
+                "$storage": "string",
+                "$value": "base\\ncpd_patrol\\quest_giver_test\\voss_briefing.anims"
+              },
+              "Flags": "Soft"
+            }
+          ]
+        }
+      ],
+      "scenePaths": [
+        "8996186121045510884"
+      ],
+      "scenePreviewPaths": [
+        "14820754023627091616"
+      ]
+    },
+    "EmbeddedFiles": []
+  }
+}

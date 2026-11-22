@@ -215,7 +215,7 @@ local function update(delta)
         if not npc or not npc:IsAttached() or npc:IsDead() then error('Investigator unavailable') end
         if context.overlayOpen and context.overlayOpen() then return end
         if not Game.GetMountedVehicle(player) and not playerBlockReason(player) and distance(player:GetWorldPosition(),npc:GetWorldPosition())<=3 then
-            if n:RequestTalk(npc) then phase,age='dialogue',0;say('Native conversation requested: hello -> two choices -> goodbye.') end
+            if n:RequestTalk(npc) then phase,age='dialogue',0;say('Native conversation requested: hello -> Voss briefing -> two choices -> goodbye.') end
         end
     end
 end

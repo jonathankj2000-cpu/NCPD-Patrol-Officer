@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "source_uploads": {
+    "Mara_Voss.anims": {
+      "bytes": 313359,
+      "sha256": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967"
+    },
+    "voss_Briefing.wav": {
+      "bytes": 3700302,
+      "sha256": "f70dafc6f729ea74cc092038f6e100b3bacba2c1e94545cefb859408acadb6a6",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 1850112,
+      "duration_seconds": 41.95265306122449
+    }
+  },
+  "packaged": {
+    "voss_briefing.anims": {
+      "bytes": 313359,
+      "sha256": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967"
+    },
+    "voss_briefing.wem": {
+      "bytes": 408099,
+      "sha256": "489325c1bf2047bf209c4816dd41d733321c311a802d6b921b7b8f254a8e5924"
+    }
+  },
+  "conversion": {
+    "codec": "Wwise Vorbis (0xFFFF), aoTuV b6.03 quality 4",
+    "encoder_repository": "https://github.com/kamus1/wem-encoder",
+    "encoder_commit": "0b1ad96eb55dd6aab27c922694a0f8f80d2c304f",
+    "aoTuV_source_sha256": "b529eb656a28cdd3a3ce22fe470a2f7705a088a87ccabe6675f1748e843aef0d",
+    "libogg_source_sha256": "83e6704730683d004d20e21b8f7f55dcb3383cdf84c0daedf30bde175f774638",
+    "packed_codebooks_git_blob": "a405d061b50cd793e17ad99b1f9f809ee372812a",
+    "resampled": false,
+    "trimmed": false,
+    "audio_padding_added": false
+  },
+  "timing": {
+    "lead_in_ms": 300,
+    "method": "Delay the shared native dialogue event: audio and lipsync start together; do not offset only one media file."
+  },
+  "lipsync": {
+    "clip": "f_00000000CAFE0001",
+    "duration_seconds": 41.9666672,
+    "num_frames": 1260,
+    "num_joints": 344,
+    "num_tracks": 414,
+    "animation_type": "AdditiveFromRefPose",
+    "rig": "base\\characters\\head\\ma\\h0_017_ma_b__middle\\h0_017_ma_b__middle_skeleton.rig",
+    "source_bank_byte_identical": true,
+    "target_head_compatibility_verified_in_game": false
+  },
+  "actual_game_validation": false,
+  "independent_verification": {
+    "decoder_repository": "https://github.com/hcs64/ww2ogg",
+    "decoder_commit": "14ed9b0dd62e815a38702b5f03c57006cbe2501b",
+    "decoder_completed": true,
+    "original_frames": 1850112,
+    "direct_vorbis_decode_frames": 1850112,
+    "wem_reconstructed_decode_frames": 1849152,
+    "common_pcm_samples_identical": true,
+    "snr_db_against_original": 21.57483916777037,
+    "sample_rate": 44100,
+    "channels": 1,
+    "actual_game_validation": false,
+    "audio_packet_count": 3644,
+    "reconstructed_ogg_tail_note": "ww2ogg writes zero Ogg page granules. With the WEM sample count on the final Ogg page, ffmpeg emits 64 extra tail samples; the complete declared 1850112-sample range is byte-identical to direct Vorbis decoding. No packaged WEM bytes were changed.",
+    "reconstructed_with_declared_granule_frames": 1850176,
+    "declared_sample_range_pcm_identical": true,
+    "declared_sample_frames_compared": 1850112,
+    "decoder_container_extra_tail_samples": 64
+  }
+}

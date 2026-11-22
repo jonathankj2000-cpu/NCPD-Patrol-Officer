@@ -27,22 +27,22 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "1087017763044968605",
               "secondaryKey": "NCPDPatrol_QG_Objective",
-              "femaleVariant": "Meet the NCPD investigator",
-              "maleVariant": "Meet the NCPD investigator"
+              "femaleVariant": "Meet Lieutenant Mara Voss",
+              "maleVariant": "Meet Lieutenant Mara Voss"
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "7635198996431393324",
               "secondaryKey": "NCPDPatrol_QG_Description",
-              "femaleVariant": "Meet the investigator and choose either reply to complete this text-only dialogue prototype.",
-              "maleVariant": "Meet the investigator and choose either reply to complete this text-only dialogue prototype."
+              "femaleVariant": "Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test.",
+              "maleVariant": "Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "primaryKey": "551112043299532721",
               "secondaryKey": "NCPDPatrol_QG_Name",
-              "femaleVariant": "NCPD Investigator",
-              "maleVariant": "NCPD Investigator"
+              "femaleVariant": "Lt. Mara Voss",
+              "maleVariant": "Lt. Mara Voss"
             }
           ]
         }

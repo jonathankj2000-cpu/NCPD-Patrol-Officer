@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19a1 Scene Guard Fix | precise dialogue and scene-tier player guards
+-- NCPD Patrol v0.19b Voss Briefing | isolated native voice and lipsync test
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -342,7 +342,7 @@ end})
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19a1 Scene Guard Fix loaded. Quest giver activation and greeting allow normal gameplay with background scene membership. Active dialogue and restricted scene tiers still pause the test. Install the complete package and fully restart the game.")
+    status("v0.19b Voss Briefing loaded. OFF DUTY: Testing > Quest giver prototype. Hello, uninterrupted voiced Voss briefing with lipsync, two text choices and goodbye. V remains silent. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

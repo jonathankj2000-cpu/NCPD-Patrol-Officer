@@ -39,6 +39,12 @@
               "stringId": "3740343362205726647",
               "femaleVariant": "option 2",
               "maleVariant": "option 2"
+            },
+            {
+              "$type": "localizationPersistenceSubtitleEntry",
+              "stringId": "2933361649594161950",
+              "femaleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
+              "maleVariant": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it."
             }
           ]
         }

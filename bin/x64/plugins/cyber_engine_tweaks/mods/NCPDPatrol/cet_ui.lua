@@ -291,14 +291,14 @@ function M.new(context)
         -- qgiver UI begin
         if ImGui.CollapsingHeader("Quest giver prototype") then
             local test=context.questGiver
-            ImGui.TextWrapped("OFF DUTY test: activates a separate journal quest at the investigator's fixed location. Approach within 3 m on foot; the native scene shows hello, two dialogue choices, then goodbye. Enable game subtitles. Clear the test before replaying it.")
+            ImGui.TextWrapped("OFF DUTY test: meet Lt. Mara Voss at the fixed quest marker. Approach within 3 m on foot and close CET: hello, a voiced 42-second briefing with lipsync, two text choices, then goodbye. V remains silent. Enable game subtitles. Clear the test before replaying it.")
             if test then
                 ImGui.TextWrapped(test.state())
                 if ImGui.Button("TEST: Activate quest giver quest") then test.start(status) end
                 if ImGui.Button("Clear quest giver test") then test.clear(status) end
                 if ImGui.Button("Log quest giver diagnostics") then status("Quest giver test | "..test.diagnostics()) end
             end
-            ImGui.TextWrapped("Investigator: 1424.737, -2754.759, 204.665; yaw -143.376. A police Hella is parked across the scene 4 m behind her. Both actors spawn when you are within 120 m. No audio files are required.")
+            ImGui.TextWrapped("Voss: 1424.737, -2754.759, 204.665; yaw -143.376. A police Hella is parked across the scene 4 m behind her. Both actors spawn within 120 m. English voice and lipsync are included in the complete package.")
         end
         -- qgiver UI end
         if ImGui.CollapsingHeader("Partner recovery") then
@@ -366,7 +366,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.19a1 Scene Guard Fix###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.19b Voss Briefing###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

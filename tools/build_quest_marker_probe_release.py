@@ -1,30 +1,36 @@
-"""Package the quest-giver player scene-guard hotfix with existing assets intact.
+"""Package the isolated voiced Voss briefing with the production systems intact.
 
-The release retains all 45 native scripts and nine compiled archives exactly.
+The release retains all 45 native scripts and eight other archives exactly.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,re,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='281ec019319c67e332e1cdc99c1e6bc9f3f22ad9'
+BASE='b13576f55e8cce93e339d97fb0e691582432db8f'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.19a1_Scene_Guard_Fix_TEST.zip'
-REPORT='NCPD_Patrol_v0.19a1_Scene_Guard_Fix_verification.json'
-TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py']
+NAME='NCPD_Patrol_v0.19b_Voss_Briefing_TEST.zip'
+REPORT='NCPD_Patrol_v0.19b_Voss_Briefing_verification.json'
+TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py']
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
 def main():
  from lupa.luajit21 import LuaRuntime
  modules=sorted((ROOT/PREFIX).glob('*.lua'));scripts=sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
- assert len(modules)==46 and len(scripts)==45 and len(TESTS)==33
+ assert len(modules)==46 and len(scripts)==45 and len(TESTS)==34
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  previous=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
  changed={PREFIX+n for n in ['init.lua','cet_ui.lua','quest_giver_test.lua']}
+ changed.update({'archive/pc/mod/NCPDPatrol_QuestGiverTest.archive','archive/pc/mod/NCPDPatrol_QuestGiverTest.archive.xl'})
  sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'))
- from probe_source import without_quest_giver_guard_fix
+ from probe_source import without_voss_briefing_branding
  for name in ['init.lua','cet_ui.lua']:
-  assert without_quest_giver_guard_fix((ROOT/PREFIX/name).read_text())==subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True),name
+  current=without_voss_briefing_branding((ROOT/PREFIX/name).read_text())
+  old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}{name}'],cwd=ROOT,text=True)
+  if name=='cet_ui.lua':
+   pattern=r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n'
+   current=re.sub(pattern,'',current,flags=re.M|re.S);old=re.sub(pattern,'',old,flags=re.M|re.S)
+  assert current==old,name
  added=set()
  for name in previous:
   if name not in changed:assert (ROOT/name).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{name}'],cwd=ROOT),'Unrelated payload changed: '+name
@@ -45,7 +51,7 @@ def main():
  'injured_functional':'tests/scene_survey/check_functional.py','officer_catalog':'tests/officer_down/check_catalog.py',
  'officer_gameplay':'tests/officer_down/check_gameplay.py','partner_safety':'tests/partner_safety/check_safety.py',
  'officer_repeat':'tests/officer_down/check_repeat.py','scene_discovery':'tests/scene_survey/check_discovery.py',
- 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py'}
+ 'discovery_staging':'tests/scene_survey/check_discovery_landing.py','site_expansion':'tests/officer_down/check_site_expansion.py','current_controls':'tests/cet_ui/check_current_controls.py','quest_giver':'tests/quest_giver/check_quest_giver.py','voss_media':'tests/quest_giver/check_voss_media.py'}
  with TemporaryDirectory(prefix='ncpd-quest-giver-prototype-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
@@ -64,7 +70,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes();compiled=json.loads((ROOT/'assets/officer_down_sites/compiled.json').read_text())
- report={'version':'v0.19a1-scene-guard-fix','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.19b-voss-briefing','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -72,13 +78,15 @@ def main():
   'retired_cet_buttons':results['current_controls']['retired_buttons'],
   'ordinary_request_samples':results['current_controls']['ordinary_request_samples'],
   'independent_fixed_pins':54,'additional_marker_archive_pins':53,'marker_archive_validation':compiled,
-  'all_nine_archives_and_45_native_scripts_unchanged':True,
+  'all_eight_other_archives_and_45_native_scripts_unchanged':True,
   'player_scene_membership_false_rejection_reproduced':results['quest_giver']['previous_scene_membership_false_rejection_reproduced'],
   'start_and_approach_use_dialogue_and_scene_tier_checks':True,
   'owned_actor_scene_release_check_unchanged':True,
   'production_dispatch_facade_unchanged':True,
   'separate_native_scene_quest_and_private_actors':True,
-  'quest_giver_choices':2,'quest_giver_audio_required':False,'quest_giver_automatic_activation':False,
+  'quest_giver_choices':2,'quest_giver_english_voice_and_lipsync_bundled':True,'quest_giver_automatic_activation':False,
+  'voss_briefing_seconds':results['voss_media']['audio']['duration_seconds'],
+  'voss_shared_audio_lipsync_lead_in_ms':300,'voss_source_animation_byte_identical':True,'player_voice':False,
   'quest_giver_actual_game_validation':False,
   'runtime_selection_scene_marker_cleanup_code_unchanged':True,
   'recorded_survey_discovery_and_gameplay_logs_preserved':True,
@@ -88,9 +96,10 @@ def main():
   'actual_new_quest_gameplay_validation':False,'observed_redscript_dispose_error_guarded':True,
   'game_checks_required':['OFF DUTY > Testing > Quest giver prototype > activate; independent journal quest and marker',
    'both actors at supplied XYZ/yaw, exact investigator appearance, side-on Hella 4 m behind',
-   'hello subtitle, two native choices, V reply and goodbye subtitle without audio files',
+   'hello subtitle, 300 ms shared lead-in, uninterrupted 42 s Voss voice and lipsync, two native choices, silent V reply and goodbye subtitle',
+   'test voice routing and facial/head compatibility for both player genders; matching source rig remains unmodified',
    'journal succeeds only after goodbye, either choice; no career/payout',
-   'clear/replay, cancellation at a choice, CET reload/save-load recovery with scoped cleanup'],
+   'clear/replay, cancellation during the briefing or at a choice, CET reload/save-load recovery with scoped cleanup'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
  (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')

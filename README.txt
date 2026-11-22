@@ -1,3 +1,44 @@
+NCPD PATROL v0.19b VOSS BRIEFING - COMPLETE BRANCH TEST
+
+Adds the supplied voss_Briefing.wav and Mara_Voss.anims to the separate quest
+giver prototype. The conversation now plays hello, a short 0.3-second shared
+lead-in, one uninterrupted English Voss briefing (about 42 seconds), the two
+existing dialogue choices, V's silent text reply, and goodbye. The journal
+completes only after goodbye. No Kessler mission is created by this test.
+
+Install the complete 122-file package and fully restart the game; the quest
+archive AND its .archive.xl file have changed. No additional runtime framework
+or audio authoring software is required. Existing requirements remain the same;
+Browser Extension is optional.
+
+1. OFF DUTY, outside combat/story dialogue: CET > Testing > Quest giver
+   prototype > TEST: Activate quest giver quest.
+2. Follow the independent marker to Voss. Close CET, enable game subtitles
+   and approach within 3 m on foot.
+3. After hello, listen to the complete briefing and watch the facial movement.
+   The choices appear afterward. Try either option; V remains text-only.
+4. Clear quest giver test before replaying. Cancellation during the briefing
+   and at the choices still waits for native scene release before cleanup.
+
+Audio uses the native dialogue voice map, not a background CET audio player.
+The WAV's original 44.1 kHz mono timing is retained in Wwise Vorbis format.
+The supplied 41.97-second animation bank is packaged byte-for-byte; its clip
+f_00000000CAFE0001 is bound explicitly to Voss's briefing. Audio and animation
+are delayed together, rather than adding silence to only one file.
+
+Automated checks cover media structure/bindings, both conversation branches,
+the full briefing before choices, interruption/replay and preserved guards.
+The private archive's ten resources compile, round-trip and extract correctly.
+Actual voice playback, subtitle presentation and the female NPC's compatibility
+with the supplied bank's male-head rig metadata still require in-game testing.
+This first test uses one long subtitle for the uninterrupted supplied line.
+
+All 45 REDscript files, the eight other archives, production dispatch,
+Officer Down's 54 sites, rewards, and actor cleanup behavior remain unchanged.
+Keep existing runtime .jsonl and *_report.json files when updating.
+
+Previous development notes:
+
 NCPD PATROL v0.19a1 SCENE GUARD FIX - COMPLETE BRANCH TEST
 
 Fixes the quest giver test rejecting normal gameplay with the message

@@ -86,3 +86,22 @@ fixer01/quest/fixer01.questphase.json and fixer01/localization/subtitles.json.js
 The MIT permission and copyright notice above apply. Dialogue is new placeholder
 text supplied for this test; original story, voices, lipsync, workspots and
 streaming/community resources are not included.
+
+Additional v0.19b Voss briefing localization adaptations
+https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+
+Minimal voice-map and lipsync-map schemas are adapted from
+fixer01/source/raw/mod/fixer01/localization/vomap.json.json and fixer01.lipmap.json.
+The MIT permission and copyright notice above apply. No fixer01 voice,
+animation or story assets are included. Voss's transcript, WAV and animation
+bank were supplied separately by the NCPD Patrol author for this test.
+
+Audio authoring provenance (tools are not installed or distributed by the mod):
+- kamus1/wem-encoder, MIT, revision 0b1ad96eb55dd6aab27c922694a0f8f80d2c304f
+  https://github.com/kamus1/wem-encoder
+- aoTuV beta6.03-2020 and libogg 1.3.6 were used for authoring only.
+- hcs64/ww2ogg, BSD, revision 14ed9b0dd62e815a38702b5f03c57006cbe2501b
+  https://github.com/hcs64/ww2ogg (independent conversion verification only).
+Source/media checksums and conversion details are recorded in
+assets/quest_giver_test/media/manifest.json in the source repository.

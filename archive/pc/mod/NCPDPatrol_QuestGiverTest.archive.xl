@@ -1,6 +1,10 @@
 journal:
   - base\ncpd_patrol\quest_giver_test\quest_giver.journal
 localization:
+  vomaps:
+    en-us: base\ncpd_patrol\quest_giver_test\vomap.json
+  lipmaps:
+    en-us: base\ncpd_patrol\quest_giver_test\voss.lipmap
   onscreens:
     en-us:
       - base\ncpd_patrol\quest_giver_test\onscreens.json

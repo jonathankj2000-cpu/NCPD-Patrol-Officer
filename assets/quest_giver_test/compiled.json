@@ -1,25 +1,34 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "a21e2a43d149d2f862520694a3a79bf66476ffba3f88802f1594227909e11c3e",
+  "archive_sha256": "4dcf723aa2e262e1628cd668efa436068fb49fcd9c75236978e503565950ad82",
   "resources": [
     "conversation.scene",
     "lines.json",
     "onscreens.json",
     "quest_giver.journal",
     "quest_giver.questphase",
-    "subtitles.json"
+    "subtitles.json",
+    "vomap.json",
+    "voss.lipmap",
+    "voss_briefing.anims",
+    "voss_briefing.wem"
   ],
   "roundtrip_validated": true,
   "extracted_resource_bytes_compared": true,
   "authored_inputs": {
-    "assets/quest_giver_test/contract.json": "2ac38409b37beee19b3cb703b5b5f7a19656f35915317975386eaac2e923839f",
+    "assets/quest_giver_test/contract.json": "d2f8a5121d9c4c95e18b80c1889e529e169c21befca6536cb796457d825a0101",
     "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
-    "assets/quest_giver_test/conversation.scene.json": "af15eeef6cee44f7db7ee72d571baee5c841ba25bcd97c183a4549d80b6c4e63",
+    "assets/quest_giver_test/media/manifest.json": "8eeb1a73c1535c7561216af1fd62aacf042678ec792092e9d07b87ab308170b2",
+    "assets/quest_giver_test/media/voss_briefing.anims": "4551f8f14adc55c52e5375bdfde81e007b1f82a3c133629a11cd0f6f2f2cd967",
+    "assets/quest_giver_test/media/voss_briefing.wem": "489325c1bf2047bf209c4816dd41d733321c311a802d6b921b7b8f254a8e5924",
+    "assets/quest_giver_test/conversation.scene.json": "fbe27a1a5df46286cd04c97f2798d505dc591e8be3fe55a2e55bc367c472f436",
     "assets/quest_giver_test/quest_giver.questphase.json": "a0a57fdf338e9b6739a518533342b31821e265076e6ed8c1bbe269c31d21344a",
     "assets/quest_giver_test/quest_giver.journal.json": "fe06c1790faedfdcece0d0f41609c00c65aacb9fab955f6f1bc74f40ce2c2e55",
-    "assets/quest_giver_test/onscreens.json.json": "977c819052cc636bda8879f57bee5d6ae6d4eb37378c9644c1d47180cee3ddc5",
-    "assets/quest_giver_test/lines.json.json": "7ae62283fd6c49c2cb2b22add581061607620debd2f116ef055c45a202eb4c65",
-    "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6"
+    "assets/quest_giver_test/onscreens.json.json": "8cf9a94b8c420a922dd89fc16225357bc56d37dffd551f1bb6580af25d1cdfbe",
+    "assets/quest_giver_test/lines.json.json": "545dc6df58ef05923ee0874d0752f59ee51e3949e9f59a961058ece1fbbe0f02",
+    "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6",
+    "assets/quest_giver_test/vomap.json.json": "e68314713a177d74cdc8cf8cef11b3335e7f7e8bac2d5889bf0c81d5b734dda3",
+    "assets/quest_giver_test/voss.lipmap.json": "534fcbcb018fe01a79dec20b45bf2d41c89bb806cf3234134072294010afae83"
   },
   "actual_game_validation": false
 }

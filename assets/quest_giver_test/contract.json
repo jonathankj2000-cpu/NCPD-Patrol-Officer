@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
   "fact_prefix": "ncpd_patrol_qgiver_test_",
   "tag": "ncpd_patrol_qgiver_test",
@@ -26,5 +26,13 @@
   "goodbye": "quest giver goodbye",
   "subtitle_ms": 3500,
   "automatic_dispatch": false,
-  "rewards": false
+  "rewards": false,
+  "briefing": {
+    "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD. I'll keep this brief. There's an Arasaka executive named Adrian Kessler. He's been involved in several operations that have cost innocent people their lives. Unfortunately, corporate influence has made a formal investigation... difficult. Kessler has a private residence in North Oak. Inside, you'll find a classified document containing evidence of his activities. I need you to retrieve that document and eliminate Kessler. This operation is strictly off the books. I've sent you the coordinates. Once the job's done, we'll talk. And V? Keep my name out of it.",
+    "clip": "f_00000000CAFE0001",
+    "audio_seconds": 41.95265306122449,
+    "animation_seconds": 41.9666672,
+    "lead_in_ms": 300,
+    "player_voice": false
+  }
 }

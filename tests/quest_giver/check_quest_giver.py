@@ -88,6 +88,11 @@ class Machine:
     def choose(self,option):
         assert self.choice_ready and option in [0,1]
         self.choice_ready=False;self.scn_emit(self.scn_nodes[self.scene],option)
+    def await_choices(self):
+        for _ in range(240):
+            if self.choice_ready:return
+            self.step(.25)
+        raise AssertionError('Briefing did not reach the two native choices')
     def step(self,seconds=.25):
         for _ in range(round(seconds/.25)):
             if not self.f.ready or self.f.menu:continue
@@ -139,7 +144,10 @@ def main():
         m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0
         m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
         m.arrive();m.talk();assert m.lines==['quest giver hello']
-        m.step(4);assert m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
+        m.step(4);assert not m.choice_ready and m.lines==['quest giver hello',assets.read('contract.json')['briefing']['text']]
+        m.step(35);assert not m.choice_ready and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2
+        assert m.f.entries[m.f.qroot].state==2 and m.f.wallet==0
+        m.await_choices();assert m.choice_ready and len(m.lines)==2
         m.choose(option);m.step(2.5);assert m.lines[-1]=='quest giver goodbye'
         assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==2 and m.f.entries[m.f.qroot].state==2
         m.step(4);assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3 and m.f.entries[m.f.qroot].state==3
@@ -151,7 +159,12 @@ def main():
     m.f.playerPoint=m.lua.globals().Vector4.new(1424.737,-2752.759,204.665,1);m.step(2)
     assert m.f.qfacts['ncpd_patrol_qgiver_test_stage']==1 and not m.lines
     m.f.qoverlay=False;m.talk();assert m.lines==['quest giver hello'];m.clear()
-    m=runtime(docs);m.start();m.arrive();m.talk();m.step(4)
+    # Cancelling during the uninterrupted briefing uses the same release gate.
+    m=runtime(docs);m.start();m.arrive();m.talk();m.step(10)
+    assert m.scene==10 and m.f.qsceneOwned and not m.choice_ready
+    m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
+    m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
+    m=runtime(docs);m.start();m.arrive();m.talk();m.await_choices()
     assert m.f.qsceneOwned and m.choice_ready
     m.f.qmod.clear(m.f.qstatus);m.step(.25);assert len(m.f.deletes)==0 and m.f.qsceneOwned
     m.step(2);assert not m.f.qmod.active() and not m.f.qpin.active and m.f.entries[m.f.qroot].state==1
@@ -173,7 +186,7 @@ def main():
     old=runtime(docs,legacy_guard=True);old.f.qforeignScene=True
     assert not old.f.qmod.start(old.f.qstatus)
     assert 'Finish the current game scene' in old.f.qlog[len(old.f.qlog)]
-    m=runtime(docs);m.f.qforeignScene=True;m.start();m.arrive();m.talk();m.step(4)
+    m=runtime(docs);m.f.qforeignScene=True;m.start();m.arrive();m.talk();m.await_choices()
     assert m.choice_ready;m.choose(0);m.step(7);assert m.f.qmod.state().startswith('Quest completed after goodbye.');m.clear()
     # Real conversations/restricted tiers still block both entry points.
     for tier in [2,3,4,5]:
@@ -203,8 +216,8 @@ def main():
         f.ClearEvents(f);f.Frame(f,'Testing',label);assert f.clicks==1 and f.Events(f).count(event)==1
     for path in ['dispatch.lua','officer_down.lua','officer_down_sites.lua','marker_navigation.lua']:
         rel=PREFIX+path;assert (ROOT/rel).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{rel}'],cwd=ROOT),path
-    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, hello/two choices/V reply/goodbye/journal success, correct scene input ordinals, previous broad-scene rejection reproduced and background-scene activation/greeting corrected with dialogue/tier guards retained, no payout/progress writes, private two-actor staging, geometry rejection, cancellation with scene-release gate, refused/deferred/tag-tombstone cleanup, replay and load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
-    return {'native_silent_scene':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
+    print('PASS: isolated quest giver: actual native/Lua bridge and authored scene/quest graphs, hello/uninterrupted Voss briefing/two choices/silent V reply/goodbye/journal success, no early choices or completion, correct scene input ordinals, background-scene activation with dialogue/tier guards retained, no payout/progress writes, private two-actor staging, geometry rejection, cancellation during briefing and choices with scene-release gate, refused/deferred/tag-tombstone cleanup, replay and load recovery; existing dispatch/marker code unchanged (engine boundaries mocked)')
+    return {'npc_briefing_voice':True,'player_voice':False,'uninterrupted_briefing_before_choices':True,'choices':2,'dialogue_paths_executed':2,'complete_only_after_goodbye':True,
         'spawned_private_actors':2,'geometry_checked_before_spawn':True,'scene_release_before_deletion':True,
         'cleanup_and_replay':True,'save_cet_recovery':True,'existing_dispatch_unchanged':True,
         'no_rewards_or_career_changes':True,'compiled_assets':manifest,'actual_game_validation':False,

@@ -1,7 +1,7 @@
-"""Author a silent, native two-choice scene and its isolated rearmable quest.
+"""Author the Voss briefing scene and its isolated rearmable test quest.
 
 Minimal scene schemas adapted from Andrea Olivato's MIT fixer01 reference.
-No original story, voice, animation, community or streaming assets are shipped.
+The private media assets are supplied by the NCPD Patrol author.
 """
 from pathlib import Path
 import argparse,copy,hashlib,json,math,shutil,subprocess,tempfile
@@ -11,6 +11,8 @@ DEPOT='base\\ncpd_patrol\\quest_giver_test\\'
 def read(name):return json.loads((DIR/name).read_text())
 def cn(s):return {'$type':'CName','$storage':'string','$value':s}
 def rid(typ,n):return {'$type':typ,'id':n}
+def soft(path):return {'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':path},'Flags':'Soft'}
+def briefing_ms(c):return math.ceil(max(c['briefing']['audio_seconds'],c['briefing']['animation_seconds'])*1000)
 def resource(typ,**fields):
     return {'Header':{'WolvenKitVersion':'9.1.1','WKitJsonVersion':'0.0.9','GameVersion':2500,'DataType':'CR2W'},
         'Data':{'Version':195,'BuildVersion':0,'RootChunk':{'$type':typ,'cookingPlatform':'PLATFORM_PC',**fields},'EmbeddedFiles':[]}}
@@ -112,9 +114,12 @@ def phase(c):
 def scene(c,t):
     r=copy.deepcopy(t['scene_root']);r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},
         actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],workspotInstances=[],workspots=[],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v1')
-    actor=r['actors'][0];actor.update(acquisitionPlan='findInWorld',actorName='NCPD Investigator',specAppearance=cn(c['appearance']),
-        specCharacterRecordId={'$type':'TweakDBID','$storage':'string','$value':c['npc_record']},lipsyncAnimSet=rid('scnLipsyncAnimSetSRRefId',4294967295),voicetagId={'$type':'scnVoicetagId','id':fnv('ncpd_patrol_qgiver_test_investigator')})
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_qgiver_test_scene_v2_voss')
+    r['resouresReferences']['lipsyncAnimSets']=[{'$type':'scnLipsyncAnimSetSRRef',
+        'asyncRefLipsyncAnimSet':soft(DEPOT+'voss_briefing.anims'),
+        'lipsyncAnimSet':{'DepotPath':{'$type':'ResourcePath','$storage':'uint64','$value':'0'},'Flags':'Default'}}]
+    actor=r['actors'][0];actor.update(acquisitionPlan='findInWorld',actorName='Lt. Mara Voss',specAppearance=cn(c['appearance']),
+        specCharacterRecordId={'$type':'TweakDBID','$storage':'string','$value':c['npc_record']},lipsyncAnimSet=rid('scnLipsyncAnimSetSRRefId',0),voicetagId={'$type':'scnVoicetagId','id':fnv('ncpd_patrol_qgiver_test_investigator')})
     actor['findActorInWorldParams']['actorRef'].update(type='Tag',names=[cn(c['tag']+'_npc')])
     actor['communityParams']['reference']={'$type':'NodeRef','$storage':'uint64','$value':'0'}
     actor['communityParams']['entryName']=cn('None');actor['spawnDespawnParams'].update(isEnabled=0,spawnOnStart=0)
@@ -124,12 +129,12 @@ def scene(c,t):
     nodes=[]
     def add(n,x):x['nodeId']=rid('scnNodeId',n);nodes.append({'HandleId':'pending','Data':x});return x
     start=add(1,copy.deepcopy(t['start']));start['outputSockets']=[output(2)]
-    def line(n,item,target,ms):
-        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=ms+300;x['outputSockets']=[output(target),output(name=1)]
-        e=x['events'][0]['Data'];e.update(startTime=0,duration=ms,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_event_'+str(n))
+    def line(n,item,target,ms,start_ms=0):
+        x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start_ms+ms+300;x['outputSockets']=[output(target),output(name=1)]
+        e=x['events'][0]['Data'];e.update(startTime=start_ms,duration=ms,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_event_'+str(n))
         e['voParams']['ignoreSpeakerIncapacitation']=0
         add(n,x)
-    line(2,1,3,c['subtitle_ms'])
+    line(2,1,10,c['subtitle_ms'])
     choice=add(3,copy.deepcopy(t['choice']));choice['options']=choice['options'][:2]
     choice['outputSockets']=[output(4,ordinal=0),output(5,ordinal=1)]+[output(name=i) for i in range(1,7)]
     choice['localizedDisplayNameOverride']={'unk1':'0','value':'NCPDPatrol_QG_Name'}
@@ -142,10 +147,13 @@ def scene(c,t):
                 'type':{'HandleId':'pending','Data':{'$type':'questSetVar_NodeType','factName':c['fact_prefix']+'choice','value':value,'setExactValue':1}}}}})
     chosen(4,1,6);chosen(5,2,7);line(6,513,8,2000);line(7,769,8,2000);line(8,257,9,c['subtitle_ms'])
     end=add(9,copy.deepcopy(t['end']));end['outputSockets']=[]
+    # One event owns both voice and facial animation. Delay both together;
+    # padding only the audio would offset the supplied matching lipsync bank.
+    line(10,1025,3,briefing_ms(c),c['briefing']['lead_in_ms'])
     r['sceneGraph']={'HandleId':'pending','Data':{'$type':'scnSceneGraph','graph':nodes,'startNodes':[rid('scnNodeId',1)],'endNodes':[rid('scnNodeId',9)]}}
     r['entryPoints']=[{'$type':'scnEntryPoint','name':cn('conversation_in'),'nodeId':rid('scnNodeId',1)}]
     r['exitPoints']=[{'$type':'scnExitPoint','name':cn('conversation_out'),'nodeId':rid('scnNodeId',9)}]
-    words={'hello':c['hello'],'goodbye':c['goodbye'],'option1':c['choices'][0],'option2':c['choices'][1]}
+    words={'hello':c['hello'],'goodbye':c['goodbye'],'option1':c['choices'][0],'option2':c['choices'][1],'briefing':c['briefing']['text']}
     ids={k:fnv('NCPDPatrol_QG_'+k) for k in words};vd=[];vp=[]
     for k,text in words.items():
         for locale in ['en_us','db_db']:
@@ -154,9 +162,10 @@ def scene(c,t):
             vp.append({'$type':'scnlocLocStoreEmbeddedVariantPayloadEntry','content':text,'variantId':{'$type':'scnlocVariantId','ruid':variant}})
     r['locStore']={'$type':'scnlocLocStoreEmbedded','vdEntries':vd,'vpEntries':vp}
     lines=[];options=[]
-    for item,key,speaker in [(1,'hello',0),(257,'goodbye',0),(513,'option1',1),(769,'option2',1)]:
+    for item,key,speaker in [(1,'hello',0),(257,'goodbye',0),(513,'option1',1),(769,'option2',1),(1025,'briefing',0)]:
         x=copy.deepcopy(t['line']);x.update(itemId=rid('scnscreenplayItemId',item),speaker=rid('scnActorId',speaker),addressee=rid('scnActorId',1-speaker),locstringId={'$type':'scnlocLocstringId','ruid':ids[key]})
-        x['femaleLipsyncAnimationName']=cn('None');x['maleLipsyncAnimationName']=cn('None');lines.append(x)
+        clip=c['briefing']['clip'] if key=='briefing' else 'None'
+        x['femaleLipsyncAnimationName']=cn(clip);x['maleLipsyncAnimationName']=cn(clip);lines.append(x)
     for item,key in [(2,'option1'),(258,'option2')]:
         x=copy.deepcopy(t['option']);x.update(itemId=rid('scnscreenplayItemId',item),locstringId={'$type':'scnlocLocstringId','ruid':ids[key]});options.append(x)
     r['screenplayStore']={'$type':'scnscreenplayStore','lines':lines,'options':options}
@@ -174,17 +183,44 @@ def outputs():
         if x.get('$type')=='gameJournalQuestMapPin':
             for k,v in c['position'].items():x['offset'][k.upper()]=v-anchor['position'][k.upper()]+anchor['offset'][k.upper()]
             x['mappinData']['active']=0
-    text={'Title':'NCPD: Investigator Contact (Test)','Objective':'Meet the NCPD investigator','Description':'Meet the investigator and choose either reply to complete this text-only dialogue prototype.','Name':'NCPD Investigator'}
+    text={'Title':'NCPD: Investigator Contact (Test)','Objective':'Meet Lieutenant Mara Voss','Description':'Meet Lieutenant Mara Voss, listen to her briefing and choose either reply to complete this dialogue test.','Name':'Lt. Mara Voss'}
     onscreens=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceOnScreenEntries','entries':[{'$type':'localizationPersistenceOnScreenEntry','primaryKey':fnv('NCPDPatrol_QG_'+k),'secondaryKey':'NCPDPatrol_QG_'+k,'femaleVariant':v,'maleVariant':v} for k,v in text.items()]}})
-    lines=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleEntries','entries':[{'$type':'localizationPersistenceSubtitleEntry','stringId':ids[k],'femaleVariant':v,'maleVariant':v} for k,v in [('hello',c['hello']),('goodbye',c['goodbye']),('option1',c['choices'][0]),('option2',c['choices'][1])]]}})
+    lines=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleEntries','entries':[{'$type':'localizationPersistenceSubtitleEntry','stringId':ids[k],'femaleVariant':v,'maleVariant':v} for k,v in [('hello',c['hello']),('goodbye',c['goodbye']),('option1',c['choices'][0]),('option2',c['choices'][1]),('briefing',c['briefing']['text'])]]}})
     subtitles=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'localizationPersistenceSubtitleMap','entries':[{'$type':'localizationPersistenceSubtitleMapEntry','subtitleFile':{'DepotPath':{'$type':'ResourcePath','$storage':'string','$value':DEPOT+'lines.json'},'Flags':'Soft'},'subtitleGroup':cn('quest')}]}})
-    return {'conversation.scene.json':scn,'quest_giver.questphase.json':qp,'quest_giver.journal.json':journal,'onscreens.json.json':onscreens,'lines.json.json':lines,'subtitles.json.json':subtitles},edges
+    vomap=resource('JsonResource',root={'HandleId':'0','Data':{'$type':'locVoiceoverMap','entries':[{'$type':'locVoLineEntry','stringId':ids['briefing'],'femaleResPath':soft(DEPOT+'voss_briefing.wem'),'maleResPath':soft(DEPOT+'voss_briefing.wem')}]}})
+    scene_path=(DEPOT+'conversation.scene').lower()
+    lipmap=resource('animLipsyncMapping',languageCodeName=cn('en-us'),
+        sceneEntries=[{'$type':'animLipsyncMappingSceneEntry','actorVoiceTags':[fnv('ncpd_patrol_qgiver_test_investigator')],'animSets':[soft(DEPOT+'voss_briefing.anims')]}],
+        scenePaths=[fnv(scene_path)],scenePreviewPaths=[fnv(scene_path+'preview')])
+    return {'conversation.scene.json':scn,'quest_giver.questphase.json':qp,'quest_giver.journal.json':journal,'onscreens.json.json':onscreens,'lines.json.json':lines,'subtitles.json.json':subtitles,'vomap.json.json':vomap,'voss.lipmap.json':lipmap},edges
 
 def validate(docs):
     c=read('contract.json');s=docs['conversation.scene.json']['Data']['RootChunk'];g=s['sceneGraph']['Data']['graph'];byid={n['Data']['nodeId']['id']:n['Data'] for n in g}
-    assert len(g)==9 and s['actors'][0]['acquisitionPlan']=='findInWorld'
+    assert len(g)==10 and s['actors'][0]['acquisitionPlan']=='findInWorld'
     ref=s['actors'][0]['findActorInWorldParams']['actorRef'];assert ref['type']=='Tag' and ref['names']==[cn(c['tag']+'_npc')]
-    assert s['actors'][0]['spawnDespawnParams']['isEnabled']==0 and not s['workspots'] and not any(v for k,v in s['resouresReferences'].items() if k!='$type')
+    assert s['actors'][0]['spawnDespawnParams']['isEnabled']==0 and not s['workspots']
+    refs=s['resouresReferences'];assert len(refs['lipsyncAnimSets'])==1
+    assert refs['lipsyncAnimSets'][0]['asyncRefLipsyncAnimSet']==soft(DEPOT+'voss_briefing.anims')
+    assert not any(v for k,v in refs.items() if k not in ['$type','lipsyncAnimSets'])
+    assert s['actors'][0]['lipsyncAnimSet']['id']==0 and s['playerActors'][0]['lipsyncAnimSet']['id']==4294967295
+    assert byid[2]['outputSockets'][0]['destinations'][0]['nodeId']['id']==10
+    assert byid[10]['outputSockets'][0]['destinations'][0]['nodeId']['id']==3
+    events=byid[10]['events'];assert len(events)==1
+    event=events[0]['Data'];assert event['screenplayLineId']['id']==1025
+    assert event['startTime']==c['briefing']['lead_in_ms']==300 and event['duration']==briefing_ms(c)
+    assert byid[10]['sectionDuration']['stu']==event['startTime']+event['duration']+300
+    spoken=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==1025)
+    assert spoken['speaker']['id']==0
+    for x in s['screenplayStore']['lines']:
+        clip=c['briefing']['clip'] if x['itemId']['id']==1025 else 'None'
+        assert x['femaleLipsyncAnimationName']==x['maleLipsyncAnimationName']==cn(clip)
+    voice=docs['vomap.json.json']['Data']['RootChunk']['root']['Data']['entries']
+    assert len(voice)==1 and voice[0]['stringId']==spoken['locstringId']['ruid']
+    assert voice[0]['femaleResPath']==voice[0]['maleResPath']==soft(DEPOT+'voss_briefing.wem')
+    lip=docs['voss.lipmap.json']['Data']['RootChunk']
+    assert lip['languageCodeName']==cn('en-us') and lip['scenePaths']==[fnv((DEPOT+'conversation.scene').lower())]
+    assert lip['scenePreviewPaths']==[fnv((DEPOT+'conversation.scenepreview').lower())]
+    assert lip['sceneEntries']==[{'$type':'animLipsyncMappingSceneEntry','actorVoiceTags':[s['actors'][0]['voicetagId']['id']],'animSets':[soft(DEPOT+'voss_briefing.anims')]}]
     ch=byid[3];assert len(ch['options'])==2
     for option,flag,line in [(0,4,6),(1,5,7)]:
         assert ch['outputSockets'][option]['destinations'][0]['nodeId']['id']==flag
@@ -193,7 +229,7 @@ def validate(docs):
         assert byid[flag]['outputSockets'][0]['destinations'][0]['nodeId']['id']==line
         assert byid[line]['outputSockets'][0]['destinations'][0]['nodeId']['id']==8
     assert byid[8]['outputSockets'][0]['destinations'][0]['nodeId']['id']==9
-    assert {e['femaleVariant'] for e in docs['lines.json.json']['Data']['RootChunk']['root']['Data']['entries']}=={c['hello'],c['goodbye'],*c['choices']}
+    assert {e['femaleVariant'] for e in docs['lines.json.json']['Data']['RootChunk']['root']['Data']['entries']}=={c['hello'],c['goodbye'],*c['choices'],c['briefing']['text']}
     for doc in docs.values():
         handles=[x['HandleId'] for x in walk(doc) if 'HandleId' in x];assert len(handles)==len(set(handles))
         assert all(x['HandleRefId'] in handles for x in walk(doc) if 'HandleRefId' in x)
@@ -235,10 +271,15 @@ def main():
             run('convert','deserialize',DIR/name,'--outpath',depot);binary=name[:-5];body=(depot/binary).read_bytes();assert body[:4]==b'CR2W';expected[binary]=body
             run('convert','serialize',depot/binary,'--outpath',roundtrip)
         validate({name:json.loads((roundtrip/name).read_text(encoding='utf-8-sig')) for name in docs})
+        media=read('media/manifest.json')
+        for name in ['voss_briefing.anims','voss_briefing.wem']:
+            body=(DIR/'media'/name).read_bytes()
+            assert hashlib.sha256(body).hexdigest()==media['packaged'][name]['sha256']
+            (depot/name).write_bytes(body);expected[name]=body
         run('pack',packed,'--outpath',out);archive=out/'NCPDPatrol_QuestGiverTest.archive';extracted=temp/'extracted';extracted.mkdir();run('extract',archive,'--outpath',extracted)
         assert {p.name:p.read_bytes() for p in extracted.rglob('*') if p.is_file()}==expected
         target=ROOT/'archive/pc/mod'/archive.name;shutil.copy2(archive,target)
-        inputs=[DIR/n for n in ['contract.json','reference-templates.json',*docs]]
+        inputs=[DIR/n for n in ['contract.json','reference-templates.json','media/manifest.json','media/voss_briefing.anims','media/voss_briefing.wem',*docs]]
         (DIR/'compiled.json').write_text(json.dumps({'archive_path':target.relative_to(ROOT).as_posix(),'archive_sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'resources':sorted(expected),'roundtrip_validated':True,'extracted_resource_bytes_compared':True,'authored_inputs':{p.relative_to(ROOT).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs},'actual_game_validation':False},indent=2)+'\n')
-    print('PASS: silent two-choice quest scene compiled, round-tripped and extracted byte-identically')
+    print('PASS: voiced Voss briefing scene and localization compiled, round-tripped and extracted with both media files byte-identical')
 if __name__=='__main__':main()
