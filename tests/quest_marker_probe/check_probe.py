@@ -5,7 +5,7 @@ from lupa.luajit21 import LuaRuntime
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[1]
 sys.path.insert(0,str(HERE.parent/'arrests'))
 from translate import translate
-from probe_source import without_probe,PROBE_BUTTONS
+from probe_source import without_probe,without_quest_giver,PROBE_BUTTONS
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol'
 BASE='d68b1696e1e0042609f323816ba94f7481de6e02'
 
@@ -50,7 +50,7 @@ def main():
         if name=='cet_ui.lua':
             # The menu cleanup intentionally retires probe launchers. Keep a
             # strict reviewed-source pin plus separate current/retired routes.
-            assert hashlib.sha256((ROOT/PREFIX/name).read_bytes()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1'
+            assert hashlib.sha256(without_quest_giver((ROOT/PREFIX/name).read_text()).encode()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1'
             continue
         old=subprocess.check_output(['git','show',f'{BASE}:{PREFIX}/{name}'],cwd=ROOT,text=True)
         assert without_probe((ROOT/PREFIX/name).read_text())==old,name

@@ -73,3 +73,16 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Additional v0.19a silent quest-giver prototype adaptations
+https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+
+Minimal schemas adapted from fixer01/source/raw/mod/fixer01/scenes/fixer01_face.scene.json,
+fixer01/quest/fixer01.questphase.json and fixer01/localization/subtitles.json.json:
+- assets/quest_giver_test/reference-templates.json
+- tools/build_quest_giver_assets.py and its generated private scene/quest resources
+
+The MIT permission and copyright notice above apply. Dialogue is new placeholder
+text supplied for this test; original story, voices, lipsync, workspots and
+streaming/community resources are not included.

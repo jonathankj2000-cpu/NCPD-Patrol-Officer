@@ -1,0 +1,25 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
+  "archive_sha256": "a21e2a43d149d2f862520694a3a79bf66476ffba3f88802f1594227909e11c3e",
+  "resources": [
+    "conversation.scene",
+    "lines.json",
+    "onscreens.json",
+    "quest_giver.journal",
+    "quest_giver.questphase",
+    "subtitles.json"
+  ],
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true,
+  "authored_inputs": {
+    "assets/quest_giver_test/contract.json": "2ac38409b37beee19b3cb703b5b5f7a19656f35915317975386eaac2e923839f",
+    "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
+    "assets/quest_giver_test/conversation.scene.json": "af15eeef6cee44f7db7ee72d571baee5c841ba25bcd97c183a4549d80b6c4e63",
+    "assets/quest_giver_test/quest_giver.questphase.json": "a0a57fdf338e9b6739a518533342b31821e265076e6ed8c1bbe269c31d21344a",
+    "assets/quest_giver_test/quest_giver.journal.json": "fe06c1790faedfdcece0d0f41609c00c65aacb9fab955f6f1bc74f40ce2c2e55",
+    "assets/quest_giver_test/onscreens.json.json": "977c819052cc636bda8879f57bee5d6ae6d4eb37378c9644c1d47180cee3ddc5",
+    "assets/quest_giver_test/lines.json.json": "7ae62283fd6c49c2cb2b22add581061607620debd2f116ef055c45a202eb4c65",
+    "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6"
+  },
+  "actual_game_validation": false
+}

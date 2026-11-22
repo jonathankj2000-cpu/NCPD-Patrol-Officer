@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,subprocess,textwrap,sys
 sys.path.insert(0,str(__import__('pathlib').Path(__file__).resolve().parents[1]/'quest_marker_probe'))
-from probe_source import without_probe,without_location_exclusion
+from probe_source import without_probe,without_location_exclusion,without_quest_giver
 BASE='a9b654fed01145dd908ffe82de6e097bf2917c56'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 BRANDING={
@@ -69,7 +69,7 @@ def verify(root):
             # The explicitly requested v0.18i menu cleanup changes layout.
             # Pin the reviewed complete UI; retained action equivalence is
             # exercised by check_cet_ui, and retired/current routes separately.
-            assert hashlib.sha256((mods/name).read_bytes()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1','Unreviewed CET menu change'
+            assert hashlib.sha256(without_quest_giver((mods/name).read_text()).encode()).hexdigest()=='d2fc8398ac309b52549c1ed25f37561077bf0e0cd169f2af5d2d2937a75727e1','Unreviewed CET menu change'
             continue
         expected=original(root,name)
         for before,after in replacements:

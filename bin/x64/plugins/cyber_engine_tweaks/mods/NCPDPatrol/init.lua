@@ -1,4 +1,4 @@
--- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary
+-- NCPD Patrol v0.19a Quest Giver Prototype | isolated silent native dialogue test
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -12,6 +12,7 @@ local Arrest = require("arrest")
 local Navigation = require("marker_navigation") -- r5 marker hook
 local MarkerProbe = require("quest_marker_probe") -- r4 probe hook
 local Survey = require("scene_survey") -- scene survey hook
+local QuestGiver = require("quest_giver_test") -- qgiver hook
 local Trunk = require("trunk")
 local onDuty = false
 local overlayOpen = false
@@ -221,6 +222,9 @@ local function ensurePoliceOutfit()
 end
 
 local function startShift()
+    -- qgiver guard begin
+    if QuestGiver.blocksDuty() then status("Clear the quest giver test before starting a shift.");return end
+    -- qgiver guard end
     -- scene survey guard begin
     if Survey.blocksDuty() then status("Finish survey cleanup/return before starting a shift.");return end
     -- scene survey guard end
@@ -295,6 +299,7 @@ end
 
 local function forgetLoadedWorld()
     Survey.reset() -- scene survey hook
+    QuestGiver.reset() -- qgiver hook
     Navigation.reset() -- r5 marker hook
     MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
     -- Also forget failed cleanup IDs when the previous shift was already over.
@@ -313,6 +318,7 @@ end
 -- scene survey setup begin
 Survey.configure({status=status,worldReady=Navigation.worldReady,canStart=function()
     if onDuty then return false,"Go OFF DUTY before testing scene locations" end
+    if QuestGiver.active() then return false,"Clear the quest giver test before a survey" end -- qgiver hook
     local life=Dispatch.lifecycle()
     if life.reserved or life.foregroundCleanup or life.backgroundCleanup or Backup.isActive() then
         return false,"Clear existing dispatch/backup actors before starting the survey"
@@ -321,10 +327,22 @@ Survey.configure({status=status,worldReady=Navigation.worldReady,canStart=functi
 end})
 -- scene survey setup end
 
+-- qgiver setup begin
+QuestGiver.configure({status=status,worldReady=Navigation.worldReady,overlayOpen=function() return overlayOpen end,canStart=function()
+    if onDuty then return false,"Go OFF DUTY before testing the quest giver" end
+    if Survey.blocksDuty() then return false,"Finish scene survey/discovery cleanup before this test" end
+    local life=Dispatch.lifecycle()
+    if life.reserved or life.foregroundCleanup or life.backgroundCleanup or Backup.isActive() then
+        return false,"Clear dispatch/backup actors before testing the quest giver"
+    end
+    return true
+end})
+-- qgiver setup end
+
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.")
+    status("v0.19a Quest Giver Prototype loaded. OFF DUTY: Testing > Quest giver prototype activates the separate investigator quest. Silent native subtitles, two choices and goodbye complete the quest. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -337,6 +355,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     Survey.update(delta) -- scene survey hook
+    QuestGiver.update(delta) -- qgiver hook
     if not isInGame() then
         Navigation.reset() -- r5 marker hook
         MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
@@ -408,6 +427,7 @@ end)
 
 registerForEvent("onShutdown", function()
     Survey.shutdown() -- scene survey hook
+    QuestGiver.shutdown() -- qgiver hook
     pcall(Navigation.finish) -- r5 marker hook
     MarkerProbe.finish(nil, "CET shutdown") -- r4 probe hook
     Trunk.finish()
@@ -429,6 +449,7 @@ local menu = require("cet_ui").new({
     navigation=Navigation, -- r5 marker hook
     markerProbe=MarkerProbe, -- r4 probe hook
     sceneSurvey=Survey, -- scene survey hook
+    questGiver=QuestGiver, -- qgiver hook
     isOnDuty=function() return onDuty end,
     getLastMessage=function() return lastMessage end,
     status=status, toggleDuty=toggleDuty, requestBackup=requestBackup,

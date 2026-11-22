@@ -1,3 +1,38 @@
+NCPD PATROL v0.19a QUEST GIVER PROTOTYPE - COMPLETE BRANCH TEST
+
+Install all 122 files and fully restart the game. Required frameworks are the
+same as the complete v0.18i package. Browser Extension remains optional.
+No audio files, voice-over tools or lipsync tools are required for this test.
+
+1. Load a manual test save outside combat, wanted status and story scenes.
+   Go OFF DUTY; finish existing dispatch/backup/survey/discovery cleanup.
+2. Open CET > Testing > Quest giver prototype > TEST: Activate quest giver quest.
+3. Follow the separate quest marker to 1424.737, -2754.759, 204.665.
+   The investigator and police Hella stage when V is within 120 m.
+4. Enable game subtitles and approach within 3 m ON FOOT. Close CET to see
+   the native dialogue choices. The conversation starts automatically nearby.
+5. Read quest giver hello, choose option 1 or option 2, then read V's reply
+   and quest giver goodbye. Journal completion follows the final section.
+6. Use Clear quest giver test before replaying. During dialogue it first
+   interrupts the private scene, then waits for scene ownership to release
+   before deleting only the two private tagged actors.
+
+The investigator uses Character.ncpd_investigator_officer_omaha_wa, appearance
+corpo__ncpd_wa_investigator__lvl3_02, yaw -143.376. Her police Hella is parked
+sideways 4 m behind her. Placement checks ground, slope, the full car footprint,
+vehicle/static clearance and local NPC navigation before creating either actor.
+
+This is a separate opt-in prototype: it grants no money or career progress and
+has no milestone/automatic-dispatch activation. Existing production dispatch,
+Officer Down sites, rewards and marker resources remain unchanged. Both native
+scene branches and cleanup/replay have automated coverage with engine APIs
+mocked. Native subtitle rendering, actor acquisition and placement must still
+be confirmed in Cyberpunk 2077. Use Log quest giver diagnostics if it fails.
+
+CET/save-load recovery cancels the private prototype and clears its current-world
+tagged actors. It does not resume this test conversation automatically.
+Keep existing .jsonl and *_report.json files when updating.
+
 NCPD PATROL v0.18i CET MENU CLEANUP - COMPLETE BRANCH TEST
 
 CET Testing opens with the current Dispatch scenarios group. Officer Down

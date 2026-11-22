@@ -58,6 +58,8 @@ for name,value in pairs({partner=partner,dispatch=dispatch,vehicle_radio=radio,b
 package.loaded.quest_marker_probe={state=display,startVisual=command('probe.visual'),relocate=command('probe.relocate'),mode=function() return 'default' end,
     diagnostics=display,reset=noop,update=noop,finish=noop,
     start=command('probe.start'),cycleMode=command('probe.cycleMode')}
+package.loaded.quest_giver_test={configure=noop,reset=noop,shutdown=noop,update=noop,active=no,blocksDuty=no,state=display,diagnostics=display,
+    start=command('questGiver.start'),clear=command('questGiver.clear')}
 package.loaded.scene_survey={configure=noop,blocksDuty=function() return f.surveyReserved==true end,summary=display,diagnostics=display,active=no,
     startDiscovery=command('survey.startDiscovery'),discoverySummary=display,exportDiscovery=command('survey.exportDiscovery'),loadDiscovery=command('survey.loadDiscovery'),
     update=noop,reset=noop,shutdown=noop,start=command('survey.start'),cancel=command('survey.cancel'),recover=command('survey.recover'),

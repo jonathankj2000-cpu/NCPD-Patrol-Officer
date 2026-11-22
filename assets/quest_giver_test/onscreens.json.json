@@ -1,0 +1,53 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "6261004349457110204",
+              "secondaryKey": "NCPDPatrol_QG_Title",
+              "femaleVariant": "NCPD: Investigator Contact (Test)",
+              "maleVariant": "NCPD: Investigator Contact (Test)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "1087017763044968605",
+              "secondaryKey": "NCPDPatrol_QG_Objective",
+              "femaleVariant": "Meet the NCPD investigator",
+              "maleVariant": "Meet the NCPD investigator"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "7635198996431393324",
+              "secondaryKey": "NCPDPatrol_QG_Description",
+              "femaleVariant": "Meet the investigator and choose either reply to complete this text-only dialogue prototype.",
+              "maleVariant": "Meet the investigator and choose either reply to complete this text-only dialogue prototype."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "551112043299532721",
+              "secondaryKey": "NCPDPatrol_QG_Name",
+              "femaleVariant": "NCPD Investigator",
+              "maleVariant": "NCPD Investigator"
+            }
+          ]
+        }
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

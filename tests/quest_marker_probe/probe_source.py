@@ -11,7 +11,18 @@ def without_location_exclusion(source):
                           'if variant==gamedataMappinVariant.FastTravelVariant\n                    or variant==gamedataMappinVariant.ServicePointDropPointVariant then')
     return source
 
+def without_quest_giver(source):
+    source=source.replace('-- NCPD Patrol v0.19a Quest Giver Prototype | isolated silent native dialogue test','-- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary')
+    source=source.replace('v0.19a Quest Giver Prototype loaded. OFF DUTY: Testing > Quest giver prototype activates the separate investigator quest. Silent native subtitles, two choices and goodbye complete the quest. Install the complete package and fully restart the game.','v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.19a Quest Giver Prototype###','NCPD Patrol - v0.18i CET Menu Cleanup###')
+    source=re.sub(r'^.* -- qgiver hook[^\n]*\n','',source,flags=re.M)
+    source=re.sub(r'^-- qgiver setup begin\n.*?^-- qgiver setup end\n\n','',source,flags=re.M|re.S)
+    source=re.sub(r'^    -- qgiver guard begin\n.*?^    -- qgiver guard end\n','',source,flags=re.M|re.S)
+    source=re.sub(r'^        -- qgiver UI begin\n.*?^        -- qgiver UI end\n','',source,flags=re.M|re.S)
+    return source
+
 def without_probe(source):
+    source=without_quest_giver(source)
     # v0.18i changes the menu and adds read-only catalogue metadata only.
     source=source.replace('-- NCPD Patrol v0.18i CET Menu Cleanup | current dispatch controls and live catalogue summary','-- NCPD Patrol v0.18h Expanded Officer Down | 38 imported compact placements, 54 stable dispatch sites')
     source=source.replace('v0.18i CET Menu Cleanup loaded. Officer Down requests use the nearby 54-site catalogue. Fixed-intersection and old marker launchers removed from CET; current dispatch tests, survey, discovery and recovery remain. Install the complete package and fully restart the game.','v0.18h Expanded Officer Down loaded. 38 approved compact discovery placements added; 54 dispatch sites total across City Center, Heywood, Pacifica, Santo Domingo and Watson. Existing 10% frequency, rewards and scene lifecycle remain. Install the complete package and fully restart the game.')
@@ -137,3 +148,5 @@ RETIRED_BUTTONS={
  'TEST: Start static quest marker','TEST: Relocate native marker near V',
  'TEST: Andrea visual marker','Remove quest marker test','Log legacy Coyote test diagnostics'}
 PROBE_BUTTONS.add('Clear leftover quest marker experiment')
+
+PROBE_BUTTONS.update({'TEST: Activate quest giver quest','Clear quest giver test','Log quest giver diagnostics'})

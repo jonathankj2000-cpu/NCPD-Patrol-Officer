@@ -1,5 +1,26 @@
 # NCPD Patrol
 
+## v0.19a — quest giver prototype
+
+Adds an **explicit OFF DUTY test** under **Testing → Quest giver prototype**.
+Activating it starts a separate journal quest and a fixed native marker at
+`1424.737, -2754.759, 204.665`. An NCPD investigator uses the supplied appearance
+and yaw `-143.376`; a private police Hella is parked sideways 4 m behind her.
+The two actors are staged when V comes within 120 m.
+
+Approach within 3 m **on foot** with game subtitles enabled. A native, silent
+scene shows **quest giver hello → option 1 / option 2 → V's reply → quest giver
+goodbye**, then marks the journal quest complete. Both choices share the ending.
+Use **Clear quest giver test** before replaying the other path.
+
+[Download the complete v0.19a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19a_Quest_Giver_Prototype_TEST.zip)
+
+Install all 122 files and fully restart. This does not activate automatically
+at milestones, pay rewards or contribute career incidents. Existing dispatch,
+54 Officer Down sites, progression and the optional browser retain their
+behavior. [Scope, implementation and game checks](docs/QUEST_GIVER_PROTOTYPE_v019a.md).
+
+
 ## v0.18i — CET menu cleanup
 
 Officer Down requests on **Dispatch** and **Testing → Dispatch scenarios** use

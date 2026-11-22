@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "quest_root": "quests/minor_quest/ncpd_patrol_quest_giver_test",
+  "fact_prefix": "ncpd_patrol_qgiver_test_",
+  "tag": "ncpd_patrol_qgiver_test",
+  "position": {
+    "x": 1424.737,
+    "y": -2754.759,
+    "z": 204.665
+  },
+  "yaw": -143.376,
+  "appearance": "corpo__ncpd_wa_investigator__lvl3_02",
+  "npc_source": "Character.ncpd_investigator_officer_omaha_wa",
+  "npc_record": "Character.NCPDPatrol_QG_Investigator",
+  "car_source": "Vehicle.v_standard2_archer_hella_police",
+  "car_record": "Vehicle.NCPDPatrol_QG_Hella",
+  "car_behind_metres": 4.0,
+  "car_yaw_offset": 90.0,
+  "spawn_radius": 120.0,
+  "talk_radius": 3.0,
+  "hello": "quest giver hello",
+  "choices": [
+    "option 1",
+    "option 2"
+  ],
+  "goodbye": "quest giver goodbye",
+  "subtitle_ms": 3500,
+  "automatic_dispatch": false,
+  "rewards": false
+}

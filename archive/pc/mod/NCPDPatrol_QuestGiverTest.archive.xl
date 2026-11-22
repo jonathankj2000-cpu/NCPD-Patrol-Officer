@@ -1,0 +1,12 @@
+journal:
+  - base\ncpd_patrol\quest_giver_test\quest_giver.journal
+localization:
+  onscreens:
+    en-us:
+      - base\ncpd_patrol\quest_giver_test\onscreens.json
+  subtitles:
+    en-us: base\ncpd_patrol\quest_giver_test\subtitles.json
+quest:
+  phases:
+    - path: base\ncpd_patrol\quest_giver_test\quest_giver.questphase
+      parent: cyberpunk2077.quest
