@@ -26,7 +26,7 @@
         "$type": "scnSceneSolutionHash",
         "sceneSolutionHash": {
           "$type": "scnSceneSolutionHashHash",
-          "sceneSolutionHashDate": "14338703109592519538"
+          "sceneSolutionHashDate": "13721638912035698691"
         }
       },
       "version": 5,
@@ -511,7 +511,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -709,7 +709,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -907,7 +907,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -1105,7 +1105,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -1303,7 +1303,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -1501,7 +1501,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -1699,7 +1699,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -1910,7 +1910,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -2501,7 +2501,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }
@@ -2699,7 +2699,7 @@
                         "disableHeadMovement": 0,
                         "ignoreSpeakerIncapacitation": 0,
                         "isHolocallSpeaker": 0,
-                        "voContext": "Vo_Context_Quest",
+                        "voContext": "Vo_Context_Minor_Activity",
                         "voExpression": "Vo_Expression_Spoken"
                       }
                     }

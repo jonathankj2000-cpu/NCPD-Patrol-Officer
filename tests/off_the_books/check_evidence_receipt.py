@@ -29,12 +29,17 @@ def baseline():
     m.lua.execute("F.books.configure({status=F.obStatus,worldReady=function() return F.ready end,onDuty=function() return F.duty end,voss=function() return F.qmod.actor() end});F.obConfigureRetention()")
     return m
 
+def escaped_death(m):
+    # Receipt-only cases continue after native pursuit has cooled off. The
+    # mandatory three-star sequence is tested independently in check_wanted.
+    killed(m);m.f.wanted=False;m.step(.25)
+
 def main():
     # Actual v0.20d rejects a zero-remaining-quantity readable event even while
     # native handling creates its Shards entry. Journal activation without that
     # event has the same failure, matching the supplied stalled stage 2 log.
     for mode in ['zero quantity','journal-only','payload changes']:
-        m=baseline();encounter(m);killed(m);m.step(2)
+        m=baseline();encounter(m);escaped_death(m);m.step(2)
         if mode=='journal-only':body_empty(m);m.f.entries[m.f.obpath].state=2
         else:pickup_event(m,0 if mode=='zero quantity' else 1,mode=='payload changes')
         m.step(12)
@@ -44,7 +49,7 @@ def main():
     # identity. Original player handler still executes once and consumes the
     # readable; Return uses the existing journal/pin owner without a new spawn.
     for quantity,mutate in [(0,False),(1,True),(1,False)]:
-        m=runtime();encounter(m);killed(m);m.step(2);created=len(m.f.creates)
+        m=runtime();encounter(m);escaped_death(m);m.step(2);created=len(m.f.creates)
         pickup_event(m,quantity,mutate);m.step(1)
         assert fact(m,'acquired')==fact(m,'acquisition_event')==fact(m,'evidence_item_seen')==1
         assert source(m)=='native item-added event' and fact(m,'evidence_item_quantity')==quantity
@@ -55,7 +60,7 @@ def main():
     # Direct Read from loot executes the pinned game's ReadAction, activates
     # the exact onscreen entry, displays native shard UI and records a receipt
     # without relying on an item-added notification or a lingering backpack item.
-    m=runtime();encounter(m);killed(m);m.step(2);m.f.wanted=True;m.f.obRead();m.step(1)
+    m=runtime();encounter(m);escaped_death(m);m.step(2);m.f.wanted=True;m.f.obRead();m.step(1)
     assert fact(m,'evidence_read_seen')==fact(m,'acquired')==1 and fact(m,'evidence_item_seen')==0
     assert source(m)=='native evidence Read action' and fact(m,'stage')==3 and state(m,'escape')==2
     assert m.f.obOriginalReads==1 and m.f.obReadSuper==1 and len(m.f.obReadUI)==1
@@ -64,7 +69,7 @@ def main():
     # New native journal activation and actual player possession are independent
     # durable proofs if an external handler consumes/swallow the event route.
     for receipt in ['journal','inventory']:
-        m=runtime();encounter(m);killed(m);m.step(2);body_empty(m)
+        m=runtime();encounter(m);escaped_death(m);m.step(2);body_empty(m)
         if receipt=='journal':m.f.entries[m.f.obpath].state=2
         else:m.f.obPlayerItems[m.f.obitem]=1
         m.step(1)
@@ -72,7 +77,7 @@ def main():
         assert source(m)==('unique shard journal activation' if receipt=='journal' else 'player inventory readback')
     # User's existing first-cycle v0.20d save: item already taken, no event
     # receipt, native private journal entry owned and no new baseline facts.
-    m=runtime();encounter(m);killed(m);m.step(2);body_empty(m)
+    m=runtime();encounter(m);escaped_death(m);m.step(2);body_empty(m)
     for key in ['evidence_baseline','evidence_journal_before','evidence_player_before']:m.f.qfacts['ncpd_patrol_otb_'+key]=0
     m.f.entries[m.f.obpath].state=2;restore(m)
     assert fact(m,'acquired')==1 and fact(m,'stage')==4 and source(m)=='legacy first-cycle shard journal receipt'
@@ -80,7 +85,7 @@ def main():
     # Empty corpse alone, missing/wrong/inactive entries, cancellation and a
     # menu/unready world cannot fabricate an acquisition or a replacement shard.
     for mode in ['empty','inactive','foreign','missing','cancelled','menu','unready']:
-        m=runtime();encounter(m);killed(m);m.step(2);body_empty(m)
+        m=runtime();encounter(m);escaped_death(m);m.step(2);body_empty(m)
         if mode=='foreign':m.f.entries['onscreens/foreign/readable'].state=2
         if mode=='missing':m.f.entries[m.f.obpath]=None
         if mode in ['menu','unready','cancelled']:m.f.entries[m.f.obpath].state=2
@@ -94,17 +99,17 @@ def main():
         m=runtime()
         if previous=='journal':m.f.entries[m.f.obpath].state=2
         else:m.f.obPlayerItems[m.f.obitem]=1
-        encounter(m);killed(m);m.step(2)
+        encounter(m);escaped_death(m);m.step(2)
         assert fact(m,'acquired')==0 and fact(m,'stage')==2,previous
         m.f.obRead();m.step(1);assert fact(m,'acquired')==1 and fact(m,'stage')==4
-    m=runtime();encounter(m);killed(m);m.step(2);body_empty(m)
+    m=runtime();encounter(m);escaped_death(m);m.step(2);body_empty(m)
     m.f.qfacts.ncpd_patrol_otb_cycle=2;m.f.qfacts.ncpd_patrol_otb_evidence_baseline=0
     m.f.entries[m.f.obpath].state=2;restore(m)
     assert fact(m,'acquired')==0 and fact(m,'stage')==2
     m.f.obRead();m.step(1);assert fact(m,'acquired')==1 and fact(m,'stage')==4
     # Foreign-item and non-player events/read actions leave this quest alone,
     # while native handlers still run once for their original behavior.
-    m=runtime();encounter(m);killed(m);m.step(2)
+    m=runtime();encounter(m);escaped_death(m);m.step(2)
     m.f.obRead('Items.other_readable');m.step(1)
     assert fact(m,'acquired')==0 and m.f.obOriginalReads==1
     m.f.obRead(m.f.obitem,m.f.obRole('guard1'))
@@ -116,7 +121,7 @@ def main():
     assert fact(m,'acquired')==0
     # Delayed/rejected quest journal writes do not undo a durable receipt. The
     # existing owner retries, then switches to Return without respawn/replay.
-    m=runtime();encounter(m);killed(m);m.step(2)
+    m=runtime();encounter(m);escaped_death(m);m.step(2)
     m.f.obJournalDelay=2;pickup_event(m);m.step(1)
     assert fact(m,'acquired')==1 and fact(m,'stage')==4 and state(m,'return')!=2
     m.step(4);assert state(m,'return')==2 and len(m.f.creates)==6

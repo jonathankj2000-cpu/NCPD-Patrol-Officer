@@ -17,7 +17,10 @@ def main():
         assert strip((ROOT/path).read_text())==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT,text=True),path
     for path in ['assets/quest_giver_test/contract.json','assets/quest_giver_test/conversation.scene.json',
         'assets/quest_giver_test/onscreens.json.json','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds']:
-        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT),path
+        if path.endswith('conversation.scene.json'):
+            from audio_source import without_ambient_mix
+            assert without_ambient_mix(json.loads((ROOT/path).read_text()))==json.loads(subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT)),path
+        else:assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT),path
     old=runtime(docs,legacy_walk=True);old.f.qposeModelWalkAfter=5
     old.start();old.arrive();old.step(15)
     assert old.f.qposeWalks==1 and len(old.f.qposeIdleCalls)==0 and len(old.f.qposeCalls)==1

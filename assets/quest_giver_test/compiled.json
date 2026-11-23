@@ -1,6 +1,6 @@
 {
   "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
-  "archive_sha256": "f5c2dda803379719d2482bc2fc5e3ea5370018537f82223d0b1965abbda54cd2",
+  "archive_sha256": "2be305a3a7f636999cfd859d3330ccf4aadf36d0b16d117aff46100ca8b66ad9",
   "resources": [
     "conversation.scene",
     "lines.json",
@@ -39,7 +39,7 @@
     "assets/quest_giver_test/media/source/Voss03.anims": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c",
     "assets/quest_giver_test/media/source/Voss01.anims": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c",
     "assets/quest_giver_test/media/source/Voss02.anims": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d",
-    "assets/quest_giver_test/conversation.scene.json": "23ee921f84bc7301bd05f14f57d182287e491d062752454568b599069fdd1366",
+    "assets/quest_giver_test/conversation.scene.json": "c7fe452d4769aa6e4ca1e392b8db034860b1f764f1b566133fb4c35c4dc1f2a9",
     "assets/quest_giver_test/quest_giver.questphase.json": "05c90d798510809c5771377e652d0e51d5082870231e1f0daa966e4138073141",
     "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
     "assets/quest_giver_test/onscreens.json.json": "5c0fb4fee610113c957f1fb6827454b824d0dced746e7f2aa2e982bc327d9601",

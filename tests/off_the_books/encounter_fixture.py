@@ -20,6 +20,7 @@ def compile_source(lua,source):
     code=code.replace('new AnimFeature_SceneGameplayOverrides()', 'NewReferenceAnimFeature()')
     code=code.replace('new InteractionSetEnableEvent()', 'NewReferenceInteractionEvent()')
     code=code.replace('new NotifyShardRead()', 'NewReferenceShardRead()')
+    code=code.replace('new PreventionForceDeescalateRequest()', 'NewReferenceDeescalation()')
     code=code.replace('local lastValue = nil', 'local lastValue = 0')
     code=code.replace('super:OnEnter(stateContext, scriptInterface)', 'ReferenceSuperOnEnter(self,stateContext,scriptInterface)')
     code=code.replace('super:CompleteAction(gameInstance)', 'ReferenceItemActionComplete(self,gameInstance)')

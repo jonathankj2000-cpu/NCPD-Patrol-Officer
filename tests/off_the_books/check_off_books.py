@@ -23,6 +23,7 @@ def runtime(retain=True,documents=None,native_source=None,events_source=None):
         with TemporaryDirectory(prefix='ncpd-offbooks-baseline-') as temp:
             path=Path(temp)/'native.reds';path.write_text(native_source);native=code(path)
     native=native.replace('local p = nil','local p = Vector4.new(0,0,0,0)').replace('new AIHoldPositionCommand()','NewOTBHold()')
+    native=native.replace('new SetWantedLevel()', 'NewWantedRequest()')
     native=native.replace('path + ','path .. ')
     native=native.replace('self:Objective(self:GetStage()) + ','self:Objective(self:GetStage()) .. ')
     import re
@@ -56,6 +57,7 @@ def runtime(retain=True,documents=None,native_source=None,events_source=None):
     lua.execute((HERE/'encounter_engine.lua').read_text())
     lua.execute((HERE/'death_loot_engine.lua').read_text())
     lua.execute((HERE/'receipt_engine.lua').read_text())
+    lua.execute((HERE/'wanted_engine.lua').read_text())
     if retain:m.f.obConfigureRetention()
     oldstep=m.step
     def step(seconds=.25):
@@ -94,8 +96,9 @@ def main():
     assert fact(m,'stage')==1 and fact(m,'killed')==0 and not m.books.HasEvidence(m.books)
     m.f.obLoot();m.step(1);assert fact(m,'acquired')==1 and fact(m,'stage')==1
     assert m.f.obPlayerItems[m.f.obitem]==0 and m.f.entries[m.f.obpath].state==2 and m.f.obOriginalAdded==1
-    killed(m);assert fact(m,'stage')==4 and state(m,'escape')==1 and state(m,'return')==2
-    assert not m.books.BlocksDuty(m.books) and m.f.manual==654 and m.f.wallet==0
+    killed(m);assert fact(m,'stage')==3 and state(m,'escape')==2 and state(m,'return')==1
+    assert m.f.obHeat==3 and m.f.obNativeWantedCalls==1
+    assert m.books.BlocksDuty(m.books) and m.f.manual==654 and m.f.wallet==0
     m.f.wanted=True;m.step(1);assert fact(m,'stage')==3 and fact(m,'escape_used')==1 and state(m,'escape')==2
     m.f.wanted=False;m.step(1);assert fact(m,'stage')==4 and state(m,'escape')==3
     # Owned observers run vanilla once, preserve wanted consequences, release

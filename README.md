@@ -1,5 +1,22 @@
 # NCPD Patrol
 
+## v0.20f — Assassination pursuit and dialogue ambience test
+
+Killing Voss's contractor now requests three native wanted stars once per
+encounter. Higher wanted levels stay higher. Retrieve the evidence, lose the
+NCPD through normal gameplay, then return to Voss. Saving/loading or escaping
+does not reapply the report; already-dead legacy encounters are not pursued
+retroactively. The confirmed v0.20e evidence receipt fix is retained.
+
+[Download the complete v0.20f test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20f_Wanted_Dialogue_TEST.zip)
+
+This also tests a lower-priority native audio context for the ten private
+briefing lines, addressing reported ambience dips around both speakers. All
+voice files, lipsync, text, subtitles and timing are unchanged. The audible
+result remains experimental until tested in game. Install the complete package,
+fully restart, and use a save before the briefing/death to test each change.
+[Implementation and test notes](docs/OFF_THE_BOOKS_WANTED_AUDIO_v020f.md).
+
 ## v0.20e — Evidence pickup progression
 
 Fixes the reported taken shard leaving `acquired=0` and Retrieve active. The

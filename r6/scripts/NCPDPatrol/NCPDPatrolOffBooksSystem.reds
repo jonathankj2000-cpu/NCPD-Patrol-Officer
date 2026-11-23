@@ -28,6 +28,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     private let m_forceEmptyHandsSample: Bool;
     private let m_upperBodySample: Int32;
     private let m_highLevelSample: Int32;
+    private let m_deathWantedPending: Bool;
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_target = null; this.m_guard1 = null; this.m_guard2 = null;
         this.m_holdTarget = null; this.m_hold1 = null; this.m_hold2 = null;
@@ -44,6 +45,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.m_requestedTier = 0; this.m_tierSource = "not sampled";
         this.m_emptyHandsRequested = false; this.m_forceEmptyHandsSample = false;
         this.m_upperBodySample = 0; this.m_highLevelSample = 0;
+        this.m_deathWantedPending = false;
     }
     // A decision exception, not a blackboard writer. ExplorationEvents owns the
     // native exit/reset; the untouched SceneTier request resumes outside scope.
@@ -120,7 +122,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     }
 
 
-    public func Version() -> Int32 { return 5; }
+    public func Version() -> Int32 { return 6; }
     private func Quests() -> ref<QuestsSystem> { return GameInstance.GetQuestsSystem(this.GetGameInstance()); }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Patrol() -> ref<NCPDPatrolSystem> { return NCPDPatrolSystem.Get(this.GetGameInstance()); }
@@ -143,6 +145,39 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     public func Wanted() -> Bool {
         let patrol: ref<NCPDPatrolSystem> = this.Patrol();
         return !IsDefined(patrol) || patrol.HasWantedLevel();
+    }
+    private func InitDeathWanted() -> Void {
+        if this.Fact("death_wanted_policy") != 0 { return; };
+        // Existing saves with a dead contractor must not receive a new chase.
+        // An ongoing legacy encounter arms only while its target is alive.
+        if this.GetStage() > 2 || this.TargetDead()
+            || (IsDefined(this.m_target) && this.m_target.IsDead()) {
+            this.Set("death_wanted_policy", 2); return;
+        };
+        if this.Owns(n"target", this.m_target) && this.m_target.IsAttached() {
+            this.Set("death_wanted_policy", 1);
+        };
+    }
+    private func ReportAssassination() -> Bool {
+        let prevention: ref<PreventionSystem>;
+        let request: ref<SetWantedLevel>;
+        if this.Fact("death_wanted_policy") != 1 || this.Fact("death_wanted_reported") > 0 { return true; };
+        prevention = GameInstance.GetScriptableSystemsContainer(this.GetGameInstance()).Get(n"PreventionSystem") as PreventionSystem;
+        if !IsDefined(prevention) { return false; };
+        // Preserve a higher native pursuit. Never change limits, lock sources,
+        // grey-star rules, security areas or the subsequent cooldown ourselves.
+        if EnumInt(prevention.GetHeatStage()) >= EnumInt(EPreventionHeatStage.Heat_3) {
+            this.Set("death_wanted_reported", 1); return true;
+        };
+        request = new SetWantedLevel();
+        request.m_wantedLevel = EPreventionHeatStage.Heat_3;
+        request.m_forcePlayerPositionAsLastCrimePoint = true;
+        if !PreventionSystem.QueueRequest(this.GetGameInstance(), request) { return false; };
+        // A persistent send receipt prevents reissuing after escape/save/load.
+        // Keep Retrieve for this tick while the native request queue processes.
+        this.Set("death_wanted_reported", 1);
+        this.m_deathWantedPending = true;
+        return false;
     }
     public static func Site() -> Vector4 {
         let p: Vector4; p.X = -649.795; p.Y = 929.771; p.Z = 9.400; p.W = 1.0; return p;
@@ -226,6 +261,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if NotEquals(this.m_reason, "") { return false; };
         this.Set("cycle", this.GetCycle() + 1);
         this.Set("killed", 0); this.Set("acquired", 0); this.Set("seeded", 0);
+        this.Set("death_wanted_policy", 1); this.Set("death_wanted_reported", 0);
         this.Set("qty_before_seen", 0); this.Set("qty_after_seen", 0);
         this.Set("qty_before", 0); this.Set("qty_after", 0); this.Set("acquisition_event", 0);
         this.Set("corpse_confirmed", 0); this.Set("corpse_repair_used", 0);
@@ -588,22 +624,28 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let stage: Int32;
         let next: Int32;
         let player: ref<PlayerPuppet>;
+        let deathWantedReady: Bool = true;
         if !NCPDPatrolMarkerSession.WorldReady() || !this.IsActive() || this.IsMenuOpen() || delta <= 0.0 || delta > 0.5 { return; };
         player = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) || !player.IsAttached() || player.IsDead() { return; };
+        this.m_deathWantedPending = false;
         if this.GetStage() == 1 && this.Fact("activation_complete") == 0 {
             this.m_trackPending = true;
             if !IsDefined(this.m_previous) { this.m_previous = this.Journal().GetTrackedEntry(); };
         };
+        if !this.OnDuty() { this.InitDeathWanted(); };
         // A real death, not defeated/unconscious, fulfils Voss's instruction.
         if IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.IsDead() { this.Set("killed", 1); };
+        if !this.OnDuty() && this.TargetDead() && this.GetStage() <= 2 {
+            deathWantedReady = this.ReportAssassination();
+        };
         this.SyncEvidenceReceipt();
         this.MaintainEvidenceLoot(delta);
         stage = this.GetStage(); next = stage;
         // Facts survive shift/session reset, but this operation progresses off duty.
         if !this.OnDuty() {
             if this.TargetDead() {
-                if !this.HasEvidence() { next = 2; } else {
+                if !this.HasEvidence() || !deathWantedReady { next = 2; } else {
                     if this.Wanted() { next = 3; this.Set("escape_used", 1); } else { next = 4; };
                 };
             };
@@ -668,6 +710,8 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let eventQuantity: Int32 = this.Fact("evidence_item_quantity");
         let baseline: Int32 = this.Fact("evidence_baseline");
         let journalBefore: Int32 = this.Fact("evidence_journal_before");
+        let deathPolicy: Int32 = this.Fact("death_wanted_policy");
+        let deathReported: Int32 = this.Fact("death_wanted_reported");
         if this.ValidActor(n"target", this.m_target) {
             record = TDBID.ToStringDEBUG(this.m_target.GetRecordID());
             death = "alive"; if this.m_target.IsDead() { death = "dead"; };
@@ -676,6 +720,6 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.Fact("qty_before_seen") > 0 { before = IntToString(this.Fact("qty_before")); };
         if this.Fact("qty_after_seen") > 0 { after = IntToString(this.Fact("qty_after")); };
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | item callback seen=\(itemSeen) | item callback quantity=\(eventQuantity) | evidence read seen=\(readSeen) | player shard now=\(this.PlayerEvidenceQuantity()) | shard journal owned=\(this.ShardJournalOwned()) | receipt baseline=\(baseline) | journal owned before=\(journalBefore) | receipt source=\(this.EvidenceReceiptSource()) | \(loot) | death loot configured=\(this.EvidenceLootConfigured()) | native loot generated=\(generated) | corpse confirmed=\(confirmed) | corpse repair used=\(repaired) | evidence loot status=\(this.m_evidenceLootReason) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | death wanted policy=\(deathPolicy) | death wanted reported=\(deathReported) | death wanted pending=\(this.m_deathWantedPending) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | item callback seen=\(itemSeen) | item callback quantity=\(eventQuantity) | evidence read seen=\(readSeen) | player shard now=\(this.PlayerEvidenceQuantity()) | shard journal owned=\(this.ShardJournalOwned()) | receipt baseline=\(baseline) | journal owned before=\(journalBefore) | receipt source=\(this.EvidenceReceiptSource()) | \(loot) | death loot configured=\(this.EvidenceLootConfigured()) | native loot generated=\(generated) | corpse confirmed=\(confirmed) | corpse repair used=\(repaired) | evidence loot status=\(this.m_evidenceLootReason) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
     }
 }

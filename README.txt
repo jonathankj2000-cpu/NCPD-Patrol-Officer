@@ -1,3 +1,32 @@
+NCPD PATROL v0.20f WANTED AND DIALOGUE - COMPLETE BRANCH TEST
+
+Contractor death now requests three native wanted stars once per encounter.
+A higher pursuit stays higher. Retrieve the real evidence, lose the NCPD through
+normal gameplay, then return to Voss. The game owns police spawning and cooldown.
+The mod never holds heat up, forces grey stars or removes the crime on cancel.
+Saving/loading after the report or escaping does not trigger it again. An
+already-dead legacy encounter receives no retrospective chase on upgrade.
+The confirmed v0.20e evidence receipt, native loot and scoped combat fix remain.
+
+The ten private Voss/V speech events now test a lower-priority native mix context
+for the reported short ambience dips. All voice files, lipsync, native V IDs,
+text, subtitles and timing are unchanged. Only the compiled conversation scene
+changes inside the private archive. No global sound-bank or volume override.
+The audible fix is experimental and must be confirmed in game.
+
+Install all 131 files and fully restart. Use a save before the briefing to test
+ambience, and a save before target death to test the new chase. Taking or reading
+the shard selects Escape while wanted; normal cooldown selects Return. You can
+also escape before collecting evidence. An already-completed save is preserved.
+
+46 portable suites, source/API contracts and archive roundtrip/extraction check
+the implementation. Real audio mix, police spawning/cooldown and save behavior
+still require in-game confirmation. Requirements and optional Browser Extension
+support are unchanged; no new dependencies. First Voss scene API 5, encounter
+API 6. Existing logs include the new death report policy/send receipt.
+
+Earlier version notes follow.
+
 NCPD PATROL v0.20e EVIDENCE RECEIPT - COMPLETE BRANCH TEST
 
 Fixes taken shard/unchanged Retrieve: killed=1, shard now=0, corpse confirmed=1,

@@ -176,7 +176,11 @@ def main():
     base='a9d4e67901b75ec3c0f655098822371afd26cff6'
     frozen=subprocess.check_output(['git','ls-tree','-r','--name-only',base,'--','assets/quest_giver_test','assets/off_the_books','archive','r6/tweaks'],cwd=ROOT,text=True).splitlines()
     frozen+=['r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds','bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua']
+    from audio_source import AUDIO_ASSETS
+    # The separate audio suite verifies only per-line mix context/cache hash
+    # changes and recompilation; all other first-scene payload remains frozen.
     for path in frozen:
+        if path in AUDIO_ASSETS:continue
         if path=='r6/tweaks/NCPDPatrol_OffTheBooks.yaml':
             # Only the contractor's private native death-loot table is added;
             # the new death-loot suite validates its exact schema and identity.

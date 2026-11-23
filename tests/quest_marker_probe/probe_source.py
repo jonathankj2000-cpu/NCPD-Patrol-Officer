@@ -1,7 +1,13 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_wanted_dialogue_branding(source):
+    source=source.replace('-- NCPD Patrol v0.20f Wanted and Dialogue | native assassination pursuit and private dialogue mix','-- NCPD Patrol v0.20e Evidence Receipt | durable readable acquisition and Return progression')
+    source=source.replace('v0.20f Wanted and Dialogue loaded. Contractor death requests three native wanted stars once; escape and cooldown remain native. Private Voss dialogue uses a lower-priority mix context for testing ambience continuity. Working evidence and dialogue timing retained. Install the complete package and fully restart the game.','v0.20e Evidence Receipt loaded. Native shard pickup/read and durable Shards receipts advance Off the Books to Escape or Return. Existing first-cycle pickup saves can recover. Working loot, combat and Voss conversation retained. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.20f Wanted and Dialogue###','NCPD Patrol - v0.20e Evidence Receipt###')
+
 def without_evidence_receipt_branding(source):
+    source=without_wanted_dialogue_branding(source)
     source=source.replace('-- NCPD Patrol v0.20e Evidence Receipt | durable readable acquisition and Return progression','-- NCPD Patrol v0.20d Evidence Loot | native death loot and saved-corpse repair')
     source=source.replace('v0.20e Evidence Receipt loaded. Native shard pickup/read and durable Shards receipts advance Off the Books to Escape or Return. Existing first-cycle pickup saves can recover. Working loot, combat and Voss conversation retained. Install the complete package and fully restart the game.','v0.20d Evidence Loot loaded. Contractor has a private native shard loot table; existing empty corpses can recover once after native loot generation. Working combat and Voss conversation retained. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.20e Evidence Receipt###','NCPD Patrol - v0.20d Evidence Loot###')

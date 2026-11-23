@@ -169,7 +169,7 @@ def scene(c,t):
     presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root'])
     r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v7_timing_v1')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v7_ambient_mix_v1')
     workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
     workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
     instance=copy.deepcopy(presentation['workspot_instance']);instance['dataId']['id']=instance['workspotInstanceId']['id']=1;instance['playAtActorLocation']=1
@@ -193,6 +193,9 @@ def scene(c,t):
         n=SPEECH_NODES[i];item=screenplay_line_id(i);key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row,c['timing']);start=row.get('lead_in_ms',0)
         x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+c['timing']['section_tail_ms'];x['outputSockets']=[output(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE),output(name=1)]
         e=x['events'][0]['Data'];e.update(startTime=start,duration=duration,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_conversation_event_'+key);e['voParams']['ignoreSpeakerIncapacitation']=0
+        # Per-line native mix context only. Keep the exact VO/clip/timing and
+        # avoid a global mixer override to address the reported ambience dips.
+        e['voParams']['voContext']='Vo_Context_Minor_Activity'
         x['events'].append(look_at(n));add(n,x)
     # Reuse the private completion receipt expected by the existing quest
     # phase/native bridge. It is set only after all ten automatic turns.
@@ -236,6 +239,7 @@ def validate_scene(docs,c):
         events=[x['Data'] for x in n['events'] if x['Data']['$type']=='scnDialogLineEvent'];assert len(events)==1;e=events[0]
         assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row,c['timing'])
         assert n['sectionDuration']['stu']==e['startTime']+e['duration']+c['timing']['section_tail_ms']
+        assert e['voParams']['voContext']=='Vo_Context_Minor_Activity'
         line=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==screenplay_line_id(i))
         assert line['speaker']['id']==(0 if row['speaker']=='voss' else 1)
         assert line['locstringId']['ruid']==row.get('string_id',fnv('NCPDPatrol_QG_'+row['key']))

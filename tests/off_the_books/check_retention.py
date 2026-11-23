@@ -20,7 +20,8 @@ def main():
     position(m);m.step(1);m.f.obRole('target').attached=False;m.f.obKeepUnloaded=True
     restore(m);m.step(2);assert len(m.f.creates)==6 and m.f.obEnables>0
     m.f.obKeepUnloaded=False;m.step(2);assert m.f.obRole('target').attached and len(m.f.creates)==6
-    killed(m);m.f.obLoot();m.step(1);assert fact(m,'stage')==4
+    killed(m);m.f.obLoot();m.step(1);assert fact(m,'stage')==3
+    m.f.wanted=False;m.step(1);assert fact(m,'stage')==4
     restore(m);position(m,1424.737,-2752.759,204.665);m.step(2)
     assert fact(m,'returned')==1 and m.f.qmod.actor() is not None and len(m.f.creates)==6
     assert m.lines==lines and m.f.qfacts['ncpd_patrol_qgiver_test_stage']==3

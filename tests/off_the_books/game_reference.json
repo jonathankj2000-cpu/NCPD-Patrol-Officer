@@ -169,6 +169,20 @@
       "file_sha256": "5f6a6c1fd936be38d54dd0a580ecd01466c0ebaa25358a43a64f3cdea2cbad6b",
       "source_sha256": "ff0df8f1a01390550814a166be3b17810f8d33e904145675d3b24eb053c19e78",
       "source": "  public func CompleteAction(gameInstance: GameInstance) -> Void {\n    let entry: wref<JournalOnscreen>;\n    let entryString: String;\n    let shardUIevent: ref<NotifyShardRead>;\n    super.CompleteAction(gameInstance);\n    entryString = this.GetJournalEntryFromAction();\n    if IsStringValid(entryString) {\n      GameInstance.GetJournalManager(gameInstance).ChangeEntryState(entryString, \"gameJournalOnscreen\", gameJournalEntryState.Active, JournalNotifyOption.Notify);\n      entry = GameInstance.GetJournalManager(gameInstance).GetEntryByString(entryString, \"gameJournalOnscreen\") as JournalOnscreen;\n    };\n    shardUIevent = new NotifyShardRead();\n    shardUIevent.title = entry.GetTitle();\n    shardUIevent.text = entry.GetDescription();\n    shardUIevent.m_imageId = entry.GetIconID();\n    shardUIevent.entry = entry;\n    GameInstance.GetUISystem(gameInstance).QueueEvent(shardUIevent);\n  }"
+    },
+    "PreventionSystem.QueueRequest": {
+      "path": "core/systems/preventionSystem.swift",
+      "line": 3522,
+      "file_sha256": "f30b1351da3ebf4b2434e45478c511e73f79c520bb21ac0bd577fb0a69ca187e",
+      "source_sha256": "8db30827fe3366d0da52c4eacb29c7123417af55b4fd267ea1c6c43e1885fd18",
+      "source": "  public final static func QueueRequest(context: GameInstance, request: ref<ScriptableSystemRequest>, opt delay: Float) -> Bool {\n    let preventionSystem: ref<PreventionSystem> = GameInstance.GetScriptableSystemsContainer(context).Get(n\"PreventionSystem\") as PreventionSystem;\n    if IsDefined(preventionSystem) {\n      if delay <= 0.00 {\n        preventionSystem.QueueRequest(request);\n      } else {\n        GameInstance.GetDelaySystem(context).DelayScriptableSystemRequest(n\"PreventionSystem\", request, delay);\n      };\n      return true;\n    };\n    return false;\n  }"
+    },
+    "PreventionSystem.OnSetWantedLevel": {
+      "path": "core/systems/preventionSystem.swift",
+      "line": 3259,
+      "file_sha256": "f30b1351da3ebf4b2434e45478c511e73f79c520bb21ac0bd577fb0a69ca187e",
+      "source_sha256": "f8e9b26311493ed1261730c4a675dbd8e2f45ee1b0da10fb646e77ec8cc8b887",
+      "source": "  private final func OnSetWantedLevel(evt: ref<SetWantedLevel>) -> Void {\n    let preventionForceDeescalateRequest: ref<PreventionForceDeescalateRequest>;\n    if NotEquals(evt.m_wantedLevel, EPreventionHeatStage.Invalid) {\n      this.TogglePreventionSystem(true);\n      this.m_ignoreSecurityAreasByQuest = evt.m_forceIgnoreSecurityAreas;\n      if evt.m_resetGreyStars {\n        this.m_forceEternalGreyStars = false;\n      };\n      if Equals(evt.m_wantedLevel, EPreventionHeatStage.Heat_0) && this.IsChasingPlayer() {\n        preventionForceDeescalateRequest = new PreventionForceDeescalateRequest();\n        preventionForceDeescalateRequest.fakeBlinkingDuration = TweakDBInterface.GetFloat(t\"PreventionSystem.setup.forcedDeescalationUIStarsBlinkingDurationSeconds\", 4.00);\n        preventionForceDeescalateRequest.telemetryInfo = \"QuestEvent\";\n        this.QueueRequest(preventionForceDeescalateRequest);\n        return;\n      };\n      if Equals(evt.m_wantedLevel, EPreventionHeatStage.Heat_0) && !this.IsChasingPlayer() {\n        return;\n      };\n      if evt.m_forcePlayerPositionAsLastCrimePoint || Vector4.IsZero(this.GetLastKnownPlayerPosition()) {\n        this.SetLastKnownPlayerPosition(this.m_player.GetWorldPosition());\n      };\n      if evt.m_forceGreyStars {\n        this.m_forceEternalGreyStars = true;\n      };\n      this.TogglePreventionGlobalQuestObjective_Internal(true, n\"prevention_state_managed_by_quest_generic\");\n      this.ChangeHeatStage(evt.m_wantedLevel, \"QuestEvent\");\n    };\n  }"
     }
   }
 }

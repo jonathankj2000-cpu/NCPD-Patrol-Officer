@@ -1,4 +1,4 @@
--- NCPD Patrol v0.20e Evidence Receipt | durable readable acquisition and Return progression
+-- NCPD Patrol v0.20f Wanted and Dialogue | native assassination pursuit and private dialogue mix
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -354,7 +354,7 @@ onClear=function(output) OffBooks.clear(output or status) end,
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.20e Evidence Receipt loaded. Native shard pickup/read and durable Shards receipts advance Off the Books to Escape or Return. Existing first-cycle pickup saves can recover. Working loot, combat and Voss conversation retained. Install the complete package and fully restart the game.")
+    status("v0.20f Wanted and Dialogue loaded. Contractor death requests three native wanted stars once; escape and cooldown remain native. Private Voss dialogue uses a lower-priority mix context for testing ambience continuity. Working evidence and dialogue timing retained. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
