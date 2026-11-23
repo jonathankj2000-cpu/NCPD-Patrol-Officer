@@ -21,8 +21,8 @@ def soft(path):return {'DepotPath':{'$type':'ResourcePath','$storage':'string','
 def media_ms(row):
     return math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000) if row['speaker']=='voss' else math.ceil(row['event_seconds']*1000)
 def turn_ms(row,timing):
-    # A file's duration does not include native playback startup. Keep the
-    # complete VO/lipsync event alive, then leave a separate turn-taking pause.
+    # Established voice/startup budget. Section boundaries retain the separate
+    # 500 ms pause; the speech event now covers that pause as well.
     return media_ms(row)+(timing['voss_playback_guard_ms'] if row['speaker']=='voss' else 0)
 def subtitle_delay(part,timing):
     return round(part['start_seconds']+timing['subtitle_delay_ms']/1000,3)
@@ -169,7 +169,7 @@ def scene(c,t):
     presentation=read('presentation-templates.json')
     r=copy.deepcopy(t['scene_root'])
     r.update(debugSymbols={'$type':'scnDebugSymbols','performersDebugSymbols':[],'sceneEventsDebugSymbols':[],'sceneNodesDebugSymbols':[],'workspotsDebugSymbols':[]},actors=[copy.deepcopy(t['actor'])],playerActors=[copy.deepcopy(t['player'])],resouresReferences=copy.deepcopy(t['resource_refs']),ridResources=[])
-    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v7_ambient_mix_v1')
+    r['sceneSolutionHash']['sceneSolutionHash']['sceneSolutionHashDate']=fnv('ncpd_patrol_voss_automatic_conversation_v7_event_tail_v1')
     workspot=copy.deepcopy(presentation['workspot']);workspot['Data']['dataId']['id']=1
     workspot['Data']['workspotResource']={**soft(c['presentation']['workspot']),'Flags':'Default'}
     instance=copy.deepcopy(presentation['workspot_instance']);instance['dataId']['id']=instance['workspotInstanceId']['id']=1;instance['playAtActorLocation']=1
@@ -192,7 +192,9 @@ def scene(c,t):
     for i,row in enumerate(c['conversation']):
         n=SPEECH_NODES[i];item=screenplay_line_id(i);key=row['key'];ids[key]=row.get('string_id',fnv('NCPDPatrol_QG_'+key));duration=turn_ms(row,c['timing']);start=row.get('lead_in_ms',0)
         x=copy.deepcopy(t['section']);x['sectionDuration']['stu']=start+duration+c['timing']['section_tail_ms'];x['outputSockets']=[output(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE),output(name=1)]
-        e=x['events'][0]['Data'];e.update(startTime=start,duration=duration,screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_conversation_event_'+key);e['voParams']['ignoreSpeakerIncapacitation']=0
+        # Preserve the section and every subsequent voice start. Only extend
+        # event ownership through the former eventless tail, as in the reference.
+        e=x['events'][0]['Data'];e.update(startTime=start,duration=duration+c['timing']['section_tail_ms'],screenplayLineId=rid('scnscreenplayItemId',item));e['id']['id']=fnv('qgiver_conversation_event_'+key);e['voParams']['ignoreSpeakerIncapacitation']=0
         # Per-line native mix context only. Keep the exact VO/clip/timing and
         # avoid a global mixer override to address the reported ambience dips.
         e['voParams']['voContext']='Vo_Context_Minor_Activity'
@@ -237,8 +239,9 @@ def validate_scene(docs,c):
     for i,row in enumerate(turns):
         node_id=SPEECH_NODES[i];n=nodes[node_id];assert n['$type']=='scnSectionNode' and target(node_id)==(SPEECH_NODES[i+1] if i+1<len(SPEECH_NODES) else RECEIPT_NODE)
         events=[x['Data'] for x in n['events'] if x['Data']['$type']=='scnDialogLineEvent'];assert len(events)==1;e=events[0]
-        assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0) and e['duration']==turn_ms(row,c['timing'])
-        assert n['sectionDuration']['stu']==e['startTime']+e['duration']+c['timing']['section_tail_ms']
+        assert e['screenplayLineId']['id']==screenplay_line_id(i) and e['startTime']==row.get('lead_in_ms',0)
+        assert e['duration']==turn_ms(row,c['timing'])+c['timing']['section_tail_ms']
+        assert n['sectionDuration']['stu']==e['startTime']+e['duration']
         assert e['voParams']['voContext']=='Vo_Context_Minor_Activity'
         line=next(x for x in s['screenplayStore']['lines'] if x['itemId']['id']==screenplay_line_id(i))
         assert line['speaker']['id']==(0 if row['speaker']=='voss' else 1)

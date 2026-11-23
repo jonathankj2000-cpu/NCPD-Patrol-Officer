@@ -1,3 +1,28 @@
+NCPD PATROL v0.20f1 DIALOGUE HANDOFF - COMPLETE BRANCH TEST
+
+Controlled ambience test: the ten speech events now cover the existing last
+500 ms of their scene sections. Every voice start, section boundary, pause and
+the complete 143.836-second conversation stay unchanged. The v0.20f audio
+context stays the same so only event-tail coverage changes. An audible fix
+has not been confirmed yet; the eventless tail is a candidate, not proof.
+
+All original voice files, lipsync, native V IDs, text, caption changes, LookAt
+and idle pose stay unchanged. A final caption can remain for an extra 500 ms.
+Existing 300 ms Voss lead-ins remain. All 50 REDscript files, encounter Lua,
+wanted/evidence, dispatch, duty, rewards and save facts are unchanged.
+
+Install all 131 files and fully restart. Use a save before Voss's briefing or
+the existing explicit test replay. Compare the same location and audio settings
+against v0.20f, especially pauses before/after V and Voss and the first/final
+lines. Confirm normal voices, lipsync, captions, no overlap and quest completion.
+
+WolvenKit roundtrip/extraction and the 46 portable regression suites check the
+package and unchanged voice schedule. Native mixer behavior needs in-game
+confirmation. Requirements and native API versions are unchanged.
+Existing Andrea Olivato MIT attribution is retained.
+
+Earlier version notes follow.
+
 NCPD PATROL v0.20f WANTED AND DIALOGUE - COMPLETE BRANCH TEST
 
 Contractor death now requests three native wanted stars once per encounter.

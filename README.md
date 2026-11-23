@@ -1,5 +1,21 @@
 # NCPD Patrol
 
+## v0.20f1 — Dialogue transition test
+
+The ten Voss/V speech events now cover the existing final 500 ms of their scene
+sections. Every voice start, pause, section boundary and the full 143.836-second
+conversation are unchanged. This tests whether the previously eventless tails
+contribute to the reported ambience cuts. The v0.20f audio context stays fixed
+for this comparison; an audible improvement has not yet been confirmed.
+
+[Download the complete v0.20f1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20f1_Dialogue_Handoff_TEST.zip)
+
+Install the complete package, fully restart, and use a save before the briefing
+or the existing explicit test replay. Compare ambience around both speakers.
+Voice/lipsync files and caption changes are retained; the last caption can stay
+visible for an extra half second. Wanted, evidence, all REDscript and encounter
+logic are unchanged. [Details](docs/VOSS_DIALOGUE_TAIL_v020f1.md).
+
 ## v0.20f — Assassination pursuit and dialogue ambience test
 
 Killing Voss's contractor now requests three native wanted stars once per

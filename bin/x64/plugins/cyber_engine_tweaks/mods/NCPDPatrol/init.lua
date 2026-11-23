@@ -1,4 +1,4 @@
--- NCPD Patrol v0.20f Wanted and Dialogue | native assassination pursuit and private dialogue mix
+-- NCPD Patrol v0.20f1 Dialogue Handoff | speech events cover existing section tails
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -354,7 +354,7 @@ onClear=function(output) OffBooks.clear(output or status) end,
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.20f Wanted and Dialogue loaded. Contractor death requests three native wanted stars once; escape and cooldown remain native. Private Voss dialogue uses a lower-priority mix context for testing ambience continuity. Working evidence and dialogue timing retained. Install the complete package and fully restart the game.")
+    status("v0.20f1 Dialogue Handoff loaded. Ten speech events now cover the existing 500 ms section tails. Voice starts, pauses, overlap guard, media and wanted/evidence logic are retained. Audible ambience result requires testing. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

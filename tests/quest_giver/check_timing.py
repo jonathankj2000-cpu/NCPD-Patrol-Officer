@@ -32,7 +32,7 @@ def audit(scene,contract):
                 assert line['itemId']['id']==packed
                 row=contract['conversation'][index]
                 start=event['startTime']/1000;end=start+event['duration']/1000
-                assert length-end>=.499,'No quiet tail before the next turn'
+                assert abs(length-end)<.001,'Speech event must cover its section tail'
                 if row['speaker']=='voss':
                     audio=wem_info((assets.DIR/'media'/row['wem']).read_bytes())['duration_seconds']
                     # All observed overlaps (up to two seconds) must fit
@@ -71,7 +71,7 @@ def main():
         # Independent readability bounds: no subsecond flash or oversized
         # return of the original whole-paragraph wall of text.
         changes=[0]+[p['start_seconds']+c['timing']['subtitle_delay_ms']/1000 for p in parts[1:]]
-        changes.append(assets.turn_ms(row,c['timing'])/1000)
+        changes.append((assets.turn_ms(row,c['timing'])+c['timing']['section_tail_ms'])/1000)
         for i,part in enumerate(parts):
             hold=changes[i+1]-changes[i];shortest=min(shortest,hold)
             assert hold>=3 and len(part['text'])<=160,(row['key'],part,hold)

@@ -1,13 +1,13 @@
-"""Build the complete assassination pursuit and private dialogue-mix test."""
+"""Build the isolated speech-event tail coverage test as a complete package."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import hashlib,json,os,subprocess,sys,zipfile
 from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
-BASE='a70f6c697ec39ef502b8e3bec5f610a33b96b4a3'
+BASE='9957b3cb4f34355ea0046dc7503962e8c940b886'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.20f_Wanted_Dialogue_TEST.zip'
-REPORT='NCPD_Patrol_v0.20f_Wanted_Dialogue_verification.json'
+NAME='NCPD_Patrol_v0.20f1_Dialogue_Handoff_TEST.zip'
+REPORT='NCPD_Patrol_v0.20f1_Dialogue_Handoff_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py','tests/quest_giver/check_scene_ids.py','tests/quest_giver/check_timing.py','tests/quest_giver/check_pose_idle.py','tests/off_the_books/check_off_books.py','tests/off_the_books/check_retention.py','tests/off_the_books/check_handoff.py','tests/off_the_books/check_encounter.py','tests/off_the_books/check_death_loot.py','tests/off_the_books/check_evidence_receipt.py','tests/off_the_books/check_wanted.py','tests/quest_giver/check_audio_mix.py']
 
 
@@ -20,20 +20,18 @@ def main():
  lua=LuaRuntime()
  for p in modules:lua.eval('function(p) local f,e=loadfile(p);assert(f,e) end')(str(p))
  oldpaths=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
- changed={PREFIX+n for n in ['init.lua','cet_ui.lua','off_the_books.lua']}
- changed.update({'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds','archive/pc/mod/NCPDPatrol_QuestGiverTest.archive'})
+ changed={PREFIX+n for n in ['init.lua','cet_ui.lua']}
+ changed.add('archive/pc/mod/NCPDPatrol_QuestGiverTest.archive')
  new=set()
- sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'));from probe_source import without_wanted_dialogue_branding
- for name in ['init.lua','cet_ui.lua']:assert without_wanted_dialogue_branding((ROOT/PREFIX/name).read_text())==previous(PREFIX+name).decode(),name
- lifecycle=(ROOT/PREFIX/'off_the_books.lua').read_text().replace("n:Version()~=6 then error('Install the complete v0.20f Off the Books package", "n:Version()~=5 then error('Install the complete v0.20e Off the Books package")
- assert lifecycle==previous(PREFIX+'off_the_books.lua').decode(),'Encounter actor lifecycle changed'
+ sys.path.insert(0,str(ROOT/'tests/quest_marker_probe'));from probe_source import without_dialogue_handoff_branding
+ for name in ['init.lua','cet_ui.lua']:assert without_dialogue_handoff_branding((ROOT/PREFIX/name).read_text())==previous(PREFIX+name).decode(),name
  for path in oldpaths:
   if path not in changed:assert (ROOT/path).read_bytes()==previous(path),'Unrelated payload changed: '+path
  for path in ['LICENSE','THIRD_PARTY_NOTICES.txt','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json','assets/officer_down_sites/catalog.json']:
   assert (ROOT/path).read_bytes()==previous(path),'Existing data changed: '+path
- # Only the per-line audio context/cache hash and compiled scene archive
- # change. The dedicated audio suite checks the exact scene delta. All voice,
- # lipsync, text, timing, workspot, quest graph and nine other archives stay exact.
+ # Only ten speech-event durations/cache hash and the compiled scene archive
+ # change. Every absolute voice start, section length, context, source media,
+ # overlap guard, native script and the nine other archives stay exact.
  sys.path.insert(0,str(ROOT/'tests/quest_giver'));from audio_source import AUDIO_ASSETS
  authored=subprocess.check_output(['git','ls-tree','-r','--name-only',BASE,'--','assets/quest_giver_test','assets/off_the_books'],cwd=ROOT,text=True).splitlines()
  for path in authored:
@@ -46,7 +44,7 @@ def main():
   'voss_timing':'tests/quest_giver/check_timing.py','voss_pose_idle':'tests/quest_giver/check_pose_idle.py','off_the_books':'tests/off_the_books/check_off_books.py',
   'voss_retention':'tests/off_the_books/check_retention.py','continuation':'tests/off_the_books/check_handoff.py','encounter':'tests/off_the_books/check_encounter.py','death_loot':'tests/off_the_books/check_death_loot.py','receipt':'tests/off_the_books/check_evidence_receipt.py',
   'wanted':'tests/off_the_books/check_wanted.py','audio_mix':'tests/quest_giver/check_audio_mix.py'}
- with TemporaryDirectory(prefix='ncpd-wanted-dialogue-release-') as tmp:
+ with TemporaryDirectory(prefix='ncpd-dialogue-handoff-release-') as tmp:
   reports={test:Path(tmp)/(key+'.json') for key,test in comparisons.items()}
   for test in TESTS:
    args=[sys.executable,str(ROOT/test)]
@@ -63,7 +61,7 @@ def main():
   assert set(z.namelist())=={p.relative_to(ROOT).as_posix() for p in paths}
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.20f-wanted-dialogue','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.20f1-dialogue-handoff','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'changed_payload':sorted(changed|new|{'README.txt'}),'new_install_files':sorted(new),
   'quest_giver_native_api_version':5,'off_the_books_native_api_version':6,
@@ -74,21 +72,26 @@ def main():
   'confirmed_readable_receipt_fix_preserved':True,
   'confirmed_death_loot_and_weapon_implementations_unchanged':True,
   'existing_quest_facts_and_real_wanted_escape_return_preserved':True,
-  'only_ten_private_vo_contexts_and_scene_cache_hash_changed':True,
-  'first_scene_voice_lipsync_captions_and_timing_byte_identical':True,
+  'only_ten_speech_event_durations_and_scene_cache_hash_changed':True,
+  'speech_events_cover_the_former_500_ms_section_tails':True,
+  'absolute_voice_starts_section_lengths_and_total_scene_time_identical':True,
+  'original_media_lipsync_caption_text_and_caption_change_schedule_identical':True,
+  'last_caption_can_remain_for_500_ms_longer':True,
+  'vo_context_and_original_overlap_guard_unchanged':True,
+  'all_50_redscripts_and_encounter_lua_byte_identical':True,
   'nine_other_archives_byte_identical':True,'all_54_officer_down_sites_unchanged':True,
   'production_dispatch_duty_and_reward_career_code_unchanged':True,
   'browser_extension_still_optional':True,'actual_game_validation':False,
   'actual_native_police_response_and_cooldown_verified':False,
-  'audio_context_change_experimental':True,'audible_ambience_fix_verified':False,
+  'speech_event_tail_change_experimental':True,'audible_ambience_fix_verified':False,
   'observed_string_operator_compile_error_guard_retained':True,
   'game_checks_required':['Install full 131-file package and fully restart the game',
-   'Replay or use a save before Voss briefing: listen to ambience before/after both speakers and confirm all ten voices/lipsync/timing',
-   'Use a save before target death for the new chase; killing the contractor raises native heat to three stars once',
-   'A higher wanted level stays higher; unconscious targets and unrelated NPC deaths do not trigger this report',
-   'Retrieve remains active until Take or Read; native wanted then selects Escape; cool off normally and Return becomes active',
-   'Save/load during pursuit and after escape: no renewed wanted request, duplicate item or dialogue replay',
-   'An existing save whose contractor is already dead does not gain a new chase on upgrade'],
+   'Replay or use a save before Voss briefing and compare the same location/audio settings against v0.20f',
+   'Listen for ambience dips before and after both Voss and V lines, including first and final lines',
+   'Confirm every voice, lipsync, caption block, original pause and absence of overlapping speech',
+   'The existing 300 ms Voss lead-ins remain; this experiment only fills the 500 ms eventless section tails',
+   'Finish the briefing and confirm the retained Voss and existing encounter continue normally',
+   'Wanted, evidence, save facts, dispatch and duty code are unchanged'],
   'zip_path':release.relative_to(ROOT).as_posix(),'zip_bytes':len(body),'zip_sha256':hashlib.sha256(body).hexdigest(),'zip_git_blob':blob(body),
   'files':{p.relative_to(ROOT).as_posix():{'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'git_blob':blob(p.read_bytes())} for p in paths}}
  (ROOT/'releases'/REPORT).write_text(json.dumps(report,indent=2)+'\n')

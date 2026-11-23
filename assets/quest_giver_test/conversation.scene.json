@@ -26,7 +26,7 @@
         "$type": "scnSceneSolutionHash",
         "sceneSolutionHash": {
           "$type": "scnSceneSolutionHashHash",
-          "sceneSolutionHashDate": "13721638912035698691"
+          "sceneSolutionHashDate": "7566336010319024185"
         }
       },
       "version": 5,
@@ -486,7 +486,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 16150,
+                      "duration": 16650,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -684,7 +684,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 4000,
+                      "duration": 4500,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -882,7 +882,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 22317,
+                      "duration": 22817,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -1080,7 +1080,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 5500,
+                      "duration": 6000,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -1278,7 +1278,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 11917,
+                      "duration": 12417,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -1476,7 +1476,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 4500,
+                      "duration": 5000,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -1674,7 +1674,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 29451,
+                      "duration": 29951,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -1885,7 +1885,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 22317,
+                      "duration": 22817,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -2476,7 +2476,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 7500,
+                      "duration": 8000,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
@@ -2674,7 +2674,7 @@
                         "role": "Full",
                         "speakers": []
                       },
-                      "duration": 12884,
+                      "duration": 13384,
                       "executionTagFlags": 0,
                       "id": {
                         "$type": "scnSceneEventId",
