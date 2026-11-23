@@ -6,8 +6,8 @@ from build_vip_refactor_release import TESTS as EXISTING_TESTS
 ROOT=Path(__file__).resolve().parents[1]
 BASE='6197a48def37b8bdcf2dcf785a0e81e9a7d9fee4'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
-NAME='NCPD_Patrol_v0.20a_Off_the_Books_TEST.zip'
-REPORT='NCPD_Patrol_v0.20a_Off_the_Books_verification.json'
+NAME='NCPD_Patrol_v0.20a1_Startup_Fix_TEST.zip'
+REPORT='NCPD_Patrol_v0.20a1_Startup_Fix_verification.json'
 TESTS=[*EXISTING_TESTS,'tests/quest_marker_probe/check_probe.py','tests/fixed_markers/check_fixed.py','tests/vip_routes/check_routes.py','tests/officer_down/check_officer_down.py','tests/scene_survey/check_survey.py','tests/scene_survey/check_settling.py','tests/scene_survey/check_staging.py','tests/scene_survey/check_functional.py','tests/officer_down/check_catalog.py','tests/officer_down/check_gameplay.py','tests/partner_safety/check_safety.py','tests/officer_down/check_repeat.py','tests/scene_survey/check_discovery.py','tests/scene_survey/check_discovery_landing.py','tests/officer_down/check_site_expansion.py','tests/cet_ui/check_current_controls.py','tests/quest_giver/check_quest_giver.py','tests/quest_giver/check_voss_media.py','tests/quest_giver/check_subtitles.py','tests/quest_giver/check_scene_ids.py','tests/quest_giver/check_timing.py','tests/quest_giver/check_pose_idle.py','tests/off_the_books/check_off_books.py','tests/off_the_books/check_retention.py']
 
 def blob(b):return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
@@ -30,6 +30,19 @@ def main():
   assert without_offbooks((ROOT/PREFIX/name).read_text())==previous(PREFIX+name).decode(),name
  assert without_retained_lua((ROOT/PREFIX/'quest_giver_test.lua').read_text())==previous(PREFIX+'quest_giver_test.lua').decode()
  assert without_retained_native((ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds').read_text())==previous('r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds').decode()
+ # The hotfix changes exactly one gameplay expression from v0.20a. Validate
+ # that scope in addition to the older pre-encounter payload freeze above.
+ hotfix_base='720ea85924a52fbc2eb98c54ad62349c7057eaf1'
+ hotfix_paths=subprocess.check_output(['git','ls-tree','-r','--name-only',hotfix_base,'--','bin','r6','archive'],cwd=ROOT,text=True).splitlines()
+ from probe_source import without_offbooks_compile_fix
+ for path in hotfix_paths:
+  before=subprocess.check_output(['git','show',hotfix_base+':'+path],cwd=ROOT)
+  after=(ROOT/path).read_bytes()
+  if path in {PREFIX+'init.lua',PREFIX+'cet_ui.lua'}:after=without_offbooks_compile_fix(after.decode()).encode()
+  if path=='r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds':
+   assert before.count(b'ReadAction.GetJournalEntryFromAction(read.GetID()) == this.ShardPath()')==1
+   before=before.replace(b'ReadAction.GetJournalEntryFromAction(read.GetID()) == this.ShardPath()',b'Equals(ReadAction.GetJournalEntryFromAction(read.GetID()), this.ShardPath())')
+  assert after==before,'Unrelated v0.20a hotfix payload changed: '+path
  for path in oldpaths:
   if path not in changed:assert (ROOT/path).read_bytes()==previous(path),'Unrelated payload changed: '+path
  frozen=['LICENSE','assets/scene_survey/sites.json','assets/fixed_markers/catalog.json','assets/vip/route-sites.json',
@@ -67,7 +80,7 @@ def main():
   assert not any(p.endswith('.jsonl') or p.endswith('_report.json') for p in z.namelist())
   for p in paths:assert z.read(p.relative_to(ROOT).as_posix())==p.read_bytes()
  body=release.read_bytes()
- report={'version':'v0.20a-off-the-books','base_commit':BASE,'source_commit':os.environ.get('GITHUB_SHA'),
+ report={'version':'v0.20a1-startup-fix','base_commit':BASE,'hotfix_base_commit':hotfix_base,'source_commit':os.environ.get('GITHUB_SHA'),
   'install_files':len(paths),'lua_modules_parsed':len(modules),'redscript_files':len(scripts),'portable_tests':TESTS,
   'comparisons':results,'new_payload':sorted(added),'changed_payload':sorted(changed),
   'officer_down_sites':54,'all_54_existing_catalogue_entries_unchanged':True,
@@ -78,6 +91,8 @@ def main():
   'production_dispatch_facade_unchanged':True,'all_payment_career_and_runtime_evidence_ledgers_unchanged':True,
   'automatic_weights':{'scanner':45,'vip':27,'cyberpsycho':18,'officer_down':10},
   'browser_extension_still_optional':True,'actual_new_quest_gameplay_validation':False,
+  'observed_v020a_string_operator_compile_error_guarded':True,'hotfix_gameplay_change':'Use Equals for the readable journal path String comparison',
+  'all_ten_v020a_archives_byte_identical':True,
   'record_provenance':json.loads((ROOT/'assets/off_the_books/records.json').read_text()),
   'new_archive_validation':json.loads((ROOT/'assets/off_the_books/compiled.json').read_text()),
   'game_checks_required':['Complete original Voss briefing; off-duty operation and contractor pin activate',

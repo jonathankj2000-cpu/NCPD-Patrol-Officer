@@ -1,7 +1,13 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_offbooks_compile_fix(source):
+    source=source.replace('-- NCPD Patrol v0.20a1 Startup Fix | compatible readable-path comparison','-- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss')
+    source=source.replace('v0.20a1 Startup Fix loaded. Off the Books readable-path comparison corrected for the game compiler. Existing quest, actors, shard and Voss conversation retained. Install the complete package and fully restart the game.','v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.20a1 Startup Fix###','NCPD Patrol - v0.20a Off the Books###')
+
 def without_offbooks(source):
+    source=without_offbooks_compile_fix(source)
     source=source.replace('-- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss','-- NCPD Patrol v0.19h1 Voss Idle Pose | one idle-only request for the existing workspot')
     source=source.replace('v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.','v0.19h1 Voss Idle Pose loaded. OFF DUTY: Testing > Quest giver prototype. Idle-only mode requested once for Voss after pose activation; v0.19h conversation and caption timing retained. Install the complete package and fully restart the game.')
     source=source.replace('NCPD Patrol - v0.20a Off the Books###','NCPD Patrol - v0.19h1 Voss Idle Pose###')

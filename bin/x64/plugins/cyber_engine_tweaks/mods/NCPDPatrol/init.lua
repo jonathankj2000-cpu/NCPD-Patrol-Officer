@@ -1,4 +1,4 @@
--- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss
+-- NCPD Patrol v0.20a1 Startup Fix | compatible readable-path comparison
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -354,7 +354,7 @@ onClear=function(output) OffBooks.clear(output or status) end,
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.")
+    status("v0.20a1 Startup Fix loaded. Off the Books readable-path comparison corrected for the game compiler. Existing quest, actors, shard and Voss conversation retained. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

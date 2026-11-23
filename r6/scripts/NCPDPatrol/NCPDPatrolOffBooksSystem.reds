@@ -65,7 +65,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
             || !IsDefined(TweakDBInterface.GetItemRecord(t"Items.generic_arasaka_family_backstory_shard")) { return false; };
         read = ItemActionsHelper.GetReadAction(ItemID.FromTDBID(t"Items.NCPDPatrol_VossEvidence01"));
         return IsDefined(read) && read.GetID() == t"ItemAction.NCPDPatrol_VossEvidenceRead01"
-            && ReadAction.GetJournalEntryFromAction(read.GetID()) == this.ShardPath();
+            && Equals(ReadAction.GetJournalEntryFromAction(read.GetID()), this.ShardPath());
     }
     public func IsReady() -> Bool {
         return NCPDPatrolMarkerSession.WorldReady() && IsDefined(this.Quests()) && IsDefined(this.Journal())

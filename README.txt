@@ -1,3 +1,16 @@
+NCPD PATROL v0.20a1 STARTUP FIX - COMPLETE BRANCH TEST
+
+Fixes the reported REDscript NO_MATCHING_OVERLOAD at OffBooksSystem line 68.
+The String journal-path comparison now uses Equals(). The newer offline front
+end had accepted ==; the compatibility guard now rejects that exact shipped
+v0.20a source and checks typed String variables, literals and return values.
+
+Install all 129 files over the existing mod and restart the game. There is no
+quest/save reset required. All ten archives and the existing off-duty quest,
+actors, readable shard, briefing media and timings are retained. The only
+gameplay expression changed is this compatibility fix; version labels differ.
+Actual game-cache compilation must be confirmed on the affected installation.
+
 NCPD PATROL v0.20a OFF THE BOOKS - COMPLETE BRANCH TEST
 
 Adds the next off-duty quest stage after the working Voss briefing. Eliminate

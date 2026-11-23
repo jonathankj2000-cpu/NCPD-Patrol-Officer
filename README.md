@@ -1,5 +1,18 @@
 # NCPD Patrol
 
+## v0.20a1 — Startup compilation fix
+
+Fixes the supplied REDscript `NO_MATCHING_OVERLOAD` error in
+`NCPDPatrolOffBooksSystem.reds:68`: the readable journal path now uses
+`Equals()` for its String comparison. The newer offline checker had accepted
+the previous `==`; the compatibility guard now rejects that exact shipped
+v0.20a source before packaging. Quest logic and all ten archives are retained.
+
+[Download the complete v0.20a1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20a1_Startup_Fix_TEST.zip)
+
+Overwrite with the complete 129-file package and restart. There is no quest or
+save reset required. Then continue the existing off-duty test as described below.
+
 ## v0.20a — Off the Books encounter
 
 After the existing Voss briefing, a separate **off-duty** quest sends V to an
