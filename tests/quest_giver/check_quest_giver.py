@@ -208,7 +208,7 @@ def main():
     assert m.lua.eval('QNative:GetPoseResource()')==contract['presentation']['workspot']
     m.lua.execute('QNative.Version=function() return 1 end')
     assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
-    assert 'complete v0.19h1' in m.f.qlog[len(m.f.qlog)]
+    assert 'complete v0.20a' in m.f.qlog[len(m.f.qlog)]
     m=runtime(docs);m.step(1);assert not m.f.qmod.active() and len(m.f.creates)==0 and not m.sms_notifications
     m.start();assert m.f.qpin.active and m.f.tracked.path==m.f.qroot+'/main/talk'
     assert len(m.sms_notifications)==1 and m.sms_notifications[0]['text']==contract['sms']['text']

@@ -57,6 +57,7 @@ EulerAngles.new=function(roll,pitch,yaw)
  return {Roll=roll,Pitch=pitch,Yaw=yaw,__vector='EulerAngles',ToQuat=function(self) return self end}
 end
 local e=f.entities;local create,delete=e.CreateEntity,e.DeleteEntity
+f.qBaseCreateEntity=create -- native boundary reused by the separate quest harness
 function e:CreateEntity(spec)
  local helper=spec.templatePath==QNative:GetPoseHelperTemplate()
  assert(helper or spec.recordID=='Character.NCPDPatrol_QG_Investigator' or spec.recordID=='Vehicle.NCPDPatrol_QG_Hella')

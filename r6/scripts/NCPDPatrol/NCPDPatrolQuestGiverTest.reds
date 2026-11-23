@@ -7,7 +7,7 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_marker = null; this.m_previous = null; this.m_tracking = false;
     }
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     public func GetPoseHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\quest_giver_test\\voss_wait_pose.ent"; }
     public func GetPoseResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot"; }
     // idle-only pose begin
@@ -16,7 +16,7 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
         let params: ref<questUseWorkspotParamsV1>;
         let target: EntityReference;
         let workspots: ref<WorkspotGameSystem>;
-        if !NCPDPatrolMarkerSession.WorldReady() || this.IsMenuOpen() || this.GetStage() != 1
+        if !NCPDPatrolMarkerSession.WorldReady() || this.IsMenuOpen() || (this.GetStage() != 1 && this.GetStage() != 3)
             || !IsDefined(npc) || !npc.IsAttached() || npc.IsDead()
             || npc.GetRecordID() != t"Character.NCPDPatrol_QG_Investigator" { return false; };
         workspots = GameInstance.GetWorkspotSystem(this.GetGameInstance());

@@ -47,7 +47,7 @@ def main():
             function fake:GetRecordID() return 'Character.Other' end
             assert(not QNative:RequestPoseIdle(fake),flag)
         end
-        for _,value in ipairs({0,2,3}) do
+        for _,value in ipairs({0,2}) do
             qs:SetFactStr(stage,value);assert(not QNative:RequestPoseIdle(npc))
         end
         qs:SetFactStr(stage,1)
@@ -61,7 +61,7 @@ def main():
     # Missing/older installed bridges cannot partially activate the quest.
     m=runtime(docs);m.lua.execute('QNative.Version=function() return 2 end')
     assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
-    assert 'complete v0.19h1' in m.f.qlog[len(m.f.qlog)]
+    assert 'complete v0.20a' in m.f.qlog[len(m.f.qlog)]
     # This remains cosmetic: refusal does not remove a visible Voss, stop her
     # existing spot, alter the voice timeline or cancel the SMS/meeting quest.
     for flag in ['qposeNoNativeSystem','qposeIdleExecuteThrows']:

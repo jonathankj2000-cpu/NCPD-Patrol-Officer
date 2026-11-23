@@ -21,7 +21,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolQuestGiverTest')
-    if not n or n:Version()~=3 then error('Install the complete v0.19h1 quest giver package and restart the game') end
+    if not n or n:Version()~=4 then error('Install the complete v0.20a quest giver package and restart the game') end
     return n
 end
 local function entities()
@@ -229,6 +229,68 @@ local function preparePose(n,step)
     return pose.stable>=.5
 end
 function M.configure(value) context=value or {};recover=true end
+-- retained Voss helpers begin
+local function retaining()
+    return context.keepAfterBriefing and context.keepAfterBriefing()==true
+end
+local function maintainRetained(n,step)
+    local player=Game.GetPlayer();local s=entities()
+    if not player or not player:IsAttached() or distance(player:GetWorldPosition(),SITE)>120 then return end
+    collect()
+    local npcRow,carRow,helperRow
+    for _,row in ipairs(rows) do
+        if s:IsTagged(row.id,CName.new(TAG..'_npc')) then
+            if npcRow then error('Duplicate retained Voss actors; clear the test') end
+            npcRow=row;row.npc=true;row.position=point(SITE)
+        elseif s:IsTagged(row.id,CName.new(TAG..'_car')) then carRow=row
+        elseif s:IsTagged(row.id,CName.new(TAG..'_pose')) then helperRow=row;row.helper=true end
+        row.object=s:GetEntity(row.id)
+        if row.npc and row.object and row.object:IsAttached() then row.position=row.object:GetWorldPosition() end
+    end
+    if not npcRow and not carRow then
+        -- Both saved actors are absent, rather than merely streamed out.
+        -- Reuse the validated original placement and the same private records.
+        if helperRow then
+            rows={helperRow}
+            if not cleanup() then return end
+        end
+        rows={};spawn(player);phase='complete';pose=nil
+        return
+    end
+    if not npcRow or not carRow then return end -- never duplicate a surviving pair member
+    rows={npcRow,carRow};if helperRow then rows[#rows+1]=helperRow end
+    for _,row in ipairs({npcRow,carRow}) do
+        if not row.object or not row.object:IsAttached() then
+            if not s:IsSpawning(row.id) then s:EnableEntity(row.id) end
+            return
+        end
+    end
+    if npcRow.object:GetRecordID()~=TweakDBID.new(NPC) or carRow.object:GetRecordID()~=TweakDBID.new(CAR) then
+        error('Unexpected retained Voss/car record; actors retained')
+    end
+    if not pose or pose.actor~=npcRow.object then
+        pose={actor=npcRow.object,ground=npcRow.object:GetWorldPosition(),anchor=helperRow}
+        if helperRow and helperRow.object and Game.GetWorkspotSystem():IsActorInWorkspot(npcRow.object) then
+            pose.requested=true
+        end
+    end
+    if not pose.returnReady and not pose.warning then
+        local ok,complete=pcall(preparePose,n,step)
+        if ok and complete then pose.returnReady=true
+        elseif not ok then pose.warning=tostring(complete);lastFailure=pose.warning end
+    end
+end
+function M.actor()
+    for _,row in ipairs(rows) do
+        if row.npc and row.object and row.object:IsAttached() and row.object:GetRecordID()==TweakDBID.new(NPC) then return row.object end
+    end
+    return nil
+end
+function M.briefingComplete()
+    local ok,value=pcall(function() return owner():IsSucceeded() end)
+    return ok and value==true
+end
+-- retained Voss helpers end
 function M.state() return label end
 function M.active() return phase~='idle' end
 function M.blocksDuty() return phase~='idle' and phase~='complete' end
@@ -258,6 +320,7 @@ function M.start(status)
 end
 function M.clear(status)
     if not ready() then say('Load a save before clearing this test.',status);return false end
+    if context.onClear then context.onClear(status) end -- retained Voss clear hook
     local ok,err=pcall(function() owner():RequestClear();collect();phase,age,poll='clearing',0,0;recover=false end)
     if not ok then say(tostring(err),status);return false end
     say('Test cancellation requested; waiting for the native scene to release its actors.',status)
@@ -267,7 +330,8 @@ local function update(delta)
     if not ready() or delta<=0 or delta>.5 then return end
     if recover then
         local n=owner();collect();recover=false
-        if #rows>0 or n:GetStage()~=0 then M.clear() end
+        if retaining() and n:GetStage()==3 then phase='complete' -- retained Voss recovery hook
+        elseif #rows>0 or n:GetStage()~=0 then M.clear() end
     end
     if phase=='idle' then return end
     local n=owner()
@@ -285,7 +349,9 @@ local function update(delta)
         if phase~='complete' then
             if not n:IsSucceeded() then error('Scene ended without a proven journal completion') end
             phase='complete';say('Quest completed after goodbye. Briefing finished. Clear the test before replaying the conversation.')
+            if context.onBriefingComplete then context.onBriefingComplete() end -- retained Voss continuation hook
         end
+        if retaining() then maintainRetained(n,step) end -- retained Voss return hook
         return
     end
     if stage==0 then
@@ -335,6 +401,7 @@ function M.update(delta)
     local ok,err=pcall(update,delta)
     if not ok then
         if lastFailure~=tostring(err) then say(tostring(err));lastFailure=tostring(err) end
+        if retaining() and M.briefingComplete() then phase='complete';return end -- retained Voss error hook
         if phase~='idle' and phase~='clearing' then M.clear() end
     end
 end
@@ -344,6 +411,6 @@ function M.diagnostics()
     return 'phase='..phase..' | owned actors='..#rows..' | pose='..poseState..' | pose proof='..tostring(pose and pose.observed or 'none')..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
 end
 function M.shutdown()
-    if ready() and M.active() then pcall(function() owner():RequestClear() end) end
+    if ready() and M.active() and not retaining() then pcall(function() owner():RequestClear() end) end
 end
 return M

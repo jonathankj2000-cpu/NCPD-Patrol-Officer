@@ -1,5 +1,21 @@
 # NCPD Patrol
 
+## v0.20a — Off the Books encounter
+
+After the existing Voss briefing, a separate **off-duty** quest sends V to an
+Arasaka contractor and two elite guards in Cherry Blossom Market. Kill the
+contractor, loot his real readable evidence shard, lose any pursuing NCPD and
+return to Voss. Voss and her Hella remain available at the original meeting.
+The return conversation and final quest reward are future work.
+
+[Download the complete v0.20a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20a_Off_the_Books_TEST.zip)
+
+Install all 129 files and fully restart. OFF DUTY > CET > Testing > Quest giver
+prototype > activate. If the briefing is already completed in the save, use
+**TEST: Continue Off the Books after briefing** instead. Normal patrol dispatch,
+rewards and the working first conversation are retained.
+[Implementation, test steps and limits](docs/OFF_THE_BOOKS_v020a.md).
+
 ## v0.19h1 — Voss idle pose
 
 Requests native idle-only mode for Voss's existing arms-crossed workspot once

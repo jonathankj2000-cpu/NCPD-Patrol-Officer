@@ -298,6 +298,16 @@ function M.new(context)
                 if ImGui.Button("Clear quest giver test") then test.clear(status) end
                 if ImGui.Button("Log quest giver diagnostics") then status("Quest giver test | "..test.diagnostics()) end
             end
+            -- offbooks UI begin
+            local operation=context.offBooks
+            if operation then
+                ImGui.TextWrapped(operation.state())
+                if ImGui.Button("TEST: Continue Off the Books after briefing") then operation.begin(status) end
+                if ImGui.Button("Clear Off the Books encounter only") then operation.clear(status) end
+                if ImGui.Button("Log Off the Books diagnostics") then status("Off the Books | "..operation.diagnostics()) end
+                ImGui.TextWrapped("Off-duty operation: eliminate the contractor, loot his actual evidence shard, lose any pursuing NCPD, then return to Voss. Native readable shards are kept in the Shards journal. This slice ends at the return objective; the debrief conversation is separate. Clearing only the encounter retains Voss for another test.")
+            end
+            -- offbooks UI end
             ImGui.TextWrapped("Voss: 1424.737, -2754.759, 204.665; yaw -143.376. A police Hella is parked across the scene 4 m behind her. Both actors spawn within 120 m. English voice and lipsync are included in the complete package.")
         end
         -- qgiver UI end
@@ -366,7 +376,7 @@ function M.new(context)
     function menu.draw()
         ImGui.SetNextWindowSize(660, 620, ImGuiCond.FirstUseEver)
         ImGui.SetNextWindowSizeConstraints(520, 360, 1600, 1200)
-        local visible = ImGui.Begin("NCPD Patrol - v0.19h1 Voss Idle Pose###NCPDPatrolWindow")
+        local visible = ImGui.Begin("NCPD Patrol - v0.20a Off the Books###NCPDPatrolWindow")
         if visible then
             ImGui.Text((context.isOnDuty() and "ON DUTY" or "OFF DUTY") .. "  |  " .. (Dispatch.isBusy() and "BUSY" or "AVAILABLE"))
             if ImGui.Button(context.isOnDuty() and "End Shift" or "Start Shift") then context.toggleDuty() end

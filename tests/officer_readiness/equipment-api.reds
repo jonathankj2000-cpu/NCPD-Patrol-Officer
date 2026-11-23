@@ -22,6 +22,7 @@ public native class DynamicEntitySystem extends IScriptable {
  public native func GetEntity(id: EntityID) -> ref<Entity>;
  public native func IsManaged(id: EntityID) -> Bool;
  public native func IsTagged(id: EntityID, tag: CName) -> Bool;
+ public native func GetTaggedID(tag: CName) -> EntityID;
 }
 @addMethod(GameInstance)
 public static native func GetDynamicEntitySystem() -> ref<DynamicEntitySystem>;

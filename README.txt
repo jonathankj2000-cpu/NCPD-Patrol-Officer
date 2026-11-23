@@ -1,3 +1,37 @@
+NCPD PATROL v0.20a OFF THE BOOKS - COMPLETE BRANCH TEST
+
+Adds the next off-duty quest stage after the working Voss briefing. Eliminate
+the Arasaka contractor at Cherry Blossom Market, loot his actual evidence shard,
+lose any pursuing NCPD, then return to Voss. Non-lethal defeat does not fulfil
+the assassination. Guards explicitly defend the target when attacked. Normal
+wanted/police consequences remain; a shift reset does not cancel this quest.
+
+The shard is a real native readable. Looting consumes its inventory instance
+into the game's Shards journal, where ARASAKA INTERNAL - TRANSFER AUTHORIZATION
+can be read. Its actual acquisition is saved independently of target death.
+
+Voss and her Hella are retained at the meeting location and recovered by their
+private tags after loading. The briefing does not replay on return. This slice
+ends at the return objective: no new debrief audio, final reward or milestone
+auto-activation has been added. Existing first-scene media/timings are unchanged.
+
+Install all 129 files and fully restart. Use an off-duty test save. CET > Testing
+> Quest giver prototype > TEST: Activate quest giver quest, then meet Voss.
+If that save already completed her briefing, use TEST: Continue Off the Books
+after briefing. Do not clear the first quest if you want to reuse its receipt.
+
+After the briefing: approach the target marker; kill the target, loot the shard,
+check it in Shards, escape any wanted level and return to Voss. Save/load during
+each stage to check actors and objectives. Clear Off the Books encounter only
+allows another encounter test while retaining Voss and the completed briefing;
+Clear quest giver test explicitly cancels both parts. Native shard history stays.
+
+Validated offline: 47 Lua modules, 48 REDscript files with Browser Extension
+present/absent, 40 portable suites, 10 archives and the full ZIP payload.
+Actual combat AI, loot UI, saved actor serialization, marker rendering and
+placement still require in-game confirmation. Browser Extension stays optional.
+See docs/OFF_THE_BOOKS_v020a.md in the source repository for the complete test.
+
 NCPD PATROL v0.19h1 VOSS IDLE POSE - COMPLETE BRANCH TEST
 
 Requests native idle-only mode once after Voss's existing crossed-arms pose

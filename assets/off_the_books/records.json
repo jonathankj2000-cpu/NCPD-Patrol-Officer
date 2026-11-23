@@ -1,0 +1,16 @@
+{
+  "reference_repository": "CDPR-Modding-Documentation/Cyberpunk-Tweaks",
+  "reference_commit": "0f39f780c92ca389f97fc19cb5ba3c10ba32dd7d",
+  "records": [
+    {"id": "Character.CorpoManArasaka", "header": "CorpoManArasaka : Crowd_NPC_Base", "path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/crowds/communities.tweak", "blob": "823be4ad5cc13ed2469821c723ec1a3895cfc8b9", "affiliation": "Factions.Arasaka"},
+    {"id": "Character.arasaka_cyborg_franged3_shingen_ma_elite", "header": "arasaka_cyborg_franged3_shingen_ma_elite : arasaka_base_ma", "path": "tweaks/base/gameplay/static_data/database/characters/npcs/records/gameplay/factions/arasaka.tweak", "blob": "300f98a0352547d7f25688d7da1fe5c8457a6039", "rarity": "NPCRarity.Elite"},
+    {"id": "Items.generic_arasaka_family_backstory_shard", "header": "generic_arasaka_family_backstory_shard : BaseShard", "path": "tweaks/base/gameplay/static_data/database/readables/generic/generic_readables.tweak", "blob": "c7be744a96337d28633592a55011e405cbde9c59"},
+    {"id": "Items.BaseShard", "header": "BaseShard : Readable", "path": "tweaks/base/gameplay/static_data/database/items/misc/readables.tweak", "blob": "a9f73150254f6307a307b588a84faa57972d3039", "item_type": "ItemType.Gen_Readable"},
+    {"id": "ItemAction.Read", "header": "Read : ItemAction", "path": "tweaks/base/gameplay/static_data/database/object_actions/item_actions.tweak", "blob": "245e945df4a02526f897d35eb84024955c3bda2d"}
+  ],
+  "runtime_tweakdb_check_required": true,
+  "live_game_records_verified": false,
+  "appearance_source": {"database": "AppearanceMenuMod release database 54272353", "record": "Character.CorpoManArasaka", "appearance": "citizen__arasaka_corpo_ma_corporate_01_1"},
+  "native_behavior_source": {"repository": "psiberx/cp2077-codeware", "version": "1.21.4", "files": ["scripts/World/DynamicEntitySpec.reds", "src/App/World/DynamicEntitySystem.cpp"]},
+  "readable_schema_reference": {"repository": "andreaolivato/cyberpunk-codes", "commit": "4aeaad5d235e3a0244c0f1857757d1b01cbcd58e", "path": "gig01_negative_balance/source/raw/mod/negative_balance/journal/gig01.journal.json", "blob": "d88a78b7c3b9fc4c49faf1d9c153252d4eff50a8", "license": "MIT"}
+}

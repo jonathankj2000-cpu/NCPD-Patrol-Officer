@@ -1,4 +1,4 @@
--- NCPD Patrol v0.19h1 Voss Idle Pose | one idle-only request for the existing workspot
+-- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -13,6 +13,7 @@ local Navigation = require("marker_navigation") -- r5 marker hook
 local MarkerProbe = require("quest_marker_probe") -- r4 probe hook
 local Survey = require("scene_survey") -- scene survey hook
 local QuestGiver = require("quest_giver_test") -- qgiver hook
+local OffBooks = require("off_the_books") -- offbooks hook
 local Trunk = require("trunk")
 local onDuty = false
 local overlayOpen = false
@@ -222,6 +223,7 @@ local function ensurePoliceOutfit()
 end
 
 local function startShift()
+    if OffBooks.blocksDuty() then status("Finish the off-duty operation and lose any pursuing NCPD before starting a shift.");return end -- offbooks hook
     -- qgiver guard begin
     if QuestGiver.blocksDuty() then status("Clear the quest giver test before starting a shift.");return end
     -- qgiver guard end
@@ -300,6 +302,7 @@ end
 local function forgetLoadedWorld()
     Survey.reset() -- scene survey hook
     QuestGiver.reset() -- qgiver hook
+    OffBooks.reset() -- offbooks hook
     Navigation.reset() -- r5 marker hook
     MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
     -- Also forget failed cleanup IDs when the previous shift was already over.
@@ -328,6 +331,9 @@ end})
 -- scene survey setup end
 
 -- qgiver setup begin
+-- offbooks setup begin
+OffBooks.configure({status=status,worldReady=Navigation.worldReady,onDuty=function() return onDuty end,voss=function() return QuestGiver.actor() end})
+-- offbooks setup end
 QuestGiver.configure({status=status,worldReady=Navigation.worldReady,overlayOpen=function() return overlayOpen end,canStart=function()
     if onDuty then return false,"Go OFF DUTY before testing the quest giver" end
     if Survey.blocksDuty() then return false,"Finish scene survey/discovery cleanup before this test" end
@@ -336,13 +342,19 @@ QuestGiver.configure({status=status,worldReady=Navigation.worldReady,overlayOpen
         return false,"Clear dispatch/backup actors before testing the quest giver"
     end
     return true
-end})
+end,
+-- offbooks callbacks begin
+keepAfterBriefing=function() return OffBooks.keepVoss() or QuestGiver.briefingComplete() end,
+onBriefingComplete=function() OffBooks.begin(status) end,
+onClear=function(output) OffBooks.clear(output or status) end,
+-- offbooks callbacks end
+})
 -- qgiver setup end
 
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.19h1 Voss Idle Pose loaded. OFF DUTY: Testing > Quest giver prototype. Idle-only mode requested once for Voss after pose activation; v0.19h conversation and caption timing retained. Install the complete package and fully restart the game.")
+    status("v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -355,6 +367,7 @@ registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
     Survey.update(delta) -- scene survey hook
+    OffBooks.update(delta) -- offbooks hook
     QuestGiver.update(delta) -- qgiver hook
     if not isInGame() then
         Navigation.reset() -- r5 marker hook
@@ -428,6 +441,7 @@ end)
 registerForEvent("onShutdown", function()
     Survey.shutdown() -- scene survey hook
     QuestGiver.shutdown() -- qgiver hook
+    OffBooks.shutdown() -- offbooks hook
     pcall(Navigation.finish) -- r5 marker hook
     MarkerProbe.finish(nil, "CET shutdown") -- r4 probe hook
     Trunk.finish()
@@ -450,6 +464,7 @@ local menu = require("cet_ui").new({
     markerProbe=MarkerProbe, -- r4 probe hook
     sceneSurvey=Survey, -- scene survey hook
     questGiver=QuestGiver, -- qgiver hook
+    offBooks=OffBooks, -- offbooks hook
     isOnDuty=function() return onDuty end,
     getLastMessage=function() return lastMessage end,
     status=status, toggleDuty=toggleDuty, requestBackup=requestBackup,

@@ -148,3 +148,15 @@ is reused for the native player actor and original string-ID replies. The full
 Andrea Olivato copyright/license notice above applies. No fixer01 story/media
 or original game V audio is redistributed. New story, Voss recordings and
 facial banks are supplied by the NCPD Patrol author.
+
+v0.20a Off the Books readable-shard journal
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: gig01_negative_balance/source/raw/mod/negative_balance/journal/gig01.journal.json
+Blob: d88a78b7c3b9fc4c49faf1d9c153252d4eff50a8
+
+The minimal onscreens/emails/quests/onscreen-group/readable-entry hierarchy in
+tools/build_off_the_books_assets.py and the generated private journal adapts
+that MIT-licensed schema. Andrea Olivato's copyright and full MIT permission
+notice above apply. No Negative Balance story, audio, animation or texture
+assets are distributed. The readable text is supplied for NCPD Patrol.

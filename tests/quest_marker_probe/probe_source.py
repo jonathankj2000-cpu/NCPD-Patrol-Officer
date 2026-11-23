@@ -1,6 +1,18 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_offbooks(source):
+    source=source.replace('-- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss','-- NCPD Patrol v0.19h1 Voss Idle Pose | one idle-only request for the existing workspot')
+    source=source.replace('v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.','v0.19h1 Voss Idle Pose loaded. OFF DUTY: Testing > Quest giver prototype. Idle-only mode requested once for Voss after pose activation; v0.19h conversation and caption timing retained. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.20a Off the Books###','NCPD Patrol - v0.19h1 Voss Idle Pose###')
+    source=re.sub(r'^.* -- offbooks hook[^\n]*\n','',source,flags=re.M)
+    source=re.sub(r'^-- offbooks setup begin\n.*?^-- offbooks setup end\n','',source,flags=re.M|re.S)
+    source=source.replace('end,\n-- offbooks callbacks begin','end\n-- offbooks callbacks begin')
+    source=re.sub(r'^-- offbooks callbacks begin\n.*?^-- offbooks callbacks end\n','',source,flags=re.M|re.S)
+    source=source.replace('end\n})\n-- qgiver setup end','end})\n-- qgiver setup end')
+    source=re.sub(r'^            -- offbooks UI begin\n.*?^            -- offbooks UI end\n','',source,flags=re.M|re.S)
+    return source
+
 def without_location_exclusion(source):
     # Exact reviewed H10 eligibility addition only; historical traces retain
     # all other geography/RNG/actor policy. New target cases test the exclusion.
@@ -12,6 +24,7 @@ def without_location_exclusion(source):
     return source
 
 def without_voss_idle_branding(source):
+    source=without_offbooks(source)
     source=source.replace('-- NCPD Patrol v0.19h1 Voss Idle Pose | one idle-only request for the existing workspot','-- NCPD Patrol v0.19h Voss Timing | delayed captions and guarded automatic turns')
     source=source.replace('v0.19h1 Voss Idle Pose loaded. OFF DUTY: Testing > Quest giver prototype. Idle-only mode requested once for Voss after pose activation; v0.19h conversation and caption timing retained. Install the complete package and fully restart the game.','v0.19h Voss Timing loaded. Longer Voss turn windows and pauses; 19 subtitle blocks with later switches. Clear the old quest-giver test, install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.19h1 Voss Idle Pose###','NCPD Patrol - v0.19h Voss Timing###')
@@ -216,3 +229,4 @@ RETIRED_BUTTONS={
 PROBE_BUTTONS.add('Clear leftover quest marker experiment')
 
 PROBE_BUTTONS.update({'TEST: Activate quest giver quest','Clear quest giver test','Log quest giver diagnostics'})
+PROBE_BUTTONS.update({'TEST: Continue Off the Books after briefing','Clear Off the Books encounter only','Log Off the Books diagnostics'})
