@@ -98,7 +98,10 @@ def main():
     m.f.obInventory[target.GetEntityID(target).hash][m.f.obitem]=0;restore(m);m.step(10)
     assert quantity(m)==0 and m.f.obseedCount==1 and fact(m,'corpse_repair_used')==0
     m=current();encounter(m);target=empty_saved_corpse(m);m.f.obPlayerItems[m.f.obitem]=1;m.step(4)
-    assert quantity(m)==0 and m.f.obseedCount==1 and fact(m,'acquired')==0
+    # Actual player possession now provides a durable receipt even if its item
+    # event is delayed; the corpse must still never receive another copy.
+    assert quantity(m)==0 and m.f.obseedCount==1 and fact(m,'acquired')==1
+    assert m.books.EvidenceReceiptSource(m.books)=='player inventory readback'
     # Query IDs find the evidence even when a specific instance lookup misses.
     m=current();m.f.obExactInstanceMiss=True;encounter(m);assert quantity(m)==1 and m.f.obseedCount==1
     killed(m);m.step(2);assert quantity(m)==1 and fact(m,'corpse_repair_used')==0
@@ -111,8 +114,10 @@ def main():
     for flag in ['obMissingDeathLoot','obWrongDeathLoot','obWrongDeathCount']:
         m=runtime();setattr(m.f,flag,True);assert not m.books.RecordsReady(m.books)
     # Preserve the in-game-confirmed combat override and all first-scene media.
-    for path in ['r6/scripts/NCPDPatrol/NCPDPatrolOffBooksCombat.reds','r6/scripts/NCPDPatrol/NCPDPatrolOffBooksLoot.reds','r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds']:
+    for path in ['r6/scripts/NCPDPatrol/NCPDPatrolOffBooksCombat.reds','r6/scripts/NCPDPatrol/NCPDPatrolOffBooksLoot.reds']:
         assert (ROOT/path).read_text()==old(path),path
+    events='r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds'
+    assert (ROOT/events).read_text().split('@wrapMethod(PlayerPuppet)')[0]==old(events).split('@wrapMethod(PlayerPuppet)')[0]
     system=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds').read_text()
     previous=old('r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds')
     def combat_slice(s):return s[s.index('    // A decision exception'):s.index('    public func Version()')]

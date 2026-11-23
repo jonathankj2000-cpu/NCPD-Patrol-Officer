@@ -120,7 +120,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     }
 
 
-    public func Version() -> Int32 { return 4; }
+    public func Version() -> Int32 { return 5; }
     private func Quests() -> ref<QuestsSystem> { return GameInstance.GetQuestsSystem(this.GetGameInstance()); }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Patrol() -> ref<NCPDPatrolSystem> { return NCPDPatrolSystem.Get(this.GetGameInstance()); }
@@ -205,7 +205,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.IsMenuOpen() { return "Close in-game menus before continuing"; };
         if this.OnDuty() { return "Go OFF DUTY before continuing"; };
         first = this.FirstBriefing();
-        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20d package"; };
+        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20e package"; };
         if !first.HasBriefingReceipt() { return "Voss final dialogue receipt not yet recorded; inspect quest giver diagnostics"; };
         if !this.RecordsReady() { return "Contractor/guard/shard records, native evidence loot table or exact Read action unavailable in TweakDB"; };
         if !IsDefined(this.Journal().GetEntryByString(this.Root(), "gameJournalQuest")) { return "Missing journal quest: " + this.Root(); };
@@ -229,6 +229,9 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.Set("qty_before_seen", 0); this.Set("qty_after_seen", 0);
         this.Set("qty_before", 0); this.Set("qty_after", 0); this.Set("acquisition_event", 0);
         this.Set("corpse_confirmed", 0); this.Set("corpse_repair_used", 0);
+        this.Set("evidence_receipt_source", 0); this.Set("evidence_item_seen", 0); this.Set("evidence_read_seen", 0);
+        this.Set("evidence_item_quantity", 0);
+        this.CaptureEvidenceBaseline();
         this.ResetEncounterProbes();
         this.Set("provoked", 0); this.Set("player_provoked", 0); this.Set("returned", 0); this.Set("escape_used", 0);
         this.Set("created_target", 0); this.Set("created_guard1", 0); this.Set("created_guard2", 0);
@@ -402,14 +405,74 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     }
     public func HasEvidence() -> Bool { return this.Fact("acquired") > 0; }
     public func TargetDead() -> Bool { return this.Fact("killed") > 0; }
-    public func ObserveEvidence(player: ref<PlayerPuppet>, item: ItemID) -> Void {
-        // Gen_Readable has already been consumed into the Shards journal by
-        // the original player handler. The real acquisition event is proof.
-        if !NCPDPatrolMarkerSession.WorldReady() || !this.IsActive() || this.Fact("seeded") <= 0
-            || !IsDefined(player) || player != GetPlayer(this.GetGameInstance()) || !ItemID.IsValid(item)
-            || ItemID.GetTDBID(item) != t"Items.NCPDPatrol_VossEvidence01" || this.Fact("acquired") > 0 { return; };
-        this.Set("acquisition_event", 1);
+    public func ShardJournalOwned() -> Bool {
+        let entry: wref<JournalEntry>;
+        let state: gameJournalEntryState;
+        if !IsDefined(this.Journal()) { return false; };
+        entry = this.Journal().GetEntryByString(this.ShardPath(), "gameJournalOnscreen");
+        if !IsDefined(entry) { return false; };
+        state = this.Journal().GetEntryState(entry);
+        return Equals(state, gameJournalEntryState.Active) || Equals(state, gameJournalEntryState.Succeeded);
+    }
+    public func PlayerEvidenceQuantity() -> Int32 {
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let tx: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        if !IsDefined(player) || !IsDefined(tx) { return -1; };
+        return tx.GetItemQuantity(player, ItemID.CreateQuery(t"Items.NCPDPatrol_VossEvidence01"));
+    }
+    private func CaptureEvidenceBaseline() -> Void {
+        let owned: Int32 = 0;
+        let quantity: Int32 = this.PlayerEvidenceQuantity();
+        if this.ShardJournalOwned() { owned = 1; };
+        if quantity < 0 { quantity = 0; };
+        this.Set("evidence_baseline", 1); this.Set("evidence_journal_before", owned);
+        this.Set("evidence_player_before", quantity);
+    }
+    private func RecordEvidenceReceipt(source: Int32, event: Bool) -> Void {
+        if !this.HasEvidence() { this.Set("evidence_receipt_source", source); };
+        if event { this.Set("acquisition_event", 1); };
         this.Set("acquired", 1);
+        this.m_evidenceLootReason = "Evidence receipt confirmed; quest selects escape or return";
+    }
+    private func ValidEvidenceEvent(player: ref<PlayerPuppet>, item: ItemID) -> Bool {
+        return NCPDPatrolMarkerSession.WorldReady() && this.IsActive() && this.Fact("seeded") > 0
+            && IsDefined(player) && player == GetPlayer(this.GetGameInstance()) && ItemID.IsValid(item)
+            && ItemID.GetTDBID(item) == t"Items.NCPDPatrol_VossEvidence01";
+    }
+    public func ObserveEvidence(player: ref<PlayerPuppet>, item: ItemID, opt quantity: Int32) -> Void {
+        if !this.ValidEvidenceEvent(player, item) { return; };
+        this.Set("evidence_item_seen", 1); this.Set("evidence_item_quantity", quantity);
+        this.RecordEvidenceReceipt(1, true);
+    }
+    public func ObserveEvidenceRead(player: ref<PlayerPuppet>, item: ItemID) -> Void {
+        if !this.ValidEvidenceEvent(player, item) { return; };
+        this.Set("evidence_read_seen", 1);
+        this.RecordEvidenceReceipt(2, true);
+    }
+    private func SyncEvidenceReceipt() -> Void {
+        let quantity: Int32;
+        if this.HasEvidence() || this.Fact("seeded") <= 0 { return; };
+        quantity = this.PlayerEvidenceQuantity();
+        if this.Fact("evidence_baseline") == 0 {
+            // v0.20d cycle 1 had no baseline and could miss a completed pickup.
+            // The unique readable receipt is proof; an empty corpse alone is not.
+            if this.GetCycle() == 1 && this.TargetDead() && this.Fact("corpse_confirmed") > 0 {
+                if quantity > 0 { this.RecordEvidenceReceipt(3, false); return; };
+                if this.ShardJournalOwned() { this.RecordEvidenceReceipt(5, false); return; };
+            };
+            this.CaptureEvidenceBaseline();
+        };
+        if quantity > this.Fact("evidence_player_before") { this.RecordEvidenceReceipt(3, false); return; };
+        if this.Fact("evidence_journal_before") == 0 && this.ShardJournalOwned() { this.RecordEvidenceReceipt(4, false); };
+    }
+    public func EvidenceReceiptSource() -> String {
+        let source: Int32 = this.Fact("evidence_receipt_source");
+        if source == 1 { return "native item-added event"; };
+        if source == 2 { return "native evidence Read action"; };
+        if source == 3 { return "player inventory readback"; };
+        if source == 4 { return "unique shard journal activation"; };
+        if source == 5 { return "legacy first-cycle shard journal receipt"; };
+        return "none";
     }
     private func ReleaseHolds() -> Void {
         if IsDefined(this.m_target) && IsDefined(this.m_holdTarget) { AIComponent.CancelCommand(this.m_target, this.m_holdTarget); };
@@ -534,6 +597,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         };
         // A real death, not defeated/unconscious, fulfils Voss's instruction.
         if IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.IsDead() { this.Set("killed", 1); };
+        this.SyncEvidenceReceipt();
         this.MaintainEvidenceLoot(delta);
         stage = this.GetStage(); next = stage;
         // Facts survive shift/session reset, but this operation progresses off duty.
@@ -599,6 +663,11 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let confirmed: Int32 = this.Fact("corpse_confirmed");
         let repaired: Int32 = this.Fact("corpse_repair_used");
         let generated: Bool = IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.WasLootGenerated();
+        let itemSeen: Bool = this.Fact("evidence_item_seen") > 0;
+        let readSeen: Bool = this.Fact("evidence_read_seen") > 0;
+        let eventQuantity: Int32 = this.Fact("evidence_item_quantity");
+        let baseline: Int32 = this.Fact("evidence_baseline");
+        let journalBefore: Int32 = this.Fact("evidence_journal_before");
         if this.ValidActor(n"target", this.m_target) {
             record = TDBID.ToStringDEBUG(this.m_target.GetRecordID());
             death = "alive"; if this.m_target.IsDead() { death = "dead"; };
@@ -607,6 +676,6 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.Fact("qty_before_seen") > 0 { before = IntToString(this.Fact("qty_before")); };
         if this.Fact("qty_after_seen") > 0 { after = IntToString(this.Fact("qty_after")); };
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | \(loot) | death loot configured=\(this.EvidenceLootConfigured()) | native loot generated=\(generated) | corpse confirmed=\(confirmed) | corpse repair used=\(repaired) | evidence loot status=\(this.m_evidenceLootReason) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | item callback seen=\(itemSeen) | item callback quantity=\(eventQuantity) | evidence read seen=\(readSeen) | player shard now=\(this.PlayerEvidenceQuantity()) | shard journal owned=\(this.ShardJournalOwned()) | receipt baseline=\(baseline) | journal owned before=\(journalBefore) | receipt source=\(this.EvidenceReceiptSource()) | \(loot) | death loot configured=\(this.EvidenceLootConfigured()) | native loot generated=\(generated) | corpse confirmed=\(confirmed) | corpse repair used=\(repaired) | evidence loot status=\(this.m_evidenceLootReason) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
     }
 }

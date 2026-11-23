@@ -1,3 +1,34 @@
+NCPD PATROL v0.20e EVIDENCE RECEIPT - COMPLETE BRANCH TEST
+
+Fixes taken shard/unchanged Retrieve: killed=1, shard now=0, corpse confirmed=1,
+acquired=0 and acquisition event=false. The journal owner waited correctly;
+the missing acquisition receipt is now handled through native readable routes.
+
+The player observer snapshots incoming identity before native consumption and
+accepts an actual exact-item event even when remaining quantity is zero. The
+exact private evidence Read action is also observed after native completion.
+Both preserve original handling once. Actual player possession and the unique
+Shards entry provide durable recovery. New cycles record starting ownership,
+so old history cannot automatically complete a new pickup. Empty body alone is
+never proof. No item, actor or reward is granted by this fix.
+
+Install all 131 files and restart. Load the affected save without Clear/replay.
+Close in-game menus and wait briefly. If the evidence is registered in Shards,
+expect acquired=1 and stage=4/Return when not wanted, or stage=3/Escape while
+wanted. Losing wanted then activates Return. Final debrief remains future work.
+
+Log Off the Books diagnostics now includes callback quantity, completed read,
+player quantity, exact journal ownership, baseline and receipt source. A journal
+recovery can show acquisition event=false with acquired=1; no old item event is
+fabricated. The receipt and objective survive save/load.
+
+44 portable suites cover the published v0.20d stall, zero quantity, payload
+mutation, actual native ReadAction body, saved receipt/history guards, delayed
+journal activation and Escape/Return. Source/API checks include optional BEF.
+Confirmed loot/weapon implementation, ten archives and Voss media are unchanged.
+Native delivery/rendering and the supplied save still need game confirmation.
+See docs/OFF_THE_BOOKS_RECEIPT_v020e.md in the source repository.
+
 NCPD PATROL v0.20d EVIDENCE LOOT - COMPLETE BRANCH TEST
 
 The supplied v0.20c log showed one shard alive, zero after death and zero loot

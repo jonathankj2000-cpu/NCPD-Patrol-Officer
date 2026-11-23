@@ -1,7 +1,13 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_evidence_receipt_branding(source):
+    source=source.replace('-- NCPD Patrol v0.20e Evidence Receipt | durable readable acquisition and Return progression','-- NCPD Patrol v0.20d Evidence Loot | native death loot and saved-corpse repair')
+    source=source.replace('v0.20e Evidence Receipt loaded. Native shard pickup/read and durable Shards receipts advance Off the Books to Escape or Return. Existing first-cycle pickup saves can recover. Working loot, combat and Voss conversation retained. Install the complete package and fully restart the game.','v0.20d Evidence Loot loaded. Contractor has a private native shard loot table; existing empty corpses can recover once after native loot generation. Working combat and Voss conversation retained. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.20e Evidence Receipt###','NCPD Patrol - v0.20d Evidence Loot###')
+
 def without_death_loot_branding(source):
+    source=without_evidence_receipt_branding(source)
     source=source.replace('-- NCPD Patrol v0.20d Evidence Loot | native death loot and saved-corpse repair','-- NCPD Patrol v0.20c Off the Books Encounter | scoped combat and native corpse loot refresh')
     source=source.replace('v0.20d Evidence Loot loaded. Contractor has a private native shard loot table; existing empty corpses can recover once after native loot generation. Working combat and Voss conversation retained. Install the complete package and fully restart the game.','v0.20c Off the Books Encounter loaded. Restaurant-scoped Tier2 exception and native corpse loot refresh; Voss conversation retained. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.20d Evidence Loot###','NCPD Patrol - v0.20c Off the Books Encounter###')

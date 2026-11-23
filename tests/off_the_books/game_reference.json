@@ -162,6 +162,13 @@
       "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
       "source_sha256": "f27733dc288a2df0b49b7f46cd19c895bf51fa32886a6aebc64362ee519a20c5",
       "source": "  protected cb func OnSetLootInteractionAccessEvent(evt: ref<SetLootInteractionAccessibilityEvent>) -> Bool {\n    this.UpdateLootInteraction();\n  }"
+    },
+    "ReadAction.CompleteAction": {
+      "path": "cyberpunk/items/actions/readAction.swift",
+      "line": 4,
+      "file_sha256": "5f6a6c1fd936be38d54dd0a580ecd01466c0ebaa25358a43a64f3cdea2cbad6b",
+      "source_sha256": "ff0df8f1a01390550814a166be3b17810f8d33e904145675d3b24eb053c19e78",
+      "source": "  public func CompleteAction(gameInstance: GameInstance) -> Void {\n    let entry: wref<JournalOnscreen>;\n    let entryString: String;\n    let shardUIevent: ref<NotifyShardRead>;\n    super.CompleteAction(gameInstance);\n    entryString = this.GetJournalEntryFromAction();\n    if IsStringValid(entryString) {\n      GameInstance.GetJournalManager(gameInstance).ChangeEntryState(entryString, \"gameJournalOnscreen\", gameJournalEntryState.Active, JournalNotifyOption.Notify);\n      entry = GameInstance.GetJournalManager(gameInstance).GetEntryByString(entryString, \"gameJournalOnscreen\") as JournalOnscreen;\n    };\n    shardUIevent = new NotifyShardRead();\n    shardUIevent.title = entry.GetTitle();\n    shardUIevent.text = entry.GetDescription();\n    shardUIevent.m_imageId = entry.GetIconID();\n    shardUIevent.entry = entry;\n    GameInstance.GetUISystem(gameInstance).QueueEvent(shardUIevent);\n  }"
     }
   }
 }

@@ -15,7 +15,7 @@ sys.path.insert(0,str(ROOT/'tools'));import build_off_the_books_assets as assets
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 ROOTPATH='quests/minor_quest/ncpd_patrol_off_the_books'
 
-def runtime(retain=True,documents=None,native_source=None):
+def runtime(retain=True,documents=None,native_source=None,events_source=None):
     docs=assets.outputs();assets.validate(docs)
     m=first_runtime(documents or first_assets.outputs()[0]);lua=m.lua;g=lua.globals()
     if native_source is None:native=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds')
@@ -32,11 +32,13 @@ def runtime(retain=True,documents=None,native_source=None):
     prepare(lua)
     from death_loot_fixture import prepare as death_prepare
     death_prepare(lua)
-    event=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds').read_text()
+    event=events_source if events_source is not None else (ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds').read_text()
     with TemporaryDirectory(prefix='ncpd-offbooks-events-') as d:
-        for owner,name,original in [('NPCPuppet','HitObserver','OriginalOTBHit'),('PlayerPuppet','ItemObserver','OriginalOTBAdded')]:
+        receivers=[('NPCPuppet','HitObserver','OriginalOTBHit','evt'),('PlayerPuppet','ItemObserver','OriginalOTBAdded','evt')]
+        if '@wrapMethod(ReadAction)' in event:receivers.append(('ReadAction','ReadObserver','OriginalOTBRead','gameInstance'))
+        for owner,name,original,argument in receivers:
             body=event.split('@wrapMethod('+owner+')')[1].split('@wrapMethod')[0]
-            body=body.replace('wrappedMethod(evt)',original+'(this, evt)')
+            body=body.replace('wrappedMethod('+argument+')',original+'(this, '+argument+')')
             p=Path(d)/(name+'.reds');p.write_text('public class '+name+' extends IScriptable {\n'+body+'\n}')
             g[name]=lua.execute(translate(p))
     ref=json.loads((ROOT/'assets/quest_marker_probe/reference-contract.json').read_text())
@@ -53,6 +55,7 @@ def runtime(retain=True,documents=None,native_source=None):
     lua.execute((HERE/'engine.lua').read_text())
     lua.execute((HERE/'encounter_engine.lua').read_text())
     lua.execute((HERE/'death_loot_engine.lua').read_text())
+    lua.execute((HERE/'receipt_engine.lua').read_text())
     if retain:m.f.obConfigureRetention()
     oldstep=m.step
     def step(seconds=.25):
@@ -135,7 +138,7 @@ def main():
     m.f.ready=True;m.f.menu=True;m.step(3);assert len(m.f.creates)==3
     m.f.menu=False;m.step(2);assert len(m.f.creates)==6
     # Main-player and exact-event guards; vanilla still receives every event.
-    m.lua.execute("ItemObserver.OnItemAddedToInventory(F.player,{itemID='Items.money',currentQuantity=1});ItemObserver.OnItemAddedToInventory(F.player,{itemID=F.obitem,currentQuantity=0})")
+    m.lua.execute("ItemObserver.OnItemAddedToInventory(F.player,{itemID='Items.money',currentQuantity=1});ItemObserver.OnItemAddedToInventory(F.player,{itemID='',currentQuantity=0})")
     assert fact(m,'acquired')==0 and m.f.obOriginalAdded==2
     m.f.duty=True;killed(m);assert fact(m,'killed')==1 and fact(m,'stage')==1
     m.f.duty=False;m.step(1);assert fact(m,'stage')==2

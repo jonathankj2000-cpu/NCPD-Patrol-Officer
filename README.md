@@ -1,5 +1,21 @@
 # NCPD Patrol
 
+## v0.20e — Evidence pickup progression
+
+Fixes the reported taken shard leaving `acquired=0` and Retrieve active. The
+item observer snapshots identity before native readable consumption and accepts
+zero-remaining-quantity notifications. It also observes the exact native Read
+action and reconciles actual possession or the unique Shards entry. Per-cycle
+starting ownership prevents old shard history from completing a new encounter.
+
+[Download the complete v0.20e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20e_Evidence_Receipt_TEST.zip)
+
+Install all 131 files, restart and load the affected first-cycle save without
+Clear. If the taken evidence is already in Shards, its missing receipt can
+recover: Escape when wanted, otherwise Return to Voss. Close in-game menus for
+the update. Confirmed loot, combat, Voss media and all archives are retained.
+[Details and verification limits](docs/OFF_THE_BOOKS_RECEIPT_v020e.md).
+
 ## v0.20d — Evidence death loot
 
 Fixes the reported `shard before death=1`, `after death=0` and zero refresh
