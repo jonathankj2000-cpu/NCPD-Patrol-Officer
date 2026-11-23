@@ -1,7 +1,13 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_death_loot_branding(source):
+    source=source.replace('-- NCPD Patrol v0.20d Evidence Loot | native death loot and saved-corpse repair','-- NCPD Patrol v0.20c Off the Books Encounter | scoped combat and native corpse loot refresh')
+    source=source.replace('v0.20d Evidence Loot loaded. Contractor has a private native shard loot table; existing empty corpses can recover once after native loot generation. Working combat and Voss conversation retained. Install the complete package and fully restart the game.','v0.20c Off the Books Encounter loaded. Restaurant-scoped Tier2 exception and native corpse loot refresh; Voss conversation retained. Install the complete package and fully restart the game.')
+    return source.replace('NCPD Patrol - v0.20d Evidence Loot###','NCPD Patrol - v0.20c Off the Books Encounter###')
+
 def without_offbooks_encounter(source):
+    source=without_death_loot_branding(source)
     source=source.replace('-- NCPD Patrol v0.20c Off the Books Encounter | scoped combat and native corpse loot refresh','-- NCPD Patrol v0.20b Voss Continuation | durable briefing receipt and pending journal activation')
     source=source.replace('v0.20c Off the Books Encounter loaded. Restaurant-scoped Tier2 exception and native corpse loot refresh; Voss conversation retained. Install the complete package and fully restart the game.','v0.20b Voss Continuation loaded. Completed briefing is retained independently of delayed journal state; Off the Books retries activation and keeps Voss. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.20c Off the Books Encounter###','NCPD Patrol - v0.20b Voss Continuation###')

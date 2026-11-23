@@ -23,7 +23,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolOffBooksSystem')
-    if not n or n:Version()~=3 then error('Install the complete v0.20c Off the Books package and restart the game') end
+    if not n or n:Version()~=4 then error('Install the complete v0.20d Off the Books package and restart the game') end
     return n
 end
 local function system()
@@ -154,7 +154,7 @@ function M.begin(status)
         end
         if context.onDuty and context.onDuty() then error('Go OFF DUTY before this operation') end
         if not collect() or next(rows) or cleanupPending then error('Previous encounter cleanup must finish before a new test') end
-        if not n:RecordsReady() then error('Required contractor/guard/shard records or Read action unavailable in TweakDB; install the complete package') end
+        if not n:RecordsReady() then error('Required contractor/guard/shard records, native evidence loot table or Read action unavailable in TweakDB; install the complete package') end
         if not n:Begin() then error(n:GetStartReason()) end
         recover=false;stable=0;age=0;lastError=nil
         lastStartFailure,pendingReason=nil,nil

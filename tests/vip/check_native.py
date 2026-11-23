@@ -16,13 +16,12 @@ source=re.sub(r'public enum gamedataNPCHighLevelState \{[^}]+\}', 'public enum g
 # The stub values are placeholders; the production code uses symbolic names.
 # QuestGiverVariant is used by CCSharedMappins and the native game enum.
 source=re.sub(r'(public enum gamedataMappinVariant \{)', r'\1 QuestGiverVariant = 999, ', source)
-additions='\n'.join(p.read_text() for p in [ROOT/'tests/career/contracts/vip-vehicle.reds', ROOT/'tests/officer_readiness/equipment-api.reds', ROOT/'tests/trunk_menu/popup-api.reds', ROOT/'tests/beanbagger/damage-api.reds', ROOT/'tests/arrests/recovery-api.reds', ROOT/'tests/quest_marker_probe/native-api.reds', ROOT/'tests/officer_down/native-api.reds', ROOT/'tests/scene_survey/functional-api.reds', ROOT/'tests/partner_safety/native-api.reds', ROOT/'tests/off_the_books/native-api.reds', ROOT/'tests/off_the_books/encounter-api.reds'])
+additions='\n'.join(p.read_text() for p in [ROOT/'tests/career/contracts/vip-vehicle.reds', ROOT/'tests/officer_readiness/equipment-api.reds', ROOT/'tests/trunk_menu/popup-api.reds', ROOT/'tests/beanbagger/damage-api.reds', ROOT/'tests/arrests/recovery-api.reds', ROOT/'tests/quest_marker_probe/native-api.reds', ROOT/'tests/officer_down/native-api.reds', ROOT/'tests/scene_survey/functional-api.reds', ROOT/'tests/partner_safety/native-api.reds', ROOT/'tests/off_the_books/native-api.reds', ROOT/'tests/off_the_books/encounter-api.reds', ROOT/'tests/off_the_books/death-loot-api.reds'])
+source+='\n'+re.sub(r'@(?:addMethod|addField)\(\w+\)\n[^\n]+\n?','',additions)
 for target,method in re.findall(r'@(?:addMethod|addField)\((\w+)\)\n([^\n]+)',additions):
  pattern=r'(public native (?:class|struct) '+target+r'\b[^\{]*\{)'
  source,count=re.subn(pattern,lambda m:m[0]+'\n '+method,source,count=1)
  assert count,target
-additions=re.sub(r'@(?:addMethod|addField)\(\w+\)\n[^\n]+\n?','',additions)
-source+='\n'+additions
 scripts=[base/'localization-api.reds', ROOT/'tests/trunk_menu/codeware-popup-api.reds']+sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
 with tempfile.TemporaryDirectory(prefix='ncpd-native-') as d:
  path=Path(d)/'contracts.reds';path.write_text(source)

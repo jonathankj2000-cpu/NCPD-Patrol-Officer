@@ -177,6 +177,16 @@ def main():
     frozen=subprocess.check_output(['git','ls-tree','-r','--name-only',base,'--','assets/quest_giver_test','assets/off_the_books','archive','r6/tweaks'],cwd=ROOT,text=True).splitlines()
     frozen+=['r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds','bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua']
     for path in frozen:
+        if path=='r6/tweaks/NCPDPatrol_OffTheBooks.yaml':
+            # Only the contractor's private native death-loot table is added;
+            # the new death-loot suite validates its exact schema and identity.
+            from death_loot_fixture import records
+            old=records(subprocess.check_output(['git','show',base+':'+path],cwd=ROOT,text=True));current=records()
+            for key,row in old.items():
+                actual=dict(current[key])
+                if key=='Character.NCPDPatrol_VossContractor01':actual.pop('lootDrop')
+                assert actual==row,key
+            continue
         assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',base+':'+path],cwd=ROOT),path
     exclusions=combat();loot()
     source='\n'.join((ROOT/'r6/scripts/NCPDPatrol'/n).read_text() for n in ['NCPDPatrolOffBooksCombat.reds','NCPDPatrolOffBooksLoot.reds','NCPDPatrolOffBooksSystem.reds'])
@@ -191,7 +201,7 @@ def main():
         'missing_components_and_rejected_events_do_not_claim_success':True,'bounded_refresh_and_reload_rebind':True,
         'actual_item_event_required_no_kill_grant':True,'shard_and_actor_not_duplicated':True,
         'save_transient_resets_before_and_after_pickup':True,'wanted_escape_and_return_preserved':True,
-        'all_first_dialogue_assets_and_existing_npc_item_records_byte_identical':True,
+        'all_first_dialogue_assets_and_existing_npc_item_fields_retained':True,
         'native_zone_sender_identified':False,'rendered_native_loot_ui_verified':False,'actual_game_validation':False}
     p=argparse.ArgumentParser();p.add_argument('--report',type=Path);args=p.parse_args()
     if args.report:args.report.write_text(json.dumps(report,indent=2)+'\n')

@@ -18,6 +18,8 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     private let m_lootPoll: Float;
     private let m_lootAttempts: Int32;
     private let m_lootRefreshed: Bool;
+    private let m_processLootRequested: Bool;
+    private let m_evidenceLootReason: String;
     private let m_combatSampled: Bool;
     private let m_combatAllowed: Bool;
     private let m_requestedTier: Int32;
@@ -37,6 +39,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     }
     private func ResetEncounterProbes() -> Void {
         this.m_lootPoll = 0.0; this.m_lootAttempts = 0; this.m_lootRefreshed = false;
+        this.m_processLootRequested = false; this.m_evidenceLootReason = "Waiting for native death loot";
         this.m_combatSampled = false; this.m_combatAllowed = false;
         this.m_requestedTier = 0; this.m_tierSource = "not sampled";
         this.m_emptyHandsRequested = false; this.m_forceEmptyHandsSample = false;
@@ -117,7 +120,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     }
 
 
-    public func Version() -> Int32 { return 3; }
+    public func Version() -> Int32 { return 4; }
     private func Quests() -> ref<QuestsSystem> { return GameInstance.GetQuestsSystem(this.GetGameInstance()); }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Patrol() -> ref<NCPDPatrolSystem> { return NCPDPatrolSystem.Get(this.GetGameInstance()); }
@@ -157,7 +160,8 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     public func RecordsReady() -> Bool {
         let item: wref<Item_Record> = TweakDBInterface.GetItemRecord(t"Items.NCPDPatrol_VossEvidence01");
         let read: wref<ObjectAction_Record>;
-        if !IsDefined(item) || !IsDefined(TweakDBInterface.GetCharacterRecord(t"Character.NCPDPatrol_VossContractor01"))
+        if !IsDefined(item) || !this.EvidenceLootConfigured()
+            || !IsDefined(TweakDBInterface.GetCharacterRecord(t"Character.NCPDPatrol_VossContractor01"))
             || !IsDefined(TweakDBInterface.GetCharacterRecord(t"Character.NCPDPatrol_VossGuard01"))
             || !IsDefined(TweakDBInterface.GetCharacterRecord(t"Character.NCPDPatrol_VossGuard02"))
             || !IsDefined(TweakDBInterface.GetCharacterRecord(t"Character.CorpoManArasaka"))
@@ -166,6 +170,18 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         read = ItemActionsHelper.GetReadAction(ItemID.FromTDBID(t"Items.NCPDPatrol_VossEvidence01"));
         return IsDefined(read) && read.GetID() == t"ItemAction.NCPDPatrol_VossEvidenceRead01"
             && Equals(ReadAction.GetJournalEntryFromAction(read.GetID()), this.ShardPath());
+    }
+    public func EvidenceLootConfigured() -> Bool {
+        let actor: wref<Character_Record> = TweakDBInterface.GetCharacterRecord(t"Character.NCPDPatrol_VossContractor01");
+        let drop: wref<LootTable_Record>;
+        let entry: wref<LootItem_Record>;
+        if !IsDefined(actor) { return false; };
+        drop = actor.LootDrop();
+        if !IsDefined(drop) || drop.GetID() != t"LootTables.NCPDPatrol_VossEvidence01"
+            || drop.GetLootItemsCount() != 1 || drop.MinItemsToLoot() != 1 || drop.MaxItemsToLoot() != 1 { return false; };
+        entry = drop.GetLootItemsItem(0);
+        return IsDefined(entry) && IsDefined(entry.ItemID()) && entry.ItemID().GetID() == t"Items.NCPDPatrol_VossEvidence01"
+            && entry.DropChance() >= 1.0 && entry.DropCountMin() == 1 && entry.DropCountMax() == 1;
     }
     public func IsReady() -> Bool {
         return NCPDPatrolMarkerSession.WorldReady() && IsDefined(this.Quests()) && IsDefined(this.Journal())
@@ -189,9 +205,9 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.IsMenuOpen() { return "Close in-game menus before continuing"; };
         if this.OnDuty() { return "Go OFF DUTY before continuing"; };
         first = this.FirstBriefing();
-        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20c package"; };
+        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20d package"; };
         if !first.HasBriefingReceipt() { return "Voss final dialogue receipt not yet recorded; inspect quest giver diagnostics"; };
-        if !this.RecordsReady() { return "Contractor/guard/shard records or exact Read action unavailable in TweakDB"; };
+        if !this.RecordsReady() { return "Contractor/guard/shard records, native evidence loot table or exact Read action unavailable in TweakDB"; };
         if !IsDefined(this.Journal().GetEntryByString(this.Root(), "gameJournalQuest")) { return "Missing journal quest: " + this.Root(); };
         if !IsDefined(this.Journal().GetEntryByString(this.Root() + "/main", "gameJournalQuestPhase")) { return "Missing journal phase: " + this.Root() + "/main"; };
         while i <= 4 {
@@ -212,6 +228,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.Set("killed", 0); this.Set("acquired", 0); this.Set("seeded", 0);
         this.Set("qty_before_seen", 0); this.Set("qty_after_seen", 0);
         this.Set("qty_before", 0); this.Set("qty_after", 0); this.Set("acquisition_event", 0);
+        this.Set("corpse_confirmed", 0); this.Set("corpse_repair_used", 0);
         this.ResetEncounterProbes();
         this.Set("provoked", 0); this.Set("player_provoked", 0); this.Set("returned", 0); this.Set("escape_used", 0);
         this.Set("created_target", 0); this.Set("created_guard1", 0); this.Set("created_guard2", 0);
@@ -286,6 +303,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
             if this.m_target != npc {
                 this.m_target = npc; this.m_holdTarget = this.Hold(npc);
                 this.m_lootPoll = 0.0; this.m_lootAttempts = 0; this.m_lootRefreshed = false;
+                this.m_processLootRequested = false;
             };
         } else {
             if Equals(role, n"guard1") {
@@ -304,10 +322,10 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.Fact("seeded") > 0 { return true; };
         tx = GameInstance.GetTransactionSystem(this.GetGameInstance());
         if !IsDefined(tx) { return false; };
-        if tx.GetItemQuantity(this.m_target, item) < 1 {
+        if this.EvidenceQuantity() < 1 {
             if !tx.GiveItem(this.m_target, item, 1) { return false; };
         };
-        if tx.GetItemQuantity(this.m_target, item) < 1 { return false; };
+        if this.EvidenceQuantity() < 1 { return false; };
         this.Set("seeded", 1);
         this.SampleEvidenceInventory();
         return true;
@@ -315,7 +333,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     private func EvidenceQuantity() -> Int32 {
         let tx: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
         if !this.ValidActor(n"target", this.m_target) || !IsDefined(tx) { return -1; };
-        return tx.GetItemQuantity(this.m_target, ItemID.FromTDBID(t"Items.NCPDPatrol_VossEvidence01"));
+        return tx.GetItemQuantity(this.m_target, ItemID.CreateQuery(t"Items.NCPDPatrol_VossEvidence01"));
     }
     private func SampleEvidenceInventory() -> Void {
         let quantity: Int32 = this.EvidenceQuantity();
@@ -331,15 +349,56 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         };
     }
     private func MaintainEvidenceLoot(delta: Float) -> Void {
+        let tx: ref<TransactionSystem>;
+        let quantity: Int32;
+        let player: ref<PlayerPuppet>;
         this.SampleEvidenceInventory();
-        if this.HasEvidence() || !this.Owns(n"target", this.m_target) || !this.m_target.IsDead()
-            || this.EvidenceQuantity() < 1 { return; };
+        if !this.Owns(n"target", this.m_target) || !this.m_target.IsDead() { return; };
         this.m_lootPoll += delta;
         if this.m_lootPoll < 1.0 || this.m_lootAttempts >= 8 { return; };
         this.m_lootPoll = 0.0;
-        if this.m_lootRefreshed && this.m_target.NCPDPatrolOffBooksLootReady() { return; };
+        tx = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        if !IsDefined(tx) { return; };
+        quantity = this.EvidenceQuantity();
+        if this.HasEvidence() {
+            // A restored/generated extra copy is never offered after receipt.
+            if quantity > 0 { tx.RemoveItemByTDBID(this.m_target, t"Items.NCPDPatrol_VossEvidence01", quantity, true); };
+            this.m_evidenceLootReason = "Evidence already acquired; no corpse replenishment";
+            return;
+        };
+        if this.m_lootRefreshed && quantity == 1 && this.m_target.NCPDPatrolOffBooksLootReady() { return; };
         this.m_lootAttempts += 1;
+        if !this.m_target.WasLootGenerated() {
+            // The vanilla disposal path uses this same guard before ProcessLoot.
+            // Never insert evidence ahead of a pending native inventory rebuild.
+            if !this.m_processLootRequested { this.m_processLootRequested = true; this.m_target.ProcessLoot(); };
+            if !this.m_target.WasLootGenerated() {
+                this.m_evidenceLootReason = "Waiting for native ProcessLoot completion; no corpse grant"; return;
+            };
+        };
+        quantity = this.EvidenceQuantity();
+        if quantity > 1 {
+            tx.RemoveItemByTDBID(this.m_target, t"Items.NCPDPatrol_VossEvidence01", quantity - 1, true);
+            quantity = this.EvidenceQuantity();
+        };
+        if quantity == 0 {
+            player = GetPlayer(this.GetGameInstance());
+            if this.Fact("seeded") <= 0 || this.Fact("corpse_confirmed") > 0 || this.Fact("corpse_repair_used") > 0
+                || !IsDefined(player) || tx.GetItemQuantity(player, ItemID.CreateQuery(t"Items.NCPDPatrol_VossEvidence01")) > 0 {
+                this.m_evidenceLootReason = "Empty corpse retained; evidence previously confirmed, pending pickup or recovery already used"; return;
+            };
+            // One migration for the reported v0.20c empty corpse. The item goes
+            // to the owned body only; this never records player acquisition.
+            this.Set("corpse_repair_used", 1);
+            if !tx.GiveItem(this.m_target, ItemID.FromTDBID(t"Items.NCPDPatrol_VossEvidence01"), 1) {
+                this.Set("corpse_repair_used", 0); this.m_evidenceLootReason = "Native corpse evidence restore rejected"; return;
+            };
+            quantity = this.EvidenceQuantity();
+        };
+        if quantity != 1 { this.m_evidenceLootReason = "Waiting for exactly one evidence item in native corpse inventory"; return; };
+        this.Set("seeded", 1); this.Set("corpse_confirmed", 1);
         this.m_lootRefreshed = this.m_target.NCPDPatrolOffBooksRefreshLoot();
+        this.m_evidenceLootReason = "Native death loot confirmed; one shard in corpse, player pickup still required";
     }
     public func HasEvidence() -> Bool { return this.Fact("acquired") > 0; }
     public func TargetDead() -> Bool { return this.Fact("killed") > 0; }
@@ -537,6 +596,9 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let acquired: Int32 = this.Fact("acquired");
         let seeded: Int32 = this.Fact("seeded");
         let acquisition: Bool = this.Fact("acquisition_event") > 0;
+        let confirmed: Int32 = this.Fact("corpse_confirmed");
+        let repaired: Int32 = this.Fact("corpse_repair_used");
+        let generated: Bool = IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.WasLootGenerated();
         if this.ValidActor(n"target", this.m_target) {
             record = TDBID.ToStringDEBUG(this.m_target.GetRecordID());
             death = "alive"; if this.m_target.IsDead() { death = "dead"; };
@@ -545,6 +607,6 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.Fact("qty_before_seen") > 0 { before = IntToString(this.Fact("qty_before")); };
         if this.Fact("qty_after_seen") > 0 { after = IntToString(this.Fact("qty_after")); };
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | \(loot) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | \(loot) | death loot configured=\(this.EvidenceLootConfigured()) | native loot generated=\(generated) | corpse confirmed=\(confirmed) | corpse repair used=\(repaired) | evidence loot status=\(this.m_evidenceLootReason) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
     }
 }

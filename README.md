@@ -1,5 +1,23 @@
 # NCPD Patrol
 
+## v0.20d — Evidence death loot
+
+Fixes the reported `shard before death=1`, `after death=0` and zero refresh
+attempts. The contractor inherited `LootTables.Empty` from his crowd base;
+his private record now declares a native loot table containing one evidence
+shard. The controller waits for native loot generation, checks all item instances,
+trims duplicate corpse copies and can repair an existing empty v0.20c corpse
+once. Evidence is never granted to V on death; real pickup is still required.
+
+[Download the complete v0.20d test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20d_Evidence_Loot_TEST.zip)
+
+Install all 131 files and fully restart, then load the affected save without
+clearing the encounter. Allow 2–3 seconds near the corpse, open ordinary loot
+and take the shard. The existing diagnostic now includes native generation,
+death-loot configuration and one-use recovery state. The working restaurant
+combat override, Voss dialogue and all ten archives are unchanged.
+[Findings and test limits](docs/OFF_THE_BOOKS_DEATH_LOOT_v020d.md).
+
 ## v0.20c — Off the Books restaurant encounter
 
 Adds a quest-scoped exception to native Tier 2 PSM decisions within 20 m of

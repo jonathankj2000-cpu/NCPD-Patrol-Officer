@@ -1,3 +1,39 @@
+NCPD PATROL v0.20d EVIDENCE LOOT - COMPLETE BRANCH TEST
+
+The supplied v0.20c log showed one shard alive, zero after death and zero loot
+refresh attempts, despite both native components being accessible. The crowd
+base inherits LootTables.Empty. The contractor's private record now supplies
+one evidence shard through a native LootTable/LootItem declaration.
+
+The controller waits for WasLootGenerated; the same guarded ProcessLoot call
+used by vanilla body disposal can start missing generation once. It then reads
+all matching item instances and trims excess copies in this owned corpse only.
+An old empty corpse with a previous seed receipt can receive one replacement
+in its inventory. This migration is saved and cannot repeat after confirmed
+corpse evidence, pending player pickup or acquisition. Nothing is granted to V
+on death. Native Loot input and the exact real readable acquisition event still
+control availability/progression. The original after-death=0 observation remains;
+shard now=1 distinguishes a repaired corpse from its historical snapshot.
+
+Install all 131 files and fully restart. Load the existing affected save without
+clearing the quest. Approach the same body, wait 2-3 seconds and take the shard
+through normal loot. Until pickup expect stage=2/acquired=0; afterward escape
+any wanted level and return to Voss. Save/load before pickup and after pickup
+to verify one corpse, one item, no replenishment and a durable receipt.
+
+Log Off the Books diagnostics adds death loot configured, native loot generated,
+corpse confirmed, corpse repair used and the exact current evidence-loot status.
+If native generation stays pending or a grant is rejected, the bounded attempts
+leave Retrieve active. No separate pickup or simulated interaction is added.
+
+43 portable suites and source/API checks cover the exact v0.20c regression,
+native-table schema, old-save migration, rejected/deferred generation, actual
+readback, duplicate trimming, real pickup and saved-actor recovery. Native loot
+generation internals, rendered UI and real serialization require game testing.
+The confirmed restaurant weapon override, first Voss conversation/media, all
+ten archives, dispatch/duty/reward systems and dependencies are unchanged.
+See docs/OFF_THE_BOOKS_DEATH_LOOT_v020d.md in the source repository.
+
 NCPD PATROL v0.20c OFF THE BOOKS ENCOUNTER - COMPLETE BRANCH TEST
 
 During Eliminate/Retrieve only, within 20 m of the Cherry Blossom Market target

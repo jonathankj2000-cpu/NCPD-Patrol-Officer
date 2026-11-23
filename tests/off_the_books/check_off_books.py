@@ -15,10 +15,13 @@ sys.path.insert(0,str(ROOT/'tools'));import build_off_the_books_assets as assets
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 ROOTPATH='quests/minor_quest/ncpd_patrol_off_the_books'
 
-def runtime(retain=True,documents=None):
+def runtime(retain=True,documents=None,native_source=None):
     docs=assets.outputs();assets.validate(docs)
     m=first_runtime(documents or first_assets.outputs()[0]);lua=m.lua;g=lua.globals()
-    native=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds')
+    if native_source is None:native=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds')
+    else:
+        with TemporaryDirectory(prefix='ncpd-offbooks-baseline-') as temp:
+            path=Path(temp)/'native.reds';path.write_text(native_source);native=code(path)
     native=native.replace('local p = nil','local p = Vector4.new(0,0,0,0)').replace('new AIHoldPositionCommand()','NewOTBHold()')
     native=native.replace('path + ','path .. ')
     native=native.replace('self:Objective(self:GetStage()) + ','self:Objective(self:GetStage()) .. ')
@@ -27,6 +30,8 @@ def runtime(retain=True,documents=None):
     g.Books=lua.execute(native)
     from encounter_fixture import prepare
     prepare(lua)
+    from death_loot_fixture import prepare as death_prepare
+    death_prepare(lua)
     event=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds').read_text()
     with TemporaryDirectory(prefix='ncpd-offbooks-events-') as d:
         for owner,name,original in [('NPCPuppet','HitObserver','OriginalOTBHit'),('PlayerPuppet','ItemObserver','OriginalOTBAdded')]:
@@ -47,6 +52,7 @@ def runtime(retain=True,documents=None):
     g.OTBEntries=lua.table_from(entries,recursive=True);g.OTBPins=lua.table_from(pins,recursive=True)
     lua.execute((HERE/'engine.lua').read_text())
     lua.execute((HERE/'encounter_engine.lua').read_text())
+    lua.execute((HERE/'death_loot_engine.lua').read_text())
     if retain:m.f.obConfigureRetention()
     oldstep=m.step
     def step(seconds=.25):

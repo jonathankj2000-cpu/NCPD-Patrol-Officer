@@ -11,6 +11,21 @@ Character.NCPDPatrol_VossContractor01:
   priority: SpawnableObjectPriority.Quest
   quest: NPCQuestAffiliation.SideQuest
   items: []
+  # The crowd base inherits LootTables.Empty. Use native death loot instead.
+  lootDrop: LootTables.NCPDPatrol_VossEvidence01
+
+LootTables.NCPDPatrol_VossEvidence01:
+  $type: LootTable
+  minItemsToLoot: 1
+  maxItemsToLoot: 1
+  lootItems: [LootItems.NCPDPatrol_VossEvidence01]
+
+LootItems.NCPDPatrol_VossEvidence01:
+  $type: LootItem
+  itemID: Items.NCPDPatrol_VossEvidence01
+  dropChance: 1.0
+  dropCountMin: 1
+  dropCountMax: 1
 
 Character.NCPDPatrol_VossGuard01:
   $base: Character.arasaka_cyborg_franged3_shingen_ma_elite
