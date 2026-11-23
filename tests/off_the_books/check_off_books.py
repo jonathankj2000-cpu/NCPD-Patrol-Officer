@@ -25,6 +25,8 @@ def runtime(retain=True,documents=None):
     import re
     native=re.sub(r'(self:Objective\([^)]*\)) \+ ',r'\1 .. ',native)
     g.Books=lua.execute(native)
+    from encounter_fixture import prepare
+    prepare(lua)
     event=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds').read_text()
     with TemporaryDirectory(prefix='ncpd-offbooks-events-') as d:
         for owner,name,original in [('NPCPuppet','HitObserver','OriginalOTBHit'),('PlayerPuppet','ItemObserver','OriginalOTBAdded')]:
@@ -44,6 +46,7 @@ def runtime(retain=True,documents=None):
     assert len(pins)==3
     g.OTBEntries=lua.table_from(entries,recursive=True);g.OTBPins=lua.table_from(pins,recursive=True)
     lua.execute((HERE/'engine.lua').read_text())
+    lua.execute((HERE/'encounter_engine.lua').read_text())
     if retain:m.f.obConfigureRetention()
     oldstep=m.step
     def step(seconds=.25):

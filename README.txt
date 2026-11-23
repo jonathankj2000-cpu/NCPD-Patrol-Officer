@@ -1,3 +1,38 @@
+NCPD PATROL v0.20c OFF THE BOOKS ENCOUNTER - COMPLETE BRANCH TEST
+
+During Eliminate/Retrieve only, within 20 m of the Cherry Blossom Market target
+and 3 m of its floor, the PSM may use native Exploration instead of the area's
+empty-hands Tier2. No blackboard/tier writes, status-effect stripping, safe-area
+override or wanted immunity are added. Native dialogue, scene animations,
+cinematic tiers, independent restrictions and Voss's briefing retain control.
+Leaving the area, retrieving evidence, cancellation or interrupted journal
+state ends the exception. Native Tier2 decisions then resume normally.
+
+After death the owned contractor requests native Inventory accessibility,
+loot-quality/container evaluation and normal Loot interaction refresh. This
+does not add a custom pickup or automatically give V the shard. Killing alone
+still leaves Retrieve active. Only the existing exact-item acquisition event
+records the receipt, then Lose the NCPD (if wanted) or Return to Voss follows.
+
+Log Off the Books diagnostics now includes the actual contractor record, shard
+registration, seeded fact, quantities before/after death and now, death state,
+Inventory/Interaction readiness, observed native Loot input and acquisition
+event. Readiness is not reported as observed loot UI. Updates have a bounded
+retry; missing components/native rejection retain the quest and evidence.
+
+Install all 131 files and fully restart. A working v0.20b encounter can resume;
+do not clear it merely to install. Test drawing/firing inside the restaurant,
+kill the contractor, approach and take the shard through normal corpse loot,
+escape wanted if necessary and return to Voss. Save before taking the shard,
+reload, and verify the same corpse and readable evidence remain available.
+
+Validated offline: 47 Lua modules, 50 REDscript files, 42 portable suites and
+source/API checks with Browser Extension present/absent. All ten archives,
+first Voss dialogue/audio/lipsync, NPC/item definitions, dispatch and duty code
+are unchanged. Native zone sender, event delivery, actual loot UI and real
+save serialization require in-game confirmation. No new dependency is added.
+See docs/OFF_THE_BOOKS_ENCOUNTER_v020c.md in the source repository.
+
 NCPD PATROL v0.20b VOSS CONTINUATION - COMPLETE BRANCH TEST
 
 Fixes the reported post-dialogue auto-clear and missing Off the Books handoff.

@@ -15,6 +15,17 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     private let m_syncPoll: Float;
     private let m_writeStage: Int32;
     private let m_trackPending: Bool;
+    private let m_lootPoll: Float;
+    private let m_lootAttempts: Int32;
+    private let m_lootRefreshed: Bool;
+    private let m_combatSampled: Bool;
+    private let m_combatAllowed: Bool;
+    private let m_requestedTier: Int32;
+    private let m_tierSource: String;
+    private let m_emptyHandsRequested: Bool;
+    private let m_forceEmptyHandsSample: Bool;
+    private let m_upperBodySample: Int32;
+    private let m_highLevelSample: Int32;
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_target = null; this.m_guard1 = null; this.m_guard2 = null;
         this.m_holdTarget = null; this.m_hold1 = null; this.m_hold2 = null;
@@ -22,8 +33,91 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.m_previous = null; this.m_lastObjective = null;
         this.m_syncPoll = 0.0; this.m_writeStage = 0;
         this.m_trackPending = false;
+        this.ResetEncounterProbes();
     }
-    public func Version() -> Int32 { return 2; }
+    private func ResetEncounterProbes() -> Void {
+        this.m_lootPoll = 0.0; this.m_lootAttempts = 0; this.m_lootRefreshed = false;
+        this.m_combatSampled = false; this.m_combatAllowed = false;
+        this.m_requestedTier = 0; this.m_tierSource = "not sampled";
+        this.m_emptyHandsRequested = false; this.m_forceEmptyHandsSample = false;
+        this.m_upperBodySample = 0; this.m_highLevelSample = 0;
+    }
+    // A decision exception, not a blackboard writer. ExplorationEvents owns the
+    // native exit/reset; the untouched SceneTier request resumes outside scope.
+    // Tier 2's empty-hands flag and WeaponReady's HighLevel listener both matter.
+    public func CombatAreaEligible(player: ref<PlayerPuppet>) -> Bool {
+        let position: Vector4;
+        let site: Vector4 = NCPDPatrolOffBooksSystem.Site();
+        let first: ref<NCPDPatrolQuestGiverTest>;
+        if !NCPDPatrolMarkerSession.WorldReady() || (this.GetStage() != 1 && this.GetStage() != 2)
+            || this.HasEvidence() || this.OnDuty() || this.IsMenuOpen() || !this.ObjectiveVisible()
+            || !IsDefined(player) || player != GetPlayer(this.GetGameInstance()) || !player.IsAttached() || player.IsDead()
+            || !this.Owns(n"target", this.m_target) { return false; };
+        first = this.FirstBriefing();
+        if !IsDefined(first) || !first.HasBriefingReceipt() || first.GetStage() == 2 { return false; };
+        position = player.GetWorldPosition();
+        return Vector4.Distance(position, site) <= 20.0
+            && AbsF(position.Z - site.Z) <= 3.0;
+    }
+
+    public func AllowRestaurantExploration(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+        let tier: ref<SceneTier>;
+        let data: ref<SceneTierData>;
+        let player: ref<PlayerPuppet>;
+        let workspots: ref<WorkspotGameSystem>;
+        let scene: ref<SceneSystem>;
+        let sceneInterface: ref<SceneSystemInterface>;
+        let high: Int32;
+        let allowed: Bool;
+        if !IsDefined(stateContext) || !IsDefined(scriptInterface) { return false; };
+        player = scriptInterface.executionOwner as PlayerPuppet;
+        if !this.CombatAreaEligible(player) || !IsDefined(scriptInterface.localBlackboard) { return false; };
+        tier = stateContext.GetPermanentScriptableParameter(n"SceneTier") as SceneTier;
+        if !IsDefined(tier) { return false; };
+        data = tier.GetTierData();
+        if !IsDefined(data) { return false; };
+        high = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.HighLevel);
+        workspots = GameInstance.GetWorkspotSystem(this.GetGameInstance());
+        scene = scriptInterface.GetSceneSystem();
+        if !IsDefined(scene) { return false; };
+        sceneInterface = scene.GetScriptInterface();
+        if !IsDefined(sceneInterface) { return false; };
+        // Independent restrictions, real dialogue, workspots, takedowns, swimming
+        // and higher cinematic tiers retain their original decisions.
+        allowed = Equals(data.tier, GameplayTier.Tier2_StagedGameplay) && data.emptyHands
+            && (high == 1 || high == 2) && IsDefined(workspots) && !workspots.IsActorInWorkspot(player)
+            && !VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), player)
+            && !sceneInterface.IsEntityInDialogue(player.GetEntityID())
+            && !scriptInterface.IsSceneAnimationActive()
+            && !stateContext.IsStateMachineActive(n"LocomotionTakedown")
+            && !stateContext.GetBoolParameter(n"enteredWaterFromSceneTierII", true)
+            && !stateContext.GetBoolParameter(n"ForceEmptyHandsByZone", true)
+            && this.Quests().GetFactStr("ForceEmptyHands") == 0
+            && !StatusEffectSystem.ObjectHasStatusEffect(player, t"GameplayRestriction.NoCombat")
+            && !StatusEffectSystem.ObjectHasStatusEffect(player, t"GameplayRestriction.NoWeapons")
+            && !StatusEffectSystem.ObjectHasStatusEffect(player, t"GameplayRestriction.InDaClub")
+            && !StatusEffectSystem.ObjectHasStatusEffect(player, t"GameplayRestriction.NoWorldInteractions");
+        // Diagnostic samples only. They never own or modify the player's states.
+        this.m_combatSampled = true;
+        this.m_combatAllowed = allowed;
+        this.m_requestedTier = EnumInt(data.tier);
+        this.m_tierSource = data.userDebugInfo;
+        this.m_emptyHandsRequested = data.emptyHands;
+        this.m_forceEmptyHandsSample = stateContext.GetBoolParameter(n"ForceEmptyHands", true);
+        this.m_upperBodySample = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.UpperBody);
+        this.m_highLevelSample = high;
+        return allowed;
+    }
+
+    public static func RestaurantExploration(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+        let owner: ref<NCPDPatrolOffBooksSystem>;
+        if !IsDefined(scriptInterface) || !IsDefined(scriptInterface.executionOwner) { return false; };
+        owner = GameInstance.GetScriptableSystemsContainer(scriptInterface.executionOwner.GetGame()).Get(n"NCPDPatrolOffBooksSystem") as NCPDPatrolOffBooksSystem;
+        return IsDefined(owner) && owner.AllowRestaurantExploration(stateContext, scriptInterface);
+    }
+
+
+    public func Version() -> Int32 { return 3; }
     private func Quests() -> ref<QuestsSystem> { return GameInstance.GetQuestsSystem(this.GetGameInstance()); }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Patrol() -> ref<NCPDPatrolSystem> { return NCPDPatrolSystem.Get(this.GetGameInstance()); }
@@ -95,7 +189,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if this.IsMenuOpen() { return "Close in-game menus before continuing"; };
         if this.OnDuty() { return "Go OFF DUTY before continuing"; };
         first = this.FirstBriefing();
-        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20b package"; };
+        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20c package"; };
         if !first.HasBriefingReceipt() { return "Voss final dialogue receipt not yet recorded; inspect quest giver diagnostics"; };
         if !this.RecordsReady() { return "Contractor/guard/shard records or exact Read action unavailable in TweakDB"; };
         if !IsDefined(this.Journal().GetEntryByString(this.Root(), "gameJournalQuest")) { return "Missing journal quest: " + this.Root(); };
@@ -116,6 +210,9 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if NotEquals(this.m_reason, "") { return false; };
         this.Set("cycle", this.GetCycle() + 1);
         this.Set("killed", 0); this.Set("acquired", 0); this.Set("seeded", 0);
+        this.Set("qty_before_seen", 0); this.Set("qty_after_seen", 0);
+        this.Set("qty_before", 0); this.Set("qty_after", 0); this.Set("acquisition_event", 0);
+        this.ResetEncounterProbes();
         this.Set("provoked", 0); this.Set("player_provoked", 0); this.Set("returned", 0); this.Set("escape_used", 0);
         this.Set("created_target", 0); this.Set("created_guard1", 0); this.Set("created_guard2", 0);
         this.Set("suppress_auto", 0);
@@ -186,7 +283,10 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         if !this.IsReady() || !this.IsActive() || cycle != this.GetCycle() || !this.WasCreated(role) || !this.Owns(role, npc) { return false; };
         if Equals(role, n"target") {
-            if this.m_target != npc { this.m_target = npc; this.m_holdTarget = this.Hold(npc); };
+            if this.m_target != npc {
+                this.m_target = npc; this.m_holdTarget = this.Hold(npc);
+                this.m_lootPoll = 0.0; this.m_lootAttempts = 0; this.m_lootRefreshed = false;
+            };
         } else {
             if Equals(role, n"guard1") {
                 if this.m_guard1 != npc { this.m_guard1 = npc; this.m_hold1 = this.Hold(npc); };
@@ -209,7 +309,37 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         };
         if tx.GetItemQuantity(this.m_target, item) < 1 { return false; };
         this.Set("seeded", 1);
+        this.SampleEvidenceInventory();
         return true;
+    }
+    private func EvidenceQuantity() -> Int32 {
+        let tx: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGameInstance());
+        if !this.ValidActor(n"target", this.m_target) || !IsDefined(tx) { return -1; };
+        return tx.GetItemQuantity(this.m_target, ItemID.FromTDBID(t"Items.NCPDPatrol_VossEvidence01"));
+    }
+    private func SampleEvidenceInventory() -> Void {
+        let quantity: Int32 = this.EvidenceQuantity();
+        if quantity < 0 { return; };
+        if this.m_target.IsDead() {
+            if this.Fact("qty_after_seen") == 0 {
+                this.Set("qty_after", quantity); this.Set("qty_after_seen", 1);
+            };
+        } else {
+            if this.Fact("qty_before_seen") == 0 || this.Fact("qty_before") != quantity {
+                this.Set("qty_before", quantity); this.Set("qty_before_seen", 1);
+            };
+        };
+    }
+    private func MaintainEvidenceLoot(delta: Float) -> Void {
+        this.SampleEvidenceInventory();
+        if this.HasEvidence() || !this.Owns(n"target", this.m_target) || !this.m_target.IsDead()
+            || this.EvidenceQuantity() < 1 { return; };
+        this.m_lootPoll += delta;
+        if this.m_lootPoll < 1.0 || this.m_lootAttempts >= 8 { return; };
+        this.m_lootPoll = 0.0;
+        if this.m_lootRefreshed && this.m_target.NCPDPatrolOffBooksLootReady() { return; };
+        this.m_lootAttempts += 1;
+        this.m_lootRefreshed = this.m_target.NCPDPatrolOffBooksRefreshLoot();
     }
     public func HasEvidence() -> Bool { return this.Fact("acquired") > 0; }
     public func TargetDead() -> Bool { return this.Fact("killed") > 0; }
@@ -219,6 +349,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if !NCPDPatrolMarkerSession.WorldReady() || !this.IsActive() || this.Fact("seeded") <= 0
             || !IsDefined(player) || player != GetPlayer(this.GetGameInstance()) || !ItemID.IsValid(item)
             || ItemID.GetTDBID(item) != t"Items.NCPDPatrol_VossEvidence01" || this.Fact("acquired") > 0 { return; };
+        this.Set("acquisition_event", 1);
         this.Set("acquired", 1);
     }
     private func ReleaseHolds() -> Void {
@@ -344,6 +475,7 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         };
         // A real death, not defeated/unconscious, fulfils Voss's instruction.
         if IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.IsDead() { this.Set("killed", 1); };
+        this.MaintainEvidenceLoot(delta);
         stage = this.GetStage(); next = stage;
         // Facts survive shift/session reset, but this operation progresses off duty.
         if !this.OnDuty() {
@@ -390,13 +522,29 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.m_lastObjective = null; this.m_previous = null;
         this.m_writeStage = 0; this.m_syncPoll = 0.0; this.m_reason = "Explicitly cancelled; waiting for owned actor cleanup";
         this.m_trackPending = false;
+        this.ResetEncounterProbes();
     }
     public func GetDiagnostics() -> String {
         let marker: String = "No scene pin during escape";
+        let record: String = "unloaded";
+        let death: String = "unloaded";
+        let loot: String = "corpse loot=unavailable (contractor not attached)";
+        let before: String = "unobserved";
+        let after: String = "unobserved";
+        let itemValid: Bool = IsDefined(TweakDBInterface.GetItemRecord(t"Items.NCPDPatrol_VossEvidence01"));
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
         let killed: Int32 = this.Fact("killed");
         let acquired: Int32 = this.Fact("acquired");
         let seeded: Int32 = this.Fact("seeded");
+        let acquisition: Bool = this.Fact("acquisition_event") > 0;
+        if this.ValidActor(n"target", this.m_target) {
+            record = TDBID.ToStringDEBUG(this.m_target.GetRecordID());
+            death = "alive"; if this.m_target.IsDead() { death = "dead"; };
+            loot = this.m_target.NCPDPatrolOffBooksLootDiagnostics();
+        };
+        if this.Fact("qty_before_seen") > 0 { before = IntToString(this.Fact("qty_before")); };
+        if this.Fact("qty_after_seen") > 0 { after = IntToString(this.Fact("qty_after")); };
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | \(marker) | \(this.m_reason)";
+        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | contractor record=\(record) | shard registered=\(itemValid) | shard before death=\(before) | shard after death=\(after) | shard now=\(this.EvidenceQuantity()) | contractor=\(death) | acquisition event=\(acquisition) | \(loot) | loot refresh attempts=\(this.m_lootAttempts) | combat area eligible=\(this.CombatAreaEligible(player)) | PSM sampled=\(this.m_combatSampled) | Tier2 exception last sample=\(this.m_combatAllowed) | requested tier=\(this.m_requestedTier) | tier source=\(this.m_tierSource) | requested empty hands=\(this.m_emptyHandsRequested) | ForceEmptyHands last sample=\(this.m_forceEmptyHandsSample) | UpperBody last sample=\(this.m_upperBodySample) | HighLevel last sample=\(this.m_highLevelSample) | \(marker) | \(this.m_reason)";
     }
 }

@@ -1,5 +1,23 @@
 # NCPD Patrol
 
+## v0.20c — Off the Books restaurant encounter
+
+Adds a quest-scoped exception to native Tier 2 PSM decisions within 20 m of
+the restaurant target, with a 3 m floor-height limit. Native exploration handles
+empty-hands and weapon-ready resets; native restrictions resume outside scope.
+Dialogue, cinematics, independent restrictions and wanted behavior are preserved.
+The contractor's corpse requests native inventory accessibility and loot-quality
+refresh; the real shard acquisition event remains necessary for progression.
+
+[Download the complete v0.20c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20c_Off_the_Books_Encounter_TEST.zip)
+
+Install all 131 files and fully restart. Existing v0.20b quest facts and saved
+actors are retained; do not clear a working quest. Use the existing **Log Off
+the Books diagnostics** for quantities before/after death, native loot input
+availability, acquisition receipt and sampled PSM source/state. Native event
+delivery and rendered corpse loot still need in-game confirmation.
+[Findings, limitations and test sequence](docs/OFF_THE_BOOKS_ENCOUNTER_v020c.md).
+
 ## v0.20b — Voss continuation
 
 Fixes the reported `Scene ended without a proven journal completion` auto-clear.

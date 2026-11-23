@@ -23,7 +23,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolOffBooksSystem')
-    if not n or n:Version()~=2 then error('Install the complete v0.20b Off the Books package and restart the game') end
+    if not n or n:Version()~=3 then error('Install the complete v0.20c Off the Books package and restart the game') end
     return n
 end
 local function system()

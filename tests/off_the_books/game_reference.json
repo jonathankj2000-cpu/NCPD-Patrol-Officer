@@ -1,0 +1,167 @@
+{
+  "source_repository": "In-Question/MOD_Development_Reference/DecompiledGameScripts",
+  "commit": "81d996b584a693e8b0f0b20526a9fa38b5c83fe7",
+  "methods": {
+    "DefaultTransition.ResetForceFlags": {
+      "path": "cyberpunk/player/psm/defaultTransition.swift",
+      "line": 25,
+      "file_sha256": "8d3551dedd023f21161f9c7d5c8e609b31993145d43f7da4934e0f39dfa33a90",
+      "source_sha256": "85ae87595e39c6806ad92d2d1375be7ea456821ee346f6673c2a2e9316227241",
+      "source": "  public final func ResetForceFlags(stateContext: ref<StateContext>) -> Void {\n    stateContext.SetPermanentBoolParameter(n\"ForceIdle\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceWalk\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceFreeze\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceEmptyHands\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceSafeState\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceReadyState\", false, true);\n    stateContext.SetPermanentBoolParameter(n\"ForceIdleVehicle\", false, true);\n  }"
+    },
+    "DefaultTransition.SetBlackboardIntVariable": {
+      "path": "cyberpunk/player/psm/defaultTransition.swift",
+      "line": 40,
+      "file_sha256": "8d3551dedd023f21161f9c7d5c8e609b31993145d43f7da4934e0f39dfa33a90",
+      "source_sha256": "7c119fc168e4b03c7396e2a0134244f35f767036c381cda6f6c684b0b8840902",
+      "source": "  public final func SetBlackboardIntVariable(scriptInterface: ref<StateGameScriptInterface>, id: BlackboardID_Int, value: Int32) -> Void {\n    scriptInterface.localBlackboard.SetInt(id, value);\n  }"
+    },
+    "DefaultTransition.GetCurrentSceneTierData": {
+      "path": "cyberpunk/player/psm/defaultTransition.swift",
+      "line": 920,
+      "file_sha256": "8d3551dedd023f21161f9c7d5c8e609b31993145d43f7da4934e0f39dfa33a90",
+      "source_sha256": "30432f178d5459c5797eac2169a3c0ffabbb3e4b57f151a352c960bf714dd08e",
+      "source": "  protected final const func GetCurrentSceneTierData(const stateContext: ref<StateContext>) -> ref<SceneTierData> {\n    let sceneTier: ref<SceneTier> = stateContext.GetPermanentScriptableParameter(n\"SceneTier\") as SceneTier;\n    if IsDefined(sceneTier) {\n      return sceneTier.GetTierData();\n    };\n    return null;\n  }"
+    },
+    "DefaultTransition.IsEmptyHandsForced": {
+      "path": "cyberpunk/player/psm/defaultTransition.swift",
+      "line": 1334,
+      "file_sha256": "8d3551dedd023f21161f9c7d5c8e609b31993145d43f7da4934e0f39dfa33a90",
+      "source_sha256": "088f5ac0b5c7c95fef74bab734ce5e21d2bb0ccc293a6802b656e1dbbbc52974",
+      "source": "  public final const func IsEmptyHandsForced(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {\n    return !scriptInterface.localBlackboard.GetBool(GetAllBlackboardDefs().PlayerStateMachine.SceneAimForced) && !scriptInterface.localBlackboard.GetBool(GetAllBlackboardDefs().PlayerStateMachine.SceneSafeForced) && (stateContext.GetBoolParameter(n\"ForceEmptyHands\", true) || stateContext.GetBoolParameter(n\"ForceEmptyHandsByZone\", true) || Cast<Bool>(scriptInterface.GetQuestsSystem().GetFact(n\"ForceEmptyHands\")) || this.IsNoCombatActionsForced(scriptInterface));\n  }"
+    },
+    "HighLevelTransition.ForceEmptyHands": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 12,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "2788f6e656e340173db20e8ac224e9285dace7bb759906e9b15a00f5ff5f3fd4",
+      "source": "  public final func ForceEmptyHands(stateContext: ref<StateContext>, val: Bool) -> Void {\n    stateContext.SetPermanentBoolParameter(n\"ForceEmptyHands\", val, true);\n  }"
+    },
+    "HighLevelTransition.IsForceEmptyHands": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 16,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "b21d47923dbc0d002c5d8e2d596edbbe4bab871bc9e0b2f9e7b655e4ab6ad612",
+      "source": "  public final func IsForceEmptyHands(stateContext: ref<StateContext>) -> Bool {\n    return stateContext.GetBoolParameter(n\"ForceEmptyHands\", true);\n  }"
+    },
+    "SceneTierAbstract.GetCurrentSceneTier": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 700,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "0f0751d9afc08b384e23d87f64c52ff499be3e9320c07322b5848d7000f29693",
+      "source": "  protected final const func GetCurrentSceneTier(const stateContext: ref<StateContext>) -> GameplayTier {\n    let requestedSceneTier: GameplayTier = GameplayTier.Undefined;\n    let sceneTier: ref<SceneTierData> = this.GetCurrentSceneTierData(stateContext);\n    if IsDefined(sceneTier) {\n      requestedSceneTier = sceneTier.tier;\n    };\n    return requestedSceneTier;\n  }"
+    },
+    "SceneTierInitialDecisions.EnterCondition": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 687,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "ead8353387e7b2bc2a07aa6e068495144bc74bae20366d3d9be9fb962762c2e7",
+      "source": "  protected final const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {\n    if EnumInt(this.GetCurrentSceneTier(stateContext)) > 1 || stateContext.GetBoolParameter(n\"requestReEnteringScene\", true) {\n      if stateContext.GetBoolParameter(n\"enteredWaterFromSceneTierII\", true) || stateContext.IsStateMachineActive(n\"LocomotionTakedown\") {\n        return false;\n      };\n      return true;\n    };\n    return false;\n  }"
+    },
+    "SceneTierIIDecisions.EnterCondition": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 773,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "3a7f7e0e58a5a0736393f5a0762cc03457bfef55839c77009dff8ac56cfd0a27",
+      "source": "  protected final const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {\n    return Equals(this.GetCurrentSceneTier(stateContext), GameplayTier.Tier2_StagedGameplay);\n  }"
+    },
+    "SceneTierAbstractDecisions.ToExploration": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 716,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "a6b76a9f1ca0dfb21fa3830b8f83b231c3b1a1a73097a76d63aa9a0d07773a05",
+      "source": "  protected final const func ToExploration(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {\n    if Equals(this.GetCurrentSceneTier(stateContext), GameplayTier.Tier1_FullGameplay) {\n      return true;\n    };\n    return false;\n  }"
+    },
+    "SceneTierAbstractEvents.OnEnter": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 726,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "7e3da27206b668ec2ef6f04bc58c996845d6e2e12c74da2f9c0c1c9840047187",
+      "source": "  public func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {\n    let sceneTier: ref<SceneTierData>;\n    let animFeature: ref<AnimFeature_SceneSystem> = new AnimFeature_SceneSystem();\n    animFeature.tier = EnumInt(this.SceneTierToEnter());\n    scriptInterface.SetAnimationParameterFeature(n\"Scene\", animFeature);\n    this.ResetForceFlags(stateContext);\n    sceneTier = this.GetCurrentSceneTierData(stateContext);\n    if IsDefined(sceneTier) {\n      if IsClient() {\n        stateContext.SetPermanentBoolParameter(n\"EmptyHandsForcedByTierChange\", sceneTier.emptyHands, true);\n      };\n      this.ForceEmptyHands(stateContext, sceneTier.emptyHands);\n    };\n    this.ForceDisableToggleWalk(stateContext);\n    this.ForceDefaultLocomotion(stateContext, scriptInterface);\n    this.UpdateCameraParams(stateContext, scriptInterface);\n    super.OnEnter(stateContext, scriptInterface);\n  }"
+    },
+    "SceneTierAbstractEvents.OnUpdate": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 745,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "d5bea119edb52fba3ab5cc605789a37470e988b034256d74d6adcd3986be9765",
+      "source": "  protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {\n    let currentHighLevelState: Int32;\n    let desiredHighLevelState: Int32;\n    let sceneTier: ref<SceneTierData>;\n    this.SetAudioParameter(n\"g_player_health\", this.GetCurrentHealthPerc(scriptInterface), scriptInterface);\n    sceneTier = this.GetCurrentSceneTierData(stateContext);\n    if IsDefined(sceneTier) {\n      if NotEquals(sceneTier.emptyHands, this.IsForceEmptyHands(stateContext)) {\n        if IsClient() {\n          stateContext.SetPermanentBoolParameter(n\"EmptyHandsForcedByTierChange\", sceneTier.emptyHands, true);\n        };\n        this.ForceEmptyHands(stateContext, sceneTier.emptyHands);\n      };\n      currentHighLevelState = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.HighLevel);\n      desiredHighLevelState = EnumInt(this.SceneTierToEnter());\n      if currentHighLevelState != desiredHighLevelState {\n        this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.HighLevel, desiredHighLevelState);\n      };\n    };\n  }"
+    },
+    "ExplorationEvents.OnEnter": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 281,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "f4e40478dc59a93f609efca483d8c2f6f995974284184704924e8fa0a50dd608",
+      "source": "  protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {\n    let animFeature: ref<AnimFeature_SceneSystem>;\n    PlayerPuppet.ReevaluateAllBreathingEffects(scriptInterface.owner as PlayerPuppet);\n    this.BlockMovement(scriptInterface, false);\n    this.ResetForceFlags(stateContext);\n    this.ResetForceWalkSpeed(stateContext);\n    this.RemoveAllTierLocomotions(scriptInterface);\n    this.ForceDefaultLocomotion(stateContext, scriptInterface);\n    GameObject.PlaySoundEvent(scriptInterface.owner, n\"ST_Health_Status_Hi_Set_State\");\n    this.ClearSceneGameplayOverrides(scriptInterface);\n    animFeature = new AnimFeature_SceneSystem();\n    animFeature.tier = 0;\n    scriptInterface.SetAnimationParameterFeature(n\"Scene\", animFeature);\n    this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.HighLevel, 1);\n    this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vitals, 0);\n    this.SetPlayerVitalsAnimFeatureData(stateContext, scriptInterface, 0, 0.00);\n    this.SetPlayerDeathAnimFeatureData(stateContext, scriptInterface, 0);\n    scriptInterface.GetAudioSystem().Play(n\"global_death_exit\");\n    super.OnEnter(stateContext, scriptInterface);\n  }"
+    },
+    "ExplorationEvents.ClearSceneGameplayOverrides": {
+      "path": "cyberpunk/player/psm/highLevelTransitions.swift",
+      "line": 302,
+      "file_sha256": "f585cf248e8703bc86562b724f2cec4a25138b916448b7c9a30f9e91a0e8cac3",
+      "source_sha256": "e2dc94076e709eeae7b9307b4a112922b89e1ff36abc145d0d57486686b73f93",
+      "source": "  protected final func ClearSceneGameplayOverrides(scriptInterface: ref<StateGameScriptInterface>) -> Void {\n    let animFeature: ref<AnimFeature_SceneGameplayOverrides> = new AnimFeature_SceneGameplayOverrides();\n    scriptInterface.localBlackboard.SetBool(GetAllBlackboardDefs().PlayerStateMachine.SceneAimForced, false);\n    scriptInterface.localBlackboard.SetBool(GetAllBlackboardDefs().PlayerStateMachine.SceneSafeForced, false);\n    animFeature.aimForced = false;\n    animFeature.safeForced = false;\n    animFeature.isAimOutTimeOverridden = false;\n    animFeature.aimOutTimeOverride = 0.00;\n    scriptInterface.SetAnimationParameterFeature(n\"SceneGameplayOverrides\", animFeature);\n  }"
+    },
+    "WeaponReadyListenerTransition.UpdateWeaponReadyListenerReturnValue": {
+      "path": "cyberpunk/player/psm/weaponTransitions.swift",
+      "line": 594,
+      "file_sha256": "32979af0ae22102a921f58c1b4d4f0f5d02a3b438549117e72e4bed61f4fe3a7",
+      "source_sha256": "d24263a93f3f7f714b0b911975f2ca986ceb485459edb97d4a927154422641b7",
+      "source": "  protected func UpdateWeaponReadyListenerReturnValue() -> Void {\n    if this.m_beingCreated {\n      return;\n    };\n    this.m_weaponReadyListenerReturnValue = true;\n    if this.m_isVaulting && !this.m_canWeaponShootWhileVaulting || this.m_isDodging && !this.m_canShootWhileDodging || this.m_hasStatusEffectVehicleScene || this.m_hasStatusEffectNoCombat && !this.m_hasStatusEffectFastForward || this.m_hasStunnedStatusEffect || this.m_isInTakedown || this.m_isUsingCombatGadget || this.m_hasJamStatusEffect || !this.m_canWeaponShootWhileSliding && this.m_isSliding || this.m_isInSafeSceneTier && !this.m_isSceneAimForced {\n      this.m_weaponReadyListenerReturnValue = false;\n    };\n  }"
+    },
+    "WeaponReadyListenerTransition.OnHighLevelChanged": {
+      "path": "cyberpunk/player/psm/weaponTransitions.swift",
+      "line": 714,
+      "file_sha256": "32979af0ae22102a921f58c1b4d4f0f5d02a3b438549117e72e4bed61f4fe3a7",
+      "source_sha256": "b11987bc63d441ea808d02dbee337448576857d0e03616a2c58e62f937cb14c8",
+      "source": "  protected cb func OnHighLevelChanged(value: Int32) -> Bool {\n    this.m_isInSafeSceneTier = value > 1 && value <= 5;\n    this.UpdateWeaponReadyListenerReturnValue();\n  }"
+    },
+    "ScriptedPuppet.UpdateLootInteraction": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3646,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "203853a4ca8f79b3daadc29e11858cedfc01910e045de59316fffd3c3885ee25",
+      "source": "  protected final func UpdateLootInteraction() -> Void {\n    this.EnableInteraction(n\"Loot\", !this.IsActive() && this.m_inventoryComponent.IsAccessible());\n  }"
+    },
+    "ScriptedPuppet.IsContainer": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3726,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "dafaba90f743b0b458ad8449d230577448df36a9fb56e49fe7a54c8c932de0f5",
+      "source": "  public const func IsContainer() -> Bool {\n    if NotEquals(this.m_lootQuality, gamedataQuality.Invalid) && NotEquals(this.m_lootQuality, gamedataQuality.Random) {\n      return true;\n    };\n    return false;\n  }"
+    },
+    "ScriptedPuppet.EvaluateLootQuality": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3669,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "c457659c5ebf85eac4d55ee41a73d1440f61abc8f323215685329f848e778c68",
+      "source": "  private final func EvaluateLootQuality() -> Bool {\n    let i: Int32;\n    let items: array<wref<gameItemData>>;\n    let iteratedQuality: gamedataQuality;\n    let lastValue: Int32;\n    let newValue: Int32;\n    let qualityToSet: gamedataQuality;\n    let type: gamedataItemType;\n    let wasChanged: Bool;\n    let transactionSystem: ref<TransactionSystem> = GameInstance.GetTransactionSystem(this.GetGame());\n    let currentQuality: gamedataQuality = this.m_lootQuality;\n    let isCurrentlyQuest: Bool = this.IsQuest();\n    let isCurrentlyIconic: Bool = this.GetIsIconic();\n    this.m_isIconic = false;\n    this.m_hasQuestItems = false;\n    if transactionSystem.GetItemList(this, items) {\n      if ArraySize(items) > 0 {\n        qualityToSet = gamedataQuality.Common;\n      };\n      i = 0;\n      while i < ArraySize(items) {\n        type = items[i].GetItemType();\n        if Equals(type, gamedataItemType.Con_Ammo) {\n        } else {\n          if !this.m_hasQuestItems && items[i].HasTag(n\"Quest\") {\n            this.m_hasQuestItems = true;\n          };\n          iteratedQuality = RPGManager.GetItemDataQuality(items[i]);\n          newValue = UIItemsHelper.QualityEnumToInt(iteratedQuality);\n          if newValue > lastValue {\n            lastValue = newValue;\n            qualityToSet = iteratedQuality;\n          };\n          this.m_isIconic = this.m_isIconic || RPGManager.IsItemIconic(items[i]);\n        };\n        i += 1;\n      };\n      this.m_lootQuality = qualityToSet;\n    };\n    if NotEquals(isCurrentlyQuest, this.IsQuest()) {\n      RPGManager.ToggleLootHighlight(this, this.IsQuest());\n    };\n    wasChanged = NotEquals(this.m_lootQuality, currentQuality) || NotEquals(isCurrentlyQuest, this.IsQuest()) || NotEquals(isCurrentlyIconic, this.m_isIconic);\n    if wasChanged || !IsNameValid(this.m_activeQualityRangeInteraction) {\n      this.ResolveQualityRangeInteractionLayer();\n    };\n    return wasChanged;\n  }"
+    },
+    "ScriptedPuppet.ResolveQualityRangeInteractionLayer": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3596,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "987820da3e8520e557b53397a80eb5c4d5bb00cba576416c3a3205df3a301138",
+      "source": "  private final func ResolveQualityRangeInteractionLayer() -> Void {\n    let currentLayer: CName;\n    let evt: ref<InteractionSetEnableEvent>;\n    if IsNameValid(this.m_activeQualityRangeInteraction) {\n      evt = new InteractionSetEnableEvent();\n      evt.enable = false;\n      evt.layer = this.m_activeQualityRangeInteraction;\n      this.QueueEvent(evt);\n      this.m_activeQualityRangeInteraction = n\"None\";\n    };\n    if NotEquals(this.m_lootQuality, gamedataQuality.Invalid) && NotEquals(this.m_lootQuality, gamedataQuality.Random) {\n      evt = new InteractionSetEnableEvent();\n      evt.enable = true;\n      if this.IsQuest() {\n        currentLayer = n\"QualityRange_Max\";\n      } else {\n        if Equals(this.m_lootQuality, gamedataQuality.Common) {\n          currentLayer = n\"QualityRange_Short\";\n        } else {\n          if Equals(this.m_lootQuality, gamedataQuality.Uncommon) {\n            currentLayer = n\"QualityRange_Medium\";\n          } else {\n            if Equals(this.m_lootQuality, gamedataQuality.Rare) {\n              currentLayer = n\"QualityRange_Medium\";\n            } else {\n              if Equals(this.m_lootQuality, gamedataQuality.Epic) {\n                currentLayer = n\"QualityRange_Max\";\n              } else {\n                if Equals(this.m_lootQuality, gamedataQuality.Legendary) {\n                  currentLayer = n\"QualityRange_Max\";\n                } else {\n                  if Equals(this.m_lootQuality, gamedataQuality.Iconic) {\n                    currentLayer = n\"QualityRange_Max\";\n                  };\n                };\n              };\n            };\n          };\n        };\n      };\n      evt.layer = currentLayer;\n      this.m_activeQualityRangeInteraction = currentLayer;\n      this.QueueEvent(evt);\n    };\n  }"
+    },
+    "ScriptedPuppet.OnItemAddedEvent": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3768,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "660232859386ac68cb49d1181bf6167d1099d0574bc03f412098e0493d67500d",
+      "source": "  protected cb func OnItemAddedEvent(evt: ref<ItemAddedEvent>) -> Bool {\n    if this.HasValidLootQuality() {\n      if this.EvaluateLootQuality() {\n        this.RequestHUDRefresh();\n      };\n    };\n  }"
+    },
+    "ScriptedPuppet.HasValidLootQuality": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 3740,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "3b5cd48b6504b05c5a98299d7169d1870c6d79ecca96bade6238f3ce57a6808e",
+      "source": "  protected final const func HasValidLootQuality() -> Bool {\n    return NotEquals(this.m_lootQuality, gamedataQuality.Invalid) && NotEquals(this.m_lootQuality, gamedataQuality.Random);\n  }"
+    },
+    "ScriptedPuppet.OnSetLootInteractionAccessEvent": {
+      "path": "cyberpunk/puppet/scriptedPuppet.swift",
+      "line": 2079,
+      "file_sha256": "9c8551a010b616046a3a3e5bfbdb3920f254c06b2d286f575b07fa55e24e32ce",
+      "source_sha256": "f27733dc288a2df0b49b7f46cd19c895bf51fa32886a6aebc64362ee519a20c5",
+      "source": "  protected cb func OnSetLootInteractionAccessEvent(evt: ref<SetLootInteractionAccessibilityEvent>) -> Bool {\n    this.UpdateLootInteraction();\n  }"
+    }
+  }
+}
