@@ -132,6 +132,9 @@ def phase(c):
     cut(14)
     for n,path,typ in [(15,base+'/main/talk','gameJournalQuestObjective'),(16,base+'/main','gameJournalQuestPhase'),(17,base,'gameJournalQuest')]:journal(n,path,typ)
     setfact(18,'stage',3);wait(19,'request','Equal',0);cut(20)
+    # Completion receipt survives ordinary scene/graph return cleanup. Only
+    # explicit Begin/RequestClear resets it in the native bridge.
+    setfact(35,'briefed',1)
     for n,path,typ in [(21,base+'/main/talk','gameJournalQuestObjective'),(22,base+'/main','gameJournalQuestPhase'),(23,base,'gameJournalQuest')]:journal(n,path,typ)
     setfact(24,'stage',0);setfact(25,'talk',0);setfact(26,'choice',0);setfact(27,'request',0);cut(30)
     for n in [90,91,92]:marker(n)
@@ -149,8 +152,11 @@ def phase(c):
     g.link(8,'Out',9,'In');g.link(8,'Out',10,'In');g.link(9,'Out',11,'In');g.link(11,'Out',12,'conversation_in')
     g.link(12,'conversation_out',13,'In');g.link(13,'True',14,'In');g.link(13,'False',30,'In')
     g.link(14,'CutSource',10,'CutDestination');g.link(14,'Out',91,'Inactive');g.link(91,'Out',15,'Succeeded')
-    g.link(15,'Out',16,'Succeeded');g.link(16,'Out',17,'Succeeded');g.link(17,'Out',18,'In');g.link(18,'Out',19,'In');g.link(19,'Out',20,'In')
-    g.link(10,'Out',30,'In');g.link(12,'Default INT',30,'In');g.link(12,'Default RET',30,'In')
+    g.link(15,'Out',16,'Succeeded');g.link(16,'Out',17,'Succeeded');g.link(17,'Out',35,'In');g.link(35,'Out',18,'In');g.link(18,'Out',19,'In');g.link(19,'Out',20,'In')
+    g.link(10,'Out',30,'In');g.link(12,'Default INT',30,'In')
+    # A normal native return must evaluate the actual final scene receipt.
+    # An early return (choice=0) still follows the existing cancellation path.
+    g.link(12,'Default RET',13,'In')
     for n in [20,30]:
         for target in [9,10,11,12,13,19]:g.link(n,'CutSource',target,'CutDestination')
         g.link(n,'Out',90,'Inactive')

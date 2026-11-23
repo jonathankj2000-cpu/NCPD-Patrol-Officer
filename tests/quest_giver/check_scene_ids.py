@@ -65,7 +65,7 @@ def main():
     for before,after in zip(old['screenplayStore']['lines'],current['screenplayStore']['lines']):
         assert {k:v for k,v in before.items() if k!='itemId'}=={k:v for k,v in after.items() if k!='itemId'}
     assert current['locStore']==old['locStore'] and current['resouresReferences']==old['resouresReferences']
-    for name in ['media/manifest.json','quest_giver.questphase.json','quest_giver.journal.json','vomap.json.json','voss.lipmap.json','lines.json.json','subtitles.json.json','voss_wait_pose.ent.json']:
+    for name in ['media/manifest.json','quest_giver.journal.json','vomap.json.json','voss.lipmap.json','lines.json.json','subtitles.json.json','voss_wait_pose.ent.json']:
         path='assets/quest_giver_test/'+name;assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),name
     before_contract=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/quest_giver_test/contract.json'],cwd=ROOT))
     def without_timing(contract):

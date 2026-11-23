@@ -1,5 +1,20 @@
 # NCPD Patrol
 
+## v0.20b — Voss continuation
+
+Fixes the reported `Scene ended without a proven journal completion` auto-clear.
+The final scene receipt is stored separately from journal acknowledgement.
+Normal native return checks that receipt, Voss/Hella remain, and the continuation
+retries until its own journal entries become active. Rejected or missing entries
+now identify the exact blocker. The working speech, lipsync and timing are retained.
+
+[Download the complete v0.20b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20b_Voss_Continuation_TEST.zip)
+
+Install the complete 129-file package and restart. If the previous version already
+cleared the failed conversation, activate the Voss test and finish it once again.
+The target objective should start automatically; there is no need to race the
+Continue button. [Details](docs/VOSS_CONTINUATION_v020b.md).
+
 ## v0.20a1 — Startup compilation fix
 
 Fixes the supplied REDscript `NO_MATCHING_OVERLOAD` error in

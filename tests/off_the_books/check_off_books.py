@@ -15,11 +15,15 @@ sys.path.insert(0,str(ROOT/'tools'));import build_off_the_books_assets as assets
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'
 ROOTPATH='quests/minor_quest/ncpd_patrol_off_the_books'
 
-def runtime(retain=True):
+def runtime(retain=True,documents=None):
     docs=assets.outputs();assets.validate(docs)
-    m=first_runtime(first_assets.outputs()[0]);lua=m.lua;g=lua.globals()
+    m=first_runtime(documents or first_assets.outputs()[0]);lua=m.lua;g=lua.globals()
     native=code(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds')
     native=native.replace('local p = nil','local p = Vector4.new(0,0,0,0)').replace('new AIHoldPositionCommand()','NewOTBHold()')
+    native=native.replace('path + ','path .. ')
+    native=native.replace('self:Objective(self:GetStage()) + ','self:Objective(self:GetStage()) .. ')
+    import re
+    native=re.sub(r'(self:Objective\([^)]*\)) \+ ',r'\1 .. ',native)
     g.Books=lua.execute(native)
     event=(ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds').read_text()
     with TemporaryDirectory(prefix='ncpd-offbooks-events-') as d:
@@ -43,13 +47,14 @@ def runtime(retain=True):
     if retain:m.f.obConfigureRetention()
     oldstep=m.step
     def step(seconds=.25):
-        for _ in range(round(seconds/.25)):m.f.books.update(.25);oldstep(.25)
+        for _ in range(round(seconds/.25)):
+            m.f.obAdvance(.25);m.f.books.update(.25);oldstep(.25)
     m.step=step;m.books=g.Books
     return m
 
 def fact(m,key):return m.f.qfacts['ncpd_patrol_otb_'+key] or 0
 def position(m,x=-649.795,y=929.771,z=9.4):m.f.playerPoint=m.lua.globals().Vector4.new(x,y,z,1)
-def briefing(m):m.start();m.arrive();m.talk();m.finish_conversation();m.step(1);assert fact(m,'stage')==1,m.f.books.diagnostics()
+def briefing(m):m.start();m.arrive();m.talk();m.finish_conversation();m.step(2);assert fact(m,'stage')==1,m.f.books.diagnostics()
 def encounter(m):briefing(m);position(m);m.step(2);assert len(m.f.creates)==6,m.f.books.diagnostics()
 def killed(m):m.f.obRole('target').dead=True;m.step(1)
 def restore(m):m.books.OnRestored(m.books,0,0);m.f.books.reset();m.f.qmod.reset();m.step(2)

@@ -1,7 +1,14 @@
 """Remove only the explicitly reviewed r4 opt-in hooks for earlier oracles."""
 import re
 
+def without_offbooks_handoff(source):
+    source=source.replace('-- NCPD Patrol v0.20b Voss Continuation | durable briefing receipt and pending journal activation','-- NCPD Patrol v0.20a1 Startup Fix | compatible readable-path comparison')
+    source=source.replace('v0.20b Voss Continuation loaded. Completed briefing is retained independently of delayed journal state; Off the Books retries activation and keeps Voss. Install the complete package and fully restart the game.','v0.20a1 Startup Fix loaded. Off the Books readable-path comparison corrected for the game compiler. Existing quest, actors, shard and Voss conversation retained. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.20b Voss Continuation###','NCPD Patrol - v0.20a1 Startup Fix###')
+    return source.replace('onBriefingComplete=function() return OffBooks.continueAfterBriefing() end,','onBriefingComplete=function() OffBooks.begin(status) end,')
+
 def without_offbooks_compile_fix(source):
+    source=without_offbooks_handoff(source)
     source=source.replace('-- NCPD Patrol v0.20a1 Startup Fix | compatible readable-path comparison','-- NCPD Patrol v0.20a Off the Books | off-duty contractor, native evidence and retained Voss')
     source=source.replace('v0.20a1 Startup Fix loaded. Off the Books readable-path comparison corrected for the game compiler. Existing quest, actors, shard and Voss conversation retained. Install the complete package and fully restart the game.','v0.20a Off the Books loaded. OFF DUTY: Testing > Quest giver prototype. After the briefing: eliminate the contractor, loot his evidence shard, lose any pursuing NCPD and return to Voss. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.20a1 Startup Fix###','NCPD Patrol - v0.20a Off the Books###')

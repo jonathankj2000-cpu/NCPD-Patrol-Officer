@@ -21,7 +21,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolQuestGiverTest')
-    if not n or n:Version()~=4 then error('Install the complete v0.20a quest giver package and restart the game') end
+    if not n or n:Version()~=5 then error('Install the complete v0.20b quest giver package and restart the game') end
     return n
 end
 local function entities()
@@ -230,6 +230,7 @@ local function preparePose(n,step)
 end
 function M.configure(value) context=value or {};recover=true end
 -- retained Voss helpers begin
+local handoffAge,handoffAccepted=0,false
 local function retaining()
     return context.keepAfterBriefing and context.keepAfterBriefing()==true
 end
@@ -287,14 +288,23 @@ function M.actor()
     return nil
 end
 function M.briefingComplete()
-    local ok,value=pcall(function() return owner():IsSucceeded() end)
+    local ok,value=pcall(function() return owner():HasBriefingReceipt() end)
     return ok and value==true
+end
+local function continueBriefing(step)
+    if handoffAccepted or not context.onBriefingComplete then return end
+    handoffAge=handoffAge+step
+    if handoffAge<1 then return end
+    handoffAge=0
+    local ok,accepted=pcall(context.onBriefingComplete)
+    handoffAccepted=ok and accepted==true
+    if not ok then lastFailure='Continuation pending: '..tostring(accepted) end
 end
 -- retained Voss helpers end
 function M.state() return label end
 function M.active() return phase~='idle' end
 function M.blocksDuty() return phase~='idle' and phase~='complete' end
-function M.reset() rows={};retired={};pose=nil;phase,poll,age='idle',0,0;recover=true;lastFailure=nil end
+function M.reset() rows={};retired={};pose=nil;phase,poll,age='idle',0,0;recover=true;lastFailure=nil;handoffAge,handoffAccepted=0,false end
 function M.start(status)
     local ok,result=pcall(function()
         if not ready() then error('Load a save and wait for the game session') end
@@ -312,6 +322,7 @@ function M.start(status)
         if not TweakDB:GetRecord(TweakDBID.new(NPC)) or not TweakDB:GetRecord(TweakDBID.new(CAR)) then error('Private investigator/car records are unavailable; install the full package') end
         if not n:Begin() then error('Quest not ready: install the archive and scripts, then restart outside combat/wanted status') end
         recover=false;phase,age,poll='waiting',0,0;lastFailure=nil
+        handoffAge,handoffAccepted=0,false -- handoff receipt hook
         say('Voss invitation requested. Check Messages and follow the meeting marker; approach within 3 m on foot to start the conversation.',status)
         return true
     end)
@@ -330,7 +341,7 @@ local function update(delta)
     if not ready() or delta<=0 or delta>.5 then return end
     if recover then
         local n=owner();collect();recover=false
-        if retaining() and n:GetStage()==3 then phase='complete' -- retained Voss recovery hook
+        if retaining() and n:HasBriefingReceipt() then phase='complete' -- retained Voss recovery hook
         elseif #rows>0 or n:GetStage()~=0 then M.clear() end
     end
     if phase=='idle' then return end
@@ -345,15 +356,21 @@ local function update(delta)
         if stage==0 and cleanup() then phase='idle';say('Test cleared. You can activate it again.');return end
         return
     end
-    if stage==3 then
-        if phase~='complete' then
-            if not n:IsSucceeded() then error('Scene ended without a proven journal completion') end
-            phase='complete';say('Quest completed after goodbye. Briefing finished. Clear the test before replaying the conversation.')
-            if context.onBriefingComplete then context.onBriefingComplete() end -- retained Voss continuation hook
+    -- handoff completion begin
+    if stage==3 or n:HasBriefingReceipt() then
+        if not n:HasBriefingReceipt() then
+            -- A provisional final stage is not completion proof. Keep the
+            -- actors while facts settle; never convert this into auto-clear.
+            phase='finishing';return
         end
+        if phase~='complete' then
+            phase='complete';say('Quest completed after goodbye. Briefing finished. Clear the test before replaying the conversation.')
+        end
+        continueBriefing(step)
         if retaining() then maintainRetained(n,step) end -- retained Voss return hook
         return
     end
+    -- handoff completion end
     if stage==0 then
         if phase~='waiting' or age>10 then error('Native quest did not activate or was interrupted; clear and retry') end
         return
@@ -409,6 +426,7 @@ function M.diagnostics()
     local ok,state=pcall(function() return owner():GetDiagnostics() end)
     local poseState=pose and (pose.warning and 'unconfirmed' or (pose.requested and 'requested' or 'loading')) or 'none'
     return 'phase='..phase..' | owned actors='..#rows..' | pose='..poseState..' | pose proof='..tostring(pose and pose.observed or 'none')..' | '..(ok and state or tostring(state))..' | last failure='..tostring(lastFailure or 'none')..' | '..label
+        ..' | briefing receipt='..tostring(M.briefingComplete())..' | continuation accepted='..tostring(handoffAccepted) -- handoff receipt hook
 end
 function M.shutdown()
     if ready() and M.active() and not retaining() then pcall(function() owner():RequestClear() end) end

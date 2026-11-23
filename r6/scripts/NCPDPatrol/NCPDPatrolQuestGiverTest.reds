@@ -4,10 +4,21 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
     private let m_marker: ref<NCPDPatrolSceneMarker>;
     private let m_previous: wref<JournalEntry>;
     private let m_tracking: Bool;
+    private let m_finishPoll: Float; // handoff receipt hook
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_marker = null; this.m_previous = null; this.m_tracking = false;
+        this.m_finishPoll = 0.0; // handoff receipt hook
     }
-    public func Version() -> Int32 { return 4; }
+    public func Version() -> Int32 { return 5; }
+    // handoff receipt begin
+    public func GetBriefingCycle() -> Int32 { return this.Quests().GetFactStr("ncpd_patrol_qgiver_test_cycle"); }
+    public func HasBriefingReceipt() -> Bool {
+        if !NCPDPatrolMarkerSession.WorldReady() || !IsDefined(this.Quests()) { return false; };
+        if this.Quests().GetFactStr("ncpd_patrol_qgiver_test_receipt_cancelled") > 0 { return false; };
+        return this.Quests().GetFactStr("ncpd_patrol_qgiver_test_briefed") > 0
+            || (this.GetStage() == 3 && (this.GetChoice() == 1 || this.GetChoice() == 2));
+    }
+    // handoff receipt end
     public func GetPoseHelperTemplate() -> ResRef { return r"base\\ncpd_patrol\\quest_giver_test\\voss_wait_pose.ent"; }
     public func GetPoseResource() -> ResRef { return r"base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot"; }
     // idle-only pose begin
@@ -64,6 +75,10 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
         player = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) || player.IsInCombat() || !IsDefined(patrol) || patrol.IsOnDuty() || patrol.HasWantedLevel() { return false; };
         this.m_previous = this.Journal().GetTrackedEntry();
+        this.Quests().SetFactStr("ncpd_patrol_qgiver_test_cycle", this.GetBriefingCycle() + 1); // handoff receipt hook
+        this.Quests().SetFactStr("ncpd_patrol_qgiver_test_briefed", 0); // handoff receipt hook
+        this.Quests().SetFactStr("ncpd_patrol_qgiver_test_receipt_cancelled", 0); // handoff receipt hook
+        this.m_finishPoll = 0.0; // handoff receipt hook
         this.Quests().SetFactStr("ncpd_patrol_qgiver_test_choice", 0);
         this.Quests().SetFactStr("ncpd_patrol_qgiver_test_talk", 0);
         this.Quests().SetFactStr("ncpd_patrol_qgiver_test_request", 1);
@@ -83,11 +98,19 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
     }
     public func RequestClear() -> Void {
         if NCPDPatrolMarkerSession.WorldReady() && IsDefined(this.Quests()) {
+            this.Quests().SetFactStr("ncpd_patrol_qgiver_test_receipt_cancelled", 1); // handoff receipt hook
+            this.Quests().SetFactStr("ncpd_patrol_qgiver_test_briefed", 0); // handoff receipt hook
             this.Quests().SetFactStr("ncpd_patrol_qgiver_test_request", 0);
         };
     }
     public func IsSucceeded() -> Bool {
         let entry: ref<JournalEntry>;
+        // handoff journal proof begin
+        if this.HasBriefingReceipt() {
+            entry = this.Journal().GetEntryByString(this.Root(), "gameJournalQuest");
+            return IsDefined(entry) && Equals(this.Journal().GetEntryState(entry), gameJournalEntryState.Succeeded);
+        };
+        // handoff journal proof end
         if !NCPDPatrolMarkerSession.WorldReady() || this.GetStage() != 3 || (this.GetChoice() != 1 && this.GetChoice() != 2) { return false; };
         entry = this.Journal().GetEntryByString(this.Root(), "gameJournalQuest");
         return IsDefined(entry) && Equals(this.Journal().GetEntryState(entry), gameJournalEntryState.Succeeded);
@@ -97,6 +120,23 @@ public class NCPDPatrolQuestGiverTest extends ScriptableSystem {
         let tracked: wref<JournalEntry>;
         if !NCPDPatrolMarkerSession.WorldReady() { return; };
         stage = this.GetStage();
+        // handoff completion begin
+        if this.HasBriefingReceipt() {
+            // Migrate a proven legacy final stage before delayed journal state
+            // or an ordinary graph return can erase its transient fields.
+            this.Quests().SetFactStr("ncpd_patrol_qgiver_test_briefed", 1);
+            stage = 3;
+            this.m_finishPoll += delta;
+            if this.m_finishPoll >= 1.0 && !this.IsMenuOpen() && !this.IsSucceeded() {
+                this.m_finishPoll = 0.0;
+                // Retry only the completed meeting's own journal entries.
+                // Pending/rejected native state never destroys its actors.
+                this.Journal().ChangeEntryState(this.Objective(), "gameJournalQuestObjective", gameJournalEntryState.Succeeded, JournalNotifyOption.DoNotNotify);
+                this.Journal().ChangeEntryState(this.Root() + "/main", "gameJournalQuestPhase", gameJournalEntryState.Succeeded, JournalNotifyOption.DoNotNotify);
+                this.Journal().ChangeEntryState(this.Root(), "gameJournalQuest", gameJournalEntryState.Succeeded, JournalNotifyOption.DoNotNotify);
+            };
+        };
+        // handoff completion end
         if stage == 1 || stage == 2 {
             if !IsDefined(this.m_marker) {
                 this.m_marker = new NCPDPatrolSceneMarker();

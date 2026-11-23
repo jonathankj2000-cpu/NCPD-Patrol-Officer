@@ -1,0 +1,27 @@
+{
+  "baseline": "bc60498ee9bcd62b649f51d4cb09eded79ecee1c",
+  "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
+  "archive_sha256": "f5c2dda803379719d2482bc2fc5e3ea5370018537f82223d0b1965abbda54cd2",
+  "extracted_resources": 16,
+  "only_changed_resources": [
+    "base/ncpd_patrol/quest_giver_test/quest_giver.questphase"
+  ],
+  "unchanged_binary_resources": {
+    "base/ncpd_patrol/quest_giver_test/vossbriefing03.wem": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
+    "base/ncpd_patrol/quest_giver_test/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+    "base/ncpd_patrol/quest_giver_test/quest_giver.journal": "9fba0731b56bff001eafd907ce7b9486ac0d4db311994bfdec671e19793f25d1",
+    "base/ncpd_patrol/quest_giver_test/conversation.scene": "8d3bb4abd4aa087492cdd46a9b8a6e4d21f4b62a144c4ddfda2bc0964d133972",
+    "base/ncpd_patrol/quest_giver_test/vossbriefing02.wem": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547",
+    "base/ncpd_patrol/quest_giver_test/vomap.json": "5ffda97d99628fcca28f37731efd9530270d345d2c220b73e303fba9d92e2196",
+    "base/ncpd_patrol/quest_giver_test/vossbriefing05.wem": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627",
+    "base/ncpd_patrol/quest_giver_test/voss_wait_pose.ent": "6e6e4c2141ae5364e53043efa0047fb549aef26d4c5f6bde5e7e6e21094862f5",
+    "base/ncpd_patrol/quest_giver_test/lines.json": "6eb9532333c5e5d989cb6d73858d76ebbdab7e050af0f1180df40b2c141a398a",
+    "base/ncpd_patrol/quest_giver_test/vossbriefing01.wem": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb",
+    "base/ncpd_patrol/quest_giver_test/onscreens.json": "4bbc2f3ea72b71db69b4658e91ed31b49e159a2e85bbeb60c10d708cc0b84f64",
+    "base/ncpd_patrol/quest_giver_test/subtitles.json": "fac54e42ce4b0bc4e04aec73c8eb58654dd50fc9118176ff8411af0378138424",
+    "base/ncpd_patrol/quest_giver_test/vossbriefing06.wem": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8",
+    "base/ncpd_patrol/quest_giver_test/voss.lipmap": "827b44b709f838cecce68f8cc8a8d38a4513d5d8c4d55594af541fb528395a83",
+    "base/ncpd_patrol/quest_giver_test/vossbriefing04.wem": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5"
+  },
+  "actual_game_validation": false
+}

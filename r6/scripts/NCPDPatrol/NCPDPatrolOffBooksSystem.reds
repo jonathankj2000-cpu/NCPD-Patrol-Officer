@@ -11,13 +11,19 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
     private let m_syncedStage: Int32;
     private let m_previous: wref<JournalEntry>;
     private let m_lastObjective: wref<JournalEntry>;
+    private let m_reason: String;
+    private let m_syncPoll: Float;
+    private let m_writeStage: Int32;
+    private let m_trackPending: Bool;
     private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
         this.m_target = null; this.m_guard1 = null; this.m_guard2 = null;
         this.m_holdTarget = null; this.m_hold1 = null; this.m_hold2 = null;
         this.m_marker = null; this.m_syncedStage = -1;
         this.m_previous = null; this.m_lastObjective = null;
+        this.m_syncPoll = 0.0; this.m_writeStage = 0;
+        this.m_trackPending = false;
     }
-    public func Version() -> Int32 { return 1; }
+    public func Version() -> Int32 { return 2; }
     private func Quests() -> ref<QuestsSystem> { return GameInstance.GetQuestsSystem(this.GetGameInstance()); }
     private func Journal() -> ref<JournalManager> { return GameInstance.GetJournalManager(this.GetGameInstance()); }
     private func Patrol() -> ref<NCPDPatrolSystem> { return NCPDPatrolSystem.Get(this.GetGameInstance()); }
@@ -72,18 +78,54 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
             && this.RecordsReady() && IsDefined(this.Journal().GetEntryByString(this.Root(), "gameJournalQuest"))
             && IsDefined(this.Journal().GetEntryByString(this.ShardPath(), "gameJournalOnscreen"));
     }
-    public func Begin() -> Bool {
+    private func FirstBriefing() -> ref<NCPDPatrolQuestGiverTest> {
+        return GameInstance.GetScriptableSystemsContainer(this.GetGameInstance()).Get(n"NCPDPatrolQuestGiverTest") as NCPDPatrolQuestGiverTest;
+    }
+    public func AutoSuppressed() -> Bool {
+        let first: ref<NCPDPatrolQuestGiverTest> = this.FirstBriefing();
+        return this.Fact("suppress_auto") > 0 && IsDefined(first)
+            && this.Fact("suppressed_cycle") == first.GetBriefingCycle();
+    }
+    public func StartBlocker() -> String {
         let first: ref<NCPDPatrolQuestGiverTest>;
-        if !this.IsReady() || this.IsMenuOpen() || this.OnDuty() || this.GetStage() != 0 { return false; };
-        first = GameInstance.GetScriptableSystemsContainer(this.GetGameInstance()).Get(n"NCPDPatrolQuestGiverTest") as NCPDPatrolQuestGiverTest;
-        if !IsDefined(first) || !first.IsSucceeded() { return false; };
+        let i: Int32 = 1;
+        let path: String;
+        if !NCPDPatrolMarkerSession.WorldReady() { return "Game session is not ready"; };
+        if !IsDefined(this.Quests()) || !IsDefined(this.Journal()) { return "Native quest/journal service unavailable"; };
+        if this.IsMenuOpen() { return "Close in-game menus before continuing"; };
+        if this.OnDuty() { return "Go OFF DUTY before continuing"; };
+        first = this.FirstBriefing();
+        if !IsDefined(first) { return "Voss briefing bridge unavailable; install the complete v0.20b package"; };
+        if !first.HasBriefingReceipt() { return "Voss final dialogue receipt not yet recorded; inspect quest giver diagnostics"; };
+        if !this.RecordsReady() { return "Contractor/guard/shard records or exact Read action unavailable in TweakDB"; };
+        if !IsDefined(this.Journal().GetEntryByString(this.Root(), "gameJournalQuest")) { return "Missing journal quest: " + this.Root(); };
+        if !IsDefined(this.Journal().GetEntryByString(this.Root() + "/main", "gameJournalQuestPhase")) { return "Missing journal phase: " + this.Root() + "/main"; };
+        while i <= 4 {
+            path = this.Objective(i);
+            if !IsDefined(this.Journal().GetEntryByString(path, "gameJournalQuestObjective")) { return "Missing journal objective: " + path; };
+            if !IsDefined(this.Journal().GetEntryByString(path + "/briefing", "gameJournalQuestDescription")) { return "Missing journal description: " + path; };
+            i += 1;
+        };
+        if !IsDefined(this.Journal().GetEntryByString(this.ShardPath(), "gameJournalOnscreen")) { return "Missing readable journal entry: " + this.ShardPath(); };
+        return "";
+    }
+    public func GetStartReason() -> String { return this.m_reason; }
+    public func Begin() -> Bool {
+        if this.GetStage() != 0 { return this.IsActive(); };
+        this.m_reason = this.StartBlocker();
+        if NotEquals(this.m_reason, "") { return false; };
         this.Set("cycle", this.GetCycle() + 1);
         this.Set("killed", 0); this.Set("acquired", 0); this.Set("seeded", 0);
         this.Set("provoked", 0); this.Set("player_provoked", 0); this.Set("returned", 0); this.Set("escape_used", 0);
         this.Set("created_target", 0); this.Set("created_guard1", 0); this.Set("created_guard2", 0);
+        this.Set("suppress_auto", 0);
+        this.Set("activation_complete", 0);
         this.m_previous = this.Journal().GetTrackedEntry();
-        this.Set("stage", 1); this.m_syncedStage = -1; this.SyncJournal(true);
-        if !this.ObjectiveVisible() { this.Cancel(); return false; };
+        this.m_trackPending = true;
+        this.Set("stage", 1); this.m_syncedStage = -1; this.m_writeStage = 0; this.m_syncPoll = 0.0;
+        this.SyncJournal(true);
+        // Acceptance is not journal activation proof. Tick keeps the same
+        // request alive until native state is observed; no eager rollback.
         return true;
     }
     public func WasCreated(role: CName) -> Bool {
@@ -204,13 +246,29 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if IsDefined(this.m_target) && this.m_target.IsDead() { this.Set("killed", 1); };
         this.ReleaseHolds(); this.Engage(this.m_guard1, attacker); this.Engage(this.m_guard2, attacker);
     }
-    private func Entry(path: String, className: String, state: gameJournalEntryState) -> Void {
-        this.Journal().ChangeEntryState(path, className, state, JournalNotifyOption.DoNotNotify);
+    private func Entry(path: String, className: String, state: gameJournalEntryState) -> Bool {
+        let entry: wref<JournalEntry> = this.Journal().GetEntryByString(path, className);
+        if !IsDefined(entry) { this.m_reason = "Missing journal entry: " + path; return false; };
+        if Equals(this.Journal().GetEntryState(entry), state) { return true; };
+        if !this.Journal().ChangeEntryState(path, className, state, JournalNotifyOption.DoNotNotify) {
+            this.m_reason = "Journal state request rejected: " + path; return false;
+        };
+        if !Equals(this.Journal().GetEntryState(entry), state) {
+            this.m_reason = "Waiting for native journal state: " + path; return false;
+        };
+        return true;
     }
     public func ObjectiveVisible() -> Bool {
         let entry: ref<JournalEntry>;
         if !this.IsActive() || !IsDefined(this.Journal()) { return false; };
         entry = this.Journal().GetEntryByString(this.Objective(this.GetStage()), "gameJournalQuestObjective");
+        return IsDefined(entry) && Equals(this.Journal().GetEntryState(entry), gameJournalEntryState.Active)
+            && this.ActiveEntry(this.Root(), "gameJournalQuest")
+            && this.ActiveEntry(this.Root() + "/main", "gameJournalQuestPhase")
+            && this.ActiveEntry(this.Objective(this.GetStage()) + "/briefing", "gameJournalQuestDescription");
+    }
+    private func ActiveEntry(path: String, kind: String) -> Bool {
+        let entry: wref<JournalEntry> = this.Journal().GetEntryByString(path, kind);
         return IsDefined(entry) && Equals(this.Journal().GetEntryState(entry), gameJournalEntryState.Active);
     }
     private func OwnTracking(entry: wref<JournalEntry>) -> Bool {
@@ -229,31 +287,49 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let objective: wref<JournalEntry>;
         let pin: ref<NCPDPatrolSceneMarker>;
         let state: gameJournalEntryState;
-        if IsDefined(this.m_marker) { this.m_marker.Close(this.GetGameInstance()); this.m_marker = null; };
-        this.Entry(this.Root(), "gameJournalQuest", gameJournalEntryState.Active);
-        this.Entry(this.Root() + "/main", "gameJournalQuestPhase", gameJournalEntryState.Active);
+        let description: gameJournalEntryState;
+        this.m_syncPoll = 0.0;
+        if this.m_writeStage != stage {
+            if IsDefined(this.m_marker) { this.m_marker.Close(this.GetGameInstance()); this.m_marker = null; };
+            while i <= 4 {
+                if i != 3 {
+                    pin = new NCPDPatrolSceneMarker(); pin.Configure(this.Objective(i), this.Root() + "/main", this.Position(i)); pin.Close(this.GetGameInstance());
+                };
+                i += 1;
+            };
+            this.m_writeStage = stage;
+        };
+        // Activate the next objective before retiring the previous one. Keep
+        // parents and descriptions active as in the working incident owners.
+        if !this.Entry(this.Root(), "gameJournalQuest", gameJournalEntryState.Active)
+            || !this.Entry(this.Root() + "/main", "gameJournalQuestPhase", gameJournalEntryState.Active)
+            || !this.Entry(this.Objective(stage) + "/briefing", "gameJournalQuestDescription", gameJournalEntryState.Active)
+            || !this.Entry(this.Objective(stage), "gameJournalQuestObjective", gameJournalEntryState.Active) { return; };
+        i = 1;
         while i <= 4 {
             if i == stage { state = gameJournalEntryState.Active; } else {
                 if i < stage { state = gameJournalEntryState.Succeeded; } else { state = gameJournalEntryState.Inactive; };
             };
             if i == 3 && stage != 3 && this.Fact("escape_used") == 0 { state = gameJournalEntryState.Inactive; };
-            this.Entry(this.Objective(i), "gameJournalQuestObjective", state);
-            // Close only our own fixed pins on restore and transitions.
-            if i != 3 {
-                pin = new NCPDPatrolSceneMarker(); pin.Configure(this.Objective(i), this.Root() + "/main", this.Position(i));
-                pin.Close(this.GetGameInstance());
-            };
+            description = gameJournalEntryState.Inactive;
+            if Equals(state, gameJournalEntryState.Active) || Equals(state, gameJournalEntryState.Succeeded) { description = gameJournalEntryState.Active; };
+            if !this.Entry(this.Objective(i) + "/briefing", "gameJournalQuestDescription", description)
+                || !this.Entry(this.Objective(i), "gameJournalQuestObjective", state) { return; };
             i += 1;
         };
         objective = this.Journal().GetEntryByString(this.Objective(stage), "gameJournalQuestObjective");
         if !this.ObjectiveVisible() { this.m_syncedStage = -1; return; };
-        if forceTrack || !IsDefined(tracked) || tracked == this.m_lastObjective || this.OwnTracking(tracked) { this.Journal().TrackEntry(objective); };
+        if forceTrack || (this.m_trackPending && tracked == this.m_previous)
+            || !IsDefined(tracked) || tracked == this.m_lastObjective || this.OwnTracking(tracked) { this.Journal().TrackEntry(objective); };
+        this.m_trackPending = false;
         this.m_lastObjective = objective;
         if stage != 3 {
             this.m_marker = new NCPDPatrolSceneMarker();
             this.m_marker.Configure(this.Objective(stage), this.Root() + "/main", this.Position(stage)); this.m_marker.Open(this.GetGameInstance());
         };
         this.m_syncedStage = stage;
+        this.Set("activation_complete", 1);
+        this.m_reason = "Journal objective active; continuation confirmed";
     }
     public func Tick(delta: Float) -> Void {
         let stage: Int32;
@@ -262,6 +338,10 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         if !NCPDPatrolMarkerSession.WorldReady() || !this.IsActive() || this.IsMenuOpen() || delta <= 0.0 || delta > 0.5 { return; };
         player = GetPlayer(this.GetGameInstance());
         if !IsDefined(player) || !player.IsAttached() || player.IsDead() { return; };
+        if this.GetStage() == 1 && this.Fact("activation_complete") == 0 {
+            this.m_trackPending = true;
+            if !IsDefined(this.m_previous) { this.m_previous = this.Journal().GetTrackedEntry(); };
+        };
         // A real death, not defeated/unconscious, fulfils Voss's instruction.
         if IsDefined(this.m_target) && this.m_target.IsAttached() && this.m_target.IsDead() { this.Set("killed", 1); };
         stage = this.GetStage(); next = stage;
@@ -274,7 +354,9 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
             };
             if next != stage { this.Set("stage", next); };
         };
-        if this.m_syncedStage != this.GetStage() || !this.ObjectiveVisible() { this.SyncJournal(false); };
+        this.m_syncPoll += delta;
+        if this.m_writeStage != this.GetStage()
+            || ((this.m_syncedStage != this.GetStage() || !this.ObjectiveVisible()) && this.m_syncPoll >= 1.0) { this.SyncJournal(false); };
         if IsDefined(this.m_marker) { this.m_marker.Tick(this.GetGameInstance(), delta); };
     }
     public func AtVoss(npc: ref<NPCPuppet>) -> Bool {
@@ -289,13 +371,16 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let i: Int32 = 1;
         let pin: ref<NCPDPatrolSceneMarker>;
         if !NCPDPatrolMarkerSession.WorldReady() || !IsDefined(this.Journal()) { return; };
+        this.Set("suppress_auto", 1);
+        if IsDefined(this.FirstBriefing()) { this.Set("suppressed_cycle", this.FirstBriefing().GetBriefingCycle()); };
         this.ReleaseHolds();
         if IsDefined(this.m_marker) { this.m_marker.Close(this.GetGameInstance()); this.m_marker = null; };
         while i <= 4 {
             if i != 3 {
                 pin = new NCPDPatrolSceneMarker(); pin.Configure(this.Objective(i), this.Root() + "/main", this.Position(i)); pin.Close(this.GetGameInstance());
             };
-            this.Entry(this.Objective(i), "gameJournalQuestObjective", gameJournalEntryState.Inactive); i += 1;
+            this.Entry(this.Objective(i), "gameJournalQuestObjective", gameJournalEntryState.Inactive);
+            this.Entry(this.Objective(i) + "/briefing", "gameJournalQuestDescription", gameJournalEntryState.Inactive); i += 1;
         };
         this.Entry(this.Root() + "/main", "gameJournalQuestPhase", gameJournalEntryState.Inactive);
         this.Entry(this.Root(), "gameJournalQuest", gameJournalEntryState.Inactive);
@@ -303,6 +388,8 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         this.Set("stage", 0); this.m_syncedStage = -1;
         this.m_target = null; this.m_guard1 = null; this.m_guard2 = null;
         this.m_lastObjective = null; this.m_previous = null;
+        this.m_writeStage = 0; this.m_syncPoll = 0.0; this.m_reason = "Explicitly cancelled; waiting for owned actor cleanup";
+        this.m_trackPending = false;
     }
     public func GetDiagnostics() -> String {
         let marker: String = "No scene pin during escape";
@@ -310,6 +397,6 @@ public class NCPDPatrolOffBooksSystem extends ScriptableSystem {
         let acquired: Int32 = this.Fact("acquired");
         let seeded: Int32 = this.Fact("seeded");
         if IsDefined(this.m_marker) { marker = this.m_marker.GetDiagnostics(); };
-        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | \(marker)";
+        return s"stage=\(this.GetStage()) | cycle=\(this.GetCycle()) | killed=\(killed) | acquired=\(acquired) | seeded=\(seeded) | wanted=\(this.Wanted()) | off duty=\(!this.OnDuty()) | \(marker) | \(this.m_reason)";
     }
 }

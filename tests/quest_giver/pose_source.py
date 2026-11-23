@@ -1,11 +1,14 @@
 """Remove only the reviewed v0.19h1 idle-only request for baseline comparisons."""
 import re
+from handoff_source import without_handoff_native,without_handoff_lua
 
 def without_retained_native(source):
+    source=without_handoff_native(source)
     source=source.replace('public func Version() -> Int32 { return 4; }','public func Version() -> Int32 { return 3; }')
     return source.replace('(this.GetStage() != 1 && this.GetStage() != 3)','this.GetStage() != 1')
 
 def without_retained_lua(source):
+    source=without_handoff_lua(source)
     source=re.sub(r'^-- retained Voss helpers begin\n.*?^-- retained Voss helpers end\n','',source,flags=re.M|re.S)
     source=source.replace("        if retaining() and n:GetStage()==3 then phase='complete' -- retained Voss recovery hook\n        elseif #rows>0 or n:GetStage()~=0 then M.clear() end",
                           "        if #rows>0 or n:GetStage()~=0 then M.clear() end")

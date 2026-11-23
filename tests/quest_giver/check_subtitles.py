@@ -20,7 +20,7 @@ def main():
     # The new conversation changes its scene/text/media, while keeping phone
     # history, quest graph and grounded body helper exactly as in v0.19f1.
     base='59fb2d4898d59909a9540af500bad390815ecab0'
-    for name in ['quest_giver.questphase.json','voss_wait_pose.ent.json','sms-templates.json']:
+    for name in ['voss_wait_pose.ent.json','sms-templates.json']:
         path='assets/quest_giver_test/'+name
         assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{base}:{path}'],cwd=ROOT)
     old=json.loads(subprocess.check_output(['git','show',f'{base}:assets/quest_giver_test/contract.json'],cwd=ROOT));assert c['sms']==old['sms'] and c['presentation']==old['presentation']

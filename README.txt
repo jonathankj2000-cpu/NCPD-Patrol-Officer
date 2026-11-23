@@ -1,3 +1,29 @@
+NCPD PATROL v0.20b VOSS CONTINUATION - COMPLETE BRANCH TEST
+
+Fixes the reported post-dialogue auto-clear and missing Off the Books handoff.
+The completed scene gets a durable final receipt. A normal Default RET checks
+the real final scene fact; an early return without it still cancels. Native
+journal completion is retried without deleting Voss, her car or pose helper.
+
+The Off the Books request survives pending journal acknowledgement. Parents
+and the current description activate before its objective. The next objective
+activates before the previous one is retired. Missing/rejected journal paths
+are reported specifically. Target actors wait for actual journal activation.
+Explicit Clear stays cleared across reload; it does not restart itself.
+
+Install all 129 files over the mod and restart. Because the old failure erased
+its completion flags, activate the Voss test once again if it was already cleared.
+Let the conversation finish. Voss should remain and the new contractor objective
+should activate automatically. Do not press Continue before dialogue finishes.
+An already retained valid receipt or active target quest can resume normally.
+
+Diagnostics now show briefing receipt, continuation acceptance and the exact
+native journal blocker. Voice, lipsync, captions, body pose and speech timing
+are unchanged. Only the quest phase changes inside the rebuilt Voss archive;
+its other 15 extracted binary resources and the other nine archives match.
+41 portable suites and offline API checks cover the failure/recovery boundaries.
+Actual native gameplay still requires confirmation in the affected game.
+
 NCPD PATROL v0.20a1 STARTUP FIX - COMPLETE BRANCH TEST
 
 Fixes the reported REDscript NO_MATCHING_OVERLOAD at OffBooksSystem line 68.

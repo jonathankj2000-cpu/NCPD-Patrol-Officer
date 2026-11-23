@@ -13,6 +13,7 @@ local recover,cleanupPending=true,false
 local poll,stable,missing,age=0,0,0,0
 local label='Off the Books: finish Voss\'s briefing to begin.'
 local lastError,lastStage=nil,nil
+local lastStartFailure,pendingReason=nil,nil
 local function distance(a,b) return math.sqrt((a.x-b.x)^2+(a.y-b.y)^2+(a.z-b.z)^2) end
 local function ready() return context.worldReady and context.worldReady() end
 local function say(text,status)
@@ -22,7 +23,7 @@ end
 local function owner()
     local box=Game.GetScriptableSystemsContainer()
     local n=box and box:Get('NCPDPatrolOffBooksSystem')
-    if not n or n:Version()~=1 then error('Install the complete v0.20a Off the Books package and restart the game') end
+    if not n or n:Version()~=2 then error('Install the complete v0.20b Off the Books package and restart the game') end
     return n
 end
 local function system()
@@ -140,23 +141,38 @@ function M.reset()
     -- persistent spawns survive save/load, death and shift-session resets.
     rows,retired={},{};recover=true;cleanupPending=false
     poll,stable,missing,age=0,0,0,0;lastError,lastStage=nil,nil
+    lastStartFailure,pendingReason=nil,nil
 end
 function M.begin(status)
     local ok,result=pcall(function()
         if not ready() or not system() then error('Load a save before continuing Off the Books') end
         if recover then error('Wait for the current game session to finish restoring before this test') end
         local n=owner()
-        if n:IsActive() then say('The operation is already active.',status);return true end
+        if n:IsActive() then
+            if status then say('The operation is already active.',status) end
+            return true
+        end
         if context.onDuty and context.onDuty() then error('Go OFF DUTY before this operation') end
         if not collect() or next(rows) or cleanupPending then error('Previous encounter cleanup must finish before a new test') end
         if not n:RecordsReady() then error('Required contractor/guard/shard records or Read action unavailable in TweakDB; install the complete package') end
-        if not n:Begin() then error('Finish Voss\'s briefing first; ensure the Off the Books journal is installed and close menus') end
+        if not n:Begin() then error(n:GetStartReason()) end
         recover=false;stable=0;age=0;lastError=nil
-        say('Off-duty operation assigned. Eliminate the contractor and retrieve his encrypted shard.',status)
+        lastStartFailure,pendingReason=nil,nil
+        if n:ObjectiveVisible() then say('Off-duty operation assigned. Eliminate the contractor and retrieve his encrypted shard.',status)
+        else say('Continuation accepted; waiting for the native journal objective. '..n:GetStartReason(),status) end
         return true
     end)
-    if not ok then say(tostring(result),status);return false end
+    if not ok then
+        local reason=tostring(result)
+        if status or lastStartFailure~=reason then say(reason,status) end
+        lastStartFailure=reason;return false
+    end
     return result
+end
+function M.continueAfterBriefing()
+    local ok,suppressed=pcall(function() return owner():AutoSuppressed() end)
+    if ok and suppressed then return true end -- explicit Clear stays cleared across reload
+    return M.begin()
 end
 function M.clear(status)
     if not ready() then say('Load a save before clearing this test.',status);return false end
@@ -185,6 +201,12 @@ local function update(delta)
     if poll>=.25 then
         poll=0
         n:Tick(.25)
+        if not n:ObjectiveVisible() then
+            local reason=n:GetStartReason()
+            if pendingReason~=reason then pendingReason=reason;say('Continuation pending | '..reason) end
+            return -- no actor creation or success notice before journal readback
+        end
+        pendingReason=nil
         if distance(player:GetWorldPosition(),SITE)<=140 and n:GetStage()<=2 and n:ObjectiveVisible() then spawnMissing(n,player) else collect() end
         local stage=n:GetStage()
         if stage~=lastStage then

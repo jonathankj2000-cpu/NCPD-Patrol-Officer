@@ -15,8 +15,7 @@ def main():
     for path,strip in [(PREFIX+'quest_giver_test.lua',without_idle_only_lua),
         ('r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds',without_idle_only_pose)]:
         assert strip((ROOT/path).read_text())==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT,text=True),path
-    for path in ['archive/pc/mod/NCPDPatrol_QuestGiverTest.archive',
-        'assets/quest_giver_test/contract.json','assets/quest_giver_test/conversation.scene.json',
+    for path in ['assets/quest_giver_test/contract.json','assets/quest_giver_test/conversation.scene.json',
         'assets/quest_giver_test/onscreens.json.json','r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds']:
         assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT),path
     old=runtime(docs,legacy_walk=True);old.f.qposeModelWalkAfter=5
@@ -61,7 +60,7 @@ def main():
     # Missing/older installed bridges cannot partially activate the quest.
     m=runtime(docs);m.lua.execute('QNative.Version=function() return 2 end')
     assert not m.f.qmod.start(m.f.qstatus) and len(m.f.creates)==0
-    assert 'complete v0.20a' in m.f.qlog[len(m.f.qlog)]
+    assert 'complete v0.20b' in m.f.qlog[len(m.f.qlog)]
     # This remains cosmetic: refusal does not remove a visible Voss, stop her
     # existing spot, alter the voice timeline or cancel the SMS/meeting quest.
     for flag in ['qposeNoNativeSystem','qposeIdleExecuteThrows']:
@@ -74,7 +73,7 @@ def main():
         'exact_private_npc_tag_record_and_stage_scope':True,'waiting_dialogue_and_post_dialogue_model_held':True,
         'no_workspot_restart_jump_teleport_or_repeated_repair':True,'no_device_user_mapping_required':True,
         'cosmetic_failure_retains_quest_actors_and_voice_flow':True,'existing_cleanup_and_replay_retained':True,
-        'entire_v019h_scene_archive_caption_script_and_timing_byte_identical':True,
+        'v019h_scene_media_caption_script_and_timing_byte_identical':True,
         'actual_native_idle_mode_rendering_confirmed':False,'actual_game_validation':False}
     parser=argparse.ArgumentParser();parser.add_argument('--report',type=Path);args=parser.parse_args()
     if args.report:args.report.write_text(json.dumps(result,indent=2)+'\n')

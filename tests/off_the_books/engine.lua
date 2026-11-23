@@ -107,6 +107,28 @@ end
 function spatial:Overlap(...) return originalSpatial:Overlap(...) end
 Game.GetSpatialQueriesSystem=function() return spatial end
 for path,row in pairs(OTBEntries) do f.entries[path]=row end
+local journal=GameInstance:GetJournalManager({});local change=journal.ChangeEntryState
+f.obTime=0;f.obQueued={};f.obWrites={}
+function journal:ChangeEntryState(path,kind,state,...)
+ if f.qDelayCompletion and path==f.qroot and state==3 then return true end
+ if not OTBEntries[path] then return change(self,path,kind,state,...) end
+ f.obWrites[#f.obWrites+1]={path=path,state=state}
+ if f.obRejectedPath==path then return false end
+ if f.obRequireDescriptions and kind=='gameJournalQuestObjective' and state==2 then
+  if f.entries[path..'/briefing'].state~=2 or f.entries[root].state~=2 or f.entries[root..'/main'].state~=2 then return false end
+ end
+ if f.obJournalDelay then
+  if not f.obQueued[path] or f.obQueued[path].state~=state then f.obQueued[path]={state=state,kind=kind,due=f.obTime+f.obJournalDelay} end
+  return true
+ end
+ return change(self,path,kind,state,...)
+end
+function f.obAdvance(seconds)
+ f.obTime=f.obTime+seconds
+ for path,row in pairs(f.obQueued) do
+  if row.due<=f.obTime then change(journal,path,row.kind,row.state);f.obQueued[path]=nil end
+ end
+end
 local execute=qs.ExecuteNode
 function qs:ExecuteNode(node,input)
  if node.path and OTBPins[node.path.realPath] then
@@ -164,5 +186,5 @@ function f.obConfigureRetention()
  f.qmod.configure({status=f.qstatus,worldReady=function() return f.ready end,overlayOpen=function() return f.qoverlay end,
   canStart=function() return not f.duty and not f.qsurvey and not f.qdispatch end,
   keepAfterBriefing=function() return f.books.keepVoss() or f.qmod.briefingComplete() end,
-  onBriefingComplete=function() f.books.begin(f.obStatus) end,onClear=function() f.books.clear(f.obStatus) end})
+  onBriefingComplete=function() return f.books.continueAfterBriefing() end,onClear=function() f.books.clear(f.obStatus) end})
 end
