@@ -99,3 +99,20 @@ the ORIGINAL v0.20f1 assets. It adds only one namespaced ScriptableService plus
 a note, and exposes received-resource and six-row readback diagnostics. No
 header, voice, scene or timing patch is stacked. Native scheduling/mixing and
 the cause of the cuts remain unconfirmed until an actual game test.
+
+LENGTH EXPERIMENT REJECTED / RECOVERY
+The author subsequently reports: callback registered=true, resource callbacks=1,
+added=6, updated=0, verified=6/6. Cuts remained and V began speaking before Voss
+finished. Thus native duration metadata registration really did execute, but it
+did not solve the cuts and introduced a timing regression. Do not promote it.
+Its builder now refuses normal use; historical reproduction requires an
+explicit flag. Production source assets still remain at original v0.20f1.
+
+tools/build_voice_ab_release.py packages exact v0.20f1 plus an inert replacement
+for the failed service and a separate explicit CET comparison. The service
+never registers/modifies durations. Full restart is necessary to discard the
+previous process's cached global report. The optional comparison queues two
+stock V lines and two private Voss lines directly on V using the native
+gameaudioeventsDialogLine event, without starting a quest scene. It preserves
+identical emitter/flags between groups and records optional native fast-forward
+state. It does not test the NPC emitter or prove an engine/mixer root cause.

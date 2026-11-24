@@ -1,3 +1,7 @@
+REJECTED EXPERIMENT: native readback verified 6/6, cuts unchanged, V/Voss
+overlap introduced. Disable this test and fully restart. Use the Voss Audio
+Control recovery package to restore the original guards after a manual install.
+
 NCPD PATROL - ISOLATED NATIVE VO LENGTH METADATA TEST
 ===================================================
 Full package based on v0.20f1, with ONE added REDscript service. The original

@@ -23,7 +23,11 @@ def sha(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--allow-rejected-experiment', action='store_true',
+                        help='Historical reproduction only: this test caused overlapping voices in game')
     args = parser.parse_args()
+    if not args.allow_rejected_experiment:
+        parser.error('Rejected in-game experiment: cuts unchanged and V/Voss overlap introduced. Use the recovery/control package.')
     original = ROOT/'releases'/BASE
     assert sha(original.read_bytes()) == BASE_HASH
     with zipfile.ZipFile(original) as z:
