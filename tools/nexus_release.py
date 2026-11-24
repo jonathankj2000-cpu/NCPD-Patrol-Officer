@@ -5,7 +5,8 @@ import re
 import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
-VERSION='v0.20g'
+# Public Nexus numbering is independent of the developer/test build sequence.
+VERSION='v0.8.7'
 BASE='NCPD_Patrol_v0.20f1_Dialogue_Handoff_TEST.zip'
 BASE_SHA256='d6493b500015e0877d28b4d85570ad9ec165a07c877c7ceb75643b1b61cc9bb4'
 PREFIX='bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/'

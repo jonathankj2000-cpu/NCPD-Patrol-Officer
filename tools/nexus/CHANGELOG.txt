@@ -1,9 +1,9 @@
-NCPD PATROL v0.20g - PUBLIC PATROL RELEASE
+NCPD PATROL v0.8.7 - PUBLIC PATROL RELEASE
 =======================================
 - Separate Nexus package with all unreleased story-prototype Lua, REDscript,
   quest/journal archives, voice/lipsync assets and private NPC/item definitions
   omitted. Their activation, update, cleanup and CET menu routes are removed.
-- Public startup message and CET window identify v0.20g.
+- Public startup message and CET window identify v0.8.7.
 - Temporary voice diagnostics and rejected audio experiments are not included.
 - Patrol gameplay is preserved from the current development baseline: scanner,
   VIP, cyberpsycho and Officer Down dispatches; existing navigation/cleanup;

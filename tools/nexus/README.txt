@@ -1,4 +1,4 @@
-NCPD PATROL v0.20g - NEXUS RELEASE
+NCPD PATROL v0.8.7 - NEXUS RELEASE
 ================================
 Patrol Night City with dispatches, a police partner, vehicle backup, arrests
 and a persistent career. This is the patrol-only public package. Unreleased
@@ -21,7 +21,7 @@ OPTIONAL
 INSTALL / UPDATE
 Exit the game. Install the complete ZIP through your mod manager, or extract
 it into the Cyberpunk 2077 folder containing bin, r6 and archive. Restart the
-whole game. CET announces v0.20g. Include all archive/.xl and tweak files.
+whole game. CET announces v0.8.7. Include all archive/.xl and tweak files.
 For a mod-manager update, replace the previous NCPD Patrol version.
 Normal career progress, reward receipts and completed-incident history remain
 in the save. Do not remove your saves or delete existing JSON/JSONL log files.
