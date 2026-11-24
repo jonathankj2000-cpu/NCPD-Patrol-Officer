@@ -84,3 +84,18 @@ the authoring pipeline and retain byte-level regression checks. If it does
 not, keep the result as a negative control and investigate a genuine Wwise
 2023.1.14 conversion plus actual native dialog start/end and fast-forward
 observations. Do not stack additional timing/context changes onto this test.
+
+RUNTIME FEEDBACK / NEXT ISOLATED CONTROL
+The author reports no audible difference with the header package loaded after
+the mod. Treat this as a negative test, not a confirmed cause or audible fix.
+The production media were never modified by that experiment.
+
+Subsequent source research found the missing native length metadata route in
+cyb3rpsych0s1s/audioware's SCENE_DIALOG_LINES.md, section "string id variants
+map" (e71fcc1c87fb8d9c2885b452272e0c883f6831e0). Codeware can extend the report
+using Resource/PostLoad even though ArchiveXL does not register length maps.
+tools/build_voss_length_test_release.py builds that separate experiment over
+the ORIGINAL v0.20f1 assets. It adds only one namespaced ScriptableService plus
+a note, and exposes received-resource and six-row readback diagnostics. No
+header, voice, scene or timing patch is stacked. Native scheduling/mixing and
+the cause of the cuts remain unconfirmed until an actual game test.
