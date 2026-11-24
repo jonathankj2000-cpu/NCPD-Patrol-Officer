@@ -1,7 +1,7 @@
 {
-  "version": "v0.20g",
+  "version": "v0.8.7",
   "flavour": "Nexus patrol release",
-  "source_commit": "06addd251cea379555dc4e88dc0b9c4f80b8b215",
+  "source_commit": "10c0a7cf44cd3d5354a0d8b569e41025fed55149",
   "baseline_zip": "NCPD_Patrol_v0.20f1_Dialogue_Handoff_TEST.zip",
   "baseline_sha256": "d6493b500015e0877d28b4d85570ad9ec165a07c877c7ceb75643b1b61cc9bb4",
   "install_files": 118,
@@ -37,7 +37,7 @@
   "browser_extension_optional": true,
   "private_story_save_migration_supported": false,
   "tests": {
-    "version": "v0.20g",
+    "version": "v0.8.7",
     "files": 118,
     "removed_story_files": [
       "archive/pc/mod/NCPDPatrol_OffTheBooks.archive",
@@ -69,12 +69,12 @@
     "actual_game_validation": false
   },
   "actual_game_validation_of_release_flavour": false,
-  "file": "NCPD_Patrol_v0.20g_Nexus_Release.zip",
-  "bytes": 1392995,
-  "sha256": "f04d43d733936ac4da39b1c3553f1cc0371c39feaad67fd4262b726ec6e3b6d7",
+  "file": "NCPD_Patrol_v0.8.7_Nexus_Release.zip",
+  "bytes": 1392998,
+  "sha256": "ba0b70e0c0ec180dd839fd8878c9fd6acef8f794520047d573745edc91f46aec",
   "files": {
     "LICENSE": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
-    "README.txt": "ea0302644e1e146cbb5e73c54c7ac2193840cd0b6790d9763071fddffcb088a7",
+    "README.txt": "29fa6c38aeb7fc2e094ebb5980f9b23c24944dbc10bd9a9a961077305a233639",
     "THIRD_PARTY_NOTICES.txt": "111f35ab825e05796213b9de12540e69d6a1cb46ee0aaaee26fe74b57c3b86c6",
     "archive/pc/mod/NCPDPatrol_Arrest.archive": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3",
     "archive/pc/mod/NCPDPatrol_BeanBagger.archive": "30f5e6ac997f96bda63a1d5c5a1ea2a36ec5d796abfe0d4485cc4bba1ed3690e",
@@ -95,7 +95,7 @@
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup.lua": "92fe41ef9358d6f1774623a9cfb64f2bc1728b10d20e791caa46b9dd7999bc1e",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup_approach.lua": "cce45e5cb1961521df2902781275c1144f066240653ba470b5292b598a0ae0e1",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/boarding.lua": "e69c46604086123f0ec75b542a97ae9b9c3f28ba3770666a5e38370242b56f35",
-    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua": "584afd7753ea565062f502e14d95c87f3a1c25912ae75d313e333fc6cf572f8d",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua": "fa4e92136862362ef2c289e93b7e63101a6ad08c5fa741f8021c15977ef34965",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho.lua": "74cb89e32a34b772068722033beb2ce79a2ca2b4a04e5b50f978d8be5c8a1c78",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho_variants.lua": "aedf8dd3a1a22deb4d2d3616f83d0e5a290d5faba513606154ea615c735221c8",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch.lua": "668dd69462f973666809ef428bc0a4430c045aea87bb7bda592f7ab9c9b88607",
@@ -105,7 +105,7 @@
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_results.lua": "be175d405befc257169c90d81b3799b9a296f053266e3a7656ede6bfc90cf558",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scanner.lua": "360a1c6cb62b391733244a80b9353809b6b91dbbcb90604edb7e1b82e6dcaeac",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scheduler.lua": "93ca728d6b0b017775b509bdf6a43d4318192e5b9884981b69218ca7b1fbf0cb",
-    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua": "a09db9ff6383967ef44f02af522d4838ad11da9b5cc1bd83057e1dfa66275d47",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua": "fd9386b90f22ec1985005506d0cfbaccefe566325079be9245a7dbbf3f83c07a",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_catalog.lua": "cf02b675dc4ef8c34f513c0d2287b8f9071d78443db0e3022a556f549fcefcda",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_navigation.lua": "88c2b031a304e9133d2417924308724214ef5069139c304677844b0a0cdfccd4",
     "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ai.lua": "3db9487b965f2d30170d557d2e55dbfdf9f8ed7f2d83e9282b33124a1cb8732a",
@@ -190,6 +190,6 @@
     "r6/tweaks/NCPDPatrol_PartnerDown.yaml": "ca033f754f9bb0251af911b1a87531ff7b153e5ffb5399448f380de3f81003a6",
     "r6/tweaks/NCPDPatrol_PoliceHella.yaml": "42b287f1b376a78c93992b91a0ffdd967f368beb1a2e1d81bdbe010d0c5ab713",
     "r6/tweaks/NCPDPatrol_VIP.yaml": "da362244c3b0af5c707b2a4778d65d6ec95e917a3332c57c2272142e790580ff",
-    "CHANGELOG.txt": "876d279baa658e533d723d0736a965e63fdd6fd140ac9573dd7d2ca8207da28b"
+    "CHANGELOG.txt": "c46a2f2a0de6ad9f2df52393aa45a5283da76616b3d555759dd02dd058859439"
   }
 }
