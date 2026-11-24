@@ -1,0 +1,86 @@
+VOSS AUDIO TRANSITION INVESTIGATION - 24 NOVEMBER 2026
+===================================================
+
+Status: concrete file-format difference identified; audible cause unconfirmed.
+The experiment is separate from the production assets and playback code.
+
+OBSERVATIONS FROM THE USER'S FILES
+- The 31.85 s MP3 contains three broadband stereo interruptions, approximately
+  6.43-8.515 s, 22.37-22.975 s and 26.20-27.325 s. Both channels are effectively
+  silent; more than 90% of samples in each interval are exactly zero after
+  decoding. This is not just a slight ambience level change.
+- Correlation with the original WAV places VossBriefing01 at approximately
+  8.537 s and VossBriefing02 at approximately 27.347 s in that recording.
+- The author confirms cuts only occur at audio file transitions, never during
+  a spoken line. All three captured cuts border a custom Voss file. Although
+  V speaks between Voss lines, this capture contains no stock-V -> stock-V
+  transition to demonstrate that an isolated stock line has the same issue.
+- The separate CET trace proves the v0.20f1 scene is loaded, including all ten
+  extended events. SceneTier, HighLevel and UpperBody are stable. No scripted
+  mute/volume request or CET update gap >=120 ms was recorded.
+- Those captures are from separate runs; their clocks are not synchronized.
+  CET does not observe internal Wwise transitions, bus levels or audio-thread
+  scheduling. Absence of script requests does not prove no native changes.
+
+SPECIFIC HEADER DIFFERENCE
+The six custom mono voices were made using kamus1/wem-encoder at revision
+0b1ad96eb55dd6aab27c922694a0f8f80d2c304f. Its ogg_to_wem() writes a traditional
+WAVE speaker mask (0x4 for mono) at fmt + 0x14. The resulting files have:
+  codec = 0xFFFF, channels = 1, rate = 44100, configuration = 0x00000004.
+
+Two reference WEMs from Andrea Olivato's cyberpunk-codes, pinned at
+f50e2d05e2ff868a1a15dbe40fd2cd9c77ff91be, have:
+  codec = 0xFFFF, channels = 1, rate = 48000, configuration = 0x00004101.
+  fixer01/source/archive/mod/fixer01/audio/vo/fixer01_face__a01.wem
+  SHA256 8a4ee371ae0226db68e0e5f2f1ab7110ed4a8448ac38b870f562661641bc89ef
+  gig01_negative_balance/source/archive/mod/negative_balance/audio/vo/gig01_nix_brief__n01.wem
+  SHA256 9f2c32467a19a749595b6c876a5289b7e4035e99e654a9491079c3393dc29248
+No reference audio is included in the test package.
+
+The independent vgmstream reader documents the modern packed representation:
+  low 8 bits: channel count; next 4 bits: configuration type;
+  remaining bits: speaker mask.
+Thus standard front-center mono is 1 | (1 << 8) | (4 << 12) = 0x4101.
+Source: src/meta/wwise.c, lines 864-873, commit
+5d5574405d61876cb995c17d86ccb8fd0be3565e in vgmstream/vgmstream.
+https://github.com/vgmstream/vgmstream/blob/5d5574405d61876cb995c17d86ccb8fd0be3565e/src/meta/wwise.c
+The reader supports older masks as well. This establishes the format
+difference, NOT how Cyberpunk's native decoder handles the legacy variant.
+
+ISOLATED TEST
+tools/build_voss_wem_header_test.py reads the SHA-pinned original v0.20f1 ZIP,
+unpacks its quest-giver archive and changes only fmt + 0x14 from 0x4 to 0x4101
+in vossbriefing01.wem through vossbriefing06.wem. It repacks, extracts again
+and verifies all sixteen archived resources against the expected bytes.
+
+Each WEM changes exactly two bytes (absolute offsets 40 and 41). The compressed
+Vorbis packets, seek table, sample rate/count, decoder allocation fields and
+all other headers remain exact. All ten non-WEM archive resources, including
+the scene, lipsync and journal, are exact. The full test ZIP retains the other
+130 original install files byte for byte and adds a test note. The production
+source's 131 install files are not modified. The CET banner remains v0.20f1.
+
+This does not claim a full official Wwise conversion, game-tested compatibility
+or a confirmed fix. A clean game restart and replay of the same conversation
+are needed to determine whether these header fields cause the cuts.
+
+OTHER LEADS / LIMITS
+- The reference voices also differ in sample rate, setup/codebook hash and
+  decoder allocation sizes. Changing allocation constants from unrelated
+  streams would be a guess. Those fields remain unchanged in this test.
+- Native V subtitle durations are shorter than the authored conservative
+  slots. The live stage lasts about 134.16 s; the authored schedule is
+  143.836 s. This shows runtime duration resolution, not the cause of muting.
+- Native fast-forward can affect audio, but its scripted activation requires
+  input or a debug/review request. The scene's 'automatic' ffStrategy alone
+  is not proof it activates. No fast-forward override was added.
+- ArchiveXL 1.28.8 merges voice-map entries. Its inspected localization path
+  does not expose per-line native mixer transitions. No global mixer state,
+  volume or ambience override was introduced.
+
+NEXT DECISION
+If the header-only test removes the cuts, promote the corrected metadata into
+the authoring pipeline and retain byte-level regression checks. If it does
+not, keep the result as a negative control and investigate a genuine Wwise
+2023.1.14 conversion plus actual native dialog start/end and fast-forward
+observations. Do not stack additional timing/context changes onto this test.
