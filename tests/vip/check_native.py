@@ -4,8 +4,12 @@ Extends offline native-cache stubs using source-derived additions. Does not ship
 these declarations or claim an actual Cyberpunk game-cache compilation.
 """
 from pathlib import Path
-import re,subprocess,sys,tempfile
+import argparse,re,subprocess,sys,tempfile
 ROOT=Path(__file__).resolve().parents[2]
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--payload-root',type=Path,help='Compile native scripts from a staged release while keeping source-backed API contracts')
+args=parser.parse_args()
+PAYLOAD=args.payload_root.resolve() if args.payload_root else ROOT
 WORK=ROOT.parent
 base=WORK/'v09a-check'
 compiler=WORK/'redscript/target/debug/ncpd-check'
@@ -22,18 +26,20 @@ for target,method in re.findall(r'@(?:addMethod|addField)\((\w+)\)\n([^\n]+)',ad
  pattern=r'(public native (?:class|struct) '+target+r'\b[^\{]*\{)'
  source,count=re.subn(pattern,lambda m:m[0]+'\n '+method,source,count=1)
  assert count,target
-scripts=[base/'localization-api.reds', ROOT/'tests/trunk_menu/codeware-popup-api.reds']+sorted((ROOT/'r6/scripts/NCPDPatrol').glob('*.reds'))
+native_scripts=sorted((PAYLOAD/'r6/scripts/NCPDPatrol').glob('*.reds'))
+assert native_scripts,'No native payload scripts found'
+scripts=[base/'localization-api.reds', ROOT/'tests/trunk_menu/codeware-popup-api.reds']+native_scripts
 with tempfile.TemporaryDirectory(prefix='ncpd-native-') as d:
  path=Path(d)/'contracts.reds';path.write_text(source)
  for browser in [True,False]:
   optional=([ROOT/'tests/career/contracts'/n for n in ['browser-data.reds','browser-extension.reds','browser-controller.reds']]+[WORK/'v010b-framework/BrowserExtension.Classes.reds']) if browser else []
   subprocess.run([str(compiler),str(path),'--',*map(str,optional+scripts)],check=True)
-  print('PASS: offline source/API compile with BEF='+str(browser)+' (not the actual game cache)')
+  print('PASS: offline source/API compile of '+str(len(native_scripts))+' payload scripts with BEF='+str(browser)+' (not the actual game cache)')
  # This exact previous owner caused the supplied 2026-11-21 game error. The
  # corrected contracts must reject it rather than inventing an Entity import.
  legacy=Path(d)/'v018e-officer-down.reds'
  legacy.write_text(subprocess.check_output(['git','show','1f3bb6cf71cc72fd1dff8a412fafb436ce9919c1:r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds'],cwd=ROOT,text=True))
- broken=[legacy if p==ROOT/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds' else p for p in scripts]
+ broken=[legacy if p==PAYLOAD/'r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds' else p for p in scripts]
  rejected=subprocess.run([str(compiler),str(path),'--',*map(str,broken)],capture_output=True,text=True)
  diagnostic=rejected.stdout+rejected.stderr
  assert rejected.returncode!=0 and 'Dispose' in diagnostic and 'VehicleObject' in diagnostic,diagnostic

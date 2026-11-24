@@ -1,0 +1,21 @@
+NCPD PATROL v0.20g - PUBLIC PATROL RELEASE
+=======================================
+- Separate Nexus package with all unreleased story-prototype Lua, REDscript,
+  quest/journal archives, voice/lipsync assets and private NPC/item definitions
+  omitted. Their activation, update, cleanup and CET menu routes are removed.
+- Public startup message and CET window identify v0.20g.
+- Temporary voice diagnostics and rejected audio experiments are not included.
+- Patrol gameplay is preserved from the current development baseline: scanner,
+  VIP, cyberpsycho and Officer Down dispatches; existing navigation/cleanup;
+  partner and backup; revives/arrests; vehicle repair; career/rewards/partners;
+  Bean Bagger and optional NCPD Career browser page.
+- All 54 approved Officer Down sites remain available. Automatic dispatch
+  weights remain 45/27/18/10. Existing payment and progression owners remain.
+- Browser Extension Framework remains optional. No new runtime dependency.
+- New installation guide lists the tested framework versions and explains
+  how to remove obsolete files when switching from private prototype builds.
+
+This release split does not change incident payouts, career receipts, weapon
+tiers, NPC combat/boarding, police-fire policy or the manual waypoint policy.
+It is not a fix for the private dialogue prototype's audio issue; that content
+is not part of this package. Private quest-test saves are not migrated.
