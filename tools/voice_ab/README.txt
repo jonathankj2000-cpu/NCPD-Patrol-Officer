@@ -1,5 +1,10 @@
 NCPD PATROL - VOSS AUDIO RECOVERY AND DIRECT VOICE CONTROL
 ========================================================
+REJECTED CONTROL: the author reports that none of its four lines is audible.
+Queued events and the local API-boundary tests did not establish playback.
+Keep the recovery stub, but use the stock-scene control for audio comparisons.
+The instructions below are retained only to document the failed experiment.
+
 This complete package restores the original v0.20f1 media/scene/scripts and
 disables the rejected VO Lengths service. It also adds an OPTIONAL standalone
 CET audio comparison. It does not claim to fix the original background cuts.

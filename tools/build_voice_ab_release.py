@@ -23,7 +23,11 @@ def sha(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
+    parser.add_argument('--allow-rejected-experiment', action='store_true',
+                        help='Historical reproduction only: no playback was audible in game')
     args = parser.parse_args()
+    if not args.allow_rejected_experiment:
+        parser.error('Rejected in-game control: none of the four lines was audible. Use the stock-scene control package.')
     original = ROOT/'releases'/BASE
     assert sha(original.read_bytes()) == BASE_HASH
     with zipfile.ZipFile(original) as z:
