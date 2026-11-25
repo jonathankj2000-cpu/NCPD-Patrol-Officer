@@ -19,7 +19,7 @@ INSTALL
 
 RUN THE EXISTING SCENE
 1. Use a test save before the Voss briefing, go off duty, then use the existing
-   CET Testing > Quest giver prototype > Activate quest giver test. If an old
+   CET Testing > Quest giver prototype > TEST: Activate quest giver quest. If an old
    test is still active, use its existing clear action before reactivating.
 2. Follow the meeting marker and approach Voss normally with CET closed.
    There is no new playback button. The regular quest scene plays all lines.
