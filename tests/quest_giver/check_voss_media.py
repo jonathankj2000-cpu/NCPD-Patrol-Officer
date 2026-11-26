@@ -9,40 +9,7 @@ import argparse,copy,hashlib,json,math,re,struct,subprocess,sys
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'tools'))
 import build_quest_giver_assets as assets
-
-def wem_info(body):
-    assert body[:4]==b'RIFF' and body[8:12]==b'WAVE'
-    assert struct.unpack_from('<I',body,4)[0]+8==len(body),'Truncated WEM'
-    chunks={};pos=12
-    while pos<len(body):
-        assert pos+8<=len(body)
-        tag=body[pos:pos+4];size=struct.unpack_from('<I',body,pos+4)[0];pos+=8
-        assert tag not in chunks and pos+size<=len(body)
-        chunks[tag]=body[pos:pos+size];pos+=size
-    assert set(chunks)=={b'fmt ',b'data'}
-    fmt=chunks[b'fmt '];assert len(fmt)==0x42
-    codec,channels,rate=struct.unpack_from('<HHI',fmt)
-    assert codec==0xffff and channels==1 and rate==44100,'Not the intended Wwise Vorbis stream'
-    assert struct.unpack_from('<H',fmt,16)[0]==0x30
-    assert struct.unpack_from('<I',fmt,20)[0]==4
-    samples=struct.unpack_from('<I',fmt,24)[0];assert samples>0
-    seek,offset=struct.unpack_from('<II',fmt,40);data=chunks[b'data']
-    assert seek%4==0 and 0<seek<offset<len(data)
-    setup_size=struct.unpack_from('<H',data,seek)[0]
-    assert seek+2+setup_size==offset
-    # Wwise stores the stripped setup and a size-prefixed packet stream.
-    h=0x811c9dc5
-    for byte in data[seek+2:offset]:h=((h*0x01000193)&0xffffffff)^byte
-    assert h==struct.unpack_from('<I',fmt,60)[0]
-    packets=0;pos=offset
-    while pos<len(data):
-        assert pos+2<=len(data)
-        size=struct.unpack_from('<H',data,pos)[0];pos+=2
-        assert size>0 and pos+size<=len(data),'Truncated audio packet'
-        pos+=size;packets+=1
-    assert packets>1
-    return {'codec':'Wwise Vorbis 0xFFFF','channels':channels,'sample_rate':rate,
-        'sample_frames':samples,'duration_seconds':samples/rate,'audio_packets':packets}
+from voss_wem import inspect as wem_info
 
 def main():
     c=assets.read('contract.json');m=assets.read('media/manifest.json');npcs=[t for t in c['conversation'] if t['speaker']=='voss']
@@ -61,8 +28,15 @@ def main():
         assert clip['all_animation_payload_fields_preserved'] and clip['num_joints']==344 and clip['num_tracks']==414
         assert clip['duration_seconds']==row['animation_seconds'] and clip['animation_type']=='AdditiveFromRefPose'
         body=(assets.DIR/'media'/row['wem']).read_bytes();audio=wem_info(body);source=m['source_uploads'][row['source_wav']]
-        assert audio['sample_frames']==source['sample_frames'] and audio['sample_rate']==source['sample_rate']
-        assert audio['duration_seconds']==row['audio_seconds'] and abs(audio['duration_seconds']-row['animation_seconds'])<1/30
+        # The authoring export resamples the unchanged 44.1-kHz WAV to 48 kHz.
+        # Keep the established scene/lipsync durations, with <= one output
+        # sample of rounding; changing scene timing would confound this fix.
+        assert abs(audio['sample_frames']/48000-source['sample_frames']/source['sample_rate'])<1/48000
+        assert abs(audio['duration_seconds']-row['audio_seconds'])<1/48000
+        assert abs(audio['duration_seconds']-row['animation_seconds'])<1/30
+        exported=m['conversion']['exports'][row['wem']]
+        assert exported['sample_frames']==audio['sample_frames'] and exported['sha256']==hashlib.sha256(body).hexdigest()
+        assert exported['independent_decode_succeeded'] and exported['aligned_waveform_correlation']>0.98
         assert assets.media_ms(row)==math.ceil(max(row['audio_seconds'],row['animation_seconds'])*1000)
         assert assets.turn_ms(row,c['timing'])>=math.ceil(audio['duration_seconds']*1000)+2000
         audios[row['key']]=audio

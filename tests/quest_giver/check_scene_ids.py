@@ -66,7 +66,13 @@ def main():
         assert {k:v for k,v in before.items() if k!='itemId'}=={k:v for k,v in after.items() if k!='itemId'}
     assert current['locStore']==old['locStore'] and current['resouresReferences']==old['resouresReferences']
     for name in ['media/manifest.json','quest_giver.journal.json','vomap.json.json','voss.lipmap.json','lines.json.json','subtitles.json.json','voss_wait_pose.ent.json']:
-        path='assets/quest_giver_test/'+name;assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),name
+        path='assets/quest_giver_test/'+name
+        if name=='media/manifest.json':
+            prior=json.loads(subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT))
+            current_media=json.loads((ROOT/path).read_text())
+            for key in ['source_upload','source_uploads','lipsync_merge','vanilla_v_string_ids']:
+                assert current_media[key]==prior[key],key
+        else:assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',f'{BASE}:{path}'],cwd=ROOT),name
     before_contract=json.loads(subprocess.check_output(['git','show',f'{BASE}:assets/quest_giver_test/contract.json'],cwd=ROOT))
     def without_timing(contract):
         contract=copy.deepcopy(contract)
@@ -101,5 +107,5 @@ def main():
     result={'reference_commit':reference['source_commit'],'reference_blob':reference['source_git_blob'],'previous_v019g_first_item_id':bad_id,'previous_type_byte':161,'previous_array_index':390,'previous_v019g_invalid_layout_rejected':True,'corrected_packed_dialogue_ids':[(i<<8)|1 for i in range(10)],'dense_scene_node_ids':list(range(1,16)),'all_dialogue_and_graph_references_checked':True,'all_44_other_native_scripts_and_all_media_unchanged':True,'only_captions_timing_and_scoped_idle_request_excluded_from_baseline_comparison':True,'actual_native_crash_reproduced':False,'actual_game_validation':False}
     p=argparse.ArgumentParser();p.add_argument('--report',type=Path);a=p.parse_args()
     if a.report:a.report.write_text(json.dumps(result,indent=2)+'\n')
-    print('PASS: reference-backed scene IDs: shipped v0.19g first ID 100001/type161/index390 and sparse graph rejected; ten packed dialogue IDs, dense ordered 15-node graph and every event/edge checked; unsafe-category/index/order/reference controls; speech/media/native V IDs and 44 other scripts unchanged, scoped captions/timing/idle request allowed (not a native crash reproduction)')
+    print('PASS: reference-backed scene IDs: shipped v0.19g first ID 100001/type161/index390 and sparse graph rejected; ten packed dialogue IDs, dense ordered 15-node graph and every event/edge checked; unsafe-category/index/order/reference controls; scene/lipsync/native V IDs and 44 other scripts retained, scoped captions/timing/idle and Wwise re-exports allowed (not a native crash reproduction)')
 if __name__=='__main__':main()

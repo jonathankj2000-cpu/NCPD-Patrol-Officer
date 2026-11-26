@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "source_upload": {
     "file": "VossBriefing.zip",
     "sha256": "842320f23bfe1b778bbb42bd7e2f158da9f760da1282d6a60c36840d4d39ea95"
@@ -76,28 +76,28 @@
       "sha256": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370"
     },
     "vossbriefing01.wem": {
-      "bytes": 127410,
-      "sha256": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb"
+      "bytes": 127215,
+      "sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d"
     },
     "vossbriefing02.wem": {
-      "bytes": 186371,
-      "sha256": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547"
+      "bytes": 188529,
+      "sha256": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909"
     },
     "vossbriefing03.wem": {
-      "bytes": 88177,
-      "sha256": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3"
+      "bytes": 87819,
+      "sha256": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c"
     },
     "vossbriefing04.wem": {
-      "bytes": 251505,
-      "sha256": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5"
+      "bytes": 252725,
+      "sha256": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc"
     },
     "vossbriefing05.wem": {
-      "bytes": 186916,
-      "sha256": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627"
+      "bytes": 186898,
+      "sha256": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd"
     },
     "vossbriefing06.wem": {
-      "bytes": 97549,
-      "sha256": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8"
+      "bytes": 96754,
+      "sha256": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782"
     }
   },
   "lipsync_merge": {
@@ -200,15 +200,134 @@
     "only_handle_buffer_ids_and_chunk_indices_relocated": true
   },
   "conversion": {
-    "codec": "Wwise Vorbis (0xFFFF), aoTuV b6.03 quality 4",
-    "encoder_repository": "https://github.com/kamus1/wem-encoder",
-    "encoder_commit": "0b1ad96eb55dd6aab27c922694a0f8f80d2c304f",
-    "aoTuV_source_sha256": "b529eb656a28cdd3a3ce22fe470a2f7705a088a87ccabe6675f1748e843aef0d",
-    "libogg_source_sha256": "83e6704730683d004d20e21b8f7f55dcb3383cdf84c0daedf30bde175f774638",
-    "packed_codebooks_git_blob": "a405d061b50cd793e17ad99b1f9f809ee372812a",
-    "resampled": false,
+    "codec": "Wwise Vorbis (0xFFFF), author-supplied Audiokinetic Wwise exports",
+    "authoring_tool": "Audiokinetic Wwise",
+    "version_attested_by_file_header": false,
+    "sample_rate": 48000,
+    "channels": 1,
+    "exports": {
+      "vossbriefing01.wem": {
+        "uploaded_filename": "VossBriefing01_5B9B5401.wem",
+        "target_filename": "vossbriefing01.wem",
+        "bytes": 127215,
+        "sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 665808,
+        "duration_seconds": 13.871,
+        "source_wav": "VossBriefing01.wav",
+        "source_wav_sha256": "e0d041ce24fcb96908aa39f543a7909c7b19e9838f9f3ac296bd8d433766d45c",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 611712,
+        "aligned_waveform_correlation": 0.9965622207857656,
+        "decoded_frames_at_44100_hz": 611579,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing02.wem": {
+        "uploaded_filename": "VossBriefing02_5B9B5401.wem",
+        "target_filename": "vossbriefing02.wem",
+        "bytes": 188529,
+        "sha256": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 961724,
+        "duration_seconds": 20.035916666666665,
+        "source_wav": "VossBriefing02.wav",
+        "source_wav_sha256": "67f6bd10a22e6db09aa79fad329283ece8fcf7755fb7f7037cc246016310a32f",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 883584,
+        "aligned_waveform_correlation": 0.9957511003408047,
+        "decoded_frames_at_44100_hz": 882999,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing03.wem": {
+        "uploaded_filename": "VossBriefing03_5B9B5401.wem",
+        "target_filename": "vossbriefing03.wem",
+        "bytes": 87819,
+        "sha256": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 462680,
+        "duration_seconds": 9.639166666666666,
+        "source_wav": "VossBriefing03.wav",
+        "source_wav_sha256": "ff16918133290ee234e30ecbdfdbde6d2c2b102d9c4ac27a557e0a0ddc42d04d",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 425088,
+        "aligned_waveform_correlation": 0.9963116231118299,
+        "decoded_frames_at_44100_hz": 424830,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing04.wem": {
+        "uploaded_filename": "VossBriefing04_5B9B5401.wem",
+        "target_filename": "vossbriefing04.wem",
+        "bytes": 252725,
+        "sha256": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 1304032,
+        "duration_seconds": 27.167333333333332,
+        "source_wav": "VossBriefing04.wav",
+        "source_wav_sha256": "05ad6e8ab41611b15cae781de4f1274e989e2a13cf9afa940933c0a29459f4eb",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 1198080,
+        "aligned_waveform_correlation": 0.995901845919956,
+        "decoded_frames_at_44100_hz": 1197698,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing05.wem": {
+        "uploaded_filename": "VossBriefing05_5B9B5401.wem",
+        "target_filename": "vossbriefing05.wem",
+        "bytes": 186898,
+        "sha256": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 961724,
+        "duration_seconds": 20.035916666666665,
+        "source_wav": "VossBriefing05.wav",
+        "source_wav_sha256": "dace5851416148c6a7779c830c14a6df8520d7f785ebaaf790fef89e0f5a0da8",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 883584,
+        "aligned_waveform_correlation": 0.9970645747543723,
+        "decoded_frames_at_44100_hz": 883353,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing06.wem": {
+        "uploaded_filename": "VossBriefing06_5B9B5401.wem",
+        "target_filename": "vossbriefing06.wem",
+        "bytes": 96754,
+        "sha256": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 509074,
+        "duration_seconds": 10.605708333333334,
+        "source_wav": "VossBriefing06.wav",
+        "source_wav_sha256": "bc4dc1b07420daca8a80cf8263a37ceaf194777214fb0477707e0363e63a05db",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 467712,
+        "aligned_waveform_correlation": 0.996828927298214,
+        "decoded_frames_at_44100_hz": 467519,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      }
+    },
+    "source_export_zip": "VossBriefing06_5B9B5401.zip",
+    "source_export_zip_sha256": "2c266c8f2e6755f898036375044a8c965e884e50e3fc0e2181f903be3e62b0b4",
+    "resampled": true,
     "trimmed": false,
-    "audio_padding_added": false
+    "audio_padding_added": false,
+    "uploaded_wem_bytes_modified": false,
+    "independent_decode": "hcs64 ww2ogg 0.24 with packed_codebooks_aoTuV_603.bin, then FFmpeg for waveform comparison"
   },
   "timing": {
     "lead_in_ms": 300,
@@ -221,5 +340,22 @@
     "1714373979483803648"
   ],
   "vanilla_v_audio_redistributed": false,
-  "actual_game_validation": false
+  "actual_game_validation": false,
+  "legacy_conversion": {
+    "codec": "Wwise Vorbis (0xFFFF), aoTuV b6.03 quality 4",
+    "encoder_repository": "https://github.com/kamus1/wem-encoder",
+    "encoder_commit": "0b1ad96eb55dd6aab27c922694a0f8f80d2c304f",
+    "aoTuV_source_sha256": "b529eb656a28cdd3a3ce22fe470a2f7705a088a87ccabe6675f1748e843aef0d",
+    "libogg_source_sha256": "83e6704730683d004d20e21b8f7f55dcb3383cdf84c0daedf30bde175f774638",
+    "packed_codebooks_git_blob": "a405d061b50cd793e17ad99b1f9f809ee372812a",
+    "resampled": false,
+    "trimmed": false,
+    "audio_padding_added": false
+  },
+  "game_test_evidence": {
+    "first_line_sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+    "first_line_fix_confirmed": true,
+    "author_report": "Voss first line and V reply start/end without cuts; cuts resume at the next old Voss recording",
+    "all_six_updated_lines_confirmed": false
+  }
 }

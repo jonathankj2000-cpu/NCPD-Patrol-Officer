@@ -14,8 +14,12 @@ REPORT='NCPD_Patrol_'+release.VERSION+'_Nexus_verification.json'
 
 def main():
     original=release.original_payload()
-    for name,body in original.items():
-        assert (ROOT/name).read_bytes()==body,'Developer payload differs from the reviewed baseline: '+name
+    # The public flavour is pinned to its own reviewed ZIP. Private Voss audio
+    # may advance independently; verify unchanged public gameplay inputs and
+    # snapshot the current developer files to prevent a packaging rollback.
+    developer={name:(ROOT/name).read_bytes() for name in original}
+    for name in original.keys()-release.EXCLUDED-release.EDITED:
+        assert developer[name]==original[name],'Public gameplay differs from the reviewed baseline: '+name
     files=release.payload()
     with tempfile.TemporaryDirectory(prefix='ncpd-nexus-release-') as temp:
         temp=Path(temp)
@@ -36,7 +40,7 @@ def main():
     with zipfile.ZipFile(target) as z:
         assert z.testzip() is None and len(z.namelist())==len(set(z.namelist()))==118
         assert {name:z.read(name) for name in z.namelist()}==files
-    for name,body in original.items():
+    for name,body in developer.items():
         assert (ROOT/name).read_bytes()==body,'Developer file was modified while packaging: '+name
     manifest={name:release.sha(body) for name,body in files.items()}
     report={'version':release.VERSION,'flavour':'Nexus patrol release',

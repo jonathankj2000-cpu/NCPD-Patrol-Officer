@@ -67,6 +67,6 @@ def main():
         'global_mix_and_volume_settings_modified':False,'native_mixer_cause_confirmed':False,'actual_game_validation':False}
     p=argparse.ArgumentParser();p.add_argument('--report',type=Path);a=p.parse_args()
     if a.report:a.report.write_text(json.dumps(result,indent=2)+'\n')
-    print('PASS: exact v0.20f 500 ms tails rejected; only ten speech-event durations/cache hash changed; identical absolute voice starts, 143.836 s scene, original media and overlap guard; roundtripped archive; audible mixer result unverified')
+    print('PASS: exact v0.20f 500 ms tails rejected; ten speech-event durations/cache hash reviewed; identical absolute voice starts, 143.836 s scene and overlap guard; six Wwise media deltas audited separately; roundtripped archive')
 
 if __name__=='__main__':main()

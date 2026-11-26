@@ -2,6 +2,9 @@
 import re
 
 def without_dialogue_handoff_branding(source):
+    source=source.replace('-- NCPD Patrol v0.20g Wwise Voice Fix | six author-supplied 48 kHz Vorbis exports','-- NCPD Patrol v0.20f1 Dialogue Handoff | speech events cover existing section tails')
+    source=source.replace('v0.20g Wwise Voice Fix loaded. All six Voss lines use the author-supplied mono 48 kHz Vorbis exports. First-line ambience fix confirmed in game; test the complete conversation. Install the complete package and fully restart the game.','v0.20f1 Dialogue Handoff loaded. Ten speech events now cover the existing 500 ms section tails. Voice starts, pauses, overlap guard, media and wanted/evidence logic are retained. Audible ambience result requires testing. Install the complete package and fully restart the game.')
+    source=source.replace('NCPD Patrol - v0.20g Wwise Voice Fix###','NCPD Patrol - v0.20f1 Dialogue Handoff###')
     source=source.replace('-- NCPD Patrol v0.20f1 Dialogue Handoff | speech events cover existing section tails','-- NCPD Patrol v0.20f Wanted and Dialogue | native assassination pursuit and private dialogue mix')
     source=source.replace('v0.20f1 Dialogue Handoff loaded. Ten speech events now cover the existing 500 ms section tails. Voice starts, pauses, overlap guard, media and wanted/evidence logic are retained. Audible ambience result requires testing. Install the complete package and fully restart the game.','v0.20f Wanted and Dialogue loaded. Contractor death requests three native wanted stars once; escape and cooldown remain native. Private Voss dialogue uses a lower-priority mix context for testing ambience continuity. Working evidence and dialogue timing retained. Install the complete package and fully restart the game.')
     return source.replace('NCPD Patrol - v0.20f1 Dialogue Handoff###','NCPD Patrol - v0.20f Wanted and Dialogue###')

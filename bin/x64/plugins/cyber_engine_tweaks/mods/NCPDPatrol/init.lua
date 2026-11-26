@@ -1,4 +1,4 @@
--- NCPD Patrol v0.20f1 Dialogue Handoff | speech events cover existing section tails
+-- NCPD Patrol v0.20g Wwise Voice Fix | six author-supplied 48 kHz Vorbis exports
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -354,7 +354,7 @@ onClear=function(output) OffBooks.clear(output or status) end,
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.20f1 Dialogue Handoff loaded. Ten speech events now cover the existing 500 ms section tails. Voice starts, pauses, overlap guard, media and wanted/evidence logic are retained. Audible ambience result requires testing. Install the complete package and fully restart the game.")
+    status("v0.20g Wwise Voice Fix loaded. All six Voss lines use the author-supplied mono 48 kHz Vorbis exports. First-line ambience fix confirmed in game; test the complete conversation. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.

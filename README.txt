@@ -1,3 +1,26 @@
+NCPD PATROL v0.20g WWISE VOICE FIX - COMPLETE BRANCH TEST
+
+All six Voss briefing voices now use the author's Wwise exports: Vorbis, mono,
+48000 Hz. The first-line control was confirmed in game: Voss and V's following
+reply played without background cuts, and cuts resumed at the next old WEM.
+This package extends that exact replacement to the remaining five recordings.
+Each export independently decodes and matches its correct original WAV.
+
+The scene, private voice IDs, voice map, subtitles, lipsync, speech timing and
+overlap guards remain byte-identical. Native V replies and the quest, wanted,
+evidence, dispatch, duty, progression and save handling retain their behavior.
+Wwise is only an authoring tool; players need no new dependency.
+
+Disable the earlier audio experiments, install this complete 135-file package
+after the main mod, deploy and fully restart the game. CET now says v0.20g
+Wwise Voice Fix. Replay the existing quest-giver test and check all six lines,
+V's replies and the final transition. The full updated conversation still
+requires game confirmation; only the first-line replacement is proven so far.
+The old VO Lengths service and silent A/B helper are overwritten with inert
+recovery files. The separate public Nexus 0.8.7 package remains unchanged.
+
+Earlier version notes follow.
+
 NCPD PATROL v0.20f1 DIALOGUE HANDOFF - COMPLETE BRANCH TEST
 
 Controlled ambience test: the ten speech events now cover the existing last

@@ -79,18 +79,28 @@ def main():
         assert row['text']==before['text'] and row['clip']==before['clip']
         blocks+=len(parts)
     assert blocks==19
-    # The timing fix must not encode silence, trim or slow the original media.
-    for name in assets.read('media/manifest.json')['packaged']:
+    # Author-supplied Wwise re-exports preserve the original WAV content and
+    # duration; the facial bank and native V replies remain byte-identical.
+    media=assets.read('media/manifest.json')
+    old_media=json.loads(subprocess.check_output(['git','show',BASE+':assets/quest_giver_test/media/manifest.json'],cwd=ROOT))
+    assert media['source_uploads']==old_media['source_uploads']
+    for name in media['packaged']:
         path='assets/quest_giver_test/media/'+name
-        assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT)
+        if name.endswith('.wem'):
+            info=wem_info((ROOT/path).read_bytes());exported=media['conversion']['exports'][name]
+            assert exported['independent_decode_succeeded'] and exported['aligned_waveform_correlation']>0.98
+            original=media['source_uploads'][exported['source_wav']]
+            assert abs(info['duration_seconds']-original['duration_seconds'])<1/48000
+        else:assert (ROOT/path).read_bytes()==subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT)
     assert [r for r in c['conversation'] if r['speaker']=='v']==[r for r in old_contract['conversation'] if r['speaker']=='v']
     report={'baseline':BASE,'timeline':timeline,'scene_seconds':round(total,3),'modelled_startup_delays_seconds':[0,.5,1,1.5,2],
         'no_overlap_with_reported_two_second_startup_envelope':True,'previous_scene_rejected':True,
         'caption_blocks':blocks,'minimum_caption_hold_seconds':round(shortest,3),
-        'all_seven_media_files_and_four_native_v_lines_byte_identical':True,
+        'facial_bank_and_four_native_v_lines_byte_identical':True,
+        'six_wwise_exports_preserve_original_wav_content_and_duration':True,
         'actual_game_voice_completion_observed':False,'actual_game_validation':False}
     parser=argparse.ArgumentParser();parser.add_argument('--report',type=Path);args=parser.parse_args()
     if args.report:args.report.write_text(json.dumps(report,indent=2)+'\n')
-    print('PASS: authored scene prevents next-turn overlap for 0--2 s modelled VO startup; old timing and short line rejected; 19 captions held >=3 s; exact original media and V replies retained (game latency not measured)')
+    print('PASS: authored scene prevents next-turn overlap for 0--2 s modelled VO startup; old timing and short line rejected; 19 captions held >=3 s; Wwise export durations, original facial bank and V replies retained (game latency not measured)')
 
 if __name__=='__main__':main()

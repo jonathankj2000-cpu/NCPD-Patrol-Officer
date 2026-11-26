@@ -6,6 +6,8 @@ AUDIO_ASSETS={
     'assets/quest_giver_test/conversation.scene.json',
     'assets/quest_giver_test/compiled.json',
     'archive/pc/mod/NCPDPatrol_QuestGiverTest.archive',
+    'assets/quest_giver_test/media/manifest.json',
+    *('assets/quest_giver_test/media/vossbriefing%02d.wem'%i for i in range(1,7)),
 }
 
 def without_event_tail(doc):
