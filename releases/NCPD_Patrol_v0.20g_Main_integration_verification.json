@@ -1,0 +1,273 @@
+{
+  "version": "v0.20g",
+  "integration_date": "2026-11-26",
+  "merge_commit": "39f399ba957b9f2299b0226af5d9bbbd3fc70094",
+  "previous_main": "7afc3b10a88651e7978a10603abc56093c3c4c16",
+  "integrated_refactor": "7f847d3ad5eb449c4a18df7e35fcdfa0a73ce087",
+  "production_and_authored_asset_files_matching_refactor": 232,
+  "all_production_and_authored_asset_files_byte_identical_to_refactor": true,
+  "existing_main_only_files_preserved_byte_identical": [
+    ".github/workflows/chinese-localization-preview.yml",
+    "addons/chinese-localization/NCPD_Patrol_Chinese_LICENSE.txt",
+    "addons/chinese-localization/NCPD_Patrol_Chinese_README.txt",
+    "addons/chinese-localization/README.md",
+    "addons/chinese-localization/archive/pc/mod/NCPDPatrol_Chinese.archive",
+    "addons/chinese-localization/archive/pc/mod/NCPDPatrol_Chinese.archive.xl",
+    "addons/chinese-localization/compiled.json",
+    "addons/chinese-localization/r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds",
+    "addons/chinese-localization/source/onscreens_zh-cn.json.json",
+    "addons/chinese-localization/source/onscreens_zh-tw.json.json",
+    "addons/chinese-localization/translations.json",
+    "releases/NCPD_Patrol_Chinese_Localization_Preview_v0.1a.zip",
+    "releases/NCPD_Patrol_Chinese_Preview_v0.1a_verification.json",
+    "tools/build_chinese_localization.py"
+  ],
+  "readme_conflict_resolved_preserving_latest_build_and_chinese_preview": true,
+  "portable_suites_passed": 46,
+  "portable_results": [
+    {
+      "test": "tests/beanbagger/check_visuals.py",
+      "passed": true,
+      "seconds": 0.06
+    },
+    {
+      "test": "tests/beanbagger/check_beanbagger.py",
+      "passed": true,
+      "seconds": 0.04
+    },
+    {
+      "test": "tests/shift_entry/check_shift.py",
+      "passed": true,
+      "seconds": 0.03
+    },
+    {
+      "test": "tests/compile_compatibility/check_legacy_api.py",
+      "passed": true,
+      "seconds": 0.54
+    },
+    {
+      "test": "tests/arrests/check_arrest.py",
+      "passed": true,
+      "seconds": 0.12
+    },
+    {
+      "test": "tests/arrests/check_arrest_interactions.py",
+      "passed": true,
+      "seconds": 0.05
+    },
+    {
+      "test": "tests/trunk_menu/check_trunk.py",
+      "passed": true,
+      "seconds": 0.08
+    },
+    {
+      "test": "tests/dispatch_journal/check_journal.py",
+      "passed": true,
+      "seconds": 0.07
+    },
+    {
+      "test": "tests/career/check_career.py",
+      "passed": true,
+      "seconds": 0.15
+    },
+    {
+      "test": "tests/cyberpsycho/check_cyberpsycho.py",
+      "passed": true,
+      "seconds": 0.08
+    },
+    {
+      "test": "tests/vip/check_vip.py",
+      "passed": true,
+      "seconds": 0.14
+    },
+    {
+      "test": "tests/officer_readiness/check_ready.py",
+      "passed": true,
+      "seconds": 0.05
+    },
+    {
+      "test": "tests/incidents/check_incidents.py",
+      "passed": true,
+      "seconds": 0.3
+    },
+    {
+      "test": "tests/dispatch_refactor/check_refactor.py",
+      "passed": true,
+      "seconds": 40.03
+    },
+    {
+      "test": "tests/cet_ui/check_cet_ui.py",
+      "passed": true,
+      "seconds": 0.68
+    },
+    {
+      "test": "tests/vip_refactor/check_vip_refactor.py",
+      "passed": true,
+      "seconds": 9.85
+    },
+    {
+      "test": "tests/quest_marker_probe/check_probe.py",
+      "passed": true,
+      "seconds": 0.1
+    },
+    {
+      "test": "tests/fixed_markers/check_fixed.py",
+      "passed": true,
+      "seconds": 23.78
+    },
+    {
+      "test": "tests/vip_routes/check_routes.py",
+      "passed": true,
+      "seconds": 0.22
+    },
+    {
+      "test": "tests/officer_down/check_officer_down.py",
+      "passed": true,
+      "seconds": 0.15
+    },
+    {
+      "test": "tests/scene_survey/check_survey.py",
+      "passed": true,
+      "seconds": 0.71
+    },
+    {
+      "test": "tests/scene_survey/check_settling.py",
+      "passed": true,
+      "seconds": 0.58
+    },
+    {
+      "test": "tests/scene_survey/check_staging.py",
+      "passed": true,
+      "seconds": 0.69
+    },
+    {
+      "test": "tests/scene_survey/check_functional.py",
+      "passed": true,
+      "seconds": 0.99
+    },
+    {
+      "test": "tests/officer_down/check_catalog.py",
+      "passed": true,
+      "seconds": 3.0
+    },
+    {
+      "test": "tests/officer_down/check_gameplay.py",
+      "passed": true,
+      "seconds": 0.84
+    },
+    {
+      "test": "tests/partner_safety/check_safety.py",
+      "passed": true,
+      "seconds": 0.06
+    },
+    {
+      "test": "tests/officer_down/check_repeat.py",
+      "passed": true,
+      "seconds": 1.0
+    },
+    {
+      "test": "tests/scene_survey/check_discovery.py",
+      "passed": true,
+      "seconds": 1.59
+    },
+    {
+      "test": "tests/scene_survey/check_discovery_landing.py",
+      "passed": true,
+      "seconds": 1.26
+    },
+    {
+      "test": "tests/officer_down/check_site_expansion.py",
+      "passed": true,
+      "seconds": 0.23
+    },
+    {
+      "test": "tests/cet_ui/check_current_controls.py",
+      "passed": true,
+      "seconds": 1.63
+    },
+    {
+      "test": "tests/quest_giver/check_quest_giver.py",
+      "passed": true,
+      "seconds": 0.97
+    },
+    {
+      "test": "tests/quest_giver/check_voss_media.py",
+      "passed": true,
+      "seconds": 0.15
+    },
+    {
+      "test": "tests/quest_giver/check_subtitles.py",
+      "passed": true,
+      "seconds": 0.07
+    },
+    {
+      "test": "tests/quest_giver/check_scene_ids.py",
+      "passed": true,
+      "seconds": 0.2
+    },
+    {
+      "test": "tests/quest_giver/check_timing.py",
+      "passed": true,
+      "seconds": 0.07
+    },
+    {
+      "test": "tests/quest_giver/check_pose_idle.py",
+      "passed": true,
+      "seconds": 0.26
+    },
+    {
+      "test": "tests/off_the_books/check_off_books.py",
+      "passed": true,
+      "seconds": 0.84
+    },
+    {
+      "test": "tests/off_the_books/check_retention.py",
+      "passed": true,
+      "seconds": 0.47
+    },
+    {
+      "test": "tests/off_the_books/check_handoff.py",
+      "passed": true,
+      "seconds": 0.55
+    },
+    {
+      "test": "tests/off_the_books/check_encounter.py",
+      "passed": true,
+      "seconds": 2.93
+    },
+    {
+      "test": "tests/off_the_books/check_death_loot.py",
+      "passed": true,
+      "seconds": 1.1
+    },
+    {
+      "test": "tests/off_the_books/check_evidence_receipt.py",
+      "passed": true,
+      "seconds": 1.64
+    },
+    {
+      "test": "tests/off_the_books/check_wanted.py",
+      "passed": true,
+      "seconds": 1.15
+    },
+    {
+      "test": "tests/quest_giver/check_audio_mix.py",
+      "passed": true,
+      "seconds": 0.14
+    }
+  ],
+  "source_api_compile": {
+    "native_scripts": 50,
+    "browser_extension_present": true,
+    "browser_extension_absent": true,
+    "warnings": 0,
+    "errors": 0,
+    "actual_game_cache_compile": false
+  },
+  "complete_package": "NCPD_Patrol_v0.20g_Complete.zip",
+  "complete_package_sha256": "65bc0d7fe922710888ecb72969f0780e5c50e67b57746aa561099b25fa353005",
+  "tested_audio_confirmation": "assets/quest_giver_test/media/wwise_game_validation.json",
+  "new_gameplay_behavior_added_during_merge": false,
+  "separate_nexus_087_package_unchanged": true,
+  "repackaged_installation_independently_game_tested": false
+}
