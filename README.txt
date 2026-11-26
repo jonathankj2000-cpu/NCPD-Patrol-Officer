@@ -5,6 +5,9 @@ All six Voss briefing voices now use the author's Wwise exports: Vorbis, mono,
 reply played without background cuts, and cuts resumed at the next old WEM.
 This package extends that exact replacement to the remaining five recordings.
 Each export independently decodes and matches its correct original WAV.
+On 2026-11-26 the author confirmed that the complete updated conversation
+plays without audio cuts. The post-release result is recorded in
+assets/quest_giver_test/media/wwise_game_validation.json.
 
 The scene, private voice IDs, voice map, subtitles, lipsync, speech timing and
 overlap guards remain byte-identical. Native V replies and the quest, wanted,
@@ -14,8 +17,8 @@ Wwise is only an authoring tool; players need no new dependency.
 Disable the earlier audio experiments, install this complete 135-file package
 after the main mod, deploy and fully restart the game. CET now says v0.20g
 Wwise Voice Fix. Replay the existing quest-giver test and check all six lines,
-V's replies and the final transition. The full updated conversation still
-requires game confirmation; only the first-line replacement is proven so far.
+V's replies and the final transition when testing future audio changes. The
+released v0.20g conversation's audio continuity is now confirmed by the author.
 The old VO Lengths service and silent A/B helper are overwritten with inert
 recovery files. The separate public Nexus 0.8.7 package remains unchanged.
 

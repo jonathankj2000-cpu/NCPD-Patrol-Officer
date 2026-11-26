@@ -4,7 +4,11 @@ Complete private branch package. All six Voss briefing WEMs now use the
 author's Wwise Vorbis exports, mono 48000 Hz. Each file independently decodes
 and matches its correct original WAV. The first-line control was confirmed
 in game: Voss and V's reply played without cuts, then the next old WEM cut.
-The full updated conversation still needs a game test.
+On 2026-11-26 the author also confirmed that the full updated conversation
+plays without audio cuts. See media/wwise_game_validation.json under the
+quest-giver assets for the post-release result and exact six-file hashes.
+For future Voss recordings, use the same Wwise Vorbis/mono/48000-Hz export
+profile and inspect the actual WEM before packaging, then test it in game.
 
 INSTALL
 1. Completely exit Cyberpunk. Disable the earlier STOCK SCENE, FIRST LINE,
