@@ -1,0 +1,92 @@
+{
+  "repository": "maximegmd/CyberEngineTweaks",
+  "version": "v1.37.1",
+  "commit": "61bd6214f0f5f8748589c9e476538614a13908c0",
+  "source": "src/sol_imgui/sol_imgui.h",
+  "url": "https://github.com/maximegmd/CyberEngineTweaks/blob/61bd6214f0f5f8748589c9e476538614a13908c0/src/sol_imgui/sol_imgui.h",
+  "methods": {
+    "Begin": [
+      "inline bool Begin(const std::string& name)",
+      "inline bool Begin(const std::string& name, int flags)",
+      "inline std::tuple<bool, bool> Begin(const std::string& name, bool open)",
+      "inline std::tuple<bool, bool> Begin(const std::string& name, bool open, int flags)"
+    ],
+    "BeginChild": [
+      "inline bool BeginChild(const std::string& name)",
+      "inline bool BeginChild(const std::string& name, float sizeX)",
+      "inline bool BeginChild(const std::string& name, float sizeX, float sizeY)",
+      "inline bool BeginChild(const std::string& name, float sizeX, float sizeY, int child_flags)",
+      "inline bool BeginChild(const std::string& name, float sizeX, float sizeY, int child_flags, int window_flags)",
+      "inline bool BeginChild(const std::string& name, float sizeX, float sizeY, bool border)",
+      "inline bool BeginChild(const std::string& name, float sizeX, float sizeY, bool border, int flags)"
+    ],
+    "BeginTabBar": [
+      "inline bool BeginTabBar(const std::string& str_id)",
+      "inline bool BeginTabBar(const std::string& str_id, int flags)"
+    ],
+    "BeginTabItem": [
+      "inline bool BeginTabItem(const std::string& label)",
+      "inline bool BeginTabItem(const std::string& label, int flags)",
+      "inline std::tuple<bool, bool> BeginTabItem(const std::string& label, bool open)",
+      "inline std::tuple<bool, bool> BeginTabItem(const std::string& label, bool open, int flags)"
+    ],
+    "Button": [
+      "inline bool Button(const std::string& label)",
+      "inline bool Button(const std::string& label, float sizeX, float sizeY)"
+    ],
+    "CollapsingHeader": [
+      "inline bool CollapsingHeader(const std::string& label)",
+      "inline bool CollapsingHeader(const std::string& label, int flags)",
+      "inline std::tuple<bool, bool> CollapsingHeader(const std::string& label, bool open)",
+      "inline std::tuple<bool, bool> CollapsingHeader(const std::string& label, bool open, int flags)"
+    ],
+    "End": [
+      "inline void End()"
+    ],
+    "EndChild": [
+      "inline void EndChild()"
+    ],
+    "EndTabBar": [
+      "inline void EndTabBar()"
+    ],
+    "EndTabItem": [
+      "inline void EndTabItem()"
+    ],
+    "GetTextLineHeightWithSpacing": [
+      "inline float GetTextLineHeightWithSpacing()"
+    ],
+    "ProgressBar": [
+      "inline void ProgressBar(float fraction)",
+      "inline void ProgressBar(float fraction, float sizeX, float sizeY)",
+      "inline void ProgressBar(float fraction, float sizeX, float sizeY, const std::string& overlay)"
+    ],
+    "SameLine": [
+      "inline void SameLine()",
+      "inline void SameLine(float offsetFromStartX)",
+      "inline void SameLine(float offsetFromStartX, float spacing)"
+    ],
+    "Separator": [
+      "inline void Separator()"
+    ],
+    "SetNextWindowSize": [
+      "inline void SetNextWindowSize(float sizeX, float sizeY)",
+      "inline void SetNextWindowSize(float sizeX, float sizeY, int cond)"
+    ],
+    "SetNextWindowSizeConstraints": [
+      "inline void SetNextWindowSizeConstraints(float minX, float minY, float maxX, float maxY)"
+    ],
+    "Spacing": [
+      "inline void Spacing()"
+    ],
+    "Text": [
+      "inline void Text(const std::string& text)"
+    ],
+    "TextColored": [
+      "inline void TextColored(float colR, float colG, float colB, float colA, const std::string& text)"
+    ],
+    "TextWrapped": [
+      "inline void TextWrapped(const std::string& text)"
+    ]
+  },
+  "enum": "ImGuiCond.FirstUseEver"
+}

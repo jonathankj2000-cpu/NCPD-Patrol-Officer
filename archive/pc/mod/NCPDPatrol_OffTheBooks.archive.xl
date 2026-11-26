@@ -1,0 +1,5 @@
+journal:
+  - base\ncpd_patrol\off_the_books\off_the_books.journal
+localization:
+  onscreens:
+    en-us: base\ncpd_patrol\off_the_books\onscreens.json

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "excluded": [
+    {
+      "name": "Megabuilding H10: Atrium",
+      "source_id": "wat_lch_dataterm_10",
+      "record": "FastTravelPoints.wat_lch_dataterm_10",
+      "node_ref": "#wat_lch_dataterm_10",
+      "existing_marker_bank_index": 271,
+      "position": {"x": -1396.31165, "y": 1277.96313, "z": 123.076935},
+      "position_fallback_radius_metres": 2,
+      "reason": "Indoor upper-floor terminal; unsuitable for generated roadside dispatch",
+      "scope": ["VIP pickup", "VIP delivery", "cyberpsycho destination"],
+      "source": "cozzbp/cyberpunk-2077.atlasforge.gg@fcccba705287737799d66d77437e5cdc8cabc971:src/data/mapmarkers.json",
+      "record_reference_source": "Deweh/CyberCAT-SimpleGUI@c1fd00305e7db905a4e7de8cfa360d4f4efee3b2:CP2077SaveEditor/Resources/FastTravel.json"
+    }
+  ],
+  "world_fast_travel_changed": false,
+  "marker_bank_indices_changed": false
+}

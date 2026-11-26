@@ -1,0 +1,35 @@
+{
+  "version": "v0.20g Wwise Voice Fix",
+  "reported_date": "2026-11-26",
+  "source": "Author feedback in chat after testing the complete six-line package",
+  "author_report": "ser riktig ut nå, ingen lydkutt oppstår.",
+  "full_voss_briefing_background_audio_continuity_confirmed": true,
+  "background_audio_cuts_reported": false,
+  "validation_scope": "Author-reported background audio continuity during the Voss briefing; no new audio recording or separate gameplay/save validation supplied.",
+  "tested_release_commit": "23ea8d94116028ae10c309cc49ce8345076e5cf7",
+  "tested_package": "NCPD_Patrol_v0.20g_Wwise_Voice_Fix_TEST.zip",
+  "tested_package_sha256": "3300562f97c3039b1eb1b176d8446d0dbe253868c02a887829a46fde983fcb6a",
+  "all_six_tested_wem_sha256": {
+    "vossbriefing01.wem": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+    "vossbriefing02.wem": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909",
+    "vossbriefing03.wem": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c",
+    "vossbriefing04.wem": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc",
+    "vossbriefing05.wem": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd",
+    "vossbriefing06.wem": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782"
+  },
+  "known_working_authoring_profile": {
+    "tool": "Audiokinetic Wwise",
+    "codec": "Vorbis",
+    "channels": 1,
+    "sample_rate": 48000,
+    "exact_tool_version_not_attested_by_wem_header": true
+  },
+  "control_evidence": [
+    "Stock game voice IDs in the same scene produced no reported cuts.",
+    "Replacing only Voss01 with the supplied Wwise export removed its cuts and the following V reply cuts; cuts resumed at the next old Voss recording.",
+    "Replacing all six Voss WEMs produced no reported cuts across the updated conversation."
+  ],
+  "exact_encoder_internal_cause_identified": false,
+  "release_zip_rebuilt_for_this_result": false,
+  "runtime_files_changed_for_this_result": false
+}

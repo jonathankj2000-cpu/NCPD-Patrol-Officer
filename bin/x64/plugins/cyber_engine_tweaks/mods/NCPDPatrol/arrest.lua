@@ -218,7 +218,7 @@ local function validateLoop(system, tree)
 end
 
 local function prepare(system, unit, helper)
-    if not unit.component then
+    if helper and not unit.component then
         unit.component = helper:FindComponentByType(CName.new("workWorkspotResourceComponent"))
         if not unit.component then error("Arrest helper has no workspot component; install the complete v0.17a package") end
         local name = system:AnimationName(unit.component.name)
@@ -239,9 +239,11 @@ local function prepare(system, unit, helper)
         local selected, nodes, sample = inspectTree(system, sourceTree)
         if selected ~= CLIP then error("Vanilla bindings do not expose the intended lying idle") end
         unit.entry = validateLoop(system, tree)
-        if not configuredLoop then
-            local bindings = read(sourceTree, "finalAnimsets")
-            if not bindings or #bindings == 0 then error("Vanilla workspot animation bindings are unreadable") end
+        local bindings = read(sourceTree, "finalAnimsets")
+        if not bindings or #bindings == 0 then error("Vanilla workspot animation bindings are unreadable") end
+        local currentBindings = read(tree, "finalAnimsets")
+        if configuredLoop ~= resource or configuredSource ~= source
+            or not currentBindings or #currentBindings ~= #bindings then
             -- Only the mod-owned resource receives these dependency/prop fields.
             -- Its authored root, loop flags, tags, status and exits stay intact.
             tree.finalAnimsets = bindings
@@ -252,7 +254,13 @@ local function prepare(system, unit, helper)
             configuredLoop, configuredSource = resource, source
             print("[NCPD Patrol] Arrest loop | private bindings configured | setups=" .. #bindings .. " | entry=2 | infinite=true | natural exits=false")
         end
+        currentBindings = read(tree, "finalAnimsets")
+        if not currentBindings or #currentBindings ~= #bindings then
+            error("Private arrest animation bindings did not survive readback; helper not created")
+        end
+        unit.bindingCount = #currentBindings
         unit.clip, unit.resource, unit.prepared = CLIP, resource, true
+        print("[NCPD Patrol] Arrest resources | private binding readback=" .. unit.bindingCount .. " | prepared before helper creation=true")
         print("[NCPD Patrol] Arrest bank | vanilla nodes=" .. nodes .. " | selected idle=" .. selected)
         print("[NCPD Patrol] Arrest bank names | " .. sample)
     end
@@ -315,7 +323,10 @@ local function fail(system, unit, reason)
     print("[NCPD Patrol] Arrest | " .. reason)
 end
 
-local function create(system, npc, token, quiet)
+local function create(system, npc, token, quiet, prepared)
+    if not prepared or not prepared.prepared or not prepared.bindingCount or prepared.bindingCount < 1 then
+        error("Arrest resources must be prepared before helper attachment")
+    end
     local dynamic = entities()
     if not dynamic or not dynamic:IsReady() then error("Codeware entity system unavailable") end
     if workspots():IsActorInWorkspot(npc) then error("Suspect is already in another workspot") end
@@ -337,8 +348,12 @@ local function create(system, npc, token, quiet)
     spec.alwaysSpawned, spec.spawnInView, spec.active = false, true, true
     local id = dynamic:CreateEntity(spec)
     if not id then error("Arrest helper creation refused; check NCPDPatrol_Arrest.archive") end
-    return {id=id, npc=npc, token=token, elapsed=0, started=false, paid=false,
+    local unit = {id=id, npc=npc, token=token, elapsed=prepared.elapsed, started=false, paid=false,
         position=position,needsRecovery=needsRecovery,groundPlacement=needsRecovery,physicsOwned=false}
+    for _,key in ipairs({"bankToken","loopToken","sourceLoad","loopLoad","entry","clip","resource","prepared","bindingCount"}) do
+        unit[key] = prepared[key]
+    end
+    return unit
 end
 
 local function placementReady(unit)
@@ -479,15 +494,28 @@ function M.update(delta, onDuty, paused)
             if pending then
                 pending.age=pending.age+delta;pending.retry=pending.retry-delta
                 if pending.retry<=0 then
-                    pending.attempts=pending.attempts+1
-                    local made, unit = pcall(create, system, pending.npc, token,pending.attempts>1)
-                    if made then
+                    pending.elapsed=pending.age
+                    local made, unit = pcall(function()
+                        -- A helper's workspot component can initialize on attach.
+                        -- Its resource must already contain the native bindings.
+                        if not prepare(system, pending, nil) then return nil end
+                        if not pending.groundStarted then pending.groundStarted=pending.age end
+                        pending.attempts=pending.attempts+1
+                        return create(system, pending.npc, token,pending.attempts>1,pending)
+                    end)
+                    if made and unit then
                         units[#units+1] = unit
                         if pending.attempts>1 then
                             print(string.format("[NCPD Patrol] Arrest ground | ready after %d checks over %.2f s",pending.attempts,pending.age))
                         end
                         pendingPlacement=nil
-                    elseif groundFailure(unit) and pending.age<1.5 then
+                    elseif made then
+                        if pending.age>8 then
+                            system:FailPose(token,"Arrest animation resources did not become ready")
+                            print("[NCPD Patrol] Arrest | Resource preparation timed out before helper creation; no payment")
+                            pendingPlacement=nil
+                        end
+                    elseif groundFailure(unit) and pending.age-(pending.groundStarted or pending.age)<1.5 then
                         pending.retry=.35
                     else
                         system:FailPose(token, publicFailure(unit))

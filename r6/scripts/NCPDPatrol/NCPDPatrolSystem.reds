@@ -41,6 +41,17 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     private let m_voiceRequiresDuty: Bool;
     private let m_heat1FlagBefore: Bool;
     private let m_heat1FlagAfter: Bool;
+    // v018f police fire fields begin
+    // Transient, per-shift allowance. No heat reset or persistent immunity.
+    private let m_recentHostileShooter: wref<GameObject>;
+    private let m_recentHostileShotAt: Float;
+    private let m_excusedPoliceShot: Bool;
+    private let m_excusedPoliceShotAt: Float;
+    private let m_excusedAttackTime: Float;
+    private let m_excusedAttack: ref<IAttack>;
+    private let m_excusedWeapon: wref<WeaponObject>;
+    private let m_excusedPoliceShots: Int32;
+    // v018f police fire fields end
 
     public static func Get(game: GameInstance) -> ref<NCPDPatrolSystem> {
         return GameInstance.GetScriptableSystemsContainer(game).Get(n"NCPDPatrolSystem") as NCPDPatrolSystem;
@@ -61,6 +72,71 @@ public class NCPDPatrolSystem extends ScriptableSystem {
         let prevention: ref<PreventionSystem> = GameInstance.GetScriptableSystemsContainer(this.GetGameInstance()).Get(n"PreventionSystem") as PreventionSystem;
         return IsDefined(prevention) && NotEquals(prevention.GetHeatStage(), EPreventionHeatStage.Heat_0);
     }
+
+    // v018f police fire methods begin
+    private func ResetPoliceFireGuard() -> Void {
+        this.m_recentHostileShooter = null; this.m_recentHostileShotAt = 0.0;
+        this.m_excusedPoliceShot = false; this.m_excusedPoliceShotAt = 0.0;
+        this.m_excusedAttackTime = 0.0; this.m_excusedAttack = null; this.m_excusedWeapon = null;
+        this.m_excusedPoliceShots = 0;
+    }
+    public func RecordHostileShooter(shooter: ref<GameObject>) -> Void {
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        if !this.m_onDuty || this.HasWantedLevel() || !NCPDPatrolMarkerSession.WorldReady()
+            || !IsDefined(player) || !player.IsAttached() || player.IsDead()
+            || !NCPDPatrolPartnerSafety.IsHostileSuspect(shooter, player) { return; };
+        this.m_recentHostileShooter = shooter;
+        this.m_recentHostileShotAt = EngineTime.ToFloat(GameInstance.GetSimTime(this.GetGameInstance()));
+    }
+    public func CanExcusePoliceHit(receiver: ref<GameObject>, hit: ref<gameHitEvent>) -> Bool {
+        let player: ref<PlayerPuppet> = GetPlayer(this.GetGameInstance());
+        let targeting: ref<TargetingSystem>;
+        let lookedAt: ref<GameObject>;
+        let tracked: ref<GameObject>;
+        let attack: ref<IAttack>;
+        let weapon: ref<WeaponObject>;
+        let now: Float;
+        let stamp: Float;
+        let recent: Bool;
+        if !this.m_onDuty || this.HasWantedLevel() || !NCPDPatrolMarkerSession.WorldReady()
+            || !IsDefined(player) || !player.IsAttached() || player.IsDead() || !player.IsInCombat()
+            || !IsDefined(receiver) || !receiver.IsAttached() || !IsDefined(hit) || hit.target != receiver
+            || !IsDefined(hit.attackData) || hit.attackData.GetInstigator() != player
+            || !AttackData.IsRangedOnly(hit.attackData.GetAttackType())
+            || !NCPDPatrolPartnerSafety.IsPolice(receiver)
+            || Equals(GameObject.GetAttitudeTowards(receiver, player), EAIAttitude.AIA_Hostile) { return false; };
+        now = EngineTime.ToFloat(GameInstance.GetSimTime(this.GetGameInstance()));
+        stamp = hit.attackData.GetAttackTime();
+        attack = hit.attackData.GetAttackDefinition(); weapon = hit.attackData.GetWeapon();
+        if now != now || stamp != stamp || now < 0.0 || stamp < 0.0 || now - stamp < -0.5 || now - stamp > 3.0
+            || !IsDefined(attack) || !IsDefined(weapon) { return false; };
+        // One shotgun discharge/ricochet can yield several hit callbacks. Keep
+        // that exact short-lived attack together; never a general grace window.
+        if this.m_excusedPoliceShot && this.m_excusedAttack == attack && this.m_excusedWeapon == weapon
+            && this.m_excusedAttackTime == stamp && now >= this.m_excusedPoliceShotAt && now - this.m_excusedPoliceShotAt <= 0.5 { return true; };
+        if this.m_excusedPoliceShot && now - this.m_excusedPoliceShotAt < 10.0 { return false; };
+        targeting = GameInstance.GetTargetingSystem(this.GetGameInstance());
+        if !IsDefined(targeting) { return false; };
+        lookedAt = targeting.GetLookAtObject(player, true, true);
+        tracked = targeting.GetTrackedTargetObject(player);
+        // Direct aim/tracking on any police actor always takes the vanilla path.
+        if lookedAt == receiver || tracked == receiver || NCPDPatrolPartnerSafety.IsPolice(lookedAt)
+            || NCPDPatrolPartnerSafety.IsPolice(tracked) { return false; };
+        recent = now >= this.m_recentHostileShotAt && now - this.m_recentHostileShotAt <= 6.0
+            && NCPDPatrolPartnerSafety.IsHostileSuspect(this.m_recentHostileShooter, player);
+        if !recent && !NCPDPatrolPartnerSafety.IsHostileSuspect(lookedAt, player)
+            && !NCPDPatrolPartnerSafety.IsHostileSuspect(tracked, player) { return false; };
+        this.m_excusedPoliceShot = true; this.m_excusedPoliceShotAt = now;
+        this.m_excusedAttackTime = stamp; this.m_excusedAttack = attack; this.m_excusedWeapon = weapon;
+        this.m_excusedPoliceShots += 1;
+        this.ShowPriorityMessage("NCPD: Stray police hit excused. Check your fire.", 4.0);
+        return true;
+    }
+    public func GetPoliceFireDiagnostics() -> String {
+        let shots: Int32 = this.m_excusedPoliceShots;
+        return s"Excused police shots this shift=\(shots) | one discharge per 10 s | deliberate aim/repeated shots use normal wanted rules";
+    }
+    // v018f police fire methods end
 
     public func EnforceDutyRules() -> Void {
         if this.m_onDuty && this.HasWantedLevel() {
@@ -98,6 +174,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
     }
 
     public func ResetSession() -> Void {
+        this.ResetPoliceFireGuard(); // v018f police fire reset
         this.m_onDuty = false;
         this.m_requestedDuty = 0;
         this.m_baselineReady = false;
@@ -156,6 +233,7 @@ public class NCPDPatrolSystem extends ScriptableSystem {
             return;
         };
         this.m_criminalTermination = false;
+        this.ResetPoliceFireGuard(); // v018f police fire reset
         this.CancelDispatchVoiceWindow();
         this.m_onDuty = true;
         this.m_shiftJobs = 0;

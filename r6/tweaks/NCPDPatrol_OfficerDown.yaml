@@ -1,0 +1,46 @@
+# Private scene records. No vanilla actor, traffic or quest records are edited.
+Character.NCPDPatrol_OD_Injured:
+  $base: Character.cvi_ncpd_police_ranged2_copperhead_ma
+  quest: NPCQuestAffiliation.General
+  savable: false
+  baseAttitudeGroup: neutral
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_OD_Defender:
+  $base: Character.cvi_ncpd_police_ranged2_copperhead_ma
+  quest: NPCQuestAffiliation.General
+  savable: false
+  baseAttitudeGroup: neutral
+  lootDrop: LootTables.Empty
+
+Character.NCPDPatrol_OD_Ganger:
+  $base: Character.maelstrom_grunt1_ranged1_lexington_ma
+  quest: NPCQuestAffiliation.General
+  savable: false
+  baseAttitudeGroup: neutral
+  lootDrop: LootTables.Empty
+
+Vehicle.NCPDPatrol_OD_Police:
+  $base: Vehicle.v_standard2_archer_hella_police
+  randomPassengers: []
+
+Vehicle.NCPDPatrol_OD_GangCar:
+  $base: Vehicle.v_standard2_archer_hella
+  randomPassengers: []
+
+BaseStatusEffect.NCPDPatrolOfficerDown:
+  $base: BaseStatusEffect.DefeatedWithRecover
+  duration: BaseStats.InfiniteDuration
+  savable: false
+
+Interactions.NCPDPatrolOfficerAid:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolOfficerAid
+  caption: NCPDPatrol_OfficerDown_Revive
+
+Interactions.NCPDPatrolOfficerTreating:
+  $base: Interactions.Loot
+  action: Choice1
+  name: NCPDPatrolOfficerTreating
+  caption: NCPDPatrol_OfficerDown_Reviving

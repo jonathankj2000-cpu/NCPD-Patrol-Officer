@@ -1,0 +1,23 @@
+{
+  "repository": "andreaolivato/cyberpunk-codes",
+  "commit": "a256760bafb625676d13b02ccf49c52b60f41d40",
+  "license": "MIT",
+  "notice": "THIRD_PARTY_NOTICES.txt",
+  "journal_source": "gig01_negative_balance/source/raw/mod/negative_balance/journal/gig01.journal.json",
+  "reference_pin": "pin_epilogue",
+  "node_reference": "#coyote_performance_test",
+  "phase_source": "gig01_negative_balance/source/raw/mod/negative_balance/quest/gig01.questphase.json",
+  "helper_source": "gig01_negative_balance/source/resources/r6/scripts/NegativeBalance/CCShared_Mappins.reds",
+  "location_source": "gig01_negative_balance/source/resources/r6/scripts/NegativeBalance/Gig01_Encounter.reds",
+  "location_function": "CCGig01Places.Coyote()",
+  "adaptations": [
+    "Private journal, facts and helper namespace; no original story",
+    "Static NodeRef EntityRef pin, QuestGiverVariant, active=1, enableGPS=1",
+    "Journal nodes activate root, phase, objective and map-pin entries; fileEntryIndex=1",
+    "Quest root activation requests quest tracking/notification",
+    "Passive root attachment; begin/stop are fact driven",
+    "Retained r4c assets allow old saved test to close",
+    "Independent visual helper has its own scriptData class and never counts as a journal proof"
+  ],
+  "actual_game_validation": false
+}

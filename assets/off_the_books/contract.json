@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "quest_root": "quests/minor_quest/ncpd_patrol_off_the_books",
+  "fact_prefix": "ncpd_patrol_otb_",
+  "tag": "ncpd_patrol_off_the_books",
+  "off_duty": true,
+  "automatic_milestone_activation": false,
+  "spawn_radius": 140.0,
+  "return_radius": 120.0,
+  "shard_record": "Items.NCPDPatrol_VossEvidence01",
+  "read_action": "ItemAction.NCPDPatrol_VossEvidenceRead01",
+  "shard_path": "onscreens/emails/quests/ncpd_patrol_off_the_books/onscreens/evidence01",
+  "actors": [
+    {
+      "role": "target",
+      "record": "Character.NCPDPatrol_VossContractor01",
+      "base": "Character.CorpoManArasaka",
+      "appearance": "citizen__arasaka_corpo_ma_corporate_01_1",
+      "x": -649.795,
+      "y": 929.771,
+      "z": 9.400,
+      "yaw": -170.762
+    },
+    {
+      "role": "guard1",
+      "record": "Character.NCPDPatrol_VossGuard01",
+      "base": "Character.arasaka_cyborg_franged3_shingen_ma_elite",
+      "x": -648.602,
+      "y": 933.895,
+      "z": 9.400,
+      "yaw": 98.288
+    },
+    {
+      "role": "guard2",
+      "record": "Character.NCPDPatrol_VossGuard02",
+      "base": "Character.arasaka_cyborg_franged3_shingen_ma_elite",
+      "x": -648.041,
+      "y": 930.799,
+      "z": 9.400,
+      "yaw": 98.838
+    }
+  ],
+  "voss": {"x": 1424.737, "y": -2754.759, "z": 204.665},
+  "text": {
+    "Title": "Off the Books",
+    "Description": "Lieutenant Mara Voss needs an Arasaka-affiliated contractor eliminated and his encrypted records recovered. This is an off-duty operation. Any police response is your responsibility. Retrieve the evidence, lose any pursuing officers, and return to Voss.",
+    "Eliminate": "Eliminate the Arasaka contractor.",
+    "Retrieve": "Retrieve the encrypted data shard.",
+    "Escape": "Lose the NCPD.",
+    "Return": "Return to Lieutenant Mara Voss.",
+    "ContractorName": "Arasaka contractor",
+    "GuardName": "Arasaka security",
+    "ShardTitle": "ARASAKA INTERNAL — TRANSFER AUTHORIZATION",
+    "ShardHint": "Restricted authorization logs and personnel transfer records.",
+    "ShardBody": "Classification: Restricted\n\nAuthorization logs and personnel transfer records.\n\nSeveral entries have been deleted or redacted.\n\nReceiving department: [REDACTED]\nTransfer authority: Corporate Security Liaison\nDisposition: External custody\n\nTwo transfer references have no corresponding intake records. Their authorization signatures match the retained transaction logs.\n\nDistribution outside authorized personnel is prohibited."
+  }
+}

@@ -1,0 +1,162 @@
+Third-party code and resource attribution
+
+Cyberpunk.Codes / Negative Balance
+https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: a256760bafb625676d13b02ccf49c52b60f41d40
+
+Adapted files/patterns:
+- gig01_negative_balance/source/resources/r6/scripts/NegativeBalance/CCShared_Mappins.reds
+  -> NCPDPatrolReferenceMappins.reds (private class, active flag, ownership checks)
+- gig01_negative_balance/source/raw/mod/negative_balance/journal/gig01.journal.json
+  -> reference.journal (private journal tree; pin_epilogue world reference/offset)
+- gig01_negative_balance/source/raw/mod/negative_balance/quest/gig01.questphase.json
+  -> reference.questphase (private passive, rearmable test graph; journal activation pattern)
+- gig01_negative_balance/source/resources/r6/scripts/NegativeBalance/Gig01_Encounter.reds
+  -> fixed Coyote marker control coordinates from CCGig01Places.Coyote()
+
+These are isolated opt-in diagnostic controls. The visual helper is not evidence
+of a native journal-linked quest pin. The original quest/story is not included.
+
+MIT License
+
+Copyright (c) 2026 Andrea Olivato
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+Additional factual marker catalog
+
+Scanner/terminal XYZ and identifiers: cozzbp/cyberpunk-2077.atlasforge.gg,
+revision fcccba705287737799d66d77437e5cdc8cabc971, src/data/mapmarkers.json.
+Only numeric positions and identifiers are used; website code, descriptions,
+art and geometry are not included. See assets/fixed_markers/sources.json.
+
+Terminal NodeRef / record identifier pairs: CyberCAT-SimpleGUI,
+https://github.com/Deweh/CyberCAT-SimpleGUI
+revision c1fd00305e7db905a4e7de8cfa360d4f4efee3b2,
+CP2077SaveEditor/Resources/FastTravel.json.
+
+MIT License
+
+Copyright (c) 2021 DeweySalt
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Additional v0.19a silent quest-giver prototype adaptations
+https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+
+Minimal schemas adapted from fixer01/source/raw/mod/fixer01/scenes/fixer01_face.scene.json,
+fixer01/quest/fixer01.questphase.json and fixer01/localization/subtitles.json.json:
+- assets/quest_giver_test/reference-templates.json
+- tools/build_quest_giver_assets.py and its generated private scene/quest resources
+
+The MIT permission and copyright notice above apply. Dialogue is new placeholder
+text supplied for this test; original story, voices, lipsync, workspots and
+streaming/community resources are not included.
+
+Additional v0.19b Voss briefing localization adaptations
+https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+
+Minimal voice-map and lipsync-map schemas are adapted from
+fixer01/source/raw/mod/fixer01/localization/vomap.json.json and fixer01.lipmap.json.
+The MIT permission and copyright notice above apply. No fixer01 voice,
+animation or story assets are included. Voss's transcript, WAV and animation
+bank were supplied separately by the NCPD Patrol author for this test.
+
+Audio authoring provenance (tools are not installed or distributed by the mod):
+- kamus1/wem-encoder, MIT, revision 0b1ad96eb55dd6aab27c922694a0f8f80d2c304f
+  https://github.com/kamus1/wem-encoder
+- aoTuV beta6.03-2020 and libogg 1.3.6 were used for authoring only.
+- hcs64/ww2ogg, BSD, revision 14ed9b0dd62e815a38702b5f03c57006cbe2501b
+  https://github.com/hcs64/ww2ogg (independent conversion verification only).
+Source/media checksums and conversion details are recorded in
+assets/quest_giver_test/media/manifest.json in the source repository.
+
+Additional v0.19c Voss workspot and LookAt presentation adaptations
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: fixer01/source/raw/mod/fixer01/scenes/fixer01_face.scene.json
+
+The workspot resource/instance, scene quest-node/socket and LookAt event schemas
+in assets/quest_giver_test/presentation-templates.json, their adaptation in
+tools/build_quest_giver_assets.py, and generated private conversation.scene
+are adapted from that MIT-licensed reference. The Andrea Olivato copyright
+notice and full MIT permission notice already included above apply.
+Voss uses a vanilla game workspot by reference; no fixer01 body animation,
+voice, story, community or streaming assets are distributed.
+
+Additional v0.19d Voss native SMS introduction adaptations
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: fixer01/source/raw/mod/fixer01/journal/fixer01.journal.json
+
+The minimal contacts-folder/contact/conversation/message schemas in
+assets/quest_giver_test/sms-templates.json and their private journal adaptation
+are adapted from that MIT-licensed reference. The Andrea Olivato copyright and
+full MIT permission notice above apply. The invitation text is supplied by the
+NCPD Patrol author; no fixer01 story, portrait or phone audio is included.
+
+v0.19e Voss waiting-pose update
+The existing MIT scene LookAt and legacy workspot schema attribution above is
+retained. The new private voss_wait_pose.ent is generated from NCPD Patrol's
+own minimal arrest helper schema, with its own component identity and a vanilla
+workspot reference. No additional Andrea Olivato assets or code are introduced.
+
+v0.19f Voss subtitle update
+The earlier Andrea Olivato MIT attributions remain in effect. This update adds
+an NCPD Patrol UI-only subtitle wrapper using the existing game subtitle/delay
+APIs; no new Andrea Olivato code, story, audio or animation is introduced.
+
+v0.19g automatic Voss/V conversation
+The original V speech pattern in fixer01/source/raw/mod/fixer01/scenes/
+fixer01_face.scene.json at the previously pinned Andrea Olivato MIT reference
+is reused for the native player actor and original string-ID replies. The full
+Andrea Olivato copyright/license notice above applies. No fixer01 story/media
+or original game V audio is redistributed. New story, Voss recordings and
+facial banks are supplied by the NCPD Patrol author.
+
+v0.20a Off the Books readable-shard journal
+Andrea Olivato, https://github.com/andreaolivato/cyberpunk-codes
+Pinned reference: 4aeaad5d235e3a0244c0f1857757d1b01cbcd58e
+Source: gig01_negative_balance/source/raw/mod/negative_balance/journal/gig01.journal.json
+Blob: d88a78b7c3b9fc4c49faf1d9c153252d4eff50a8
+
+The minimal onscreens/emails/quests/onscreen-group/readable-entry hierarchy in
+tools/build_off_the_books_assets.py and the generated private journal adapts
+that MIT-licensed schema. Andrea Olivato's copyright and full MIT permission
+notice above apply. No Negative Balance story, audio, animation or texture
+assets are distributed. The readable text is supplied for NCPD Patrol.

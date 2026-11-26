@@ -214,15 +214,24 @@ function registerForEvent(name,callback) callbacks[name]=callback end
 function registerHotkey() end
 ImGui={Begin=function() return true end,End=noop,Text=noop,TextWrapped=noop,Separator=noop,CollapsingHeader=no,
  Button=function(label) labels[label]=true;return pressed==label end}
+ImGuiCond={FirstUseEver=4}
+ImGui.SetNextWindowSize=noop;ImGui.SetNextWindowSizeConstraints=noop
+ImGui.SameLine=noop;ImGui.Spacing=noop;ImGui.TextColored=noop;ImGui.ProgressBar=noop
+ImGui.GetTextLineHeightWithSpacing=function() return 18 end
+ImGui.BeginChild=function() return true end;ImGui.EndChild=noop
+ImGui.BeginTabBar=function() return true end;ImGui.EndTabBar=noop;ImGui.EndTabItem=noop
+local selectedTab="Testing"
+ImGui.BeginTabItem=function(name) return name==selectedTab end
+ImGui.CollapsingHeader=function(name) return name=="Dispatch scenarios" end
 dofile(MOD_DIR..'/init.lua');callbacks.onOverlayOpen()
 pressed='TEST: Request cyberpsycho dispatch';callbacks.onDraw()
 assert(labels[pressed] and Dispatch.isActive() and #f.creates==0 and c:GetStage()==1)
-pressed='Cancel active dispatch';callbacks.onDraw()
+selectedTab='Dispatch';pressed='Cancel active dispatch';callbacks.onDraw()
 assert(labels[pressed] and not Dispatch.isActive() and f:State()==1)
 
 -- Shipped manual controls select the next dispatch, without replacing a target.
 local Catalog=require('cyberpsycho_variants')
-pressed='TEST: Next cyberpsycho variant';callbacks.onDraw()
+selectedTab='Testing';pressed='TEST: Next cyberpsycho variant';callbacks.onDraw()
 assert(labels[pressed] and Cyber.variantState()==Catalog.label(1))
 pressed='Use random cyberpsycho variants';callbacks.onDraw()
 assert(labels[pressed] and Cyber.variantState():find('Random',1,true))

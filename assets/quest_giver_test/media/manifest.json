@@ -1,0 +1,361 @@
+{
+  "version": 3,
+  "source_upload": {
+    "file": "VossBriefing.zip",
+    "sha256": "842320f23bfe1b778bbb42bd7e2f158da9f760da1282d6a60c36840d4d39ea95"
+  },
+  "source_uploads": {
+    "Voss01.anims": {
+      "bytes": 337459,
+      "sha256": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c"
+    },
+    "Voss02.anims": {
+      "bytes": 368921,
+      "sha256": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d"
+    },
+    "Voss03.anims": {
+      "bytes": 84371,
+      "sha256": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c"
+    },
+    "VossBriefing01.wav": {
+      "bytes": 1223502,
+      "sha256": "e0d041ce24fcb96908aa39f543a7909c7b19e9838f9f3ac296bd8d433766d45c",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 611712,
+      "duration_seconds": 13.871020408163265
+    },
+    "VossBriefing02.wav": {
+      "bytes": 1767246,
+      "sha256": "67f6bd10a22e6db09aa79fad329283ece8fcf7755fb7f7037cc246016310a32f",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 883584,
+      "duration_seconds": 20.035918367346937
+    },
+    "VossBriefing03.wav": {
+      "bytes": 850254,
+      "sha256": "ff16918133290ee234e30ecbdfdbde6d2c2b102d9c4ac27a557e0a0ddc42d04d",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 425088,
+      "duration_seconds": 9.639183673469388
+    },
+    "VossBriefing04.wav": {
+      "bytes": 2396238,
+      "sha256": "05ad6e8ab41611b15cae781de4f1274e989e2a13cf9afa940933c0a29459f4eb",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 1198080,
+      "duration_seconds": 27.16734693877551
+    },
+    "VossBriefing05.wav": {
+      "bytes": 1767246,
+      "sha256": "dace5851416148c6a7779c830c14a6df8520d7f785ebaaf790fef89e0f5a0da8",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 883584,
+      "duration_seconds": 20.035918367346937
+    },
+    "VossBriefing06.wav": {
+      "bytes": 935502,
+      "sha256": "bc4dc1b07420daca8a80cf8263a37ceaf194777214fb0477707e0363e63a05db",
+      "sample_rate": 44100,
+      "channels": 1,
+      "sample_frames": 467712,
+      "duration_seconds": 10.605714285714285
+    },
+    "VOSS.docx": {
+      "bytes": 16187,
+      "sha256": "591f33e2c917152830cf6b22dd4fd67fc2e183e4e9a62cca44a712458a1ca661"
+    }
+  },
+  "packaged": {
+    "voss_conversation.anims": {
+      "bytes": 787983,
+      "sha256": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370"
+    },
+    "vossbriefing01.wem": {
+      "bytes": 127215,
+      "sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d"
+    },
+    "vossbriefing02.wem": {
+      "bytes": 188529,
+      "sha256": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909"
+    },
+    "vossbriefing03.wem": {
+      "bytes": 87819,
+      "sha256": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c"
+    },
+    "vossbriefing04.wem": {
+      "bytes": 252725,
+      "sha256": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc"
+    },
+    "vossbriefing05.wem": {
+      "bytes": 186898,
+      "sha256": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd"
+    },
+    "vossbriefing06.wem": {
+      "bytes": 96754,
+      "sha256": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782"
+    }
+  },
+  "lipsync_merge": {
+    "source_banks": [
+      "Voss01.anims",
+      "Voss02.anims",
+      "Voss03.anims"
+    ],
+    "merged_bank": "voss_conversation.anims",
+    "rig": {
+      "DepotPath": {
+        "$type": "ResourcePath",
+        "$storage": "string",
+        "$value": "base\\characters\\head\\ma\\h0_017_ma_b__middle\\h0_017_ma_b__middle_skeleton.rig"
+      },
+      "Flags": "Default"
+    },
+    "clips": [
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0001",
+        "duration_seconds": 13.8999996,
+        "num_frames": 417,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "b606e56eada9149305bb0086ac88e40729673b02691fd30b2a305690e27ee214",
+        "original_data_chunk_sha256": "fa4dcd2db54e931ed67557680e8c973ef670122b34f62a9ebbc1124ab01a2ee9",
+        "merged_data_chunk_index": 0,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0002",
+        "duration_seconds": 20.0666676,
+        "num_frames": 603,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "a2531f5d32fbafea7adef788465a46eaa234fffa52402192981fac9a0d9908a7",
+        "original_data_chunk_sha256": "e1c194f250846aaf6731f4f5e916dda559ebb1b37a4709be857bb52adb3887fe",
+        "merged_data_chunk_index": 1,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss01.anims",
+        "clip": "f_00000000CAFE0003",
+        "duration_seconds": 9.66666698,
+        "num_frames": 291,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "9f17e04f3c9f3e51df6bac383f5c999d79aac0c158f8634ec4bdc71731611729",
+        "original_data_chunk_sha256": "6ec31c18d406cc0c0cc4d9cb3de92e7f082490c8cf673be42a78fb5b888e4574",
+        "merged_data_chunk_index": 2,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss02.anims",
+        "clip": "f_00000000CAFE0004",
+        "duration_seconds": 27.2000008,
+        "num_frames": 817,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "281c35687f9ca02ad7d4171e7f06b12ee24bd0b21f8ef0d0e9d1ce7b03eb5112",
+        "original_data_chunk_sha256": "589bfafb9a5e144ddb390e38c996001d2a0c4f988a147ac15a93e79354138223",
+        "merged_data_chunk_index": 3,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss02.anims",
+        "clip": "f_00000000CAFE0005",
+        "duration_seconds": 20.0666676,
+        "num_frames": 603,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "36b0b8446e08a1352a63e50a700dc50d6672180d2689a339c88ac8069773d21a",
+        "original_data_chunk_sha256": "99adc990ab1cf26994055ba03c63ac51a12f29b30a46134053db68a58ba5a780",
+        "merged_data_chunk_index": 4,
+        "all_animation_payload_fields_preserved": true
+      },
+      {
+        "source_bank": "Voss03.anims",
+        "clip": "f_00000000CAFE0006",
+        "duration_seconds": 10.6333332,
+        "num_frames": 319,
+        "num_joints": 344,
+        "num_tracks": 414,
+        "animation_type": "AdditiveFromRefPose",
+        "canonical_animation_sha256": "61f0e22ce9205b06fcaa0da663d0ce66196a500f92f786d068639515f5dc78db",
+        "original_data_chunk_sha256": "bdf9b318a2b2f280b02f8dca2748edac681f05ca30c4d4b2590a3103b07adf2d",
+        "merged_data_chunk_index": 5,
+        "all_animation_payload_fields_preserved": true
+      }
+    ],
+    "roundtrip_validated": true,
+    "all_animation_payload_fields_preserved": true,
+    "only_handle_buffer_ids_and_chunk_indices_relocated": true
+  },
+  "conversion": {
+    "codec": "Wwise Vorbis (0xFFFF), author-supplied Audiokinetic Wwise exports",
+    "authoring_tool": "Audiokinetic Wwise",
+    "version_attested_by_file_header": false,
+    "sample_rate": 48000,
+    "channels": 1,
+    "exports": {
+      "vossbriefing01.wem": {
+        "uploaded_filename": "VossBriefing01_5B9B5401.wem",
+        "target_filename": "vossbriefing01.wem",
+        "bytes": 127215,
+        "sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 665808,
+        "duration_seconds": 13.871,
+        "source_wav": "VossBriefing01.wav",
+        "source_wav_sha256": "e0d041ce24fcb96908aa39f543a7909c7b19e9838f9f3ac296bd8d433766d45c",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 611712,
+        "aligned_waveform_correlation": 0.9965622207857656,
+        "decoded_frames_at_44100_hz": 611579,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing02.wem": {
+        "uploaded_filename": "VossBriefing02_5B9B5401.wem",
+        "target_filename": "vossbriefing02.wem",
+        "bytes": 188529,
+        "sha256": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 961724,
+        "duration_seconds": 20.035916666666665,
+        "source_wav": "VossBriefing02.wav",
+        "source_wav_sha256": "67f6bd10a22e6db09aa79fad329283ece8fcf7755fb7f7037cc246016310a32f",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 883584,
+        "aligned_waveform_correlation": 0.9957511003408047,
+        "decoded_frames_at_44100_hz": 882999,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing03.wem": {
+        "uploaded_filename": "VossBriefing03_5B9B5401.wem",
+        "target_filename": "vossbriefing03.wem",
+        "bytes": 87819,
+        "sha256": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 462680,
+        "duration_seconds": 9.639166666666666,
+        "source_wav": "VossBriefing03.wav",
+        "source_wav_sha256": "ff16918133290ee234e30ecbdfdbde6d2c2b102d9c4ac27a557e0a0ddc42d04d",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 425088,
+        "aligned_waveform_correlation": 0.9963116231118299,
+        "decoded_frames_at_44100_hz": 424830,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing04.wem": {
+        "uploaded_filename": "VossBriefing04_5B9B5401.wem",
+        "target_filename": "vossbriefing04.wem",
+        "bytes": 252725,
+        "sha256": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 1304032,
+        "duration_seconds": 27.167333333333332,
+        "source_wav": "VossBriefing04.wav",
+        "source_wav_sha256": "05ad6e8ab41611b15cae781de4f1274e989e2a13cf9afa940933c0a29459f4eb",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 1198080,
+        "aligned_waveform_correlation": 0.995901845919956,
+        "decoded_frames_at_44100_hz": 1197698,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing05.wem": {
+        "uploaded_filename": "VossBriefing05_5B9B5401.wem",
+        "target_filename": "vossbriefing05.wem",
+        "bytes": 186898,
+        "sha256": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 961724,
+        "duration_seconds": 20.035916666666665,
+        "source_wav": "VossBriefing05.wav",
+        "source_wav_sha256": "dace5851416148c6a7779c830c14a6df8520d7f785ebaaf790fef89e0f5a0da8",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 883584,
+        "aligned_waveform_correlation": 0.9970645747543723,
+        "decoded_frames_at_44100_hz": 883353,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      },
+      "vossbriefing06.wem": {
+        "uploaded_filename": "VossBriefing06_5B9B5401.wem",
+        "target_filename": "vossbriefing06.wem",
+        "bytes": 96754,
+        "sha256": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782",
+        "codec": "Wwise Vorbis (0xFFFF)",
+        "channels": 1,
+        "sample_rate": 48000,
+        "sample_frames": 509074,
+        "duration_seconds": 10.605708333333334,
+        "source_wav": "VossBriefing06.wav",
+        "source_wav_sha256": "bc4dc1b07420daca8a80cf8263a37ceaf194777214fb0477707e0363e63a05db",
+        "source_sample_rate": 44100,
+        "source_sample_frames": 467712,
+        "aligned_waveform_correlation": 0.996828927298214,
+        "decoded_frames_at_44100_hz": 467519,
+        "independent_decode_succeeded": true,
+        "uploaded_bytes_unchanged": true
+      }
+    },
+    "source_export_zip": "VossBriefing06_5B9B5401.zip",
+    "source_export_zip_sha256": "2c266c8f2e6755f898036375044a8c965e884e50e3fc0e2181f903be3e62b0b4",
+    "resampled": true,
+    "trimmed": false,
+    "audio_padding_added": false,
+    "uploaded_wem_bytes_modified": false,
+    "independent_decode": "hcs64 ww2ogg 0.24 with packed_codebooks_aoTuV_603.bin, then FFmpeg for waveform comparison"
+  },
+  "timing": {
+    "lead_in_ms": 300,
+    "method": "Each Voss dialogue event owns its complete matching voice/lipsync; subtitles only update the native UI text. V slots are initial conservative timings."
+  },
+  "vanilla_v_string_ids": [
+    "1938843197804515328",
+    "1895381798296993792",
+    "1938900123686932480",
+    "1714373979483803648"
+  ],
+  "vanilla_v_audio_redistributed": false,
+  "actual_game_validation": false,
+  "legacy_conversion": {
+    "codec": "Wwise Vorbis (0xFFFF), aoTuV b6.03 quality 4",
+    "encoder_repository": "https://github.com/kamus1/wem-encoder",
+    "encoder_commit": "0b1ad96eb55dd6aab27c922694a0f8f80d2c304f",
+    "aoTuV_source_sha256": "b529eb656a28cdd3a3ce22fe470a2f7705a088a87ccabe6675f1748e843aef0d",
+    "libogg_source_sha256": "83e6704730683d004d20e21b8f7f55dcb3383cdf84c0daedf30bde175f774638",
+    "packed_codebooks_git_blob": "a405d061b50cd793e17ad99b1f9f809ee372812a",
+    "resampled": false,
+    "trimmed": false,
+    "audio_padding_added": false
+  },
+  "game_test_evidence": {
+    "first_line_sha256": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+    "first_line_fix_confirmed": true,
+    "author_report": "Voss first line and V reply start/end without cuts; cuts resume at the next old Voss recording",
+    "all_six_updated_lines_confirmed": false
+  }
+}

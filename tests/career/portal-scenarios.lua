@@ -50,8 +50,10 @@ assert(text:find('15/20 total',1,true) and text:find('NCPD vest + Lexington Mili
 assert(find(host.page,'NCPDPatrolOfficerSummary') and find(host.page,'NCPDPatrolCareerTimeline'))
 assert(find(host.page,'NCPDPatrolPartnerSummary') and #f.itemCalls==0)
 local oldClaim,oldRefresh,oldTab=site.m_claimButton,site.m_refreshButton,site.m_partnerTab
-assert(hover(site.m_buttons[0],true));assert(site.m_faces[0].color.Green>0.13)
-assert(hover(site.m_buttons[0],false) and site.m_faces[0].color.Green==0.13)
+local serviceIndex=0
+while site.m_buttons[serviceIndex]~=site.m_serviceTab do serviceIndex=serviceIndex+1 end
+assert(hover(site.m_serviceTab,true));assert(site.m_faces[serviceIndex].color.Green>0.13)
+assert(hover(site.m_serviceTab,false) and site.m_faces[serviceIndex].color.Green==0.13)
 assert(not f:Click(oldClaim,'hold'));assert(f:Click(oldRefresh) and #f.loads==1)
 assert(not oldClaim.callbacks.OnRelease and not oldRefresh.callbacks.OnRelease and not oldTab.callbacks.OnRelease)
 assert(not oldClaim.callbacks.OnEnter and not oldClaim.callbacks.OnLeave)

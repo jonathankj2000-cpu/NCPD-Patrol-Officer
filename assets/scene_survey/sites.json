@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "coverage": [
+    "City Center (Central)",
+    "Watson"
+  ],
+  "coverage_note": "Only user-surveyed City Center and Watson positions are covered so far; individual districts are not inferred from coordinates.",
+  "source_document": "Spawn plasser kryss og \u00e5pne plasser.docx",
+  "source_document_sha256": "26a26fffe8b10c4504efef8360d8865b2a9c701117dce819286b5c7e024b9fe5",
+  "source_document_entries": 16,
+  "original_test_included": true,
+  "sites": [
+    {
+      "id": "test_kryss_01",
+      "label": "TEST_KRYSS_01",
+      "position": {
+        "x": -490.911377,
+        "y": -173.816315,
+        "z": 7.88707
+      },
+      "heading": 0.0,
+      "source": "original user test coordinate"
+    },
+    {
+      "id": "kryss_02",
+      "label": "Kryss_02",
+      "position": {
+        "x": -1960.31665,
+        "y": -1216.668457,
+        "z": 10.327583
+      },
+      "heading": 169.956,
+      "captured_heading": 169.956,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_03",
+      "label": "Kryss_03",
+      "position": {
+        "x": -1832.878174,
+        "y": -869.848999,
+        "z": 7.484634
+      },
+      "heading": 321.126,
+      "captured_heading": -38.874,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_04",
+      "label": "Kryss_04",
+      "position": {
+        "x": -1854.23584,
+        "y": -95.590836,
+        "z": 7.551308
+      },
+      "heading": 180.643,
+      "captured_heading": -179.357,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_05",
+      "label": "Kryss_05",
+      "position": {
+        "x": -1840.118164,
+        "y": 214.088165,
+        "z": 7.082535
+      },
+      "heading": 29.621,
+      "captured_heading": 29.621,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_06",
+      "label": "Kryss_06",
+      "position": {
+        "x": -1572.332642,
+        "y": 30.73172,
+        "z": 16.555321
+      },
+      "heading": 222.943,
+      "captured_heading": -137.057,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_07",
+      "label": "Kryss_07",
+      "position": {
+        "x": -1503.422485,
+        "y": 1571.012939,
+        "z": 18.0
+      },
+      "heading": 261.656,
+      "captured_heading": -98.344,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_08",
+      "label": "Kryss_08",
+      "position": {
+        "x": -1423.498535,
+        "y": 2204.005615,
+        "z": 17.999985
+      },
+      "heading": 304.034,
+      "captured_heading": -55.966,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_09",
+      "label": "Kryss_09",
+      "position": {
+        "x": -1156.895386,
+        "y": 2365.504639,
+        "z": 6.728867
+      },
+      "heading": 115.846,
+      "captured_heading": 115.846,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_10",
+      "label": "Kryss_10",
+      "position": {
+        "x": -1017.527283,
+        "y": 2576.913818,
+        "z": 22.164085
+      },
+      "heading": 216.449,
+      "captured_heading": -143.551,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_11",
+      "label": "Kryss_11",
+      "position": {
+        "x": -1577.779541,
+        "y": 3236.467773,
+        "z": 7.118637
+      },
+      "heading": 218.298,
+      "captured_heading": -141.702,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_12",
+      "label": "Kryss_12",
+      "position": {
+        "x": -1889.25415,
+        "y": 3637.462646,
+        "z": 7.118637
+      },
+      "heading": 249.84300000000002,
+      "captured_heading": -110.157,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_13",
+      "label": "Kryss_13",
+      "position": {
+        "x": -1872.005249,
+        "y": 3754.047119,
+        "z": 7.118225
+      },
+      "heading": 140.038,
+      "captured_heading": 140.038,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_14",
+      "label": "Kryss_14",
+      "position": {
+        "x": -713.949585,
+        "y": 2196.259033,
+        "z": 52.904289
+      },
+      "heading": 274.35,
+      "captured_heading": -85.65,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_15",
+      "label": "Kryss_15",
+      "position": {
+        "x": -868.048889,
+        "y": -290.759155,
+        "z": 7.695068
+      },
+      "heading": 55.283,
+      "captured_heading": 55.283,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_16",
+      "label": "Kryss_16",
+      "position": {
+        "x": -967.523193,
+        "y": -218.141068,
+        "z": 7.25
+      },
+      "heading": 326.467,
+      "captured_heading": -33.533,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    },
+    {
+      "id": "kryss_17",
+      "label": "Kryss_17",
+      "position": {
+        "x": -1295.443359,
+        "y": -167.141464,
+        "z": 7.931709
+      },
+      "heading": 54.183,
+      "captured_heading": 54.183,
+      "source": "Spawn plasser kryss og \u00e5pne plasser.docx"
+    }
+  ]
+}

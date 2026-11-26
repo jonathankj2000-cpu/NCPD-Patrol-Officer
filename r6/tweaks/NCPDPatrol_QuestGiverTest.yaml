@@ -1,0 +1,17 @@
+# Private test actors only. Source appearance and fixed pose supplied by user.
+Character.NCPDPatrol_QG_Investigator:
+  $base: Character.ncpd_investigator_officer_omaha_wa
+  appearanceName: corpo__ncpd_wa_investigator__lvl3_02
+  displayName: LocKey#NCPDPatrol_QG_Name
+  fullDisplayName: LocKey#NCPDPatrol_QG_Name
+  skipDisplayArchetype: true
+  priority: SpawnableObjectPriority.Quest
+  quest: NPCQuestAffiliation.SideQuest
+  isCrowd: false
+  isBumpable: false
+  baseAttitudeGroup: friendly
+  reactionPreset: ReactionPresets.NoReaction
+  tags: [Invulnerable]
+
+Vehicle.NCPDPatrol_QG_Hella:
+  $base: Vehicle.v_standard2_archer_hella_police

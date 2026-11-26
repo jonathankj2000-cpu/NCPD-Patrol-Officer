@@ -1,5 +1,22 @@
 # NCPD Patrol
 
+## v0.20g — Current complete development build
+
+`main` now includes the latest refactor build, Officer Down catalogue and tools,
+fixed quest markers, and the existing Off the Books prototype. All six Voss
+briefing recordings use the author-supplied Wwise Vorbis exports (mono, 48 kHz).
+The author confirmed that the full conversation plays without background audio cuts.
+
+[Download the complete v0.20g build](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.20g_Complete.zip)
+
+This replaces the full development mod; no separate audio patch or load-order
+layer is needed. Disable older NCPD development/audio-test packages, install the
+complete ZIP, deploy and fully restart Cyberpunk. Existing quest facts and save
+handling are retained. Wwise is an authoring tool, not a player dependency.
+
+The separate **Nexus 0.8.7** patrol release still excludes Voss/Off the Books.
+[Download Nexus 0.8.7](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_v0.8.7_Nexus_Release.zip).
+
 ## Optional Chinese localization preview 0.1a
 
 [Download Simplified + Traditional Chinese preview](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/main/releases/NCPD_Patrol_Chinese_Localization_Preview_v0.1a.zip)
@@ -14,7 +31,423 @@ Install **after the main mod**, allowing the optional package to overwrite only
 Chinese as the game's interface language and restart. Reapply the language pack
 after main-mod updates. Existing English fallback and gameplay are retained.
 See the [add-on instructions and coverage](addons/chinese-localization/README.md).
-The main gameplay package remains **0.17d**.
+The preview was validated against **0.17d**; newer quest content is outside its translated coverage.
+
+
+## v0.20f1 — Dialogue transition test
+
+The ten Voss/V speech events now cover the existing final 500 ms of their scene
+sections. Every voice start, pause, section boundary and the full 143.836-second
+conversation are unchanged. This tests whether the previously eventless tails
+contribute to the reported ambience cuts. The v0.20f audio context stays fixed
+for this comparison; an audible improvement has not yet been confirmed.
+
+[Download the complete v0.20f1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20f1_Dialogue_Handoff_TEST.zip)
+
+Install the complete package, fully restart, and use a save before the briefing
+or the existing explicit test replay. Compare ambience around both speakers.
+Voice/lipsync files and caption changes are retained; the last caption can stay
+visible for an extra half second. Wanted, evidence, all REDscript and encounter
+logic are unchanged. [Details](docs/VOSS_DIALOGUE_TAIL_v020f1.md).
+
+## v0.20f — Assassination pursuit and dialogue ambience test
+
+Killing Voss's contractor now requests three native wanted stars once per
+encounter. Higher wanted levels stay higher. Retrieve the evidence, lose the
+NCPD through normal gameplay, then return to Voss. Saving/loading or escaping
+does not reapply the report; already-dead legacy encounters are not pursued
+retroactively. The confirmed v0.20e evidence receipt fix is retained.
+
+[Download the complete v0.20f test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20f_Wanted_Dialogue_TEST.zip)
+
+This also tests a lower-priority native audio context for the ten private
+briefing lines, addressing reported ambience dips around both speakers. All
+voice files, lipsync, text, subtitles and timing are unchanged. The audible
+result remains experimental until tested in game. Install the complete package,
+fully restart, and use a save before the briefing/death to test each change.
+[Implementation and test notes](docs/OFF_THE_BOOKS_WANTED_AUDIO_v020f.md).
+
+## v0.20e — Evidence pickup progression
+
+Fixes the reported taken shard leaving `acquired=0` and Retrieve active. The
+item observer snapshots identity before native readable consumption and accepts
+zero-remaining-quantity notifications. It also observes the exact native Read
+action and reconciles actual possession or the unique Shards entry. Per-cycle
+starting ownership prevents old shard history from completing a new encounter.
+
+[Download the complete v0.20e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20e_Evidence_Receipt_TEST.zip)
+
+Install all 131 files, restart and load the affected first-cycle save without
+Clear. If the taken evidence is already in Shards, its missing receipt can
+recover: Escape when wanted, otherwise Return to Voss. Close in-game menus for
+the update. Confirmed loot, combat, Voss media and all archives are retained.
+[Details and verification limits](docs/OFF_THE_BOOKS_RECEIPT_v020e.md).
+
+## v0.20d — Evidence death loot
+
+Fixes the reported `shard before death=1`, `after death=0` and zero refresh
+attempts. The contractor inherited `LootTables.Empty` from his crowd base;
+his private record now declares a native loot table containing one evidence
+shard. The controller waits for native loot generation, checks all item instances,
+trims duplicate corpse copies and can repair an existing empty v0.20c corpse
+once. Evidence is never granted to V on death; real pickup is still required.
+
+[Download the complete v0.20d test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20d_Evidence_Loot_TEST.zip)
+
+Install all 131 files and fully restart, then load the affected save without
+clearing the encounter. Allow 2–3 seconds near the corpse, open ordinary loot
+and take the shard. The existing diagnostic now includes native generation,
+death-loot configuration and one-use recovery state. The working restaurant
+combat override, Voss dialogue and all ten archives are unchanged.
+[Findings and test limits](docs/OFF_THE_BOOKS_DEATH_LOOT_v020d.md).
+
+## v0.20c — Off the Books restaurant encounter
+
+Adds a quest-scoped exception to native Tier 2 PSM decisions within 20 m of
+the restaurant target, with a 3 m floor-height limit. Native exploration handles
+empty-hands and weapon-ready resets; native restrictions resume outside scope.
+Dialogue, cinematics, independent restrictions and wanted behavior are preserved.
+The contractor's corpse requests native inventory accessibility and loot-quality
+refresh; the real shard acquisition event remains necessary for progression.
+
+[Download the complete v0.20c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20c_Off_the_Books_Encounter_TEST.zip)
+
+Install all 131 files and fully restart. Existing v0.20b quest facts and saved
+actors are retained; do not clear a working quest. Use the existing **Log Off
+the Books diagnostics** for quantities before/after death, native loot input
+availability, acquisition receipt and sampled PSM source/state. Native event
+delivery and rendered corpse loot still need in-game confirmation.
+[Findings, limitations and test sequence](docs/OFF_THE_BOOKS_ENCOUNTER_v020c.md).
+
+## v0.20b — Voss continuation
+
+Fixes the reported `Scene ended without a proven journal completion` auto-clear.
+The final scene receipt is stored separately from journal acknowledgement.
+Normal native return checks that receipt, Voss/Hella remain, and the continuation
+retries until its own journal entries become active. Rejected or missing entries
+now identify the exact blocker. The working speech, lipsync and timing are retained.
+
+[Download the complete v0.20b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20b_Voss_Continuation_TEST.zip)
+
+Install the complete 129-file package and restart. If the previous version already
+cleared the failed conversation, activate the Voss test and finish it once again.
+The target objective should start automatically; there is no need to race the
+Continue button. [Details](docs/VOSS_CONTINUATION_v020b.md).
+
+## v0.20a1 — Startup compilation fix
+
+Fixes the supplied REDscript `NO_MATCHING_OVERLOAD` error in
+`NCPDPatrolOffBooksSystem.reds:68`: the readable journal path now uses
+`Equals()` for its String comparison. The newer offline checker had accepted
+the previous `==`; the compatibility guard now rejects that exact shipped
+v0.20a source before packaging. Quest logic and all ten archives are retained.
+
+[Download the complete v0.20a1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20a1_Startup_Fix_TEST.zip)
+
+Overwrite with the complete 129-file package and restart. There is no quest or
+save reset required. Then continue the existing off-duty test as described below.
+
+## v0.20a — Off the Books encounter
+
+After the existing Voss briefing, a separate **off-duty** quest sends V to an
+Arasaka contractor and two elite guards in Cherry Blossom Market. Kill the
+contractor, loot his real readable evidence shard, lose any pursuing NCPD and
+return to Voss. Voss and her Hella remain available at the original meeting.
+The return conversation and final quest reward are future work.
+
+[Download the complete v0.20a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.20a_Off_the_Books_TEST.zip)
+
+Install all 129 files and fully restart. OFF DUTY > CET > Testing > Quest giver
+prototype > activate. If the briefing is already completed in the save, use
+**TEST: Continue Off the Books after briefing** instead. Normal patrol dispatch,
+rewards and the working first conversation are retained.
+[Implementation, test steps and limits](docs/OFF_THE_BOOKS_v020a.md).
+
+## v0.19h1 — Voss idle pose
+
+Requests native idle-only mode for Voss's existing arms-crossed workspot once
+it is active, before dialogue. The working v0.19h voice and caption timing,
+lipsync, SMS and all nine archives are retained.
+
+[Download the complete v0.19h1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19h1_Voss_Idle_Pose_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Wait near Voss,
+then approach and let the conversation finish; check the body stays in its
+idle rather than transitioning to walking. [Details](docs/VOSS_IDLE_POSE_v019h1.md).
+
+## v0.19h — Voss timing
+
+Adds playback headroom before V replies and longer turn-taking pauses. Caption
+changes occur later; short adjoining phrases are grouped into 19 blocks.
+Original media, dialogue and the working scene identifiers are preserved.
+
+[Download the complete v0.19h test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19h_Voss_Timing_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Let the ten-turn
+conversation finish without skipping, checking overlap and caption timing.
+[Timing policy and validation limits](docs/VOSS_TIMING_v019h.md).
+
+## v0.19g1 — Voss scene ID fix
+
+Corrects malformed local dialogue type/index IDs in v0.19g and restores a dense
+ordered scene graph. All speech, original V string IDs, media and native scripts
+are preserved. The bad v0.19g identifiers are now rejected before packaging.
+
+[Download the complete v0.19g1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19g1_Voss_Scene_ID_Fix_TEST.zip)
+
+Install all 123 files, fully restart and test from a save made before the old
+Voss test was activated. This fixes an identified data error; the reported
+native crash still needs game confirmation. [Details](docs/VOSS_SCENE_ID_FIX_v019g1.md).
+
+## v0.19g — Voss conversation
+
+The meeting uses the supplied six-part Voss briefing with matching lipsync and
+four automatic original V replies. There is no choice menu. SMS, the grounded
+waiting pose and the v0.19f1 pose-confirmation fix remain included.
+
+[Download the complete v0.19g test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19g_Voss_Conversation_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Activate the same
+quest-giver test and approach Voss. Verify V's original voices and timing in
+the game. [Details](docs/VOSS_CONVERSATION_v019g.md).
+
+## v0.19f1 — Voss pose confirmation fix
+
+Fixes the eight-second cancellation that could delete Voss and the Hella even
+while her waiting animation was playing. Native actor activity can confirm the
+pose without a device-user mapping. Cosmetic pose failures now retain the
+actors and meeting quest. SMS, three captions, voice and lipsync are preserved.
+
+[Download the complete v0.19f1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19f1_Voss_Pose_Check_Fix_TEST.zip)
+
+Clear the old test, install all 123 files and fully restart. Wait at least
+15 seconds near Voss before approaching to talk, then test either reply.
+[Cause, regression and game checks](docs/VOSS_POSE_CHECK_FIX_v019f1.md).
+
+## v0.19f — Voss subtitles
+
+The briefing displays three timed subtitle blocks while voice and lipsync play
+continuously. Includes the native SMS invitation and grounded arms-crossed
+waiting pose from v0.19d/e.
+
+[Download the complete v0.19f test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19f_Voss_Subtitles_TEST.zip)
+
+Clear the old quest-giver test, install all 123 files and fully restart. Use
+OFF DUTY → CET → Testing → Quest giver prototype → Activate. Text changes at
+approximately 15 and 28.5 seconds into the voiced briefing. Actual in-game
+timing and ground alignment need testing. [Details](docs/VOSS_SUBTITLES_v019f.md).
+
+## v0.19a1 — quest giver scene-guard fix
+
+Corrects the early “Finish the current game scene” rejection. Player scene
+membership alone no longer blocks activation or the investigator greeting.
+Both gates use actual dialogue state and restricted scene tiers. The broader
+ownership check still protects the private actors during cleanup.
+
+[Download the complete v0.19a1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19a1_Scene_Guard_Fix_TEST.zip)
+
+Install all 122 files and fully restart. Then use the same OFF DUTY quest-giver
+test button. All nine archives and 45 native scripts are unchanged.
+[Fix evidence and checks](docs/QUEST_GIVER_SCENE_GUARD_v019a1.md).
+
+
+## v0.19a — quest giver prototype
+
+Adds an **explicit OFF DUTY test** under **Testing → Quest giver prototype**.
+Activating it starts a separate journal quest and a fixed native marker at
+`1424.737, -2754.759, 204.665`. An NCPD investigator uses the supplied appearance
+and yaw `-143.376`; a private police Hella is parked sideways 4 m behind her.
+The two actors are staged when V comes within 120 m.
+
+Approach within 3 m **on foot** with game subtitles enabled. A native, silent
+scene shows **quest giver hello → option 1 / option 2 → V's reply → quest giver
+goodbye**, then marks the journal quest complete. Both choices share the ending.
+Use **Clear quest giver test** before replaying the other path.
+
+[Download the complete v0.19a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.19a_Quest_Giver_Prototype_TEST.zip)
+
+Install all 122 files and fully restart. This does not activate automatically
+at milestones, pay rewards or contribute career incidents. Existing dispatch,
+54 Officer Down sites, progression and the optional browser retain their
+behavior. [Scope, implementation and game checks](docs/QUEST_GIVER_PROTOTYPE_v019a.md).
+
+
+## v0.18i — CET menu cleanup
+
+Officer Down requests on **Dispatch** and **Testing → Dispatch scenarios** use
+all **54 enabled catalogue locations**. The menu now displays the count and
+coverage. Current Officer Down state, logging, export and cleanup are grouped
+under **Diagnostics → Officer Down: current dispatch**.
+
+Removed the fixed Kryss 1 launcher/rotation/locator, obsolete injured-placement
+pilot controls and old marker experiment launchers. Existing recorded-site
+survey and terminal discovery tools remain; milestone test unlocks are grouped
+with Reward equipment. One guarded cleanup button remains for old marker tests.
+
+[Download the complete v0.18i test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.18i_CET_Menu_Cleanup_TEST.zip)
+
+Install all 117 files and fully restart. All 54 locations, native scripts,
+archives, dispatch behavior, rewards and saved results are unchanged.
+[Scope, catalogue audit and game checks](docs/CET_MENU_CLEANUP_v018i.md).
+
+
+## v0.17e2 — arrest initialization test
+
+Prepares and reads back the private arrest animation bindings **before helper
+attachment**, checks later resource instances/caches, and waits for pending
+assets without creating an unbound helper. Native scripts, the infinite lying
+loop/archive, physics and payment are unchanged. Includes the H10 exclusion.
+
+[Download the complete v0.17e2 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e2_Arrest_Initialization_TEST.zip)
+
+Install all 88 files and fully restart. Test a newly downed, uncredited suspect.
+The old code fails the new attachment-order test; whether this resolves the
+reported T-pose still needs game confirmation. [Evidence and test](docs/ARREST_BINDING_INITIALIZATION_v017e2.md).
+
+## v0.17e1 — H10 location fix
+
+Excludes **Megabuilding H10: Atrium** from VIP pickup/delivery and cyberpsycho
+dispatch destinations. Uses its exact fast-travel record plus a 2 m XYZ fallback;
+street-level locations below it remain eligible. World fast travel and fixed
+marker-bank indices are preserved. Includes the complete v0.17e improvements.
+
+[Download the complete v0.17e1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e1_H10_Location_Fix_TEST.zip)
+
+Install all 88 files and restart the game.
+
+## v0.17e — patrol improvements branch test
+
+Extracts the working r5c marker catalogue and diagnostic formatting with **3161
+identical observation rows** against the actual r5c controller. Marker activation,
+confirmation, fallback timing, cleanup and session gating keep their behavior.
+
+NCPD Career now has **Start Shift** in its sidebar, using the existing shift
+controller. Backup prefers V's recently driven route, checks ground, corridor
+and camera visibility, and confirms the car's actual placement before deploying
+its two officers. Placement retries are bounded and retain the one-unit limit.
+
+[Download the complete v0.17e test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17e_Patrol_Improvements_TEST.zip)
+
+Install all 87 files and fully restart. Browser Extension is optional; the
+career website needs it. VIP/ambush and all six archives are unchanged. No clear
+Bean Bagger pump-colour regression was found; materials and runtime diagnostics
+are unchanged. [Findings](docs/BEAN_BAGGER_BLUE_PUMP_REVIEW.md).
+
+[Scope, checks and game-test steps](docs/PATROL_IMPROVEMENTS_v017e.md).
+Backup driving and long-term marker/load reliability still need game testing.
+
+
+## Fixed quest markers r5c — branch test
+
+Corrects r5b's false rejection of a valid native marker: deterministic private
+ownership is independent of journal availability during restore, and the
+selected private entry identifies its own pin. Codeware Session/Ready gates
+CET/native work; restore processes at most 48 objectives per update. Fallback
+status follows live registration rather than keeping its initial pending label.
+
+[Download the complete r5c test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5c_TEST.zip)
+
+Install all 84 files and fully restart; the new session service and bank
+interface 4 are required. All six archives stay byte-identical to r5b. Expected
+normal state: 3112 ownership identities, selected membership true, one active
+bank pin and native confirmed=true. The existing diagnostics button prints
+both current and pre-cleanup evidence. Game stability and crash attribution
+remain unverified. [Implementation and evidence](docs/FIXED_QUEST_MARKERS.md).
+
+## Fixed quest markers r5b — branch test
+
+Native quest pins now survive deactivation for engine reuse. The check counts
+active pins separately from cached instances; a correctly positioned active pin
+is retained when journal proof is incomplete. Both marker controllers wait for
+an attached player before native cleanup. Pre-cleanup diagnostics survive fallback,
+and fallback registration/activation is measured explicitly.
+
+[Download the complete r5b test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5b_TEST.zip)
+
+Install the complete package and fully restart. Check save loading first, then
+repeat dispatch/cancel/completion and reload. The existing **Log active dispatch
+marker diagnostics** button prints current state and a retained pre-cleanup
+snapshot. The reported animation-buffer crash is **not attributed or confirmed
+fixed**; these changes address verified source defects. All six archives stay
+byte-identical to r5a. [Evidence, checks and limits](docs/FIXED_QUEST_MARKERS.md).
+
+## Fixed quest markers r5a — branch test
+
+Corrects r5's all-location marker pool with **one site objective and one pin**,
+inactive definitions and explicit selected-pin activation. Scanner sites now
+use fixed offsets from the game-confirmed Coyote anchor. Native confirmation
+requires exactly one active bank pin, correct objective link and both positions.
+Old/private pool markers and stale diagnostic positions are cleaned up.
+
+[Download the complete r5a test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Fixed_Quest_Markers_r5a_TEST.zip)
+
+Install the entire package and restart. Use **Diagnostics → Fixed quest markers
+→ Log active dispatch marker diagnostics** while the assignment is active.
+The separate legacy Coyote experiment does not diagnose active dispatches.
+Original attendance, actors, results, payments and progression remain with
+their existing owners; they select the matching site objective. Manual
+waypoints stay independent. Browser Extension remains optional.
+
+18 portable suites, source guards and offline API compilation pass; **r5a still
+needs in-game validation**. R5's observed failure is recorded with the fix.
+[Implementation, evidence and test steps](docs/FIXED_QUEST_MARKERS.md).
+
+## VIP refactor r3 — branch test
+
+VIP location selection and waypoint ownership now live in separate modules.
+`vip.lua` keeps the native quest/token, witness, boarding, delivery and actor
+cleanup flow. Selection order/ranges, marker recovery, rewards and both ambush
+modules retain the r2 behavior. The six-tab CET menu is included.
+
+[Download the complete VIP refactor r3 ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_VIP_Refactor_r3_TEST.zip)
+
+Install the **entire package** and restart; CET announces **v0.17d VIP refactor r3**.
+Include both `vip_locations.lua` and `vip_waypoint.lua`. No new dependency,
+native interface or save migration. Main remains separate from this branch.
+
+Verification: **16 suites**, **29,208 matching VIP trace rows against r2**, the
+unchanged **17,374-row dispatch comparison** and **156 CET action comparisons**;
+24 Lua modules, 28 unchanged native scripts and a complete 72-file ZIP. Actual
+game validation remains necessary. [Ownership and checks](docs/VIP_REFACTOR.md).
+
+## CET interface refactor r2 — branch test
+
+The CET menu now has **Patrol, Dispatch, Career, Settings, Diagnostics and Testing**
+tabs. Duty/availability controls stay at the top, each tab scrolls independently,
+and the last action's status stays in a separate footer. Logs and test grants
+are grouped away from normal patrol actions. Career shows rank, progress and
+next reward; active test unlocks display a persistent warning.
+
+[Download the complete CET refactor r2 ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_CET_Interface_Refactor_r2_TEST.zip)
+
+Install the **entire package** and restart; CET announces **v0.17d CET refactor r2**.
+`cet_ui.lua` owns presentation; `init.lua` retains session/shift ownership and
+update order. All 52 previous controls and their gameplay owners remain.
+Native scripts, rewards, progression, dispatch timing and actor cleanup are
+unchanged. Main stays separate from this refactor branch.
+
+Verification: **15 suites**, **156 old/new button-action comparisons**, the
+unchanged **17,374-row dispatch comparison**, 22 Lua modules, 28 unchanged native
+scripts and a complete 70-file ZIP. CET 1.37.1 bindings were checked; actual
+rendering/input still need an in-game test. [Details and checks](docs/CET_UI_REFACTOR.md).
+
+## Dispatch refactor r1 — branch test
+
+The dispatch coordinator now delegates scanner assignments, scheduling and result
+tracking to separate modules. Existing CET/trunk calls, the 50/30/20 mix,
+standby, native journals, payments, career progress and actor cleanup contracts
+are preserved. Read-only lifecycle diagnostics distinguish assignments,
+foreground cleanup and background scenes.
+
+[Download the complete refactor r1 test ZIP](https://github.com/jonathankj2000-cpu/NCPD-Patrol-Officer/raw/refs/heads/git-checkout--b-refactor/cleanup/releases/NCPD_Patrol_v0.17d_Dispatch_Refactor_r1_TEST.zip)
+
+Install the complete package and restart; CET announces **v0.17d dispatch
+refactor r1**. No new dependency or save migration. This branch contains the
+refactor; `main` remains unchanged. See [ownership, contracts and game checks](docs/DISPATCH_REFACTOR.md).
+
+Verification: all 13 existing suites plus a differential comparison against
+pinned v0.17d; 21 Lua modules, 28 unchanged redscript files and a complete
+69-file ZIP. Actual game validation is still required.
 
 ## v0.17d: partial ambush cleanup after VIP delivery
 

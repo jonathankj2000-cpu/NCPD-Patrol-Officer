@@ -1,0 +1,69 @@
+{
+  "source": "User-provided r5b CET logs and observations, 2026-11-20",
+  "build": "v0.17d fixed quest markers r5b",
+  "outcome": "failed",
+  "before_cleanup": {
+    "scope": 3,
+    "site": 40,
+    "objective": "quests/minor_quest/ncpd_patrol_dispatch_3/main/resolve_bank_40",
+    "hash": 3418482757,
+    "active_matches": 1,
+    "registered_matches": 1,
+    "registered_bank_pins": 0,
+    "active_bank_pins": 0,
+    "target_active": true,
+    "objective_link": true,
+    "runtime_position_ok": true,
+    "quest_position_ok": true,
+    "native_confirmed": false,
+    "retained": false,
+    "target": [
+      -1246.196167,
+      -946.847656,
+      31.42
+    ],
+    "runtime": [
+      -1246.196167,
+      -946.847656,
+      31.420044
+    ],
+    "quest_position": [
+      -1246.196167,
+      -946.847656,
+      31.420044
+    ]
+  },
+  "after_cleanup": {
+    "status": "Fallback registration pending",
+    "fallback_registered": true,
+    "fallback_active": true,
+    "fallback_visible_flag": true,
+    "fallback_position_ok": true,
+    "fallback_attempts": 1,
+    "manual_waypoint_before_after": [
+      0,
+      0
+    ]
+  },
+  "user_observations": [
+    "Native marker visible briefly on two attempts, then removed",
+    "On the third attempt no marker appeared",
+    "Reloading the earlier pre-shift save crashed again"
+  ],
+  "confirmed_source_finding": "The selected pin passes direct hash/link/position checks but the ownership census is zero. The retained/confirmed predicates reject it and queue fallback.",
+  "registry_initialization_hypothesis": "r5b admits current paths only if journal entries exist during RestoreCleanup. This availability-dependent failure is reproduced against actual r5b code by the regression suite. The live cause of the missing membership was not captured.",
+  "attachment_analysis_treated_as": "Research suggestions and reported evidence, not instructions or verified crash attribution",
+  "later_crash_claim": {
+    "from_attached_analysis": "Access violation reading 0xFFFFFFFFFFFFFFFF during Spawning player",
+    "raw_archive_available_here": false,
+    "independently_verified": false
+  },
+  "r5c": {
+    "game_validation": false,
+    "crash_resolution_confirmed": false,
+    "ownership_catalogue_entries": 3112,
+    "session_gate": "Codeware Session/Ready; blocked during BeforeStart/BeforeEnd/End",
+    "restore_objectives_per_tick": 48,
+    "all_six_archives_preserved": true
+  }
+}

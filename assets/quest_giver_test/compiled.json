@@ -1,0 +1,127 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
+  "archive_sha256": "c0d187fb6279b4628a5f166ee4f823919931b8bd111d9396e4e26068f331ce88",
+  "resources": [
+    "conversation.scene",
+    "lines.json",
+    "onscreens.json",
+    "quest_giver.journal",
+    "quest_giver.questphase",
+    "subtitles.json",
+    "vomap.json",
+    "voss.lipmap",
+    "voss_conversation.anims",
+    "voss_wait_pose.ent",
+    "vossbriefing01.wem",
+    "vossbriefing02.wem",
+    "vossbriefing03.wem",
+    "vossbriefing04.wem",
+    "vossbriefing05.wem",
+    "vossbriefing06.wem"
+  ],
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true,
+  "authored_inputs": {
+    "assets/quest_giver_test/contract.json": "162089643dd23bb0c8a3cefea6596b6f18378bb8df6efce48049eaac87362b6f",
+    "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
+    "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
+    "assets/quest_giver_test/sms-templates.json": "6b0a5ecae835db197b083eff69fa7be70b18bb482cf5d814a62df4475355c228",
+    "assets/quest_giver_test/subtitle-controller.reds.template": "9b29e1e08d4fe2af22f597d85b975ff9725c5b337f6b465845baf359ff260aba",
+    "assets/quest_giver_test/scene-id-reference.json": "2dcc4348ddedf1e30cf51d4766586c8a0e44e5313f35a5cb0cb3eb7c15db9264",
+    "assets/quest_giver_test/media/manifest.json": "d392b25a00c0fae88a986faeb122f7299686c32a34c53f1290a4c406dc732958",
+    "assets/quest_giver_test/media/vossbriefing03.wem": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c",
+    "assets/quest_giver_test/media/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+    "assets/quest_giver_test/media/vossbriefing02.wem": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909",
+    "assets/quest_giver_test/media/vossbriefing05.wem": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd",
+    "assets/quest_giver_test/media/vossbriefing01.wem": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d",
+    "assets/quest_giver_test/media/vossbriefing06.wem": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782",
+    "assets/quest_giver_test/media/vossbriefing04.wem": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc",
+    "assets/quest_giver_test/media/source/Voss03.anims": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c",
+    "assets/quest_giver_test/media/source/Voss01.anims": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c",
+    "assets/quest_giver_test/media/source/Voss02.anims": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d",
+    "assets/quest_giver_test/conversation.scene.json": "2e687dcbf6fe52fec29de28ac642da5969748de03f7244b8f8e12e04e3061d25",
+    "assets/quest_giver_test/quest_giver.questphase.json": "05c90d798510809c5771377e652d0e51d5082870231e1f0daa966e4138073141",
+    "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
+    "assets/quest_giver_test/onscreens.json.json": "5c0fb4fee610113c957f1fb6827454b824d0dced746e7f2aa2e982bc327d9601",
+    "assets/quest_giver_test/lines.json.json": "604910f2220b71266c6a25c07d35cb9fb7b250cbb7862a07c7d5a2c1b62cf652",
+    "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6",
+    "assets/quest_giver_test/vomap.json.json": "166498a6d2867e3b2524fd22250063677a019b29620171a8aa834682ccfe35c7",
+    "assets/quest_giver_test/voss.lipmap.json": "1b2596d14516c9d6197c392e3d304bf3fc86fecdd89301871249ed3c5681ca15",
+    "assets/quest_giver_test/voss_wait_pose.ent.json": "d8a3fbd7652e686e8460bec11d8eceeafa43d4755378ae3157441d920af0ef3c",
+    "assets/arrest/arrest_workspot.ent.json": "9f5696eb3d574acc19f3660f15c28631baf7a0dccc253db6c37653708b63fe58",
+    "assets/quest_giver_test/media/wwise_export_audit.json": "1e69ea8eeb3b19684776748858a3b6396d01462f8e91e18dc074e27d62e4a164"
+  },
+  "actual_game_validation": false,
+  "wwise_voice_fix": {
+    "baseline_archive_sha256": "f88bcfcf6347dbf4ff63cd88d2d7d6ab56e904dabe9e01cd51f948fff22712a6",
+    "six_wems_replaced": true,
+    "other_ten_resources_byte_identical": true,
+    "resource_audit": {
+      "base/ncpd_patrol/quest_giver_test/conversation.scene": {
+        "before": "4d43e0cf6b7d2cb4c14163b4ffdb0185eed0434a6d939a63a7fcbcfb4c584027",
+        "after": "4d43e0cf6b7d2cb4c14163b4ffdb0185eed0434a6d939a63a7fcbcfb4c584027"
+      },
+      "base/ncpd_patrol/quest_giver_test/lines.json": {
+        "before": "6eb9532333c5e5d989cb6d73858d76ebbdab7e050af0f1180df40b2c141a398a",
+        "after": "6eb9532333c5e5d989cb6d73858d76ebbdab7e050af0f1180df40b2c141a398a"
+      },
+      "base/ncpd_patrol/quest_giver_test/onscreens.json": {
+        "before": "4bbc2f3ea72b71db69b4658e91ed31b49e159a2e85bbeb60c10d708cc0b84f64",
+        "after": "4bbc2f3ea72b71db69b4658e91ed31b49e159a2e85bbeb60c10d708cc0b84f64"
+      },
+      "base/ncpd_patrol/quest_giver_test/quest_giver.journal": {
+        "before": "9fba0731b56bff001eafd907ce7b9486ac0d4db311994bfdec671e19793f25d1",
+        "after": "9fba0731b56bff001eafd907ce7b9486ac0d4db311994bfdec671e19793f25d1"
+      },
+      "base/ncpd_patrol/quest_giver_test/quest_giver.questphase": {
+        "before": "a620cfe7803209595376490c1ee8a377df81d17a6f9230c06e7c39fd8e4cd892",
+        "after": "a620cfe7803209595376490c1ee8a377df81d17a6f9230c06e7c39fd8e4cd892"
+      },
+      "base/ncpd_patrol/quest_giver_test/subtitles.json": {
+        "before": "fac54e42ce4b0bc4e04aec73c8eb58654dd50fc9118176ff8411af0378138424",
+        "after": "fac54e42ce4b0bc4e04aec73c8eb58654dd50fc9118176ff8411af0378138424"
+      },
+      "base/ncpd_patrol/quest_giver_test/vomap.json": {
+        "before": "5ffda97d99628fcca28f37731efd9530270d345d2c220b73e303fba9d92e2196",
+        "after": "5ffda97d99628fcca28f37731efd9530270d345d2c220b73e303fba9d92e2196"
+      },
+      "base/ncpd_patrol/quest_giver_test/voss.lipmap": {
+        "before": "827b44b709f838cecce68f8cc8a8d38a4513d5d8c4d55594af541fb528395a83",
+        "after": "827b44b709f838cecce68f8cc8a8d38a4513d5d8c4d55594af541fb528395a83"
+      },
+      "base/ncpd_patrol/quest_giver_test/voss_conversation.anims": {
+        "before": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+        "after": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370"
+      },
+      "base/ncpd_patrol/quest_giver_test/voss_wait_pose.ent": {
+        "before": "6e6e4c2141ae5364e53043efa0047fb549aef26d4c5f6bde5e7e6e21094862f5",
+        "after": "6e6e4c2141ae5364e53043efa0047fb549aef26d4c5f6bde5e7e6e21094862f5"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing01.wem": {
+        "before": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb",
+        "after": "dd10245f1a397b12d7f7ee968395225e9648689c7ed44063fafd1d988caf945d"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing02.wem": {
+        "before": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547",
+        "after": "aa137d3ee9ea98982de30a12dd9576606429c57315ca63238505e2f30b20d909"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing03.wem": {
+        "before": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
+        "after": "25fa9284ed986f80060978c78086fb07846db51fb3f9b5cdc708be39c9afe25c"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing04.wem": {
+        "before": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5",
+        "after": "af4286cd9f0b045c837fdd116cb838d34e815821dbc74191a591f56c42913ccc"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing05.wem": {
+        "before": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627",
+        "after": "617cae8d1b1189d6b823948b95b230334987612b6d6d818704367ab60c5079bd"
+      },
+      "base/ncpd_patrol/quest_giver_test/vossbriefing06.wem": {
+        "before": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8",
+        "after": "8ca379d805133c1264fe0e1c3e2c433229c0712fde201fdf1026e82901a54782"
+      }
+    },
+    "whole_conversation_in_game_verified": false
+  }
+}

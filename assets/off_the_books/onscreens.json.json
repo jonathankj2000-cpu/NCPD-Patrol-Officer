@@ -1,0 +1,102 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "10525193475389932557",
+              "secondaryKey": "NCPDPatrol_OTB_Title",
+              "femaleVariant": "Off the Books",
+              "maleVariant": "Off the Books"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "14606570211513156421",
+              "secondaryKey": "NCPDPatrol_OTB_Description",
+              "femaleVariant": "Lieutenant Mara Voss needs an Arasaka-affiliated contractor eliminated and his encrypted records recovered. This is an off-duty operation. Any police response is your responsibility. Retrieve the evidence, lose any pursuing officers, and return to Voss.",
+              "maleVariant": "Lieutenant Mara Voss needs an Arasaka-affiliated contractor eliminated and his encrypted records recovered. This is an off-duty operation. Any police response is your responsibility. Retrieve the evidence, lose any pursuing officers, and return to Voss."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "17658828115967224191",
+              "secondaryKey": "NCPDPatrol_OTB_Eliminate",
+              "femaleVariant": "Eliminate the Arasaka contractor.",
+              "maleVariant": "Eliminate the Arasaka contractor."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "4876402455188535885",
+              "secondaryKey": "NCPDPatrol_OTB_Retrieve",
+              "femaleVariant": "Retrieve the encrypted data shard.",
+              "maleVariant": "Retrieve the encrypted data shard."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "13461232817366195074",
+              "secondaryKey": "NCPDPatrol_OTB_Escape",
+              "femaleVariant": "Lose the NCPD.",
+              "maleVariant": "Lose the NCPD."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "3288370381503115867",
+              "secondaryKey": "NCPDPatrol_OTB_Return",
+              "femaleVariant": "Return to Lieutenant Mara Voss.",
+              "maleVariant": "Return to Lieutenant Mara Voss."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "6965801983256104869",
+              "secondaryKey": "NCPDPatrol_OTB_ContractorName",
+              "femaleVariant": "Arasaka contractor",
+              "maleVariant": "Arasaka contractor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "3696453288713856353",
+              "secondaryKey": "NCPDPatrol_OTB_GuardName",
+              "femaleVariant": "Arasaka security",
+              "maleVariant": "Arasaka security"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "7802102909777118719",
+              "secondaryKey": "NCPDPatrol_OTB_ShardTitle",
+              "femaleVariant": "ARASAKA INTERNAL \u2014 TRANSFER AUTHORIZATION",
+              "maleVariant": "ARASAKA INTERNAL \u2014 TRANSFER AUTHORIZATION"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "5220825057136915030",
+              "secondaryKey": "NCPDPatrol_OTB_ShardHint",
+              "femaleVariant": "Restricted authorization logs and personnel transfer records.",
+              "maleVariant": "Restricted authorization logs and personnel transfer records."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "15216765282137129615",
+              "secondaryKey": "NCPDPatrol_OTB_ShardBody",
+              "femaleVariant": "Classification: Restricted\n\nAuthorization logs and personnel transfer records.\n\nSeveral entries have been deleted or redacted.\n\nReceiving department: [REDACTED]\nTransfer authority: Corporate Security Liaison\nDisposition: External custody\n\nTwo transfer references have no corresponding intake records. Their authorization signatures match the retained transaction logs.\n\nDistribution outside authorized personnel is prohibited.",
+              "maleVariant": "Classification: Restricted\n\nAuthorization logs and personnel transfer records.\n\nSeveral entries have been deleted or redacted.\n\nReceiving department: [REDACTED]\nTransfer authority: Corporate Security Liaison\nDisposition: External custody\n\nTwo transfer references have no corresponding intake records. Their authorization signatures match the retained transaction logs.\n\nDistribution outside authorized personnel is prohibited."
+            }
+          ]
+        }
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

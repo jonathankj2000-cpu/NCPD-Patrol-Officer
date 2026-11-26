@@ -1,0 +1,24 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive",
+  "archive_sha256": "398bb3d05a80ad1a74df5cf9fe3ab93894578d2b058151db9c417b89481f41f5",
+  "authored_inputs": {
+    "assets/quest_marker_probe/probe.journal.json": "187ba8127ee6d89a2a8caed88271e58a28ce2229e7f97f1f827f499b79530b59",
+    "assets/quest_marker_probe/probe_onscreens.json.json": "6512a8aa47e8f3584e65073ee7a23aebf4b93a56eeef50208ef797e9d939899f",
+    "assets/quest_marker_probe/probe_anchor.ent.json": "d4a85d0b66d579a8501b87202068605202dee5ff0f7094c14e28523069d4e0a2",
+    "assets/quest_marker_probe/probe.questphase.json": "7220e7ae2ea0a01e5d0135e0d8161e1717e06adc846b40f5d09c160c41e9c907",
+    "assets/quest_marker_probe/reference.journal.json": "6fea717673883d76ff11a3fec813cb664fdb8233da3edfedf9a89afdc899fb77",
+    "assets/quest_marker_probe/reference_onscreens.json.json": "a56a330af58ed5b92051bd65cdfa1a4db40ec9d3be4ac0003fd8ed6a53f49cb0",
+    "assets/quest_marker_probe/reference.questphase.json": "386b3bb572b6628f023b94a6567b6a8bdf67bb6c9ec92b15d5a4bbe47984852c"
+  },
+  "resources": {
+    "probe.journal": "d8db82afd1f4c506289266f5560fe1be517ee131b4b3fdb55c2888c344b2ca25",
+    "probe_onscreens.json": "0d259da3f0bb42b0ef3aef6735f22eef73e62eba67c833e1e7a6286c03e0b265",
+    "probe_anchor.ent": "6857d5210660d71177c9a8760d9956969ff4b1606c2ab3a2a944940e8725e348",
+    "probe.questphase": "adc561070e5144f14d05cff9bc3973b622278feb75ec72927a3cd25009ef5e42",
+    "reference.journal": "daa1f1ddad75c89f6d5326ab4409ae4688d6d79efb45ff79427f50cbbb7bb530",
+    "reference_onscreens.json": "7dd38b049b9da4da91362a01a7f7d81c4ff6565605922c4a65b898479102a7fe",
+    "reference.questphase": "cef3625b468c67500f8aae992dbfade0f89de7d2ed8318e3b7534818bc4c3d9d"
+  },
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true
+}

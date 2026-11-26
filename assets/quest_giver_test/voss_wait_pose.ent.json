@@ -1,0 +1,137 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "entEntityTemplate",
+      "appearances": [],
+      "defaultAppearance": {
+        "$type": "CName",
+        "$storage": "string",
+        "$value": "default"
+      },
+      "compiledData": {
+        "BufferId": "0",
+        "Flags": 0,
+        "Type": "WolvenKit.RED4.Archive.Buffer.RedPackage, WolvenKit.RED4, Version=9.1.1.0, Culture=neutral, PublicKeyToken=null",
+        "Data": {
+          "Version": 4,
+          "Sections": 7,
+          "CruidIndex": 0,
+          "CruidDict": {
+            "0": "0",
+            "1": "19005001"
+          },
+          "Chunks": [
+            {
+              "$type": "gameObject"
+            },
+            {
+              "$type": "workWorkspotResourceComponent",
+              "id": "19005001",
+              "name": {
+                "$type": "CName",
+                "$storage": "string",
+                "$value": "NCPDPatrolVossWaitPose"
+              },
+              "localTransform": {
+                "$type": "WorldTransform",
+                "Orientation": {
+                  "$type": "Quaternion",
+                  "i": 0,
+                  "j": 0,
+                  "k": 0,
+                  "r": 1
+                },
+                "Position": {
+                  "$type": "WorldPosition",
+                  "x": {
+                    "$type": "FixedPoint",
+                    "Bits": 0
+                  },
+                  "y": {
+                    "$type": "FixedPoint",
+                    "Bits": 0
+                  },
+                  "z": {
+                    "$type": "FixedPoint",
+                    "Bits": 0
+                  }
+                }
+              },
+              "workspotResource": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot"
+                },
+                "Flags": "Default"
+              }
+            }
+          ]
+        }
+      },
+      "entity": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "gameObject"
+        }
+      },
+      "includes": [],
+      "inplaceResources": [],
+      "resolvedDependencies": [],
+      "components": [
+        {
+          "$type": "workWorkspotResourceComponent",
+          "id": "19005001",
+          "name": {
+            "$type": "CName",
+            "$storage": "string",
+            "$value": "NCPDPatrolVossWaitPose"
+          },
+          "localTransform": {
+            "$type": "WorldTransform",
+            "Orientation": {
+              "$type": "Quaternion",
+              "i": 0,
+              "j": 0,
+              "k": 0,
+              "r": 1
+            },
+            "Position": {
+              "$type": "WorldPosition",
+              "x": {
+                "$type": "FixedPoint",
+                "Bits": 0
+              },
+              "y": {
+                "$type": "FixedPoint",
+                "Bits": 0
+              },
+              "z": {
+                "$type": "FixedPoint",
+                "Bits": 0
+              }
+            }
+          },
+          "workspotResource": {
+            "DepotPath": {
+              "$type": "ResourcePath",
+              "$storage": "string",
+              "$value": "base\\workspots\\common\\ground\\generic__stand_ground_arms_crossed__stand_around__02.workspot"
+            },
+            "Flags": "Default"
+          }
+        }
+      ],
+      "cookingPlatform": "PLATFORM_PC"
+    },
+    "EmbeddedFiles": []
+  }
+}

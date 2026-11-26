@@ -1,0 +1,1478 @@
+{
+  "schema": 1,
+  "coverage": [
+    "City Center (Central)",
+    "Heywood",
+    "Pacifica",
+    "Santo Domingo",
+    "Watson"
+  ],
+  "sites": [
+    {
+      "index": 1,
+      "id": "test_kryss_01",
+      "label": "TEST_KRYSS_01",
+      "position": {
+        "x": -490.911377,
+        "y": -173.816315,
+        "z": 7.88707
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:18:06Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 2,
+      "id": "kryss_02",
+      "label": "Kryss_02",
+      "position": {
+        "x": -1960.31665,
+        "y": -1216.668457,
+        "z": 10.327583
+      },
+      "heading": 169.956,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_02",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:18:25Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 3,
+      "id": "kryss_03",
+      "label": "Kryss_03",
+      "position": {
+        "x": -1832.878174,
+        "y": -869.848999,
+        "z": 7.484634
+      },
+      "heading": 141.126,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_03",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:18:46Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 4,
+      "id": "kryss_04",
+      "label": "Kryss_04",
+      "position": {
+        "x": -1854.23584,
+        "y": -95.590836,
+        "z": 7.551308
+      },
+      "heading": 180.643,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_04",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:19:05Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 5,
+      "id": "kryss_05",
+      "label": "Kryss_05",
+      "position": {
+        "x": -1840.118164,
+        "y": 214.088165,
+        "z": 7.082535
+      },
+      "heading": 29.621,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_05",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:19:23Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 6,
+      "id": "kryss_06",
+      "label": "Kryss_06",
+      "position": {
+        "x": -1572.332642,
+        "y": 30.73172,
+        "z": 16.555321
+      },
+      "heading": 222.943,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_06",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:19:43Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 7,
+      "id": "kryss_07",
+      "label": "Kryss_07",
+      "position": {
+        "x": -1503.422485,
+        "y": 1571.012939,
+        "z": 18.0
+      },
+      "heading": 261.656,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_07",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:20:02Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 8,
+      "id": "kryss_08",
+      "label": "Kryss_08",
+      "position": {
+        "x": -1423.498535,
+        "y": 2204.005615,
+        "z": 17.999985
+      },
+      "heading": 304.034,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_08",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:20:21Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 9,
+      "id": "kryss_09",
+      "label": "Kryss_09",
+      "position": {
+        "x": -1156.895386,
+        "y": 2365.504639,
+        "z": 6.728867
+      },
+      "heading": 115.846,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_09",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:20:40Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 10,
+      "id": "kryss_10",
+      "label": "Kryss_10",
+      "position": {
+        "x": -1017.527283,
+        "y": 2576.913818,
+        "z": 22.164085
+      },
+      "heading": 216.449,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_10",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:20:58Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 11,
+      "id": "kryss_11",
+      "label": "Kryss_11",
+      "position": {
+        "x": -1577.779541,
+        "y": 3236.467773,
+        "z": 7.118637
+      },
+      "heading": 218.298,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_11",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:21:17Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 12,
+      "id": "kryss_12",
+      "label": "Kryss_12",
+      "position": {
+        "x": -1889.25415,
+        "y": 3637.462646,
+        "z": 7.118637
+      },
+      "heading": 249.843,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_12",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:21:36Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 13,
+      "id": "kryss_14",
+      "label": "Kryss_14",
+      "position": {
+        "x": -713.949585,
+        "y": 2196.259033,
+        "z": 52.904289
+      },
+      "heading": 274.35,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_14",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:22:28Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 14,
+      "id": "kryss_15",
+      "label": "Kryss_15",
+      "position": {
+        "x": -868.048889,
+        "y": -290.759155,
+        "z": 7.695068
+      },
+      "heading": 235.283,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_15",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:22:49Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 15,
+      "id": "kryss_16",
+      "label": "Kryss_16",
+      "position": {
+        "x": -967.523193,
+        "y": -218.141068,
+        "z": 7.25
+      },
+      "heading": 326.467,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_16",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:23:08Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 16,
+      "id": "kryss_17",
+      "label": "Kryss_17",
+      "position": {
+        "x": -1295.443359,
+        "y": -167.141464,
+        "z": 7.931709
+      },
+      "heading": 54.183,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_kryss_17",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "41fa60a71e2839072fbeb505f966b583df41829b1430196402d6106306853e59",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-21T03:23:27Z",
+      "source_report_sha256": "a8a1ed0fa76dbf3d2309f25145913f51863f420273bd1563c859986398571b3b"
+    },
+    {
+      "index": 17,
+      "id": "terminal_133_r10_b180",
+      "label": "Ring Road",
+      "position": {
+        "x": -1157.6800537109,
+        "y": 136.10659790039,
+        "z": 7.484228515625
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_133_r10_b180",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:44:51Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_133",
+      "source_index": 133,
+      "source_id": "cct_cpz_dataterm_01",
+      "radius": 10,
+      "bearing": 180,
+      "nominal_position": {
+        "x": -1157.68005,
+        "y": 136.106598,
+        "z": 7.34890509
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 18,
+      "id": "terminal_152_r10_b135",
+      "label": "Halsey & MLK",
+      "position": {
+        "x": -1761.6038818359,
+        "y": 192.45425415039,
+        "z": 16.566511535645
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_152_r10_b135",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:45:39Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_152",
+      "source_index": 152,
+      "source_id": "cct_dtn_dataterm_01",
+      "radius": 10,
+      "bearing": 135,
+      "nominal_position": {
+        "x": -1761.603908,
+        "y": 192.454231,
+        "z": 16.6809425
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 19,
+      "id": "terminal_153_r10_b0",
+      "label": "Berkeley & Bruce Skiv",
+      "position": {
+        "x": -1850.6856689453,
+        "y": 674.92572021484,
+        "z": 10.900001907349
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_153_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:46:27Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_153",
+      "source_index": 153,
+      "source_id": "cct_dtn_dataterm_02",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1850.68567,
+        "y": 674.92572,
+        "z": 10.7170582
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 20,
+      "id": "terminal_154_r10_b0",
+      "label": "Skyline & Republic",
+      "position": {
+        "x": -2345.1501464844,
+        "y": 431.90670776367,
+        "z": 7.8287528991699
+      },
+      "heading": 270,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_154_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:47:08Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_154",
+      "source_index": 154,
+      "source_id": "cct_dtn_dataterm_03",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -2345.15015,
+        "y": 431.906708,
+        "z": 7.87158537
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 21,
+      "id": "terminal_156_r10_b270",
+      "label": "Downtown North",
+      "position": {
+        "x": -1520.7014160156,
+        "y": 683.78631591797,
+        "z": 9.139767074585
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_156_r10_b270",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:47:59Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_156",
+      "source_index": 156,
+      "source_id": "cct_dtn_dataterm_05",
+      "radius": 10,
+      "bearing": 270,
+      "nominal_position": {
+        "x": -1520.70142,
+        "y": 683.786316,
+        "z": 8.9742775
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 22,
+      "id": "terminal_157_r10_b0",
+      "label": "Downtown Central",
+      "position": {
+        "x": -2105.1328125,
+        "y": 261.09552001953,
+        "z": 8.3259910583496
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_157_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:48:51Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "City Center",
+      "source_anchor_id": "terminal_157",
+      "source_index": 157,
+      "source_id": "cct_dtn_dataterm_07",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -2105.13281,
+        "y": 261.09552,
+        "z": 7.90156126
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 23,
+      "id": "terminal_164_r10_b0",
+      "label": "Senate & Market",
+      "position": {
+        "x": -1879.3676757813,
+        "y": -574.45855712891,
+        "z": 7.9107154846191
+      },
+      "heading": 180,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_164_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:49:37Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_164",
+      "source_index": 164,
+      "source_id": "hey_gle_dataterm_01",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1879.36768,
+        "y": -574.458557,
+        "z": 7.87509966
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 24,
+      "id": "terminal_165_r10_b0",
+      "label": "Ventura & Skyline",
+      "position": {
+        "x": -1850.2552490234,
+        "y": -1206.4010009766,
+        "z": 20.221767807007
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_165_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:07:28Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_165",
+      "source_index": 165,
+      "source_id": "hey_gle_dataterm_02",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1850.25525,
+        "y": -1206.401,
+        "z": 20.2347031
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 25,
+      "id": "terminal_166_r10_b0",
+      "label": "Palms View Way",
+      "position": {
+        "x": -1709.9020996094,
+        "y": -886.14208984375,
+        "z": 8.6230739593506
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_166_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:08:08Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_166",
+      "source_index": 166,
+      "source_id": "hey_gle_dataterm_03",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1709.9021,
+        "y": -886.14209,
+        "z": 8.59025574
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 26,
+      "id": "terminal_180_r10_b45",
+      "label": "Republic & Vine",
+      "position": {
+        "x": -590.65673828125,
+        "y": -114.32151031494,
+        "z": 7.9000019073486
+      },
+      "heading": 270,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_180_r10_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:50:47Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_180",
+      "source_index": 180,
+      "source_id": "hey_rey_dataterm_01",
+      "radius": 10,
+      "bearing": 45,
+      "nominal_position": {
+        "x": -590.656776,
+        "y": -114.32151,
+        "z": 7.69283676
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 27,
+      "id": "terminal_181_r10_b45",
+      "label": "Petrel St",
+      "position": {
+        "x": -915.82458496094,
+        "y": 112.20412445068,
+        "z": 7.5630640029907
+      },
+      "heading": 270,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_181_r10_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:51:33Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_181",
+      "source_index": 181,
+      "source_id": "hey_rey_dataterm_02",
+      "radius": 10,
+      "bearing": 45,
+      "nominal_position": {
+        "x": -915.824562,
+        "y": 112.204125,
+        "z": 7.32327032
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 28,
+      "id": "terminal_182_r10_b225",
+      "label": "College St",
+      "position": {
+        "x": -989.91571044922,
+        "y": -604.38934326172,
+        "z": 8.1000370025635
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_182_r10_b225",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:52:33Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_182",
+      "source_index": 182,
+      "source_id": "hey_rey_dataterm_03",
+      "radius": 10,
+      "bearing": 225,
+      "nominal_position": {
+        "x": -989.915734,
+        "y": -604.389366,
+        "z": 8.2038269
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 29,
+      "id": "terminal_183_r10_b135",
+      "label": "Skyline East",
+      "position": {
+        "x": -664.25421142578,
+        "y": -427.81503295898,
+        "z": 8.1000007629395
+      },
+      "heading": 225,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_183_r10_b135",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:53:25Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_183",
+      "source_index": 183,
+      "source_id": "hey_rey_dataterm_04",
+      "radius": 10,
+      "bearing": 135,
+      "nominal_position": {
+        "x": -664.254235,
+        "y": -427.81504,
+        "z": 8.20603752
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 30,
+      "id": "terminal_184_r10_b135",
+      "label": "Congress & Madison",
+      "position": {
+        "x": -1229.5755615234,
+        "y": -440.08291625977,
+        "z": 8.2000011444092
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_184_r10_b135",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:54:12Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_184",
+      "source_index": 184,
+      "source_id": "hey_rey_dataterm_05",
+      "radius": 10,
+      "bearing": 135,
+      "nominal_position": {
+        "x": -1229.575588,
+        "y": -440.082924,
+        "z": 8.14825153
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 31,
+      "id": "terminal_191_r10_b0",
+      "label": "Corporation St",
+      "position": {
+        "x": -2392.853515625,
+        "y": -71.031929016113,
+        "z": 8.4560245513916
+      },
+      "heading": 180,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_191_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:54:57Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_191",
+      "source_index": 191,
+      "source_id": "hey_spr_dataterm_01",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -2392.85352,
+        "y": -71.031921,
+        "z": 8.11292934
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 32,
+      "id": "terminal_197_r10_b0",
+      "label": "Pumping Station",
+      "position": {
+        "x": -2400.0598144531,
+        "y": -960.99987792969,
+        "z": 8.1000007629395
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_197_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:15:38Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Heywood",
+      "source_anchor_id": "terminal_197",
+      "source_index": 197,
+      "source_id": "hey_spr_dataterm_07",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -2400.05981,
+        "y": -960.999878,
+        "z": 8.13999748
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 33,
+      "id": "terminal_205_r10_b135",
+      "label": "Stadium Parking",
+      "position": {
+        "x": -1314.2905273438,
+        "y": -1664.4786376953,
+        "z": 44.200003051758
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_205_r10_b135",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:57:36Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Pacifica",
+      "source_anchor_id": "terminal_205",
+      "source_index": 205,
+      "source_id": "pac_cvi_dataterm_04",
+      "radius": 10,
+      "bearing": 135,
+      "nominal_position": {
+        "x": -1314.290548,
+        "y": -1664.478612,
+        "z": 44.0499992
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 34,
+      "id": "terminal_209_r10_b45",
+      "label": "West Wind Apartments",
+      "position": {
+        "x": -2651.537109375,
+        "y": -2480.4038085938,
+        "z": 17.400001907349
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_209_r10_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:58:19Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Pacifica",
+      "source_anchor_id": "terminal_209",
+      "source_index": 209,
+      "source_id": "pac_wwd_dataterm_03",
+      "radius": 10,
+      "bearing": 45,
+      "nominal_position": {
+        "x": -2651.537082,
+        "y": -2480.403782,
+        "z": 18.0376701
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 35,
+      "id": "terminal_210_r10_b90",
+      "label": "Republic East",
+      "position": {
+        "x": 120.74914550781,
+        "y": -622.46234130859,
+        "z": 7.4999999046326
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_210_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T00:59:27Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_210",
+      "source_index": 210,
+      "source_id": "std_arr_dataterm_01",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": 120.749146,
+        "y": -622.462341,
+        "z": 7.58192062
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 36,
+      "id": "terminal_211_r30_b45",
+      "label": "Megabuilding H6",
+      "position": {
+        "x": -188.24871826172,
+        "y": -830.98010253906,
+        "z": 7.7000121116638
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_211_r30_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:00:23Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_211",
+      "source_index": 211,
+      "source_id": "std_arr_dataterm_02",
+      "radius": 30,
+      "bearing": 45,
+      "nominal_position": {
+        "x": -188.248726,
+        "y": -830.980095,
+        "z": 7.64019918
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 37,
+      "id": "terminal_212_r10_b90",
+      "label": "Red Dirt Bar",
+      "position": {
+        "x": -736.02276611328,
+        "y": -969.36962890625,
+        "z": 7.8000010490417
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_212_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:01:21Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_212",
+      "source_index": 212,
+      "source_id": "std_arr_dataterm_03",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": -736.022766,
+        "y": -969.369629,
+        "z": 7.89920044
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 38,
+      "id": "terminal_213_r10_b0",
+      "label": "Hargreaves St",
+      "position": {
+        "x": -671.62524414063,
+        "y": -1253.2204589844,
+        "z": 8.8000015258789
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_213_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:02:04Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_213",
+      "source_index": 213,
+      "source_id": "std_arr_dataterm_04",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -671.625244,
+        "y": -1253.22046,
+        "z": 8.97216702
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 39,
+      "id": "terminal_214_r10_b90",
+      "label": "Megabuilding H4",
+      "position": {
+        "x": -966.77325439453,
+        "y": -1762.5239257813,
+        "z": 11.100006484985
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_214_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:02:47Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_214",
+      "source_index": 214,
+      "source_id": "std_arr_dataterm_05",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": -966.773193,
+        "y": -1762.5238,
+        "z": 11.1501083
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 40,
+      "id": "terminal_216_r10_b0",
+      "label": "San Amaro St",
+      "position": {
+        "x": 693.466796875,
+        "y": -592.34912109375,
+        "z": 9.8000015258789
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_216_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:03:29Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_216",
+      "source_index": 216,
+      "source_id": "std_arr_dataterm_07",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": 693.466736,
+        "y": -592.349121,
+        "z": 9.96000004
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 41,
+      "id": "terminal_217_r10_b90",
+      "label": "MLK & Brandon",
+      "position": {
+        "x": -505.42218017578,
+        "y": -750.39611816406,
+        "z": 7.5695880889893
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_217_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:04:16Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_217",
+      "source_index": 217,
+      "source_id": "std_arr_dataterm_08",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": -505.42215,
+        "y": -750.396118,
+        "z": 7.43000031
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 42,
+      "id": "terminal_218_r10_b270",
+      "label": "Mission Waterfront",
+      "position": {
+        "x": -1066.0441894531,
+        "y": -1240.3533935547,
+        "z": 12.200001144409
+      },
+      "heading": 135,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_218_r10_b270",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:05:04Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_218",
+      "source_index": 218,
+      "source_id": "std_arr_dataterm_09",
+      "radius": 10,
+      "bearing": 270,
+      "nominal_position": {
+        "x": -1066.04419,
+        "y": -1240.35339,
+        "z": 11.2299995
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 43,
+      "id": "terminal_225_r10_b270",
+      "label": "Almunecar & Jerez",
+      "position": {
+        "x": 60.155742645264,
+        "y": -1937.0841064453,
+        "z": 2.6000021934509
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_225_r10_b270",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:05:56Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_225",
+      "source_index": 225,
+      "source_id": "std_rcr_dataterm_01",
+      "radius": 10,
+      "bearing": 270,
+      "nominal_position": {
+        "x": 60.155743,
+        "y": -1937.08411,
+        "z": 2.51694679
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 44,
+      "id": "terminal_226_r10_b0",
+      "label": "Rancho Coronado North",
+      "position": {
+        "x": 712.47998046875,
+        "y": -980.23889160156,
+        "z": 28.900001907349
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_226_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:06:40Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_226",
+      "source_index": 226,
+      "source_id": "std_rcr_dataterm_02",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": 712.47998,
+        "y": -980.238892,
+        "z": 28.8372574
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 45,
+      "id": "terminal_227_r10_b90",
+      "label": "Rancho Coronado South",
+      "position": {
+        "x": -498.17776489258,
+        "y": -1840.8028564453,
+        "z": 7.4999999046326
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_227_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:07:22Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_227",
+      "source_index": 227,
+      "source_id": "std_rcr_dataterm_03",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": -498.177765,
+        "y": -1840.80286,
+        "z": 7.44232035
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 46,
+      "id": "terminal_228_r10_b0",
+      "label": "Rancho Coronado East",
+      "position": {
+        "x": 446.2255859375,
+        "y": -2147.1274414063,
+        "z": 14.900001907349
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_228_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:08:15Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_228",
+      "source_index": 228,
+      "source_id": "std_rcr_dataterm_05",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": 446.225586,
+        "y": -2147.12744,
+        "z": 14.6052914
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 47,
+      "id": "terminal_229_r10_b45",
+      "label": "Kendal Park",
+      "position": {
+        "x": 372.28594970703,
+        "y": -1682.0240478516,
+        "z": 9.4349731445313
+      },
+      "heading": 315,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_229_r10_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:08:57Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_229",
+      "source_index": 229,
+      "source_id": "std_rcr_dataterm_06",
+      "radius": 10,
+      "bearing": 45,
+      "nominal_position": {
+        "x": 372.285942,
+        "y": -1682.024022,
+        "z": 9.43942547
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 48,
+      "id": "terminal_232_r10_b0",
+      "label": "Mallagra & Manzanita",
+      "position": {
+        "x": 322.57833862305,
+        "y": -1420.8397216797,
+        "z": 15.100000762939
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_232_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:10:07Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Santo Domingo",
+      "source_anchor_id": "terminal_232",
+      "source_index": 232,
+      "source_id": "std_rcr_dataterm_09",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": 322.578369,
+        "y": -1420.83972,
+        "z": 15.1099997
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 49,
+      "id": "terminal_252_r10_b135",
+      "label": "California & Pershing",
+      "position": {
+        "x": -2165.2434082031,
+        "y": 1999.322265625,
+        "z": 18.50000038147
+      },
+      "heading": 45,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_252_r10_b135",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:12:57Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_252",
+      "source_index": 252,
+      "source_id": "wat_awf_dataterm_03",
+      "radius": 10,
+      "bearing": 135,
+      "nominal_position": {
+        "x": -2165.243428,
+        "y": 1999.322288,
+        "z": 18.188345
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 50,
+      "id": "terminal_254_r10_b180",
+      "label": "Kennedy North",
+      "position": {
+        "x": -1223.0354003906,
+        "y": 1881.3107910156,
+        "z": 22.517034912109
+      },
+      "heading": 45,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_254_r10_b180",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:13:45Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_254",
+      "source_index": 254,
+      "source_id": "wat_kab_dataterm_02",
+      "radius": 10,
+      "bearing": 180,
+      "nominal_position": {
+        "x": -1223.0354,
+        "y": 1881.31079,
+        "z": 22.5
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 51,
+      "id": "terminal_255_r10_b90",
+      "label": "Creek Loop",
+      "position": {
+        "x": -1054.5715332031,
+        "y": 1582.0587158203,
+        "z": 2.8000487327576
+      },
+      "heading": 90,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_255_r10_b90",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:14:33Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_255",
+      "source_index": 255,
+      "source_id": "wat_kab_dataterm_03",
+      "radius": 10,
+      "bearing": 90,
+      "nominal_position": {
+        "x": -1054.57153,
+        "y": 1582.05872,
+        "z": 2.53999996
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 52,
+      "id": "terminal_257_r10_b0",
+      "label": "Pinewood St South",
+      "position": {
+        "x": -1145.4138183594,
+        "y": 1160.8863525391,
+        "z": 17.400001907349
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_257_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:15:17Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_257",
+      "source_index": 257,
+      "source_id": "wat_kab_dataterm_05",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1145.41382,
+        "y": 1160.88635,
+        "z": 17.3337002
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 53,
+      "id": "terminal_261_r10_b45",
+      "label": "Allen St South",
+      "position": {
+        "x": -1081.0910644531,
+        "y": 1319.6123046875,
+        "z": 5.2000121116638
+      },
+      "heading": 270,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_261_r10_b45",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:16:09Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_261",
+      "source_index": 261,
+      "source_id": "wat_kab_dataterm_10",
+      "radius": 10,
+      "bearing": 45,
+      "nominal_position": {
+        "x": -1081.091042,
+        "y": 1319.612328,
+        "z": 5.35999966
+      },
+      "layout": "compact"
+    },
+    {
+      "index": 54,
+      "id": "terminal_262_r10_b0",
+      "label": "Pinewood Junction",
+      "position": {
+        "x": -1062.7305908203,
+        "y": 2176.7795410156,
+        "z": 13.100002670288
+      },
+      "heading": 0,
+      "enabled": true,
+      "quest_root": "quests/minor_quest/ncpd_patrol_officer_down_terminal_262_r10_b0",
+      "validation_profile": "injured-functional-v1",
+      "survey_catalog_revision": "d4a76e914f84032c6b4dbdf0cd7505e463174a171bbb8e5b17ad6813a6075c5b/offset-search-v1",
+      "survey_layout_revision": "od-layout-v2",
+      "survey_timestamp": "2026-11-22T01:16:51Z",
+      "source_report_sha256": "139058fe463de5befb82e33721f0df4dbd005f2d610d80f47a2c202d4c36efe2",
+      "source_type": "terminal-offset-discovery",
+      "district": "Watson",
+      "source_anchor_id": "terminal_262",
+      "source_index": 262,
+      "source_id": "wat_kab_dataterm_11",
+      "radius": 10,
+      "bearing": 0,
+      "nominal_position": {
+        "x": -1062.73059,
+        "y": 2176.77954,
+        "z": 13.21
+      },
+      "layout": "compact"
+    }
+  ]
+}

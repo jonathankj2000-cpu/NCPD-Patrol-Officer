@@ -1,0 +1,53 @@
+# Private records only. Vanilla bases are pinned in assets/off_the_books/records.json.
+Character.NCPDPatrol_VossContractor01:
+  $base: Character.CorpoManArasaka
+  appearanceName: citizen__arasaka_corpo_ma_corporate_01_1
+  displayName: LocKey#NCPDPatrol_OTB_ContractorName
+  fullDisplayName: LocKey#NCPDPatrol_OTB_ContractorName
+  skipDisplayArchetype: true
+  isCrowd: false
+  baseAttitudeGroup: neutral
+  savable: true
+  priority: SpawnableObjectPriority.Quest
+  quest: NPCQuestAffiliation.SideQuest
+  items: []
+  # The crowd base inherits LootTables.Empty. Use native death loot instead.
+  lootDrop: LootTables.NCPDPatrol_VossEvidence01
+
+LootTables.NCPDPatrol_VossEvidence01:
+  $type: LootTable
+  minItemsToLoot: 1
+  maxItemsToLoot: 1
+  lootItems: [LootItems.NCPDPatrol_VossEvidence01]
+
+LootItems.NCPDPatrol_VossEvidence01:
+  $type: LootItem
+  itemID: Items.NCPDPatrol_VossEvidence01
+  dropChance: 1.0
+  dropCountMin: 1
+  dropCountMax: 1
+
+Character.NCPDPatrol_VossGuard01:
+  $base: Character.arasaka_cyborg_franged3_shingen_ma_elite
+  displayName: LocKey#NCPDPatrol_OTB_GuardName
+  fullDisplayName: LocKey#NCPDPatrol_OTB_GuardName
+  skipDisplayArchetype: true
+  isCrowd: false
+  baseAttitudeGroup: neutral
+  savable: true
+  priority: SpawnableObjectPriority.Quest
+  quest: NPCQuestAffiliation.SideQuest
+
+Character.NCPDPatrol_VossGuard02:
+  $base: Character.NCPDPatrol_VossGuard01
+
+ItemAction.NCPDPatrol_VossEvidenceRead01:
+  $base: ItemAction.Read
+  journalEntry: onscreens/emails/quests/ncpd_patrol_off_the_books/onscreens/evidence01
+
+Items.NCPDPatrol_VossEvidence01:
+  $base: Items.generic_arasaka_family_backstory_shard
+  displayName: LocKey#NCPDPatrol_OTB_ShardTitle
+  localizedDescription: LocKey#NCPDPatrol_OTB_ShardHint
+  itemSecondaryAction: ItemAction.NCPDPatrol_VossEvidenceRead01
+  tags: [Readable, Shard, Quest, SkipActivityLog, HideInBackpackUI, HideAtVendor]

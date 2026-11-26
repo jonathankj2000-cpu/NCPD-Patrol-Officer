@@ -1,0 +1,15 @@
+journal:
+  - base\ncpd_patrol\quest_marker_probe\probe.journal
+  - base\ncpd_patrol\quest_marker_probe\reference.journal
+localization:
+  onscreens:
+    en-us:
+      - base\ncpd_patrol\quest_marker_probe\probe_onscreens.json
+      - base\ncpd_patrol\quest_marker_probe\reference_onscreens.json
+
+quest:
+  phases:
+    - path: base\ncpd_patrol\quest_marker_probe\probe.questphase
+      parent: cyberpunk2077.quest
+    - path: base\ncpd_patrol\quest_marker_probe\reference.questphase
+      parent: cyberpunk2077.quest

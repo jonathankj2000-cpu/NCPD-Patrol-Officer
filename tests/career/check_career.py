@@ -80,6 +80,7 @@ assert weapon_records=={
 lua.globals().TieredRewardRecords=lua.table_from({key:lua.table_from({'base':value[0],'quality':value[1]}) for key,value in weapon_records.items()})
 lua.execute((HERE/'scenarios.lua').read_text())
 lua.execute((HERE/'portal-scenarios.lua').read_text())
+lua.execute((HERE/'shift-scenarios.lua').read_text())
 lua.execute((HERE/'weapon-scenarios.lua').read_text())
 lua.execute((HERE/'beanbagger-rewards.lua').read_text())
 lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol')
@@ -91,4 +92,4 @@ assert 'this.LoadPageByAddress(' not in source
 assert 'this.m_deviceLogicController.LoadPageByAddress(' in source
 assert 'GetWebPage(address: String)' in source and 'ClaimNextReward()' in source
 assert 'CreateScriptedQuest' not in source
-print('PASS: three portal pages fit five viewport sizes; rank/reward/partner rendering, native viewport helpers, hover/callback cleanup, stale contexts; fixed T2/T3/T5 rewards, CET controls, save restore and actual pinned BEF registration/navigation (native boundaries mocked)')
+print('PASS: three portal pages fit five viewport sizes; career Start/End Shift queue native desired states with pending feedback, no direct lifecycle changes, duplicate/stale/session/death/wanted guards; rank/reward/partner rendering, callback cleanup, tiered rewards and pinned BEF registration/navigation (native boundaries mocked)')

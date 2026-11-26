@@ -1,0 +1,151 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "gameJournalResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "entry": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "gameJournalRootFolderEntry",
+          "id": "",
+          "journalEntryOverrideDataList": [],
+          "entries": [
+            {
+              "HandleId": "1",
+              "Data": {
+                "$type": "gameJournalFolderEntry",
+                "id": "quests/minor_quest",
+                "journalEntryOverrideDataList": [],
+                "entries": [
+                  {
+                    "HandleId": "2",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_marker_probe",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "3",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "4",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "inspect",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "5",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_MarkerProbe_Description"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "HandleId": "6",
+                                      "Data": {
+                                        "$type": "gameJournalQuestMapPin",
+                                        "id": "location",
+                                        "journalEntryOverrideDataList": [],
+                                        "entries": [],
+                                        "enableGPS": 1,
+                                        "reference": {
+                                          "$type": "gameEntityReference",
+                                          "type": "EntityRef",
+                                          "reference": {
+                                            "$type": "NodeRef",
+                                            "$storage": "uint64",
+                                            "$value": "0"
+                                          },
+                                          "names": [],
+                                          "slotName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": ""
+                                          },
+                                          "sceneActorContextName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": ""
+                                          },
+                                          "dynamicEntityUniqueName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": ""
+                                          }
+                                        },
+                                        "slotName": {
+                                          "$type": "CName",
+                                          "$storage": "string",
+                                          "$value": ""
+                                        },
+                                        "mappinData": {
+                                          "$type": "gamemappinsMappinData",
+                                          "mappinType": {
+                                            "$type": "TweakDBID",
+                                            "$value": "Mappins.QuestStaticMappinDefinition",
+                                            "$storage": "string"
+                                          },
+                                          "variant": "DefaultQuestVariant",
+                                          "active": 0,
+                                          "visibleThroughWalls": 1,
+                                          "debugCaption": "NCPD QUEST MARKER TEST",
+                                          "localizedCaption": {
+                                            "unk1": "0",
+                                            "value": "NCPDPatrol_MarkerProbe_Location"
+                                          }
+                                        },
+                                        "offset": {
+                                          "$type": "Vector3",
+                                          "X": -1549.817505,
+                                          "Y": -1544.082886,
+                                          "Z": 70.155853
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_MarkerProbe_Objective"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_MarkerProbe_Title"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

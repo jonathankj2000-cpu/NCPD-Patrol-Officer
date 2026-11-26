@@ -1,0 +1,34 @@
+name: NCPD Patrol refactor checks
+on:
+  push:
+    branches: ['git-checkout--b-refactor/cleanup']
+    paths-ignore: ['releases/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ncpd-dispatch-refactor-cleanup
+  cancel-in-progress: true
+jobs:
+  verify-and-package:
+    if: github.ref == 'refs/heads/git-checkout--b-refactor/cleanup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Install test runtime
+        run: |
+          python3 -m venv .ci-python
+          .ci-python/bin/pip install 'lupa==2.6'
+      - name: Verify quest marker activation contract, existing behavior and complete r4b ZIP
+        run: .ci-python/bin/python tools/build_quest_marker_probe_release.py
+      - name: Commit verified branch test package
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add releases/NCPD_Patrol_v0.17d_Quest_Marker_Probe_r4b_TEST.zip releases/NCPD_Patrol_Quest_Marker_Probe_r4b_verification.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Build quest marker probe r4b activation test package"
+          git push origin HEAD:git-checkout--b-refactor/cleanup

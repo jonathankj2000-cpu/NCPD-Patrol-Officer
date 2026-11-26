@@ -1,0 +1,68 @@
+// Offline contracts only. Sources: Codeware 1.21.4 (6dfdbce),
+// scripts/Quest/QuestsSystem.reds, Base/Imports/quest*NodeDefinition.reds,
+// Base/Addons/gameJournalPath.reds; game orphans.swift and journalManager.swift.
+// These declarations are never installed and do not prove native execution.
+// Game orphans.swift:26718, explicit Int32 -> Uint16 conversion.
+public native func Cast(a: Int32) -> Uint16;
+@addMethod(GameInstance)
+public static native func GetQuestsSystem(game: GameInstance) -> ref<QuestsSystem>;
+@addMethod(JournalManager)
+public final native const func GetEntryHash(entry: wref<JournalEntry>) -> Int32;
+@addMethod(MappinSystem)
+public final native func GetMappinFromObjective(phaseEntry: wref<JournalEntry>, objectiveEntry: wref<JournalEntry>) -> wref<IMappin>;
+@addMethod(MappinSystem)
+public final native func GetManuallyTrackedMappinID() -> NewMappinID;
+// Game orphans.swift MappinSystem:17828; scriptData ownership is private.
+@addMethod(MappinSystem)
+public final native func GetMappin(mappinId: NewMappinID) -> ref<IMappin>;
+// Game orphans.swift:17846; used by questLogDetailsPanel.swift:263.
+@addMethod(MappinSystem)
+public final native func GetQuestMappinPosition(mappinHash: Uint32, out position: Vector3) -> Bool;
+public native struct Vector3 {
+ public native let X: Float;
+ public native let Y: Float;
+ public native let Z: Float;
+}
+// Game orphans.swift IMappin:37439, engine flag only; not proof of rendered pixels.
+@addMethod(IMappin)
+public final native func IsVisible() -> Bool;
+@addMethod(IMappin)
+public final native func IsQuestMappin() -> Bool;
+@addMethod(IMappin)
+public final native func GetWorldPosition() -> Vector4;
+public native class QuestsSystem extends IScriptable {
+ public native func ExecuteNode(node: ref<questNodeDefinition>, opt inputSocket: CName) -> Void;
+ public native func GetFactStr(factName: String) -> Int32;
+ public native func SetFactStr(factName: String, value: Int32) -> Void;
+}
+public native class graphGraphNodeDefinition extends IScriptable {}
+public abstract native class questNodeDefinition extends graphGraphNodeDefinition {
+ public native let id: Uint16;
+}
+public abstract native class questDisableableNodeDefinition extends questNodeDefinition {}
+public native class questMappinManagerNodeDefinition extends questDisableableNodeDefinition {
+ public native let path: ref<gameJournalPath>;
+ public native let disablePreviousMappins: Bool;
+}
+public native class gameJournalPath extends IScriptable {
+ public native let realPath: String;
+ public native let fileEntryIndex: Int32;
+ public native let className: CName;
+ public final native const func GetHash() -> Uint32;
+}
+public abstract native class QuestMappin extends IMappin {
+ public final native func GetJournalPathHash() -> Uint32;
+}
+
+// Codeware Utils/Hash.reds and App/Utils/Hashing.hpp: RED4ext Murmur3 seed.
+public native func Murmur3(data: script_ref<String>, opt seed: Uint32) -> Uint32;
+public native class ScriptableService extends IScriptable {}
+public native class ScriptableServiceContainer extends IScriptable {
+ public native func GetService(name: CName) -> ref<ScriptableService>;
+}
+@addMethod(GameInstance)
+public static native func GetScriptableServiceContainer() -> ref<ScriptableServiceContainer>;
+public native class CallbackSystemEvent extends IScriptable {}
+
+// Game orphans.swift:29488, actual unsigned comparison for sorted ownership.
+public native func OperatorLess(a: Uint32, b: Uint32) -> Bool;

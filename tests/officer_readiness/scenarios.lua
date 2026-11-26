@@ -60,7 +60,8 @@ ambient.tags={};player.tags={}
 local patrol={Version=function() return 17 end,IsDispatchMenuOpen=function() return f.paused end,IsOnDuty=function() return not f.offDuty end,
  HasWantedLevel=function() return f.wanted==true end,
  NotifyDispatch=function() end}
-local support={Version=function() return 17 end,
+local support={Version=function() return 17 end,SpawnSafetyVersion=function() return 1 end,
+ CanSpawnBackupAt=function() return not f.spawnVisible end,
  RegisterPartner=function(_,a) f.partner=a;f.partnerState=1;return true end,
  UnregisterPartner=function() f.partnerState=0 end,TickPartner=function() end,GetPartnerState=function() return f.partnerState end,
  RestorePartnerFollowerRole=function() return true end,IsPartnerFollowerReady=function() return true end,
@@ -98,6 +99,13 @@ function entities:DeleteEntity(id)
  return true
 end
 Game={GetPlayer=function() return player end,GetMountedVehicle=function(a) return a.mounted end,
+ GetSpatialQueriesSystem=function() return {SyncRaycastByCollisionGroup=function(_,from,to,group)
+  assert(group=='Static')
+  if from.x==to.x and from.y==to.y and from.z>to.z then
+   return true,{position=vec(from.x,from.y,0),normal=vec(0,0,1)}
+  end
+  return false,nil
+ end} end,
  GetMountingFacility=function() return {GetMountingInfoSingleWithObjects=function(_,a) return {slotId={id=a.seat}} end} end,
  GetDynamicEntitySystem=function() return entities end,CreateEntityReference=function() return {} end,
  GetAINavigationSystem=function() return {FindPointInSphereForCharacter=function(_,p) return {status=1,point=p} end} end,
@@ -353,3 +361,4 @@ p=f.partner;local partnerRole=p.role;units=deploy()
 assert(Backup.release(support,patrol,status) and p.role==partnerRole and f.managed[p.id.hash])
 local deleted=f.deletes;Backup.reset();assert(f.deletes==deleted,'world reset deleted stale IDs')
 Partner.dismiss(status)
+BackupTestBoundary={f=f,player=player,support=support,patrol=patrol,entities=entities,actor=actor,vec=vec}

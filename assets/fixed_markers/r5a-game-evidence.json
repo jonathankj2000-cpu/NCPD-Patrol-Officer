@@ -1,0 +1,54 @@
+{
+  "source": "User-provided r5a game observations and crash attachment on 2026-11-20",
+  "build": "v0.17d fixed quest markers r5a",
+  "outcome": "failed",
+  "scanner": {
+    "scope": 4,
+    "site": 70,
+    "hash": 116029026,
+    "target": [
+      -873.579346,
+      -1006.990112,
+      11.395622
+    ],
+    "fallback": true,
+    "native_confirmed": false,
+    "post_cleanup_native_pins": 0,
+    "post_cleanup_runtime": [
+      0,
+      0,
+      0
+    ],
+    "post_cleanup_quest_position": [
+      0,
+      0,
+      0
+    ],
+    "pre_cleanup_probe": "Not captured; current diagnostics were reset at fallback"
+  },
+  "observations": [
+    "Scanner marker briefly visible in world AND map, then absent from both",
+    "VIP and cyberpsycho reportedly showed the same behavior",
+    "Later dispatches in the same session no longer produced even the initial marker"
+  ],
+  "crash": {
+    "reason": "Assert",
+    "pool": "PoolAnimBuffers",
+    "requested_bytes": 550622650736,
+    "alignment": 322565760,
+    "alignment_is_power_of_two": false,
+    "loading_saved_session": true,
+    "stage": "Loading world",
+    "uptime_seconds": 647,
+    "symbolic_stacktrace_available": false,
+    "mod_causality": "Unknown: this dump does not prove or exclude NCPD Patrol",
+    "privacy": "No dump, screenshot, save or system-info attachment committed"
+  },
+  "source_defects_verified_by_negative_controls": [
+    "r5a unregisters cached inactive engine-owned quest instances",
+    "r5a may mutate journal/marker state with a non-null detached player"
+  ],
+  "r5b_game_validation": false,
+  "r5b_crash_resolution_confirmed": false,
+  "verification_scope": "Source/API checks and mocked engine lifecycle variants; no actual game execution"
+}

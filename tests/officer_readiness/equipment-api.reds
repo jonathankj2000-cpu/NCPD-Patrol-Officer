@@ -17,8 +17,12 @@ public native class WeaponObject extends ItemObject {
  public static native func GetWeaponType(id: ItemID) -> gamedataItemType;
 }
 public native class DynamicEntitySystem extends IScriptable {
+ public native func IsReady() -> Bool;
+ public native func IsSpawning(id: EntityID) -> Bool;
+ public native func GetEntity(id: EntityID) -> ref<Entity>;
  public native func IsManaged(id: EntityID) -> Bool;
  public native func IsTagged(id: EntityID, tag: CName) -> Bool;
+ public native func GetTaggedID(tag: CName) -> EntityID;
 }
 @addMethod(GameInstance)
 public static native func GetDynamicEntitySystem() -> ref<DynamicEntitySystem>;

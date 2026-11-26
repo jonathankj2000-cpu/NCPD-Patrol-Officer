@@ -1,0 +1,1222 @@
+{
+  "version": "v0.18e1-startup-fix",
+  "base_commit": "1f3bb6cf71cc72fd1dff8a412fafb436ce9919c1",
+  "source_commit": "a7bd7dece84c9b636fccd597e360c921b880b926",
+  "install_files": 115,
+  "lua_modules_parsed": 43,
+  "redscript_files": 44,
+  "portable_tests": [
+    "tests/beanbagger/check_visuals.py",
+    "tests/beanbagger/check_beanbagger.py",
+    "tests/shift_entry/check_shift.py",
+    "tests/compile_compatibility/check_legacy_api.py",
+    "tests/arrests/check_arrest.py",
+    "tests/arrests/check_arrest_interactions.py",
+    "tests/trunk_menu/check_trunk.py",
+    "tests/dispatch_journal/check_journal.py",
+    "tests/career/check_career.py",
+    "tests/cyberpsycho/check_cyberpsycho.py",
+    "tests/vip/check_vip.py",
+    "tests/officer_readiness/check_ready.py",
+    "tests/incidents/check_incidents.py",
+    "tests/dispatch_refactor/check_refactor.py",
+    "tests/cet_ui/check_cet_ui.py",
+    "tests/vip_refactor/check_vip_refactor.py",
+    "tests/quest_marker_probe/check_probe.py",
+    "tests/fixed_markers/check_fixed.py",
+    "tests/vip_routes/check_routes.py",
+    "tests/officer_down/check_officer_down.py",
+    "tests/scene_survey/check_survey.py",
+    "tests/scene_survey/check_settling.py",
+    "tests/scene_survey/check_staging.py",
+    "tests/scene_survey/check_functional.py",
+    "tests/officer_down/check_catalog.py",
+    "tests/officer_down/check_gameplay.py",
+    "tests/partner_safety/check_safety.py",
+    "tests/officer_down/check_repeat.py"
+  ],
+  "comparisons": {
+    "dispatch": {
+      "base_commit": "ff0d0024d85d31df783e5f989a1d2cb3d9cefbc1",
+      "identical_trace_rows": 17374,
+      "trace_sha256": "6529ef0f143298e0ae15bcd1e3a9bd016b1a1c80bdc3af0227b41715df53b20f",
+      "scenario_files": [
+        "tests/incidents/native-scenarios.lua",
+        "tests/incidents/mixed-scenarios.lua",
+        "tests/incidents/background-scenarios.lua",
+        "tests/incidents/partial-cleanup-scenarios.lua",
+        "tests/dispatch_refactor/scanner-contracts.lua"
+      ],
+      "lifecycle_invariants": true,
+      "timing_regression_negative_control": true,
+      "geography_scope": "Pinned v0.17e2 location provider for historical synthetic actor/scheduler fixtures; actual baked routes tested separately"
+    },
+    "ui": {
+      "base_commit": "3c20841bba35d69289e5f70784b3202a5fbf8881",
+      "tabs": [
+        "Patrol",
+        "Dispatch",
+        "Career",
+        "Settings",
+        "Diagnostics",
+        "Testing"
+      ],
+      "button_inventory": [
+        {
+          "button": "10-4: Release backup",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Ambush cars: fixture (change)",
+          "tab": "Settings"
+        },
+        {
+          "button": "Assign / re-check NCPD Hella",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Assign Standard NCPD Patrol Officer",
+          "tab": "Career"
+        },
+        {
+          "button": "Cancel active dispatch",
+          "tab": "Dispatch"
+        },
+        {
+          "button": "Check partner state",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Check vehicle records and ownership",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Claim next milestone reward",
+          "tab": "Career"
+        },
+        {
+          "button": "Clear test unlocks",
+          "tab": "Testing"
+        },
+        {
+          "button": "Cop Stats",
+          "tab": "Career"
+        },
+        {
+          "button": "Dismiss partner",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Enable dispatch alert",
+          "tab": "Settings"
+        },
+        {
+          "button": "Enable dispatch voice",
+          "tab": "Settings"
+        },
+        {
+          "button": "Enable vehicle chatter",
+          "tab": "Settings"
+        },
+        {
+          "button": "Grant / check Police Uniform",
+          "tab": "Patrol"
+        },
+        {
+          "button": "LOCKED: MaxTac Netrunner",
+          "tab": "Career"
+        },
+        {
+          "button": "LOCKED: NCPD Shotgun Enforcer",
+          "tab": "Career"
+        },
+        {
+          "button": "LOCKED: NCPD Tactical Officer",
+          "tab": "Career"
+        },
+        {
+          "button": "Log Bean Bagger diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log VIP diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log automatic dispatch diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log career browser diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log cyberpsycho diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log dispatch journal diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log incident reward diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log officer readiness (partner + backup)",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log partner AI diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Log scanner diagnostics",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Open NCPD Career (computer browser)",
+          "tab": "Career"
+        },
+        {
+          "button": "Preview police radio (in vehicle)",
+          "tab": "Testing"
+        },
+        {
+          "button": "Rebuild VIP waypoint",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Request backup patrol",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Request dispatch now",
+          "tab": "Dispatch"
+        },
+        {
+          "button": "Request new partner",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Resume automatic dispatch",
+          "tab": "Dispatch"
+        },
+        {
+          "button": "Revive partner (nearby)",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Set BUSY",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Spawn partner",
+          "tab": "Patrol"
+        },
+        {
+          "button": "Start Shift",
+          "tab": "Patrol"
+        },
+        {
+          "button": "TEST: Give Bean Bagger (Tier 2)",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Give tiered reward weapons",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Next cyberpsycho variant",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Request VIP transport",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Request cyberpsycho dispatch",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Request scanner dispatch",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Trigger VIP ambush",
+          "tab": "Testing"
+        },
+        {
+          "button": "TEST: Unlock all milestones (session)",
+          "tab": "Testing"
+        },
+        {
+          "button": "Test dispatch alert",
+          "tab": "Testing"
+        },
+        {
+          "button": "Test timeout: 15 s left (on route)",
+          "tab": "Testing"
+        },
+        {
+          "button": "Test: down partner",
+          "tab": "Testing"
+        },
+        {
+          "button": "Try vanilla police Hella explicitly",
+          "tab": "Diagnostics"
+        },
+        {
+          "button": "Use random cyberpsycho variants",
+          "tab": "Testing"
+        }
+      ],
+      "compared_action_routes": 156,
+      "cet_api_version": "v1.37.1",
+      "cet_api_commit": "61bd6214f0f5f8748589c9e476538614a13908c0",
+      "cet_methods": [
+        "Begin",
+        "BeginChild",
+        "BeginTabBar",
+        "BeginTabItem",
+        "Button",
+        "CollapsingHeader",
+        "End",
+        "EndChild",
+        "EndTabBar",
+        "EndTabItem",
+        "GetTextLineHeightWithSpacing",
+        "ProgressBar",
+        "SameLine",
+        "Separator",
+        "SetNextWindowSize",
+        "SetNextWindowSizeConstraints",
+        "Spacing",
+        "Text",
+        "TextColored",
+        "TextWrapped"
+      ],
+      "default_buttons": {
+        "Patrol": [
+          "Start Shift",
+          "Set BUSY",
+          "Spawn partner",
+          "Request new partner",
+          "Dismiss partner",
+          "Revive partner (nearby)",
+          "Request backup patrol",
+          "10-4: Release backup"
+        ],
+        "Dispatch": [
+          "Start Shift",
+          "Set BUSY",
+          "Request dispatch now",
+          "Request Officer Down dispatch",
+          "Cancel active dispatch",
+          "Resume automatic dispatch"
+        ],
+        "Career": [
+          "Start Shift",
+          "Set BUSY",
+          "Cop Stats",
+          "Claim next milestone reward",
+          "Open NCPD Career (computer browser)"
+        ],
+        "Settings": [
+          "Start Shift",
+          "Set BUSY",
+          "Enable dispatch alert",
+          "Enable dispatch voice",
+          "Enable vehicle chatter",
+          "Ambush cars: fixture (change)"
+        ],
+        "Diagnostics": [
+          "Start Shift",
+          "Set BUSY"
+        ],
+        "Testing": [
+          "Start Shift",
+          "Set BUSY",
+          "TEST: Unlock all milestones (session)",
+          "Clear test unlocks"
+        ]
+      },
+      "session_source_unchanged_except_probe_hooks_and_build_labels": true,
+      "begin_end_balancing": true,
+      "inactive_tabs_do_not_run_actions": true,
+      "live_session_and_status_getters": true,
+      "panel_errors_preserve_scopes_and_log_once": true,
+      "font_scaled_footer": [
+        14,
+        18,
+        24,
+        32
+      ],
+      "missing_native_and_optional_browser": true,
+      "wrong_dispatch_target_negative_control": true,
+      "actual_game_rendering": false
+    },
+    "vip": {
+      "base_commit": "a9b654fed01145dd908ffe82de6e097bf2917c56",
+      "identical_trace_rows": 29208,
+      "trace_sha256": "a94be818d746e5d0987d727e86c622499de33f4e1b47840a6b0d171bd7ec3719",
+      "scenario_files": [
+        "tests/vip/scenarios.lua",
+        "tests/vip/fleet-scenarios.lua",
+        "tests/vip/waypoint-scenarios.lua",
+        "tests/incidents/native-scenarios.lua",
+        "tests/incidents/mixed-scenarios.lua",
+        "tests/incidents/background-scenarios.lua",
+        "tests/incidents/partial-cleanup-scenarios.lua"
+      ],
+      "extracted_policies_and_remaining_actor_flow_source_guard": true,
+      "geography_scope": "Pinned v0.17e2 location provider; new baked selection and scanner clearance negative control tested separately",
+      "recovery_cooldown_negative_control": true,
+      "independent_helpers_and_old_world_reset": true,
+      "actual_game_validation": false
+    },
+    "probe": {
+      "actual_game_validation": false,
+      "actual_native_creation_proven": false,
+      "prior_static_r4d_confirmed_by_user": true,
+      "relocation_requires_game_test": true,
+      "runtime_and_quest_location_readback": true,
+      "three_seconds_observed_stability_and_same_id": true,
+      "single_scoped_position_write_no_retry_loop": true,
+      "archived_phase_nodes": 22,
+      "archived_phase_edges": 21,
+      "phase_ack_alone_is_not_marker_proof": true,
+      "reference_fixed_position": {
+        "X": -1259.598,
+        "Y": -989.166,
+        "Z": 12.037
+      },
+      "reference_world_node": "#coyote_performance_test",
+      "source_commit": "a256760bafb625676d13b02ccf49c52b60f41d40",
+      "mit_notice_included": true,
+      "visual_marker_cannot_confirm_native_journal_pin": true,
+      "legacy_saved_test_cleanup": true,
+      "manual_waypoint_never_written": true,
+      "objective_hash_position_unique_pin_and_phase_stage_required": true,
+      "phase_controls_own_journal_and_mappin_states": true,
+      "private_fact_namespace": "ncpd_patrol_marker_reference_r4d_",
+      "normal_dispatch_unchanged": true,
+      "no_dynamic_entity_spawning": true,
+      "menu_pauses_lifetime": true,
+      "confirmed_phase_and_actor_free_marker_cleanup_before_restart": true,
+      "phase_is_rearmable_without_restart": true,
+      "save_restore_forgets_old_handles": true,
+      "ui_controls": [
+        "Clear Officer Down scene",
+        "Export Officer Down gameplay report",
+        "Export scene survey report",
+        "Load saved survey results",
+        "Log Officer Down diagnostics",
+        "Log active dispatch marker diagnostics",
+        "Log legacy Coyote test diagnostics",
+        "Log scene survey diagnostics",
+        "Recover survey cleanup and return",
+        "Remove quest marker test",
+        "Request Officer Down dispatch",
+        "Revive scene officer (nearby)",
+        "Stop survey and return",
+        "TEST: Andrea visual marker",
+        "TEST: Injured placement pilot (3 sites)",
+        "TEST: Injured settling pilot (3 sites)",
+        "TEST: Relocate native marker near V",
+        "TEST: Request Officer Down",
+        "TEST: Request Officer Down dispatch",
+        "TEST: Retry unverified survey sites",
+        "TEST: Rotate Officer Down scene 90 degrees",
+        "TEST: Start static quest marker",
+        "TEST: Survey all recorded sites (compact)",
+        "TEST: Survey all recorded sites (standard)",
+        "TEST: Waypoint to Officer Down intersection"
+      ],
+      "assets_roundtrip_and_extraction": true
+    },
+    "fixed_markers": {
+      "native_game_execution": false,
+      "sites": 323,
+      "fixed_map_pins": {
+        "dispatch": 792,
+        "vip": 382,
+        "cyberpsycho": 382
+      },
+      "runtime_relocation_used": false,
+      "original_objectives_and_text_retained": true,
+      "same_target_native_hash_position_objective_proof": true,
+      "default_no_native_pin_falls_back_honestly": true,
+      "manual_waypoint_never_written": true,
+      "stale_tokens_and_background_owner_cleanup_scoped": true,
+      "vip_pickup_delivery_and_cyberpsycho_stage_switch": true,
+      "load_rediscovery_and_refused_deletion_retry": true,
+      "gameplay_actor_reward_and_result_methods_unchanged": true,
+      "one_pin_per_site_objective": true,
+      "all_pin_definitions_inactive": true,
+      "mappin_manager_activation_explicit": true,
+      "unexpected_and_legacy_bank_pins_pruned": true,
+      "actual_native_owner_transitions_executed": true,
+      "inactive_native_cache_retained": true,
+      "same_id_native_reuse": true,
+      "valid_native_retained_without_false_journal_confirmation": true,
+      "pre_cleanup_snapshot_retained": true,
+      "fallback_registration_liveness_observed": true,
+      "detached_player_blocks_mutations": true,
+      "r5a_negative_controls_detected": 2,
+      "r5b_valid_native_rejection_negative_control_detected": true,
+      "ownership_independent_of_journal_readiness": true,
+      "selected_pin_direct_identity_counted": true,
+      "session_ready_and_before_end_gate": true,
+      "restore_objectives_per_tick_maximum": 48,
+      "fallback_status_follows_live_state": true
+    },
+    "vip_routes": {
+      "baked_endpoints": 60,
+      "baked_routes": 360,
+      "player_positions_exercised": 120,
+      "runtime_coordinates": "shared canonical marker catalogue; unchanged two-metre match",
+      "no_discovered_terminal_requirement": true,
+      "pickup_and_delivery_scanner_exclusion": true,
+      "recent_selection_window": 12,
+      "small_pool_remains_live": true,
+      "old_live_pool_negative_control": true,
+      "scanner_radius_negative_control": true,
+      "actual_facade_lifecycle_reward_and_new_assignment": true,
+      "native_marker_bank_integration": "tests/fixed_markers/check_fixed.py executes all 360 pairs",
+      "vip_quest_native_scripts_archives_arrest_and_actor_code_unchanged": true,
+      "career_sidebar_change_covered_by_career_suite": true,
+      "incident_ledger_extension": "Officer Down adds one kind/receipt; original VIP/CP payment traces retained",
+      "actual_game_road_and_rendering_validation": false
+    },
+    "officer_down": {
+      "manual_fixed_scene": true,
+      "position": {
+        "x": -490.911377,
+        "y": -173.816315,
+        "z": 7.88707
+      },
+      "cars": 3,
+      "officers": 2,
+      "gang_members": 5,
+      "arrival_metres": 55,
+      "prepare_metres": 250,
+      "production_layout": "compact",
+      "compact_line_gap_metres": 12,
+      "gang_lateral_offset_metres": 5.5,
+      "gang_center_gap_metres": 11,
+      "automatic_rotation_order": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "manual_preferred_heading_retained": true,
+      "vehicle_overlap_queries_typed": true,
+      "all_ten_positions_checked_before_creation": true,
+      "prepare_near_metres": 180,
+      "prepare_interval_seconds": 1,
+      "prepare_near_grace_seconds": 8,
+      "early_missing_ground_retry_on_approach": true,
+      "placement_grace_pauses_with_menus_and_unready_session": true,
+      "unexpected_engine_errors_not_retried_as_geometry": true,
+      "no_rotation_after_partial_creation": true,
+      "prearrival_protection_and_position_lock": true,
+      "actual_native_aid_and_dual_completion": true,
+      "existing_partner_identity_untouched": true,
+      "reward": 2000,
+      "one_career_incident": true,
+      "dispatch_manual_waypoint_preserved": true,
+      "native_marker_never_unregistered": true,
+      "manual_locator_explicit_click_only": true,
+      "locator_off_duty_no_scene_or_quest_mutation": true,
+      "partial_refused_and_delayed_cleanup": true,
+      "automatic_weights_unchanged": true,
+      "typed_ground_and_probe_regressions": {
+        "raycast_hit_type": "Vector3",
+        "navigation_argument_type": "Vector4",
+        "previous_layout_reproduces_reported_type_error": true,
+        "previous_probe_rejects_supported_uphill_ground": true,
+        "accepted_heading_height_combinations": 12,
+        "rejected_support_cases": 6,
+        "height_normal_footprint_and_road_level_limits_preserved": true
+      },
+      "ui_controls_routed": 6,
+      "actual_game_rendering_combat_traffic_and_layout_validation": false
+    },
+    "scene_survey": {
+      "sites": 17,
+      "source_docx_entries": 16,
+      "original_test_included": true,
+      "coverage": [
+        "City Center (Central)",
+        "Watson"
+      ],
+      "actual_game_validation": false,
+      "actual_lua_and_translated_native_owner": true,
+      "full_tour_actor_creations": 170,
+      "maximum_concurrent_test_actors": 10,
+      "observed_stability_seconds": 3,
+      "actual_physical_detach_before_transfer": true,
+      "source_specific_god_mode_cleanup": true,
+      "saved_heading_reused_after_module_reload": true,
+      "retry_only_unverified": true,
+      "partial_and_delayed_cleanup": true,
+      "menu_and_world_readiness_pause": true,
+      "displaced_actor_is_rejected_without_locking": true,
+      "cancel_and_api_errors": true,
+      "disk_failure_does_not_prevent_cleanup": true,
+      "explicit_cet_reload_recovery": true,
+      "world_generation_forgets_old_ids": true,
+      "death_and_mount_guards": true,
+      "incompatible_and_truncated_evidence_ignored": true,
+      "quest_money_career_and_manual_waypoint_unchanged": true,
+      "ui_routes": 8,
+      "duty_blocked_during_survey": true
+    },
+    "injured_settling": {
+      "profile": "injured-settling-pilot-v1",
+      "pilot_sites": [
+        "kryss_04",
+        "kryss_11",
+        "kryss_15"
+      ],
+      "settle_active_seconds": 4,
+      "observe_active_seconds": 3,
+      "final_original_position_limit_m": 1.5,
+      "observation_anchor_drift_m": 0.15,
+      "legacy_17_site_runtime_and_evidence_identical": true,
+      "legacy_successes_preserved_and_pilot_results_separate": true,
+      "movement_logged_without_actor_teleport_or_rebase": true,
+      "ground_and_local_clearance_checks": true,
+      "actual_game_animation_confirmation": false,
+      "precision_pilot_policy_and_layout_preserved": true
+    },
+    "injured_placement": {
+      "profile": "injured-staging-pilot-v1",
+      "pilot_sites": [
+        "kryss_04",
+        "kryss_11",
+        "kryss_15"
+      ],
+      "staging_active_seconds": 4,
+      "uncorrected_release_seconds": 0.5,
+      "uncorrected_observation_seconds": 3,
+      "final_original_position_limit_m": 1.5,
+      "observation_anchor_drift_m": 0.15,
+      "native_corrects_only_owned_injured_during_staging": true,
+      "continued_drift_and_ignored_teleport_rejected": true,
+      "target_static_ground_and_vehicle_clearance_required": true,
+      "three_evidence_profiles_kept_separate": true,
+      "legacy_manual_scene_and_arrest_policy_preserved": true,
+      "actual_game_validation": false
+    },
+    "injured_functional": {
+      "profile": "injured-functional-v1",
+      "default_full_tour": true,
+      "injured_spawn_displacement_limit": null,
+      "injured_anchor_drift_limit": null,
+      "scene_radius_m": 25,
+      "aid_range_m": 2.5,
+      "usable_aid_seconds": 3,
+      "settle_seconds": 4,
+      "bounded_observation_seconds": 12,
+      "safe_4_m_offsets_and_07_m_motion_accepted": true,
+      "native_complete_walking_path_required": true,
+      "below_ground_wall_vehicle_missing_state_and_partial_paths_rejected": true,
+      "actor_teleports_or_position_rebase": false,
+      "other_nine_actors_original_15_m_limit": true,
+      "old_evidence_preserved_separately": true,
+      "actual_revive_execution_tested": false,
+      "actual_game_validation": false
+    },
+    "officer_catalog": {
+      "sites": 16,
+      "excluded_unverified": [
+        "kryss_13"
+      ],
+      "new_native_pins": 15,
+      "actual_all_site_gameplay_fixture": true,
+      "actual_game_validation": false
+    },
+    "officer_gameplay": {
+      "automatic_weights": {
+        "scanner": 45,
+        "vip": 27,
+        "cyberpsycho": 18,
+        "officer_down": 10
+      },
+      "weighted_first_draws": 100,
+      "automatic_resume_with_retained_scene": true,
+      "physical_cleanup_and_cet_recovery": true,
+      "world_change_never_deletes_reused_ids": true,
+      "gameplay_log_preserved_and_streamed": true,
+      "logging_failure_does_not_block_gameplay": true,
+      "natural_and_mounted_access": true,
+      "existing_rewards_unchanged": true,
+      "actual_game_validation": false
+    },
+    "partner_safety": {
+      "exact_registered_partner_only": true,
+      "on_duty_session_only": true,
+      "ranged_hits_only": true,
+      "non_hostile_police_people_and_vehicles_only": true,
+      "npc_and_vehicle_on_hit_wrappers": true,
+      "v_and_other_companions_unchanged": true,
+      "enemy_and_hostile_quest_targets_unchanged": true,
+      "wanted_enforcement_unchanged": true,
+      "world_restore_forgets_partner": true,
+      "actual_game_wanted_reproduction": false
+    },
+    "officer_repeat": {
+      "three_sequential_completions": true,
+      "same_site_native_pin_rearmed": true,
+      "previous_silent_refusal_detected": true,
+      "manual_retry_shortens_aftermath_only": true,
+      "automatic_retention_and_other_types_preserved": true,
+      "physical_cleanup_before_next_token": true,
+      "cleanup_error_does_not_fail_successful_quest": true,
+      "one_pending_report": true,
+      "payments_and_career_once_per_incident": true,
+      "reported_three_pending_rows_and_ten_handles_reproduced": true,
+      "accepted_vehicle_disposal_recovers_stall": true,
+      "native_disposal_requires_private_actor_receipt_and_generation": true,
+      "deferred_dispose_is_not_cleanup_proof": true,
+      "detached_id_only_receipts_do_not_block_new_call": true,
+      "retired_receipts_prune_and_forget_on_world_change": true,
+      "native_disposal_and_stale_codeware_manager_game_validation": false,
+      "actual_game_validation": false
+    }
+  },
+  "new_payload": [],
+  "changed_payload": [
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down.lua",
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds"
+  ],
+  "career_start_end_uses_existing_native_desired_request": true,
+  "career_end_on_all_three_sections": true,
+  "career_pending_duplicate_stale_and_world_guards": true,
+  "career_button_never_directly_finishes_shift": true,
+  "fast_travel_existing_start_end_unchanged": true,
+  "officer_down_test_under_other_dispatch_tests": true,
+  "partner_guard_exact_registered_actor_only": true,
+  "partner_guard_on_duty_ready_world_only": true,
+  "partner_guard_ranged_police_npc_and_vehicle_hits_only": true,
+  "partner_guard_hostile_police_bypass": true,
+  "partner_guard_before_original_on_hit": true,
+  "original_v_and_other_actor_hits_passthrough": true,
+  "global_heat_reset_or_immunity": false,
+  "existing_wanted_termination_unchanged": true,
+  "reference_vehicle_threat_and_combat_hit_paths_found": true,
+  "reported_wanted_cause_proven": false,
+  "reference_game_source_commit": "81d996b584a693e8b0f0b20526a9fa38b5c83fe7",
+  "existing_43_native_scripts_and_eight_archives_unchanged_from_v018e": true,
+  "scanner_vip_cyberpsycho_markers_survey_arrest_partner_and_backup_unchanged": true,
+  "all_payment_and_career_ledgers_unchanged": true,
+  "automatic_weights": {
+    "scanner": 45,
+    "vip": 27,
+    "cyberpsycho": 18,
+    "officer_down": 10
+  },
+  "officer_down_sites": 16,
+  "officer_down_reward": 2000,
+  "officer_down_career_credit": 1,
+  "browser_extension_still_optional": true,
+  "actual_game_validation": false,
+  "observed_redscript_dispose_error_guarded": true,
+  "fake_entity_dispose_contract_removed": true,
+  "optional_cet_capability_absence_tested": true,
+  "officer_down_reported_pattern": {
+    "phase": "aftermath",
+    "stage": 3,
+    "owned_rows": 3,
+    "retained_handles": 10
+  },
+  "manual_retry_can_end_completed_retention": true,
+  "automatic_retention_seconds": 90,
+  "automatic_retention_distance_m": 150,
+  "optional_cet_dispose_after_accepted_delete_seconds": 5,
+  "vehicle_dispose_requires_id_reference_record_generation_and_receipt": true,
+  "disposal_is_not_physical_cleanup_proof": true,
+  "detached_vehicle_id_registry_capacity": 256,
+  "detached_codeware_id_receipts_are_retained_and_pruned": true,
+  "foreground_actor_id_ownership_kept_until_physical_clear": true,
+  "background_cleanup_errors_preserve_successful_quest_and_other_types": true,
+  "runtime_cause_and_engine_acknowledgement_confirmed": false,
+  "game_checks_required": [
+    "repeat completed Officer Down calls through CET and automatic dispatch",
+    "optional CET disposal availability and detached Codeware ID retirement",
+    "no visible actors lost from cleanup ownership",
+    "cancel/partial setup/CET reload/save load and refused physical cleanup",
+    "existing marker/reward/career behavior"
+  ],
+  "zip_path": "releases/NCPD_Patrol_v0.18e1_Startup_Fix_TEST.zip",
+  "zip_bytes": 1403054,
+  "zip_sha256": "056578717527fa43d1c412789e748dfaa511a00bfb6132f62276f7dd3527b859",
+  "zip_git_blob": "7fe0c21bf112c091c199cb0ac49a3e1b248687f7",
+  "files": {
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/partner.lua": {
+      "sha256": "0d54721733e30d4eb17a85128d8a2ffe3ae1040d8b9ef7a844d79fbd7f09efbc",
+      "git_blob": "f28fa3594fbaeb61888062bc6eb1368c8726c702"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup.lua": {
+      "sha256": "92fe41ef9358d6f1774623a9cfb64f2bc1728b10d20e791caa46b9dd7999bc1e",
+      "git_blob": "c9d6547da06730c0ba82e43dc2b6416bb743864a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip.lua": {
+      "sha256": "7e4b21a50b39788026877ce1822f8fea92a5cb34dca7bfd6900025c44bb4a16b",
+      "git_blob": "0ba9d53846c586bdf937755e2d513933439f0074"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_staging.lua": {
+      "sha256": "1fd3ae3487f8b04d6c2da568bb9c7d9d50225561ae4ce8c8a1353738ddc5a6f0",
+      "git_blob": "c2567940b5738df607c48faf47a2afeb5f4bc955"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ready.lua": {
+      "sha256": "ea8eff556c9c6fe685a7d315999dfac839dd02d652576510068d7387d144f5db",
+      "git_blob": "ee3290808e300b080b203299c62033d08fe31891"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_settling.lua": {
+      "sha256": "1268cc205c3c29d76f0fd207ba73b8592b7ccca17466220d2fa35d829f9a7738",
+      "git_blob": "335371b3527b92961ee4ad788668fa64701eab9f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_location_policy.lua": {
+      "sha256": "0ea5fefc98ba058b156dca5aee30cdc3c5969255281fa64f00135f7af086cf8b",
+      "git_blob": "1099663a833468c2af955681c158a280e4f2cfc8"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua": {
+      "sha256": "02cee8c1c655a06c4e2e5abcf145a8dee1da4829ce36db89cc9d7f06d32a13f4",
+      "git_blob": "43fee8a1df578f52415c5dc66ad60061eb98e8b9"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey.lua": {
+      "sha256": "c72c400cc428656f9c1b32eb0e47bee6833af93b93f0cbea595221dc4cafd92c",
+      "git_blob": "98f092d76a606b8e27395ec2873b1114bbea0d46"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_log.lua": {
+      "sha256": "9c580a3fd2b382813d1bdfbea52a5daa341e829c08d6d5b0bc5aed1888a01e2b",
+      "git_blob": "f23e079cc6086e6b268e7fee71955dd35868f168"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_navigation.lua": {
+      "sha256": "88c2b031a304e9133d2417924308724214ef5069139c304677844b0a0cdfccd4",
+      "git_blob": "259442880e7046f59716363960494d5ce276cc07"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down.lua": {
+      "sha256": "4a90a8c299177164e3e191a2035f67a29623174f1493793abbf551c40ba1067d",
+      "git_blob": "0bb157bdc4780d58e1e949597b76268b46273ccd"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup_approach.lua": {
+      "sha256": "cce45e5cb1961521df2902781275c1144f066240653ba470b5292b598a0ae0e1",
+      "git_blob": "91708bd11d3b22a5b8164bced19b943f79358d39"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_selection.lua": {
+      "sha256": "e03e5258ac5d7237f1f54e2105cfa32ba9409d5e046e024a44df24a9749a1aec",
+      "git_blob": "7a7a0073d3cd00d4dcaf7b642512de5922fb54dd"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_functional.lua": {
+      "sha256": "f2bda7e1cd53b7cbc5745daa7c55eb05f1c850208a7cd77aaeacefded3bd9947",
+      "git_blob": "3e4b02c2a51b1ea61b6b08c550e224e2375ce842"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_store.lua": {
+      "sha256": "6a86528044e274690232beb73ec177ee3942f4a6bac0cfaef19d7229acdf066c",
+      "git_blob": "b2f23423aa9bc992fb24975c0bddbf0147dd8080"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/trunk.lua": {
+      "sha256": "b8b3b4912dc5ad9a3768e835a7489d90e36ee17b515c3662f3028acca261158f",
+      "git_blob": "027b5b14d75b3143f1a9d40372521256eca1a0fa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_ambush.lua": {
+      "sha256": "03c4c10fc1a2a49eb02a7565e3b1787e0db797b53e0d2ceb504f89a694e06d9d",
+      "git_blob": "58be71bd518582cff6f98c27a52bf6ff32115afa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho.lua": {
+      "sha256": "74cb89e32a34b772068722033beb2ce79a2ca2b4a04e5b50f978d8be5c8a1c78",
+      "git_blob": "4840d40b5d83d38b050a0f97b92809baec29de79"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_sites.lua": {
+      "sha256": "576b2c26e566b0f45baedc55d6bfcc6cf55773382f7fb144d34120da910d12ce",
+      "git_blob": "2f5e60021d8d6ecf07afb5ab4fb971d226e7c41d"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/boarding.lua": {
+      "sha256": "e69c46604086123f0ec75b542a97ae9b9c3f28ba3770666a5e38370242b56f35",
+      "git_blob": "1b10ff2d0a4d2ca8d15419ae6e2fc71a6dd6934e"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_hud.lua": {
+      "sha256": "6de86a32c2bc07afd96917a09c52f0b6d41d2ef78fdce04f989220c775009987",
+      "git_blob": "245d936ddad376a721bf685ef3901a04fced67f6"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vehicle_radio.lua": {
+      "sha256": "27d2eecef153e2cc828b004e17232504a0197686287528728c2dc38e1176b247",
+      "git_blob": "59bb8050d5f84babc54bd31ece8828a0fe0c3a85"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_layout.lua": {
+      "sha256": "c7dc9712f0e726f4b31d51343a0ee4e2b71fe5379b4a75457bb065a10a39f0ae",
+      "git_blob": "95c3e4d266f45abb813a66cc7fdc74e36454f330"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_marker_probe.lua": {
+      "sha256": "f634b70368dafeb736f7d900f8f9d2f25303ac8948283eac50fa989c3d5d1cf8",
+      "git_blob": "0b1f927563ed6d6c905b05d6b1065c24a0895719"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho_variants.lua": {
+      "sha256": "aedf8dd3a1a22deb4d2d3616f83d0e5a290d5faba513606154ea615c735221c8",
+      "git_blob": "6b7bd71c949050ee2a94a443bfde388137a9fa06"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scheduler.lua": {
+      "sha256": "93ca728d6b0b017775b509bdf6a43d4318192e5b9884981b69218ca7b1fbf0cb",
+      "git_blob": "0e9cfeb01b11f8901c745961c1ed44a3f2c10e76"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_sites.lua": {
+      "sha256": "0b3199d78defc9440d1645cdae3f0c9909a10cc01cf8c4d5b9430fc3475448c4",
+      "git_blob": "59971fca9116a6b7164f5d6f4e27f0cebf73da31"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scanner.lua": {
+      "sha256": "360a1c6cb62b391733244a80b9353809b6b91dbbcb90604edb7e1b82e6dcaeac",
+      "git_blob": "0da3d9b34f8276a23d24a3af09c7c8b7266c09e0"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_results.lua": {
+      "sha256": "be175d405befc257169c90d81b3799b9a296f053266e3a7656ede6bfc90cf558",
+      "git_blob": "154d89b29dae436944a2c4e47d6e0b687aeb96d3"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_scene.lua": {
+      "sha256": "6145ff543be02181aa382b00b6c6c67e1dc977f7376e8e265a54e71685be0d8c",
+      "git_blob": "57797b45b9bbda2d43ef188bb009bc9cdc04a914"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_catalog.lua": {
+      "sha256": "cf02b675dc4ef8c34f513c0d2287b8f9071d78443db0e3022a556f549fcefcda",
+      "git_blob": "5fdffbae8cca74c84324f1ee46c4d951d308a53f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua": {
+      "sha256": "3c75d8f41353bba1f2826b806b2a2575321a6fcc6862232210dcf82867a0e6e3",
+      "git_blob": "b02ddc01139ed6c1bebda7b58841cb8fbe96867c"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_route_catalog.lua": {
+      "sha256": "566bf23af2572e38ed130791aaf58a7a6292b05725a16b8213169feedc226399",
+      "git_blob": "1881e4029bcda16a599c4740e8fe34ef79f33538"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_locations.lua": {
+      "sha256": "e1e28612db040e9442383411de59b650381ba39c5594f58cabcf67f6ad97f342",
+      "git_blob": "ea3412d0ef884ed86b730180f630f5e6fca68d15"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_actors.lua": {
+      "sha256": "18cdb7bd81699a4ed056ac4ac175d4f4b8a5c578db4a99e157d4fc1d1d03d749",
+      "git_blob": "b85174d0c8ed1cebc8046ade84c96b9e6c37442a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_waypoint.lua": {
+      "sha256": "87e64c33354bb648f2b77b2b300eee7f260a6db23d8402426d26fdf6a83e15b5",
+      "git_blob": "7b5a620f5a7a3eb3724494c11e18e9979cc9b1c6"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/revive_probe.lua": {
+      "sha256": "eeedb79d403e27fabe60e51b71bdf6e5ca89fc76a38f7c5de4e18028c10c66c5",
+      "git_blob": "2175d5a833062f71053012fd8fb589887a169e61"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_ambush_unit.lua": {
+      "sha256": "2ab2cf4c056a3a9460e667941201ca779bd2e776dc7890258c7585e9d10e81bd",
+      "git_blob": "a8693f611dc342f28822fa2a98770f2b61653fcb"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua": {
+      "sha256": "bec8799efb176db107bace5a76c1ef303f7701e9b7a913eccfaf3d5526b62434",
+      "git_blob": "d7a7a31b25edce5863067f6767f8e5bdfe9a52fa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ai.lua": {
+      "sha256": "3db9487b965f2d30170d557d2e55dbfdf9f8ed7f2d83e9282b33124a1cb8732a",
+      "git_blob": "8e0aaf8c9a3044ae3ddd7c3d2dc303d5aa26b58f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_journal.lua": {
+      "sha256": "df636c851fa3c656c0199de0dd0c9ac2215ca68fd399406a549ae0e83d754615",
+      "git_blob": "f4ad3d1290101970b7f99466d66714e19d4d35cc"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch.lua": {
+      "sha256": "f369755fb585717f3791e026012a1b3724b2d32263647a47b21b802a71458b98",
+      "git_blob": "b7100f7692748928fe80ecf88302d89273ea2c34"
+    },
+    "r6/tweaks/NCPDPatrol_CareerVehicles.yaml": {
+      "sha256": "927e57f08ebae95cf7ecdad834045c12b1f0b7bf5972818c4137b42eba95cf67",
+      "git_blob": "7021dbb473218d422f10bf3cc2e3dba6da5476e6"
+    },
+    "r6/tweaks/NCPDPatrol_Interactions.yaml": {
+      "sha256": "64cad0f14d9394828d91ee522676a8bfc8517e5c9869472c8247211adbdea86b",
+      "git_blob": "6babbf3b26b0682fd876e1cd4ed86895ca6474a6"
+    },
+    "r6/tweaks/NCPDPatrol_Cyberpsycho.yaml": {
+      "sha256": "f5c9de109d62a7700c7ac3959c9ae044e16b41e5f2c1b3649da9e38cf19404e1",
+      "git_blob": "6c7b98d58800ebd71adca274a2b933ff8cf87370"
+    },
+    "r6/tweaks/NCPDPatrol_VIP.yaml": {
+      "sha256": "da362244c3b0af5c707b2a4778d65d6ec95e917a3332c57c2272142e790580ff",
+      "git_blob": "dcc7f6f937c36fe73a5ffb783ac90704d40d8773"
+    },
+    "r6/tweaks/NCPDPatrol_PartnerDown.yaml": {
+      "sha256": "ca033f754f9bb0251af911b1a87531ff7b153e5ffb5399448f380de3f81003a6",
+      "git_blob": "5b0516c0e39951001e178127866c0fc8fc1c42cb"
+    },
+    "r6/tweaks/NCPDPatrol_OfficerDown.yaml": {
+      "sha256": "c93b1d4c97740e97f9896e7b4981b3cc012727129e60abf26c6828590dd0863b",
+      "git_blob": "0bed0fb7fedb0d1af30733129db50d999397f26b"
+    },
+    "r6/tweaks/NCPDPatrol_PoliceHella.yaml": {
+      "sha256": "42b287f1b376a78c93992b91a0ffdd967f368beb1a2e1d81bdbe010d0c5ab713",
+      "git_blob": "800dd4b66b4aa90f83edbdf6a6de8a46dd30d730"
+    },
+    "r6/tweaks/NCPDPatrol_Arrest.yaml": {
+      "sha256": "531829d1d7b97a3c25f35dd9e4fd8428c8b59c8a08acda19d3ac5da865704944",
+      "git_blob": "aad960c2c07fb5d284d0b3001425de713e70c1c9"
+    },
+    "r6/tweaks/NCPDPatrol_CareerWeapons.yaml": {
+      "sha256": "5ca13c688c15eb7b68d6bea8de2e60a97a89fb58f500d4bf8ce4eb283f690a83",
+      "git_blob": "15579feea82cb90686e292dab14c42e3832b6260"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds": {
+      "sha256": "4d7e96e44affe5333607d2ba178cf1f55f4323f35fc5ef1f38595beea56cdada",
+      "git_blob": "6d487b2b805c8986027801eddb0eb9381bfa594b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkInteractions.reds": {
+      "sha256": "ca29d42470fdba64834955dae242ad851fbb269d48110485d76488a4d4c7aa87",
+      "git_blob": "beb51041205890cc2a2bd96aafcf27f0e5e27b5b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerData.reds": {
+      "sha256": "69419eda04ef658e1760c8e81431da539fbecbdb8ceab928e7c7344cfff78400",
+      "git_blob": "4b304f90263acdf3fea47fa5917fdb82683ed1a9"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTerminal.reds": {
+      "sha256": "078b09b6e05988023a30f7bb5a2bd3a24f3aed178cd481446d9d73e6b7d48d11",
+      "git_blob": "42665ed21bbcd8ccf2327aa73d424d83d0ffc6b5"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownInteractions.reds": {
+      "sha256": "29d4a210997ac725090d777f90f22f0ad1dd98afe4c752e3e697228920464a69",
+      "git_blob": "e9c36c1f266f651636d342d6e1864e1d31283f06"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds": {
+      "sha256": "29bd3deadb87b8b6f8a6b9a8500d5b869eeb1ef36de9a8509b0b1350df8820a0",
+      "git_blob": "72428db8741940c6a287c679c4aaf6f3eea7518f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds": {
+      "sha256": "e3a2c61d72ed0b8a6a8a8e9d52e93f11c6adad4401e8db8bed623fa34f0efdf7",
+      "git_blob": "14731dd6ae47e03b0248e22c85b09aeb0e40ae18"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerEquipment.reds": {
+      "sha256": "7d1a49d68a19e931d2cc3124278f64ed53d1711a5fab715f918e0254f7f08ea2",
+      "git_blob": "04d53737134ebe70dcdf825c5c0786bf06b0ab59"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolNotice.reds": {
+      "sha256": "047dd7803a7ff145d21323bc9e1fb18e12511e2871501b8a097e075d7cbeab49",
+      "git_blob": "34fbb8d66f8ca7b967319b704b2865dbf117b9e0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds": {
+      "sha256": "333866a4f90b40883a4476d93d6e58b71d955d03b8ab3a67bdbd210dcce85edd",
+      "git_blob": "caa1329d9626291acc25cba7fec13a55348cda0e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds": {
+      "sha256": "92d24ab9a9e7e801be4baef2ef76556b8f151fb74d8cdfc9182c49291fec633a",
+      "git_blob": "d84e6cb38038dd28deafc2cc693cae00ba692b75"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolPartnerSafety.reds": {
+      "sha256": "e3632144075a67f221b4091c0e074a3eaf0eaee6f62de53b32e6ce64b8ae0801",
+      "git_blob": "a9054bf044087a3d6b6d8145e62139eed03d2e69"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds": {
+      "sha256": "ed95ef1cb6aed6c76bff2354206dbdc1f45b86dfb53961a36404a4ab593efe86",
+      "git_blob": "e4695aa7eaae206c395d86034939e54820357592"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds": {
+      "sha256": "86922c2c9dd79668bb2ede2db11554247d2e6b42137eff5b43d762acf86ede2e",
+      "git_blob": "706e9d5650c263195da6fe617534219b175ea635"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappinData.reds": {
+      "sha256": "3c035cad71334ce22f14e9ceface5c03ee25f60cecca161a495e10479c7f722a",
+      "git_blob": "d4703475800bce2721566dc3349c9dcb679afc8c"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds": {
+      "sha256": "130299c0336ef0ee434dec1f690edc614f93bb42f33a7e9270b10ab0c1b88169",
+      "git_blob": "ab3dd5e18ef49104e6bece670511382b8878779e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds": {
+      "sha256": "60448c85daa6aca9dffeb84f01aa801f1d1ce56cea0dfdbb87ef69165d860504",
+      "git_blob": "ad577f7c3a3c7366442fa20d6ecf826b62c40d2b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds": {
+      "sha256": "e5979dd509f0423417105e70bd3626069da1dca845f4e5f7b385d98d9ca2fd2e",
+      "git_blob": "28f85e566406c862563fb0da0d866a6d63118384"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkPopup.reds": {
+      "sha256": "bf21b27f456fc05e1dfcd442fe609e6345b8a60fcde70157515258f4e1d56a71",
+      "git_blob": "73c416cedd8ebddf2c4b16e661c7e5627aeba35f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestEvents.reds": {
+      "sha256": "1a9ec17af20b608d8fe0e1564f12e65f2f517b4ec3e15f80cc5cedf7ebadde66",
+      "git_blob": "22982b22ace05655dfbb1d3737122522f011a425"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolBeanBaggerSystem.reds": {
+      "sha256": "974883a30fe41e6bf13d44e33933e12ccabc78286c6dd3b6318d6bbdf07e7cc3",
+      "git_blob": "2c207653e0520c65753bd3b5ac2afb03492a6871"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds": {
+      "sha256": "8ec5c0830bc354e75117007888d5b78f23e1dd53b372e1e429a962484d2b1b33",
+      "git_blob": "972b3e7e689612b83eab1e17c32051eff40ccff7"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds": {
+      "sha256": "f2dff7910d464f4fd19d690178cecb220b98e05f838fa2ca9d9bce146b48a60b",
+      "git_blob": "fd578bcd6b3aef19b3cac4d73539cbece4169426"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds": {
+      "sha256": "f6e6e4921aa838f0fd5f3815b1d29e515ff9f30b651c8baec5582c4973fe6d8e",
+      "git_blob": "0ef57634cfa91ffa9b3a002613bd25c7ded70a4f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchMappinData.reds": {
+      "sha256": "704d6b0462af918062b3fc9a2f2ca109c9ed3525f0d44a799a87713f34a067e4",
+      "git_blob": "2cda1031453b2325f60d68441ea082960c8c57ad"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds": {
+      "sha256": "5b05a5183d7ae85075dc37c5e36bb04653f355cc40f4b7ad7e1bca8a3c78503c",
+      "git_blob": "bf5fe9efd7bc40de2aee674df012876234a297bf"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds": {
+      "sha256": "d387650740ff2e16b62da1321adb70703312f7c6085e4b61cb580c38b7dd19a5",
+      "git_blob": "32a6cf01912d7f88dee1704c6b46b0e55aa7f502"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportInteractions.reds": {
+      "sha256": "97cf384182c4911de7fece043abb2a37757e86da51e521d9cc74c3a109541c82",
+      "git_blob": "c81d240b900dece23325208d20beca4a1372e0f6"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolBonusReceipt.reds": {
+      "sha256": "55fc73d9d2717c1b2a8dc32131c63c4e9fdc034ba5ddccf27ecdea712834cf5b",
+      "git_blob": "974e24d88c917f20e7c82ea3877115c00ac2c51a"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkSystem.reds": {
+      "sha256": "ec3e13d9536073df1eabbc19ede809fed886cf3579eb1cece4c382d2688d572b",
+      "git_blob": "18358acbf1f4a10f15a150982d0ab90bc9d32426"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds": {
+      "sha256": "21a413fba8cd92535d538e84149aacc591bfa141ac6b3183a6d572347c7103c9",
+      "git_blob": "27c73b29028f8a92dd90fa51d785a5e810bb610b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds": {
+      "sha256": "0e8aba80cf428b5071269640c2ea8e5c9937f84992fd08afda8cf389937feaff",
+      "git_blob": "a4b75ad2ba5e1a4456698db8c85db43a7adafdb4"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds": {
+      "sha256": "e1a041ae6c583d1558976f02aa76d1179608e820c92bd5733b1881e9da1ea9cb",
+      "git_blob": "de8da8b30887c9624aaa4e9e561d2c24d4205930"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds": {
+      "sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "git_blob": "a08075b6347ab206a8e610c87cf445389eccc3ab"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkVehicle.reds": {
+      "sha256": "e11c9a72bf63d92414c2d632fc4eddcef82d152ac3c8c1b687b291767ed973c3",
+      "git_blob": "68777544d79983bbf50b30749ee4488523b11b6d"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds": {
+      "sha256": "b394d7b1475a08c8fc81d163aec6aff3da4229897de8c8dbb317c5403d995d28",
+      "git_blob": "65a0cc53ce02e471574e3205038e4901395bd97d"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds": {
+      "sha256": "5090ce3d884e70ad197b47ed3b26e11a4c759a100612c4d42b0bb8082bd24e55",
+      "git_blob": "e705d18aef039b4815e6acecb1792fbfecee51ab"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds": {
+      "sha256": "6d175847d0b37538b00d6c911afd93e2ade8c194a35f4ca453b3a9beb6294291",
+      "git_blob": "42910d9bb2a0141713fa2321f2c9ce44821cdd91"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds": {
+      "sha256": "81a385984fea45b44ae4c2b4f7cef124ff205992625ce1323857f0b29224c35f",
+      "git_blob": "c6f5659cd785a2f719bc4aa054fbc11411a1f502"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVoiceWindow.reds": {
+      "sha256": "8d4939c89098d4e3c20b3826e62e5ee3fe917741eec125b6dc5dde99b7b1f2bb",
+      "git_blob": "67fe01a02121fe384b32e6e7e561a4160a7243b0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownCatalog.reds": {
+      "sha256": "8943c55f56d63e4f9e5b1eec124998c097d2fab407f4e2fef47470e12974d9ab",
+      "git_blob": "5fe2ba3f6c49c9331a73150317473b8821028b1e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolRadioStep.reds": {
+      "sha256": "97cd25ca63e68604fb10f420510ca84fa4377bb9884bc84506a30c7dfd0d91e8",
+      "git_blob": "3fb8669ceb94e1139f3a3089636c38c98c8f5ac4"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": {
+      "sha256": "835684597041a0c1993733732e07d0e12ec24ab0a3977a0f5b8bf9425c5218e4",
+      "git_blob": "7cfb149e1bc15326eb21da24936f7b0e2f16e636"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds": {
+      "sha256": "7a575720d318f60a19214a4fda450d2bdd55db8d4f5cea3a37a1627b484c0e79",
+      "git_blob": "bfbcdedc25c9362785c42f2974ba9bb4c5fa3538"
+    },
+    "r6/tweaks/NCPDBeanBagger/NCPDBeanBagger.yaml": {
+      "sha256": "8e80762296ba0847f412447dd8ceea46cf0d124a60b15776de207b06cb1b1cdd",
+      "git_blob": "d93927b2730cce854a1252c21a681c3c407ee070"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDown.archive": {
+      "sha256": "4c49fbe807d0c52b85c8f00eea8111c9f64791c2840c64ae112a10624800d684",
+      "git_blob": "c8ff91ed4781e1eb8997d4d6ae7e39b1353e8824"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive.xl": {
+      "sha256": "c2d20188e8a59c7f8b40e0470439433c3bea15bf4ae82076620d55217382ab20",
+      "git_blob": "24e1252f3bf72622ccb61fb10c61215b2edfd7ce"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive": {
+      "sha256": "930ac746ca49c65ed17f0a994adb224141e6b0d6210f669e905ddc36b0aca470",
+      "git_blob": "5c30bb18fd2c63ce9c5b13cc98b11a0bd20923de"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive": {
+      "sha256": "51855a3e56512ef64a3137ad4aa10d5b7742d3db52105a4122691a4c1f263826",
+      "git_blob": "3d39380d9fd9cad05e2e2579e06a38fb2c17c532"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive": {
+      "sha256": "0d51089ec37648b436c81aee90ff7c34e364632d06398f7f180a0d37319b79e9",
+      "git_blob": "c507ad71714f5bf1b4a34f52559961a7c024d1c4"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive": {
+      "sha256": "54a8fca9629317494f216d5137537a71434f50d2fd065a52eae4647b70bcfbed",
+      "git_blob": "e80bc55b640d39d62cec78aa1d56a845529d2063"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive.xl": {
+      "sha256": "61778904e186690f2e61c40b5b406db12fd96aed00639a4e4ea56c05baa89354",
+      "git_blob": "6d01010c2ec9e1df00c1fe36e90406cfee247b19"
+    },
+    "archive/pc/mod/NCPDPatrol_BeanBagger.archive.xl": {
+      "sha256": "0b7c257f3c540ba511d752e9b88d72c8985186bd12c894285071098ad04976c7",
+      "git_blob": "f39b46ca991b051835c48df2f294f857f8908294"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive.xl": {
+      "sha256": "e9afcb8d4aceed644944b92ac8c0c58464698fce3903f5bd5da5e39dfe8ebf73",
+      "git_blob": "c9d5b69408f4bf97e05430be28dd5c2eb5b992f2"
+    },
+    "archive/pc/mod/NCPDPatrol_BeanBagger.archive": {
+      "sha256": "30f5e6ac997f96bda63a1d5c5a1ea2a36ec5d796abfe0d4485cc4bba1ed3690e",
+      "git_blob": "7dc9f145a25e7dff58fb78663185b3c9cae066c7"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl": {
+      "sha256": "8e885068933790d1491ff85b2900a03b4275eea570d260f11b22ded469f1c55d",
+      "git_blob": "e96c2a97cc08eb79fe4136adfa627ec794889529"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDown.archive.xl": {
+      "sha256": "24957c413dd28de3844004ec4ace06e843f8f6da491cda9777e1b419b64c15d3",
+      "git_blob": "33265ec4f42112afa744fe6d99e91f11c40eaab9"
+    },
+    "archive/pc/mod/NCPDPatrol_Arrest.archive": {
+      "sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3",
+      "git_blob": "25563f7e7f2135cd5f361a28df005a6eb7b31560"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive": {
+      "sha256": "398bb3d05a80ad1a74df5cf9fe3ab93894578d2b058151db9c417b89481f41f5",
+      "git_blob": "67c815d71b2afbb13738e4741790268619ca86d1"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive.xl": {
+      "sha256": "7a58a6cb528209dec72d8b07711d68935243a04e04f98520fce9e63a4e8bb781",
+      "git_blob": "45bc4d6718dddc04a92ff0c5f9e34adad07af0cb"
+    },
+    "README.txt": {
+      "sha256": "9bddbd7e945cb7d66eb9131c3a18910ce195939631bbe109ce9bf28f5559624b",
+      "git_blob": "d53e0831e52f4f4d12650e41d730e4e374905934"
+    },
+    "LICENSE": {
+      "sha256": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
+      "git_blob": "547869b1c104b5a7680458b19c8e2bca54c9c803"
+    },
+    "THIRD_PARTY_NOTICES.txt": {
+      "sha256": "28b02c72c62963d57e925f92bad852a7a50ced122f3276bf330c1d88701e3dca",
+      "git_blob": "c90b8ff34bc966855d71c7bf3de55e8a726935d1"
+    }
+  }
+}

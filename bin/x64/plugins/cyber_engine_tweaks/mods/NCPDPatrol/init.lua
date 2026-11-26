@@ -1,4 +1,4 @@
--- NCPD Patrol v0.17d | completed VIP dispatch releases partial ambush cleanup
+-- NCPD Patrol v0.20g Wwise Voice Fix | six author-supplied 48 kHz Vorbis exports
 -- Upgrades the working v0.2 CET UI. No Equipment-EX dependency.
 -- Start Shift gives the vanilla Police Uniform only when it is not owned.
 -- No automatic equipping: player uses the game's Special Outfit slot.
@@ -9,6 +9,11 @@ local Dispatch = require("dispatch")
 local VehicleRadio = require("vehicle_radio")
 local Backup = require("backup")
 local Arrest = require("arrest")
+local Navigation = require("marker_navigation") -- r5 marker hook
+local MarkerProbe = require("quest_marker_probe") -- r4 probe hook
+local Survey = require("scene_survey") -- scene survey hook
+local QuestGiver = require("quest_giver_test") -- qgiver hook
+local OffBooks = require("off_the_books") -- offbooks hook
 local Trunk = require("trunk")
 local onDuty = false
 local overlayOpen = false
@@ -30,6 +35,7 @@ local function status(message)
 end
 
 local function isInGame()
+    if not Navigation.worldReady() then return false end -- r5 marker hook
     return Game ~= nil and Game.GetPlayer ~= nil and Game.GetPlayer() ~= nil
 end
 
@@ -217,6 +223,13 @@ local function ensurePoliceOutfit()
 end
 
 local function startShift()
+    if OffBooks.blocksDuty() then status("Finish the off-duty operation and lose any pursuing NCPD before starting a shift.");return end -- offbooks hook
+    -- qgiver guard begin
+    if QuestGiver.blocksDuty() then status("Clear the quest giver test before starting a shift.");return end
+    -- qgiver guard end
+    -- scene survey guard begin
+    if Survey.blocksDuty() then status("Finish survey cleanup/return before starting a shift.");return end
+    -- scene survey guard end
     if not isInGame() then
         status("Load a save before starting a shift.")
         return
@@ -287,6 +300,11 @@ local function toggleDuty()
 end
 
 local function forgetLoadedWorld()
+    Survey.reset() -- scene survey hook
+    QuestGiver.reset() -- qgiver hook
+    OffBooks.reset() -- offbooks hook
+    Navigation.reset() -- r5 marker hook
+    MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
     -- Also forget failed cleanup IDs when the previous shift was already over.
     -- This callback must never delete entities or unregister old native handles.
     Partner.reset()
@@ -300,10 +318,43 @@ local function forgetLoadedWorld()
     dutyPoll, bonusPoll = 0, 0
 end
 
+-- scene survey setup begin
+Survey.configure({status=status,worldReady=Navigation.worldReady,canStart=function()
+    if onDuty then return false,"Go OFF DUTY before testing scene locations" end
+    if QuestGiver.active() then return false,"Clear the quest giver test before a survey" end -- qgiver hook
+    local life=Dispatch.lifecycle()
+    if life.reserved or life.foregroundCleanup or life.backgroundCleanup or Backup.isActive() then
+        return false,"Clear existing dispatch/backup actors before starting the survey"
+    end
+    return true
+end})
+-- scene survey setup end
+
+-- qgiver setup begin
+-- offbooks setup begin
+OffBooks.configure({status=status,worldReady=Navigation.worldReady,onDuty=function() return onDuty end,voss=function() return QuestGiver.actor() end})
+-- offbooks setup end
+QuestGiver.configure({status=status,worldReady=Navigation.worldReady,overlayOpen=function() return overlayOpen end,canStart=function()
+    if onDuty then return false,"Go OFF DUTY before testing the quest giver" end
+    if Survey.blocksDuty() then return false,"Finish scene survey/discovery cleanup before this test" end
+    local life=Dispatch.lifecycle()
+    if life.reserved or life.foregroundCleanup or life.backgroundCleanup or Backup.isActive() then
+        return false,"Clear dispatch/backup actors before testing the quest giver"
+    end
+    return true
+end,
+-- offbooks callbacks begin
+keepAfterBriefing=function() return OffBooks.keepVoss() or QuestGiver.briefingComplete() end,
+onBriefingComplete=function() return OffBooks.continueAfterBriefing() end,
+onClear=function(output) OffBooks.clear(output or status) end,
+-- offbooks callbacks end
+})
+-- qgiver setup end
+
 registerForEvent("onInit", function()
     Dispatch.init()
     Observe("PlayerPuppet", "OnGameAttached", forgetLoadedWorld)
-    status("v0.17d loaded. Completed VIP delivery releases known ambush cleanup, including never-attached cars and pending crew despawn. Marker recovery and rewards retained. Install the complete package and restart.")
+    status("v0.20g Wwise Voice Fix loaded. All six Voss lines use the author-supplied mono 48 kHz Vorbis exports. First-line ambience fix confirmed in game; test the complete conversation. Install the complete package and fully restart the game.")
 end)
 
 -- Preserve the hotkey ID from v0.1.1 / v0.2, with no default binding.
@@ -315,7 +366,12 @@ registerForEvent("onOverlayOpen", function() overlayOpen = true end)
 registerForEvent("onOverlayClose", function() overlayOpen = false end)
 
 registerForEvent("onUpdate", function(delta)
+    Survey.update(delta) -- scene survey hook
+    OffBooks.update(delta) -- offbooks hook
+    QuestGiver.update(delta) -- qgiver hook
     if not isInGame() then
+        Navigation.reset() -- r5 marker hook
+        MarkerProbe.reset() -- r4 probe hook: forget old-world IDs
         Trunk.reset()
         Arrest.reset()
         if onDuty then Partner.reset(); Backup.reset(); Dispatch.reset(); VehicleRadio.reset(); onDuty = false end
@@ -378,9 +434,16 @@ registerForEvent("onUpdate", function(delta)
     local arrestPaused = true
     pcall(function() arrestPaused = getPatrolSystem():IsDispatchMenuOpen() end)
     Arrest.update(delta, onDuty, arrestPaused)
+    Navigation.update(delta,status) -- r5 marker hook
+    MarkerProbe.update(delta, onDuty, status) -- r4 probe hook
 end)
 
 registerForEvent("onShutdown", function()
+    Survey.shutdown() -- scene survey hook
+    QuestGiver.shutdown() -- qgiver hook
+    OffBooks.shutdown() -- offbooks hook
+    pcall(Navigation.finish) -- r5 marker hook
+    MarkerProbe.finish(nil, "CET shutdown") -- r4 probe hook
     Trunk.finish()
     Backup.finish(getSupportSystem(), nil)
     VehicleRadio.finish(getPatrolSystem())
@@ -393,235 +456,27 @@ registerForEvent("onShutdown", function()
     Partner.dismiss(function() end)
 end)
 
+-- The menu reads live session state and routes actions to the existing owners.
+local menu = require("cet_ui").new({
+    partner=Partner, dispatch=Dispatch, backup=Backup, arrest=Arrest,
+    trunk=Trunk, vehicleRadio=VehicleRadio,
+    navigation=Navigation, -- r5 marker hook
+    markerProbe=MarkerProbe, -- r4 probe hook
+    sceneSurvey=Survey, -- scene survey hook
+    questGiver=QuestGiver, -- qgiver hook
+    offBooks=OffBooks, -- offbooks hook
+    isOnDuty=function() return onDuty end,
+    getLastMessage=function() return lastMessage end,
+    status=status, toggleDuty=toggleDuty, requestBackup=requestBackup,
+    getPatrolSystem=getPatrolSystem, getSupportSystem=getSupportSystem,
+    careerAction=careerAction, assignPatrolCar=assignPatrolCar,
+    ensurePoliceOutfit=ensurePoliceOutfit, showVehicleDiagnostics=showVehicleDiagnostics,
+    assignVanillaHella=function()
+        assignVehicleById(VANILLA_POLICE_HELLA, "NCPD Hella (vanilla police variant)")
+    end,
+    logScanner=logScanner,
+})
+
 registerForEvent("onDraw", function()
-    if not overlayOpen then return end
-    local visible = ImGui.Begin("NCPD Patrol - v0.17d")
-    if visible then
-        ImGui.Text("PATROL STATUS")
-        ImGui.Separator()
-        ImGui.Text(onDuty and "ON DUTY" or "OFF DUTY")
-        ImGui.TextWrapped("Use a Fast Travel terminal for Start Shift / End Shift. These controls remain available for diagnostics.")
-        ImGui.TextWrapped("At your owned police car's trunk: tap R for backup; hold until the native indicator completes for Patrol Menu (uses your secondary interaction binding). Choose 1-7 in the two-row menu; 9 closes.")
-        if ImGui.Button(onDuty and "End Shift" or "Start Shift") then
-            toggleDuty()
-        end
-
-        ImGui.Separator()
-        ImGui.Text("DISPATCH")
-        ImGui.Text(Dispatch.isBusy() and "STATUS: BUSY" or "STATUS: AVAILABLE")
-        if ImGui.Button(Dispatch.isBusy() and "Set AVAILABLE" or "Set BUSY") then
-            Trunk.setBusy(not Dispatch.isBusy(), status)
-        end
-        ImGui.Separator()
-        ImGui.Text("NCPD CAREER")
-        if ImGui.Button("Cop Stats") then Trunk.showStats(status) end
-        if ImGui.Button("Log career browser diagnostics") then
-            local ok, result = pcall(function()
-                local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.17d package and restart") end
-                return browser:GetDiagnostics()
-            end)
-            status("Career browser | " .. tostring(result))
-        end
-        if ImGui.Button("Open NCPD Career (computer browser)") then
-            local ok, result = pcall(function()
-                local browser = Game.GetScriptableSystemsContainer():Get("NCPDPatrol.Career.NCPDPatrolCareerBrowserState")
-                if not browser or browser:Version() ~= 1 then error("Install the complete v0.17d package and restart") end
-                if not browser:OpenCareer() then return "Open a computer's Net browser first; check career browser diagnostics if the page is unavailable." end
-                return "Career page requested on the current computer."
-            end)
-            status("Career browser | " .. tostring(result))
-        end
-        if ImGui.Button("TEST: Unlock all milestones (session)") then careerAction("test", true) end
-        if ImGui.Button("Clear test unlocks") then careerAction("test", false) end
-        ImGui.TextWrapped("Test unlocks make all career rewards and partners available until cleared or a save is loaded. Your incident count stays unchanged. Claimed equipment and vehicles are saved normally.")
-        if ImGui.Button("TEST: Give tiered reward weapons") then careerAction("weapons") end
-        if ImGui.Button("TEST: Give Bean Bagger (Tier 2)") then careerAction("beanbagger") end
-        if ImGui.Button("Log Bean Bagger diagnostics") then
-            local ok, info = pcall(function()
-                local system = Game.GetScriptableSystemsContainer():Get("NCPDPatrolBeanBaggerSystem")
-                if not system or system:Version() ~= 1 then error("Install all v0.17d files and restart") end
-                return system:GetDiagnostics()
-            end)
-            status("Bean Bagger | " .. tostring(info))
-        end
-        ImGui.TextWrapped("Tiered tests give Bean Bagger T2, Lexington T2, Masamune T3 and Defender T5 with TEST unlocks enabled. The separate Bean Bagger button needs no unlock override. One test copy per weapon per session; career receipts stay unchanged. Test copies remain if you save.")
-        if ImGui.Button("Claim next milestone reward") then careerAction("claim") end
-        if ImGui.CollapsingHeader("Partner assignment (CET fallback)") then
-            local ok, career = pcall(function() return Game.GetScriptableSystemsContainer():Get("NCPDPatrolCareerSystem") end)
-            if ok and career and career:Version() == 3 then
-                ImGui.TextWrapped("Selected: " .. tostring(career:GetSelectedPartnerName()))
-                for index = 0, career:PartnerCount() - 1 do
-                    local name = tostring(career:PartnerName(index))
-                    local label = career:IsPartnerUnlocked(index) and ("Assign " .. name) or ("LOCKED: " .. name)
-                    if ImGui.Button(label) then careerAction("partner", index) end
-                end
-                ImGui.TextWrapped("Selection applies at shift start or Request new partner; it does not replace your current partner immediately.")
-            end
-        end
-        ImGui.Separator()
-        ImGui.Text("DISPATCH CONTROLS")
-        local repairSeconds = Trunk.repairSeconds()
-        if repairSeconds > 0 then ImGui.Text("Vehicle repair: " .. tostring(repairSeconds) .. " s remaining") end
-        ImGui.TextWrapped("Dispatch searches within 1 km, then 1.5 km and 2 km. Empty searches retry after 30 seconds. Request a call now to skip the automatic wait.")
-        if ImGui.Button("Request dispatch now") then
-            Dispatch.requestMixed(getPatrolSystem(), status)
-        end
-        ImGui.TextWrapped("Dispatch mix: "..Dispatch.mixDescription()..". Unavailable types fall back to another type. Busy pauses automatic calls.")
-        if ImGui.Button("TEST: Request scanner dispatch") then Dispatch.request(getPatrolSystem(), status) end
-        if ImGui.Button("TEST: Request cyberpsycho dispatch") then
-            Dispatch.requestCyberpsycho(getPatrolSystem(), status)
-        end
-        ImGui.TextWrapped("Next cyberpsycho: " .. Dispatch.cyberpsychoVariantState())
-        if ImGui.Button("TEST: Next cyberpsycho variant") then Dispatch.cycleCyberpsychoVariant(status) end
-        if ImGui.Button("Use random cyberpsycho variants") then Dispatch.randomCyberpsychoVariants(status) end
-        ImGui.TextWrapped("Cyberpsycho dispatch: 17 variants. Respond 500-2000 m away; the threat spawns on arrival. Completion pays EUR$3000, plus EUR$500 for non-lethal neutralization, and records one career incident. Manual controls remain available for testing.")
-        ImGui.TextWrapped("Cyberpsycho: " .. Dispatch.cyberpsychoState())
-        if ImGui.Button("Log cyberpsycho diagnostics") then status("Cyberpsycho | " .. Dispatch.cyberpsychoDiagnostics()) end
-        if ImGui.Button("TEST: Request VIP transport") then Dispatch.requestVIP(getPatrolSystem(), status) end
-        ImGui.TextWrapped("VIP transport: collect the witness in your owned police car with a free seat. Delivery unlocks after actual boarding. Stop and let the witness exit. An ambush can include 1-3 attacker cars. Successful delivery pays a flat EUR$2000 and records one career incident.")
-        if ImGui.Button("Ambush cars: "..Dispatch.vipAmbushCars().." (change)") then Dispatch.cycleVIPAmbushCars(status) end
-        if ImGui.Button("TEST: Trigger VIP ambush") then Dispatch.requestVIPAmbush(status) end
-        ImGui.TextWrapped("VIP: " .. Dispatch.vipState())
-        ImGui.TextWrapped("VIP ambush: " .. Dispatch.vipAmbushState())
-        if ImGui.Button("Log VIP diagnostics") then status("VIP | " .. Dispatch.vipDiagnostics()) end
-        if ImGui.Button("Rebuild VIP waypoint") then Dispatch.refreshVIPWaypoint(getPatrolSystem(),status) end
-        if ImGui.Button("Log automatic dispatch diagnostics") then status("Automatic dispatch | "..Dispatch.schedulerDiagnostics(getPatrolSystem())) end
-        if ImGui.Button("Log incident reward diagnostics") then status("Incident rewards | "..Dispatch.rewardDiagnostics()) end
-        if ImGui.Button("Cancel active dispatch") then
-            Dispatch.cancel(getPatrolSystem(), status)
-        end
-        if ImGui.Button(Dispatch.isAutomatic() and "Pause automatic dispatch" or "Resume automatic dispatch") then
-            Dispatch.setAutomatic(not Dispatch.isAutomatic(), status)
-        end
-        if ImGui.Button(Dispatch.isSoundEnabled() and "Mute dispatch alert" or "Enable dispatch alert") then
-            Dispatch.setSoundEnabled(not Dispatch.isSoundEnabled(), status)
-        end
-        if ImGui.Button("Test dispatch alert") then
-            Dispatch.testAudio(getPatrolSystem(), false, status)
-        end
-        if ImGui.Button(Dispatch.isVoiceEnabled() and "Mute dispatch voice" or "Enable dispatch voice") then
-            Dispatch.setVoiceEnabled(not Dispatch.isVoiceEnabled(), status)
-        end
-        if ImGui.Button("Preview police radio (in vehicle)") then
-            Dispatch.testAudio(getPatrolSystem(), true, status)
-        end
-        ImGui.TextWrapped("The confirmed police radio line accompanies new dispatch notices. Custom on-scene briefs can be added later.")
-        local voicePatrol = getPatrolSystem()
-        if voicePatrol then
-            local ok, info = pcall(function() return voicePatrol:GetVoiceDiagnostics() end)
-            ImGui.TextWrapped(ok and info or "Voice diagnostics unavailable; install all v0.17d files.")
-        end
-        ImGui.TextWrapped("Navigation: " .. Dispatch.navigationState())
-        if ImGui.Button(VehicleRadio.isEnabled() and "Mute vehicle chatter" or "Enable vehicle chatter") then
-            VehicleRadio.setEnabled(not VehicleRadio.isEnabled(), getPatrolSystem(), status)
-        end
-        ImGui.TextWrapped("Vehicle radio: " .. VehicleRadio.state())
-        ImGui.TextWrapped(Dispatch.state())
-        ImGui.Text("Dispatches completed: " .. tostring(Dispatch.completed()) .. " | Failed: " .. tostring(Dispatch.failedCount()))
-        ImGui.TextWrapped("Last dispatch result: " .. Dispatch.lastOutcome())
-        ImGui.TextWrapped("Six journal briefings. Dispatch supplement: EUR$500 after an attended call is completed, with its own payment receipt. A 3-minute response deadline pauses in menus and clears On scene.")
-        if ImGui.Button("Test timeout: 15 s left (on route)") then
-            Dispatch.armTimeoutTest(getPatrolSystem(), status)
-        end
-        if ImGui.Button("Log dispatch journal diagnostics") then
-            status("Dispatch journal | " .. Dispatch.journalDiagnostics())
-        end
-        ImGui.TextWrapped("Journal: " .. Dispatch.journalDiagnostics())
-        ImGui.TextWrapped("Automatic dispatch: "..Dispatch.schedulerStatus(getPatrolSystem()))
-        ImGui.TextWrapped("Objective display: " .. Dispatch.hudState())
-
-        ImGui.Separator()
-        ImGui.Text("NCPD PATROL VEHICLE")
-        ImGui.TextWrapped("Vanilla NCPD Hella. Bundled TweakXL tweak adds it to the garage-eligible vehicle list; Start Shift requests ownership.")
-        if ImGui.Button("Check vehicle records and ownership") then
-            showVehicleDiagnostics()
-        end
-        if ImGui.Button("Assign / re-check NCPD Hella") then
-            assignPatrolCar()
-        end
-        if ImGui.Button("Try vanilla police Hella explicitly") then
-            assignVehicleById(VANILLA_POLICE_HELLA, "NCPD Hella (vanilla police variant)")
-        end
-        ImGui.TextWrapped("After updating: restart the game, reassign the car, then check ownership and the summon menu. If ownership still says no, report the exact status.")
-
-        ImGui.Separator()
-        ImGui.Text("POLICE UNIFORM - VANILLA SPECIAL OUTFIT")
-        ImGui.TextWrapped("Start Shift grants the existing River Ward quest uniform once if it is not owned. No Equipment-EX or wardrobe setup.")
-        if ImGui.Button("Grant / check Police Uniform") then
-            ensurePoliceOutfit()
-        end
-        ImGui.TextWrapped("Equip manually via Inventory > Special Outfit. End Shift does not remove or unequip it.")
-
-        ImGui.Separator()
-        ImGui.Text("NCPD PARTNER")
-        ImGui.TextWrapped("Start Shift automatically calls one NCPD partner to follow you. End Shift dismisses your partner.")
-        if ImGui.Button("Spawn partner") then
-            Partner.spawn(onDuty, status)
-        end
-        if ImGui.Button("Request new partner") then
-            Partner.replace(onDuty, status)
-        end
-        if ImGui.Button("Dismiss partner") then
-            Partner.dismiss(status)
-        end
-        if ImGui.Button("Check partner state") then
-            status(Partner.state())
-        end
-        ImGui.TextWrapped("Current state: " .. Partner.state())
-        ImGui.TextWrapped("Active profile: " .. Partner.activeProfile())
-        ImGui.TextWrapped("Vehicle: " .. Partner.vehicleState())
-        ImGui.TextWrapped("Revive: " .. Partner.aidState())
-        if ImGui.Button("Log partner AI diagnostics") then
-            status("Partner AI | " .. Partner.diagnostics())
-            print("[NCPD Patrol] Partner health | " .. Partner.healthDiagnostics())
-        end
-        if ImGui.Button("Log officer readiness (partner + backup)") then
-            status("Partner readiness | " .. Partner.readinessDiagnostics())
-            print("[NCPD Patrol] " .. Backup.diagnostics())
-        end
-        ImGui.TextWrapped("When your partner is down, approach and use Revive Partner. Stay within 2.5 m for 3 seconds.")
-        if ImGui.Button("Test: down partner") then
-            local support = getSupportSystem()
-            if support then support:DownPartner() end
-        end
-        if ImGui.Button("Revive partner (nearby)") then
-            local support = getSupportSystem()
-            if support then support:StartPartnerRevive() end
-        end
-        ImGui.TextWrapped("Dismiss removes your partner for the current shift. Use Spawn partner if you want to call another one.")
-
-        ImGui.Separator()
-        ImGui.Text("NCPD ARRESTS")
-        ImGui.TextWrapped("On duty, approach a living, downed enemy and use Arrest suspect (primary interaction, normally F). Stay within 2.5 m for 2 seconds. A registered arrest pays EUR$250 once per suspect, separately from scanner bonuses.")
-        ImGui.TextWrapped("Arrest: " .. Arrest.state())
-        ImGui.TextWrapped("Civilians, police, companions, bosses and quest-marked bodies are excluded in this first build. Normal body/loot choices return after arrest.")
-        ImGui.Separator()
-        ImGui.Text("NCPD BACKUP")
-        ImGui.TextWrapped("On duty, use Request NCPD Backup at your owned police car's trunk, beside stash. One car with two officers responds. Optional key: CET Bindings > NCPD Patrol - Request backup.")
-        if ImGui.Button("Request backup patrol") then requestBackup() end
-        if ImGui.Button("10-4: Release backup") then Backup.release(getSupportSystem(), getPatrolSystem(), status) end
-        ImGui.TextWrapped(Backup.state())
-        ImGui.TextWrapped("Hold R at your owned police car's trunk > 10-4 - Release backup to end their follower duty. They stay on scene; allow seated officers to exit before driving away. A new patrol is available after the previous car and officers are removed beyond 150 m. Without 10-4, normal follow and vehicle boarding remain available.")
-        ImGui.Separator()
-        ImGui.Text("SCANNER BONUS")
-        ImGui.TextWrapped("EUR$1000 for each eligible NCPD combat activity completed on duty. Reported Crime follow-ups are not included in this build.")
-        local patrol = getPatrolSystem()
-        if patrol then
-            local ok, info = pcall(function()
-                if patrol:Version() ~= 17 then return "Version mismatch: install all v0.17d files and restart the game." end
-                return patrol:GetMonitorDiagnostics()
-                    .. " | Last payment: EUR$" .. tostring(patrol:GetLastBonusAmount())
-            end)
-            ImGui.TextWrapped(ok and info or ("Scanner diagnostics failed: " .. tostring(info)))
-            if ImGui.Button("Log scanner diagnostics") then logScanner(patrol, true) end
-        else
-            ImGui.TextWrapped("NCPD Patrol redscript module unavailable.")
-        end
-        ImGui.Separator()
-        ImGui.Text("STATUS / DIAGNOSTICS")
-        ImGui.TextWrapped(lastMessage)
-        ImGui.TextWrapped("Shift status resets on game reload.")
-    end
-    ImGui.End()
+    if overlayOpen then menu.draw() end
 end)

@@ -1,0 +1,34 @@
+{
+  "version": "audio-trace-0.1",
+  "production_reference_commit": "2d291733dd38f04a39b3dc51e5cfce65cc42efae",
+  "production_install_files_unchanged": 131,
+  "install_files": 2,
+  "only_new_separate_cet_helper_folder": true,
+  "native_scripts_added": false,
+  "audio_quest_and_playback_settings_changed": false,
+  "tests": {
+    "read_only_observer_and_state_capture_executed": true,
+    "inactive_and_off_duty_guards": true,
+    "no_disk_io_during_dialogue": true,
+    "automatic_two_second_postroll_export": true,
+    "frame_gaps_psm_changes_audio_requests_and_ui_markers_recorded": true,
+    "bounded_plain_data_and_export_retry": true,
+    "preroll_timeouts_world_reset_and_callback_errors": true,
+    "loaded_scene_fields_checked_after_capture_only": true,
+    "old_timing_and_pending_resource_distinguished": true,
+    "native_audio_hook_delivery_verified": false,
+    "audible_mixer_cause_verified": false,
+    "actual_game_validation": false
+  },
+  "actual_game_validation": false,
+  "native_callback_delivery_verified": false,
+  "native_wwise_mixer_measured": false,
+  "path": "releases/NCPD_Patrol_Audio_Trace_v0.1_TEST.zip",
+  "bytes": 7456,
+  "sha256": "ac609ad06795b9318028b718887b7ea93a20fd3e4e6ffec3095dc85bd59cb080",
+  "files": {
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrolAudioTrace/init.lua": "8dd3a7c1977b5c2be6e0627391d877fba2f544f03aaf79d0d0dbd2cad0d5deb5",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrolAudioTrace/README.txt": "da089ed7e2b1b2eb810f4703a4f8fe301abbb9f68a28595f76616052c2776cdd"
+  },
+  "source_commit": "124a5f511d83c58c6a447407a3fdd558266c7b81"
+}

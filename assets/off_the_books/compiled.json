@@ -1,0 +1,17 @@
+{
+  "archive_path": "archive/pc/mod/NCPDPatrol_OffTheBooks.archive",
+  "archive_sha256": "070de6ad671d190deeeced7d579aea1a5a74e852a63c43aa7468f925df8cc69c",
+  "resources": [
+    "off_the_books.journal",
+    "onscreens.json"
+  ],
+  "roundtrip_validated": true,
+  "extracted_resource_bytes_compared": true,
+  "authored_inputs": {
+    "assets/off_the_books/contract.json": "168d36bb9c43871de9e4e762929155f99d09df401ab40d755d544f0dbb4f3c2c",
+    "assets/off_the_books/records.json": "769c5e7db2f58c59160634fcaf146a0110e7eb40ab2dc4730ab261fdf0bf4201",
+    "assets/off_the_books/off_the_books.journal.json": "13450c8daa3c64166a19e1402026fac014aa34bcce9f62de7b6172cf3aa1f749",
+    "assets/off_the_books/onscreens.json.json": "63501b9ce3a5d4c3d47e1c03d40ccd2b6a7e38af4a111726bc5343af2583764e"
+  },
+  "actual_game_validation": false
+}

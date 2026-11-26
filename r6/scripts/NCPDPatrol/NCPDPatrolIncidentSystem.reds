@@ -35,7 +35,7 @@ public class NCPDPatrolIncidentSystem extends ScriptableSystem {
             && IsDefined(patrol) && patrol.IsOnDuty() && !patrol.HasWantedLevel();
     }
     public func Reserve(kind: CName) -> Int32 {
-        if !this.Eligible() || (NotEquals(kind, n"vip") && NotEquals(kind, n"cyberpsycho")) { return 0; };
+        if !this.Eligible() || (NotEquals(kind, n"vip") && NotEquals(kind, n"cyberpsycho") && NotEquals(kind, n"officer_down")) { return 0; };
         if this.m_serial >= 2147483647 { return 0; };
         this.m_serial += 1;
         ArrayPush(this.m_openIds, this.m_serial); ArrayPush(this.m_openKinds, kind);
@@ -47,6 +47,7 @@ public class NCPDPatrolIncidentSystem extends ScriptableSystem {
         ArrayErase(this.m_openIds, index); ArrayErase(this.m_openKinds, index);
     }
     public func CompleteVIP(id: Int32) -> Bool { return this.Complete(id, n"vip", 2000); }
+    public func CompleteOfficerDown(id: Int32) -> Bool { return this.Complete(id, n"officer_down", 2000); }
     public func CompleteCyberpsycho(id: Int32, nonLethal: Bool) -> Bool {
         let amount: Int32 = 3000;
         if nonLethal { amount += 500; };
@@ -100,8 +101,12 @@ public class NCPDPatrolIncidentSystem extends ScriptableSystem {
                 if Equals(this.m_completedKinds[i], n"vip") {
                     receipt = s"VIP TRANSPORT PAID | +EUR$\(amount)";
                 } else {
-                    receipt = s"CYBERPSYCHO DISPATCH PAID | +EUR$\(amount)";
-                    if amount == 3500 { receipt = receipt + " | Non-lethal bonus included: EUR$500"; };
+                    if Equals(this.m_completedKinds[i], n"officer_down") {
+                        receipt = s"OFFICER DOWN DISPATCH PAID | +EUR$\(amount)";
+                    } else {
+                        receipt = s"CYBERPSYCHO DISPATCH PAID | +EUR$\(amount)";
+                        if amount == 3500 { receipt = receipt + " | Non-lethal bonus included: EUR$500"; };
+                    };
                 };
                 ArrayPush(this.m_receipts, receipt);
                 if this.m_noticeDelay <= 0.0 { this.m_noticeDelay = 8.0; };

@@ -1,0 +1,18 @@
+{
+  "node_type": "questMappinManagerNodeDefinition",
+  "activate": "Active",
+  "deactivate": "Inactive",
+  "file_entry_index": 2,
+  "quest_root": "quests/minor_quest/ncpd_patrol_marker_probe",
+  "evidence": [
+    {
+      "kind": "Primary WolvenKit editor implementation: Active/Inactive input sockets",
+      "url": "https://github.com/WolvenKit/WolvenKit/blob/c6065b22f70cb0a53913f5440d112ab1b7dd00a4/WolvenKit.App/ViewModels/GraphEditor/Nodes/Quest/questMappinManagerNodeDefinitionWrapper.cs"
+    },
+    {
+      "kind": "Authored quest resource documentation: containing quest entry is segment 2; vanilla SQ021 example is identified for inspection",
+      "url": "https://hlky.github.io/cyberpunk-quest-authoring/journal/mappins.html#activating-and-hiding-a-quest-pin"
+    }
+  ],
+  "standalone_codeware_execution_proven_in_game": false
+}

@@ -1,0 +1,375 @@
+{
+  "schema": 1,
+  "source_catalog": "assets/fixed_markers/catalog.json",
+  "sources": "assets/fixed_markers/sources.json",
+  "exclusions": "assets/fixed_markers/location-exclusions.json",
+  "selection": "Authored outdoor street/parking candidates; no metro, private estate, apartment-interior or H10 Atrium terminals. Names and coordinate data do not prove physical accessibility in game.",
+  "validation": "Catalogue/marker-data validation only. Existing runtime witness navigation, height, path, owned vehicle and boarding checks still apply. Road driving paths are not baked.",
+  "seed": 1706001,
+  "destinations_per_pickup": 6,
+  "trip_min_metres": 500,
+  "trip_max_metres": 5000,
+  "recent_selections": 12,
+  "sites": [
+    {
+      "site": 133,
+      "source_id": "cct_cpz_dataterm_01",
+      "name": "Ring Road",
+      "district": "City Center"
+    },
+    {
+      "site": 152,
+      "source_id": "cct_dtn_dataterm_01",
+      "name": "Halsey & MLK",
+      "district": "City Center"
+    },
+    {
+      "site": 153,
+      "source_id": "cct_dtn_dataterm_02",
+      "name": "Berkeley & Bruce Skiv",
+      "district": "City Center"
+    },
+    {
+      "site": 154,
+      "source_id": "cct_dtn_dataterm_03",
+      "name": "Skyline & Republic",
+      "district": "City Center"
+    },
+    {
+      "site": 156,
+      "source_id": "cct_dtn_dataterm_05",
+      "name": "Downtown North",
+      "district": "City Center"
+    },
+    {
+      "site": 157,
+      "source_id": "cct_dtn_dataterm_07",
+      "name": "Downtown Central",
+      "district": "City Center"
+    },
+    {
+      "site": 164,
+      "source_id": "hey_gle_dataterm_01",
+      "name": "Senate & Market",
+      "district": "Heywood"
+    },
+    {
+      "site": 165,
+      "source_id": "hey_gle_dataterm_02",
+      "name": "Ventura & Skyline",
+      "district": "Heywood"
+    },
+    {
+      "site": 166,
+      "source_id": "hey_gle_dataterm_03",
+      "name": "Palms View Way",
+      "district": "Heywood"
+    },
+    {
+      "site": 180,
+      "source_id": "hey_rey_dataterm_01",
+      "name": "Republic & Vine",
+      "district": "Heywood"
+    },
+    {
+      "site": 181,
+      "source_id": "hey_rey_dataterm_02",
+      "name": "Petrel St",
+      "district": "Heywood"
+    },
+    {
+      "site": 182,
+      "source_id": "hey_rey_dataterm_03",
+      "name": "College St",
+      "district": "Heywood"
+    },
+    {
+      "site": 183,
+      "source_id": "hey_rey_dataterm_04",
+      "name": "Skyline East",
+      "district": "Heywood"
+    },
+    {
+      "site": 184,
+      "source_id": "hey_rey_dataterm_05",
+      "name": "Congress & Madison",
+      "district": "Heywood"
+    },
+    {
+      "site": 191,
+      "source_id": "hey_spr_dataterm_01",
+      "name": "Corporation St",
+      "district": "Heywood"
+    },
+    {
+      "site": 197,
+      "source_id": "hey_spr_dataterm_07",
+      "name": "Pumping Station",
+      "district": "Heywood"
+    },
+    {
+      "site": 202,
+      "source_id": "pac_cvi_dataterm_01",
+      "name": "Grand Imperial Mall",
+      "district": "Pacifica"
+    },
+    {
+      "site": 205,
+      "source_id": "pac_cvi_dataterm_04",
+      "name": "Stadium Parking",
+      "district": "Pacifica"
+    },
+    {
+      "site": 209,
+      "source_id": "pac_wwd_dataterm_03",
+      "name": "West Wind Apartments",
+      "district": "Pacifica"
+    },
+    {
+      "site": 210,
+      "source_id": "std_arr_dataterm_01",
+      "name": "Republic East",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 211,
+      "source_id": "std_arr_dataterm_02",
+      "name": "Megabuilding H6",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 212,
+      "source_id": "std_arr_dataterm_03",
+      "name": "Red Dirt Bar",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 213,
+      "source_id": "std_arr_dataterm_04",
+      "name": "Hargreaves St",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 214,
+      "source_id": "std_arr_dataterm_05",
+      "name": "Megabuilding H4",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 216,
+      "source_id": "std_arr_dataterm_07",
+      "name": "San Amaro St",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 217,
+      "source_id": "std_arr_dataterm_08",
+      "name": "MLK & Brandon",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 218,
+      "source_id": "std_arr_dataterm_09",
+      "name": "Mission Waterfront",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 225,
+      "source_id": "std_rcr_dataterm_01",
+      "name": "Almunecar & Jerez",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 226,
+      "source_id": "std_rcr_dataterm_02",
+      "name": "Rancho Coronado North",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 227,
+      "source_id": "std_rcr_dataterm_03",
+      "name": "Rancho Coronado South",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 228,
+      "source_id": "std_rcr_dataterm_05",
+      "name": "Rancho Coronado East",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 229,
+      "source_id": "std_rcr_dataterm_06",
+      "name": "Kendal Park",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 232,
+      "source_id": "std_rcr_dataterm_09",
+      "name": "Mallagra & Manzanita",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 234,
+      "source_id": "std_rcr_dataterm_11",
+      "name": "Woodhaven Street",
+      "district": "Santo Domingo"
+    },
+    {
+      "site": 252,
+      "source_id": "wat_awf_dataterm_03",
+      "name": "California & Pershing",
+      "district": "Watson"
+    },
+    {
+      "site": 254,
+      "source_id": "wat_kab_dataterm_02",
+      "name": "Kennedy North",
+      "district": "Watson"
+    },
+    {
+      "site": 255,
+      "source_id": "wat_kab_dataterm_03",
+      "name": "Creek Loop",
+      "district": "Watson"
+    },
+    {
+      "site": 257,
+      "source_id": "wat_kab_dataterm_05",
+      "name": "Pinewood St South",
+      "district": "Watson"
+    },
+    {
+      "site": 261,
+      "source_id": "wat_kab_dataterm_10",
+      "name": "Allen St South",
+      "district": "Watson"
+    },
+    {
+      "site": 262,
+      "source_id": "wat_kab_dataterm_11",
+      "name": "Pinewood Junction",
+      "district": "Watson"
+    },
+    {
+      "site": 263,
+      "source_id": "wat_kab_dataterm_12",
+      "name": "Allen Street",
+      "district": "Watson"
+    },
+    {
+      "site": 264,
+      "source_id": "wat_lch_dataterm_01",
+      "name": "Goldsmith St",
+      "district": "Watson"
+    },
+    {
+      "site": 265,
+      "source_id": "wat_lch_dataterm_02",
+      "name": "Drake Ave",
+      "district": "Watson"
+    },
+    {
+      "site": 266,
+      "source_id": "wat_lch_dataterm_03",
+      "name": "California & Cartwright",
+      "district": "Watson"
+    },
+    {
+      "site": 268,
+      "source_id": "wat_lch_dataterm_05",
+      "name": "Bradbury & Buran",
+      "district": "Watson"
+    },
+    {
+      "site": 269,
+      "source_id": "wat_lch_dataterm_07",
+      "name": "Clarendon St",
+      "district": "Watson"
+    },
+    {
+      "site": 283,
+      "source_id": "wat_nid_dataterm_01",
+      "name": "Martin St",
+      "district": "Watson"
+    },
+    {
+      "site": 284,
+      "source_id": "wat_nid_dataterm_02",
+      "name": "NID: Docks",
+      "district": "Watson"
+    },
+    {
+      "site": 287,
+      "source_id": "wat_nid_dataterm_05",
+      "name": "Offshore St",
+      "district": "Watson"
+    },
+    {
+      "site": 288,
+      "source_id": "wat_nid_dataterm_06",
+      "name": "Pershing St",
+      "district": "Watson"
+    },
+    {
+      "site": 294,
+      "source_id": "wbr_hil_dataterm_01",
+      "name": "Gold Niwaki Plaza",
+      "district": "Westbrook"
+    },
+    {
+      "site": 295,
+      "source_id": "wbr_hil_dataterm_02",
+      "name": "Lele Park",
+      "district": "Westbrook"
+    },
+    {
+      "site": 297,
+      "source_id": "wbr_hil_dataterm_04",
+      "name": "Longshore South",
+      "district": "Westbrook"
+    },
+    {
+      "site": 298,
+      "source_id": "wbr_hil_dataterm_05",
+      "name": "Dynalar",
+      "district": "Westbrook"
+    },
+    {
+      "site": 301,
+      "source_id": "wbr_jpn_dataterm_01",
+      "name": "Capitola St",
+      "district": "Westbrook"
+    },
+    {
+      "site": 303,
+      "source_id": "wbr_jpn_dataterm_03",
+      "name": "Silk Road West",
+      "district": "Westbrook"
+    },
+    {
+      "site": 304,
+      "source_id": "wbr_jpn_dataterm_04",
+      "name": "Sagan & Diamond",
+      "district": "Westbrook"
+    },
+    {
+      "site": 306,
+      "source_id": "wbr_jpn_dataterm_06",
+      "name": "Crescent & Broad",
+      "district": "Westbrook"
+    },
+    {
+      "site": 308,
+      "source_id": "wbr_jpn_dataterm_08",
+      "name": "Skyline & Salinas",
+      "district": "Westbrook"
+    },
+    {
+      "site": 323,
+      "source_id": "wbr_nok_dataterm_05",
+      "name": "North Oak Sign",
+      "district": "Westbrook"
+    }
+  ]
+}

@@ -1,0 +1,1347 @@
+{
+  "version": "v0.20f-wanted-dialogue",
+  "base_commit": "a70f6c697ec39ef502b8e3bec5f610a33b96b4a3",
+  "source_commit": "d19cf9a3e72a123c2d8a78d7947034be03649320",
+  "install_files": 131,
+  "lua_modules_parsed": 47,
+  "redscript_files": 50,
+  "portable_tests": [
+    "tests/beanbagger/check_visuals.py",
+    "tests/beanbagger/check_beanbagger.py",
+    "tests/shift_entry/check_shift.py",
+    "tests/compile_compatibility/check_legacy_api.py",
+    "tests/arrests/check_arrest.py",
+    "tests/arrests/check_arrest_interactions.py",
+    "tests/trunk_menu/check_trunk.py",
+    "tests/dispatch_journal/check_journal.py",
+    "tests/career/check_career.py",
+    "tests/cyberpsycho/check_cyberpsycho.py",
+    "tests/vip/check_vip.py",
+    "tests/officer_readiness/check_ready.py",
+    "tests/incidents/check_incidents.py",
+    "tests/dispatch_refactor/check_refactor.py",
+    "tests/cet_ui/check_cet_ui.py",
+    "tests/vip_refactor/check_vip_refactor.py",
+    "tests/quest_marker_probe/check_probe.py",
+    "tests/fixed_markers/check_fixed.py",
+    "tests/vip_routes/check_routes.py",
+    "tests/officer_down/check_officer_down.py",
+    "tests/scene_survey/check_survey.py",
+    "tests/scene_survey/check_settling.py",
+    "tests/scene_survey/check_staging.py",
+    "tests/scene_survey/check_functional.py",
+    "tests/officer_down/check_catalog.py",
+    "tests/officer_down/check_gameplay.py",
+    "tests/partner_safety/check_safety.py",
+    "tests/officer_down/check_repeat.py",
+    "tests/scene_survey/check_discovery.py",
+    "tests/scene_survey/check_discovery_landing.py",
+    "tests/officer_down/check_site_expansion.py",
+    "tests/cet_ui/check_current_controls.py",
+    "tests/quest_giver/check_quest_giver.py",
+    "tests/quest_giver/check_voss_media.py",
+    "tests/quest_giver/check_subtitles.py",
+    "tests/quest_giver/check_scene_ids.py",
+    "tests/quest_giver/check_timing.py",
+    "tests/quest_giver/check_pose_idle.py",
+    "tests/off_the_books/check_off_books.py",
+    "tests/off_the_books/check_retention.py",
+    "tests/off_the_books/check_handoff.py",
+    "tests/off_the_books/check_encounter.py",
+    "tests/off_the_books/check_death_loot.py",
+    "tests/off_the_books/check_evidence_receipt.py",
+    "tests/off_the_books/check_wanted.py",
+    "tests/quest_giver/check_audio_mix.py"
+  ],
+  "comparisons": {
+    "current_controls": {
+      "catalogue_enabled": 54,
+      "full_catalogue_eligible_and_native_confirmed": 54,
+      "ordinary_request_samples": [
+        {
+          "origin": [
+            -2650,
+            -2300,
+            18
+          ],
+          "index": 2
+        },
+        {
+          "origin": [
+            900,
+            -1100,
+            25
+          ],
+          "index": 35
+        },
+        {
+          "origin": [
+            -1100,
+            3000,
+            8
+          ],
+          "index": 8
+        },
+        {
+          "origin": [
+            -1900,
+            700,
+            12
+          ],
+          "index": 4
+        },
+        {
+          "origin": [
+            0,
+            -2100,
+            10
+          ],
+          "index": 45
+        }
+      ],
+      "retired_buttons": [
+        "Log legacy Coyote test diagnostics",
+        "Remove quest marker test",
+        "TEST: Andrea visual marker",
+        "TEST: Injured placement pilot (3 sites)",
+        "TEST: Injured settling pilot (3 sites)",
+        "TEST: Relocate native marker near V",
+        "TEST: Request Officer Down",
+        "TEST: Rotate Officer Down scene 90 degrees",
+        "TEST: Start static quest marker",
+        "TEST: Waypoint to Officer Down intersection"
+      ],
+      "current_added_controls": [
+        "Clear Off the Books encounter only",
+        "Clear Officer Down scene",
+        "Clear leftover quest marker experiment",
+        "Clear quest giver test",
+        "Export Officer Down gameplay report",
+        "Export discovery report",
+        "Export scene survey report",
+        "Load discovery results",
+        "Load saved survey results",
+        "Log Off the Books diagnostics",
+        "Log Officer Down diagnostics",
+        "Log active dispatch marker diagnostics",
+        "Log police fire diagnostics",
+        "Log quest giver diagnostics",
+        "Log scene survey diagnostics",
+        "Recover discovery cleanup and return",
+        "Recover survey cleanup and return",
+        "Request Officer Down dispatch",
+        "Revive scene officer (nearby)",
+        "Stop discovery and return",
+        "Stop survey and return",
+        "TEST: Activate quest giver quest",
+        "TEST: Continue Off the Books after briefing",
+        "TEST: Discover scenes near 3 closest terminals",
+        "TEST: Discover scenes near all 60 terminals",
+        "TEST: Request Officer Down dispatch",
+        "TEST: Retry unverified survey sites",
+        "TEST: Survey all recorded sites (compact)",
+        "TEST: Survey all recorded sites (standard)"
+      ],
+      "dispatch_scenarios_first": true,
+      "passive_drawing_has_no_actions": true,
+      "actual_game_validation": false
+    },
+    "quest_giver": {
+      "npc_briefing_voice": true,
+      "player_voice": true,
+      "automatic_replies": true,
+      "speech_turns": 10,
+      "native_v_replies": 4,
+      "choices": 0,
+      "dialogue_paths_executed": 1,
+      "complete_only_after_goodbye": true,
+      "grounded_waiting_pose_executed": true,
+      "workspot_ready_before_conversation": true,
+      "v019f_active_pose_missing_device_user_despawn_reproduced": true,
+      "native_activity_without_device_user_completes_automatic_dialogue": true,
+      "native_extended_info_entering_exiting_fields_checked": true,
+      "cosmetic_pose_failure_retains_actors_and_quest": true,
+      "native_look_at_target_slot": "pla_default_tgt",
+      "look_at_release_on_completion_and_pose_release_on_clear": true,
+      "native_sms_intro": true,
+      "sms_notifications_per_explicit_start": 1,
+      "sms_history_retained_on_clear": true,
+      "sms_exact_text_and_quest_attachment": true,
+      "no_duplicate_message_entries": true,
+      "spawned_private_actors": 2,
+      "spawned_private_pose_devices": 1,
+      "geometry_checked_before_spawn": true,
+      "scene_release_before_deletion": true,
+      "pose_device_detaches_before_puppet_deletion": true,
+      "no_body_pose_restart_at_greeting": true,
+      "cleanup_and_replay": true,
+      "save_cet_recovery": true,
+      "existing_dispatch_unchanged": true,
+      "no_rewards_or_career_changes": true,
+      "compiled_assets": {
+        "archive_path": "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
+        "archive_sha256": "2be305a3a7f636999cfd859d3330ccf4aadf36d0b16d117aff46100ca8b66ad9",
+        "resources": [
+          "conversation.scene",
+          "lines.json",
+          "onscreens.json",
+          "quest_giver.journal",
+          "quest_giver.questphase",
+          "subtitles.json",
+          "vomap.json",
+          "voss.lipmap",
+          "voss_conversation.anims",
+          "voss_wait_pose.ent",
+          "vossbriefing01.wem",
+          "vossbriefing02.wem",
+          "vossbriefing03.wem",
+          "vossbriefing04.wem",
+          "vossbriefing05.wem",
+          "vossbriefing06.wem"
+        ],
+        "roundtrip_validated": true,
+        "extracted_resource_bytes_compared": true,
+        "authored_inputs": {
+          "assets/quest_giver_test/contract.json": "162089643dd23bb0c8a3cefea6596b6f18378bb8df6efce48049eaac87362b6f",
+          "assets/quest_giver_test/reference-templates.json": "28a9868d2f233355b057cc3ae6c56d06e9a96a37591a6f52eb3608f7b05568a7",
+          "assets/quest_giver_test/presentation-templates.json": "42ab461905034d1a89b7b4ca959e55cd64c4fd3378b1df5b36eb861abc458e47",
+          "assets/quest_giver_test/sms-templates.json": "6b0a5ecae835db197b083eff69fa7be70b18bb482cf5d814a62df4475355c228",
+          "assets/quest_giver_test/subtitle-controller.reds.template": "9b29e1e08d4fe2af22f597d85b975ff9725c5b337f6b465845baf359ff260aba",
+          "assets/quest_giver_test/scene-id-reference.json": "2dcc4348ddedf1e30cf51d4766586c8a0e44e5313f35a5cb0cb3eb7c15db9264",
+          "assets/quest_giver_test/media/manifest.json": "e3c6fe1cf775870dfde81a51bf1ec37224771ced968c75b4d49c366a0f33174a",
+          "assets/quest_giver_test/media/vossbriefing03.wem": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
+          "assets/quest_giver_test/media/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+          "assets/quest_giver_test/media/vossbriefing02.wem": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547",
+          "assets/quest_giver_test/media/vossbriefing05.wem": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627",
+          "assets/quest_giver_test/media/vossbriefing01.wem": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb",
+          "assets/quest_giver_test/media/vossbriefing06.wem": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8",
+          "assets/quest_giver_test/media/vossbriefing04.wem": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5",
+          "assets/quest_giver_test/media/source/Voss03.anims": "bf33d634d8e29dfce0d6e007734bda484755ffdd410b79c127a727ae9389749c",
+          "assets/quest_giver_test/media/source/Voss01.anims": "5b46cb9d3ff3bc30a87a79511ba3eb1de8edc5f5497546a929bfdccda862e35c",
+          "assets/quest_giver_test/media/source/Voss02.anims": "7ebc3cc60cc1c86039c2d4b9ea7d544a4cfaf52ebc8c8482f107225384ba682d",
+          "assets/quest_giver_test/conversation.scene.json": "c7fe452d4769aa6e4ca1e392b8db034860b1f764f1b566133fb4c35c4dc1f2a9",
+          "assets/quest_giver_test/quest_giver.questphase.json": "05c90d798510809c5771377e652d0e51d5082870231e1f0daa966e4138073141",
+          "assets/quest_giver_test/quest_giver.journal.json": "07859cb8513a6852b1a652f65bbbd59423a3451d078df0e98252af3b2ab5db81",
+          "assets/quest_giver_test/onscreens.json.json": "5c0fb4fee610113c957f1fb6827454b824d0dced746e7f2aa2e982bc327d9601",
+          "assets/quest_giver_test/lines.json.json": "604910f2220b71266c6a25c07d35cb9fb7b250cbb7862a07c7d5a2c1b62cf652",
+          "assets/quest_giver_test/subtitles.json.json": "e1ae02bb5803839e42b717f4b55948e3c013d0e47c7e5c76a5b5431c251f78b6",
+          "assets/quest_giver_test/vomap.json.json": "166498a6d2867e3b2524fd22250063677a019b29620171a8aa834682ccfe35c7",
+          "assets/quest_giver_test/voss.lipmap.json": "1b2596d14516c9d6197c392e3d304bf3fc86fecdd89301871249ed3c5681ca15",
+          "assets/quest_giver_test/voss_wait_pose.ent.json": "d8a3fbd7652e686e8460bec11d8eceeafa43d4755378ae3157441d920af0ef3c",
+          "assets/arrest/arrest_workspot.ent.json": "9f5696eb3d574acc19f3660f15c28631baf7a0dccc253db6c37653708b63fe58"
+        },
+        "actual_game_validation": false
+      },
+      "actual_game_validation": false,
+      "previous_scene_membership_false_rejection_reproduced": true,
+      "background_scene_membership_allows_start_and_greeting": true,
+      "actual_dialogue_and_restricted_tiers_block_both_entry_points": true
+    },
+    "voss_media": {
+      "audio": {
+        "Voss01": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 611712,
+          "duration_seconds": 13.871020408163265,
+          "audio_packets": 1047
+        },
+        "Voss02": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 883584,
+          "duration_seconds": 20.035918367346937,
+          "audio_packets": 1585
+        },
+        "Voss03": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 425088,
+          "duration_seconds": 9.639183673469388,
+          "audio_packets": 727
+        },
+        "Voss04": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 1198080,
+          "duration_seconds": 27.16734693877551,
+          "audio_packets": 2144
+        },
+        "Voss05": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 883584,
+          "duration_seconds": 20.035918367346937,
+          "audio_packets": 1602
+        },
+        "Voss06": {
+          "codec": "Wwise Vorbis 0xFFFF",
+          "channels": 1,
+          "sample_rate": 44100,
+          "sample_frames": 467712,
+          "duration_seconds": 10.605714285714285,
+          "audio_packets": 797
+        }
+      },
+      "total_voss_audio_seconds": 101.35510204081632,
+      "animation_payloads_preserved": true,
+      "voice_entries": 6,
+      "native_v_string_ids": [
+        "1938843197804515328",
+        "1895381798296993792",
+        "1938900123686932480",
+        "1714373979483803648"
+      ],
+      "shared_event_lead_in_ms": 300,
+      "complete_audio_per_turn": true,
+      "player_voice": true,
+      "player_guards_unchanged": true,
+      "grounded_private_pose_helper": true,
+      "no_scene_pose_restart": true,
+      "actual_game_validation": false
+    },
+    "voss_subtitles": {
+      "subtitle_parts": {
+        "Voss01": [
+          {
+            "start_seconds": 0,
+            "text": "V. Glad you could make it. Lieutenant Mara Voss, NCPD."
+          },
+          {
+            "start_seconds": 5.08,
+            "text": "I've been going through your recent scanner reports. You've been rather busy."
+          },
+          {
+            "start_seconds": 9.64,
+            "text": "Some of your methods are... unconventional. Care to comment?"
+          }
+        ],
+        "Voss02": [
+          {
+            "start_seconds": 0,
+            "text": "Of course not. Let's make sure the paperwork continues to reflect that."
+          },
+          {
+            "start_seconds": 5.56,
+            "text": "I'm investigating a man with connections to Arasaka. A contractor who helped make two witnesses disappear."
+          },
+          {
+            "start_seconds": 12.46,
+            "text": "I had enough evidence to bring him in. Unfortunately, the case was closed before my request for a warrant even reached a judge."
+          }
+        ],
+        "Voss03": [
+          {
+            "start_seconds": 0,
+            "text": "If anything, corruption's become rather more efficient."
+          },
+          {
+            "start_seconds": 4.14,
+            "text": "The people responsible know exactly which strings to pull. And who's holding the other end."
+          }
+        ],
+        "Voss04": [
+          {
+            "start_seconds": 0,
+            "text": "A few of us, yes. Unfortunately, being honest doesn't make you particularly influential in this department."
+          },
+          {
+            "start_seconds": 8.3,
+            "text": "The contractor is carrying an encrypted data shard. Transaction records, names, dates. Enough to connect him to the disappearances."
+          },
+          {
+            "start_seconds": 17.26,
+            "text": "I need that shard, V. But there's something else."
+          },
+          {
+            "start_seconds": 20.86,
+            "text": "I need you to eliminate him. Permanently."
+          },
+          {
+            "start_seconds": 23.96,
+            "text": "This isn't an arrest. I'm asking you to do wet work."
+          }
+        ],
+        "Voss05": [
+          {
+            "start_seconds": 0,
+            "text": "He'll be moving through a public area. There may be witnesses, and I can't prevent patrol officers from responding if someone calls in a shooting."
+          },
+          {
+            "start_seconds": 8.7,
+            "text": "But once it's over, I'll do everything in my power to make sure your name disappears from the incident report."
+          },
+          {
+            "start_seconds": 15.42,
+            "text": "I can't promise you a clean escape. Only that I'll do what I can afterward."
+          }
+        ],
+        "Voss06": [
+          {
+            "start_seconds": 0,
+            "text": "Good. I'll send you his location."
+          },
+          {
+            "start_seconds": 2.6,
+            "text": "Retrieve the shard before anyone else gets their hands on it."
+          },
+          {
+            "start_seconds": 6.28,
+            "text": "And V? Whatever happens out there, we never had this conversation."
+          }
+        ]
+      },
+      "subtitle_delay_ms": 1000,
+      "voss_turns": 6,
+      "caption_blocks": 19,
+      "complete_original_media_per_turn": true,
+      "native_ui_wrapper_executed": true,
+      "original_method_once_per_line": true,
+      "exact_private_actor_text_stage_scope": true,
+      "line_metadata_and_duration_preserved": true,
+      "stale_reuse_cancel_completion_detach_and_destroy_guards": true,
+      "native_font_speaker_and_settings_retained": true,
+      "actual_game_validation": false,
+      "native_delay_pause_and_rendering_require_game_check": true
+    },
+    "scene_ids": {
+      "reference_commit": "4aeaad5d235e3a0244c0f1857757d1b01cbcd58e",
+      "reference_blob": "82f4a677128dff4765fe66276c7eefa8b8b2ce2d",
+      "previous_v019g_first_item_id": 100001,
+      "previous_type_byte": 161,
+      "previous_array_index": 390,
+      "previous_v019g_invalid_layout_rejected": true,
+      "corrected_packed_dialogue_ids": [
+        1,
+        257,
+        513,
+        769,
+        1025,
+        1281,
+        1537,
+        1793,
+        2049,
+        2305
+      ],
+      "dense_scene_node_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "all_dialogue_and_graph_references_checked": true,
+      "all_44_other_native_scripts_and_all_media_unchanged": true,
+      "only_captions_timing_and_scoped_idle_request_excluded_from_baseline_comparison": true,
+      "actual_native_crash_reproduced": false,
+      "actual_game_validation": false
+    },
+    "voss_timing": {
+      "baseline": "a890a40a9aafb4c6ebf37975d7465bfcf8339cec",
+      "timeline": [
+        {
+          "turn": "Voss01",
+          "event_at_seconds": 0.8,
+          "audio_seconds": 13.871020408163265,
+          "latest_modelled_voice_end": 16.671,
+          "next_turn_at_seconds": 17.45
+        },
+        {
+          "turn": "Voss02",
+          "event_at_seconds": 22.25,
+          "audio_seconds": 20.035918367346937,
+          "latest_modelled_voice_end": 44.286,
+          "next_turn_at_seconds": 45.067
+        },
+        {
+          "turn": "Voss03",
+          "event_at_seconds": 51.367,
+          "audio_seconds": 9.639183673469388,
+          "latest_modelled_voice_end": 63.006,
+          "next_turn_at_seconds": 63.784
+        },
+        {
+          "turn": "Voss04",
+          "event_at_seconds": 69.084,
+          "audio_seconds": 27.16734693877551,
+          "latest_modelled_voice_end": 98.251,
+          "next_turn_at_seconds": 99.035
+        },
+        {
+          "turn": "Voss05",
+          "event_at_seconds": 99.335,
+          "audio_seconds": 20.035918367346937,
+          "latest_modelled_voice_end": 121.371,
+          "next_turn_at_seconds": 122.152
+        },
+        {
+          "turn": "Voss06",
+          "event_at_seconds": 130.452,
+          "audio_seconds": 10.605714285714285,
+          "latest_modelled_voice_end": 143.058,
+          "next_turn_at_seconds": 143.836
+        }
+      ],
+      "scene_seconds": 143.836,
+      "modelled_startup_delays_seconds": [
+        0,
+        0.5,
+        1,
+        1.5,
+        2
+      ],
+      "no_overlap_with_reported_two_second_startup_envelope": true,
+      "previous_scene_rejected": true,
+      "caption_blocks": 19,
+      "minimum_caption_hold_seconds": 3.1,
+      "all_seven_media_files_and_four_native_v_lines_byte_identical": true,
+      "actual_game_voice_completion_observed": false,
+      "actual_game_validation": false
+    },
+    "voss_pose_idle": {
+      "baseline": "e554a51015ba8fbd302e4c581ec839c522e68704",
+      "old_controller_lacks_idle_request_in_moving_workspot_model": true,
+      "one_idle_only_request_after_private_pose_active": true,
+      "request_function": "IdleOnlyMode",
+      "native_enum_value": 3,
+      "exact_private_npc_tag_record_and_stage_scope": true,
+      "waiting_dialogue_and_post_dialogue_model_held": true,
+      "no_workspot_restart_jump_teleport_or_repeated_repair": true,
+      "no_device_user_mapping_required": true,
+      "cosmetic_failure_retains_quest_actors_and_voice_flow": true,
+      "existing_cleanup_and_replay_retained": true,
+      "v019h_scene_media_caption_script_and_timing_byte_identical": true,
+      "actual_native_idle_mode_rendering_confirmed": false,
+      "actual_game_validation": false
+    },
+    "off_the_books": {
+      "actual_native_lua_events_and_shared_marker_executed": true,
+      "original_ten_turn_briefing_handoff_executed": true,
+      "native_readable_auto_consumed_but_receipt_persists": true,
+      "true_death_required": true,
+      "native_hit_and_crime_handlers_preserved": true,
+      "private_guards_defend_on_owned_hit": true,
+      "conditional_escape_and_return_executed": true,
+      "save_transient_reset_no_duplicate_actors": true,
+      "accepted_delete_requires_detach": true,
+      "geometric_checks_before_creation": true,
+      "manual_waypoint_and_payments_unchanged": true,
+      "native_record_and_readable_guards_executed": true,
+      "roundtrip_archive": {
+        "archive_path": "archive/pc/mod/NCPDPatrol_OffTheBooks.archive",
+        "archive_sha256": "070de6ad671d190deeeced7d579aea1a5a74e852a63c43aa7468f925df8cc69c",
+        "resources": [
+          "off_the_books.journal",
+          "onscreens.json"
+        ],
+        "roundtrip_validated": true,
+        "extracted_resource_bytes_compared": true,
+        "authored_inputs": {
+          "assets/off_the_books/contract.json": "168d36bb9c43871de9e4e762929155f99d09df401ab40d755d544f0dbb4f3c2c",
+          "assets/off_the_books/records.json": "769c5e7db2f58c59160634fcaf146a0110e7eb40ab2dc4730ab261fdf0bf4201",
+          "assets/off_the_books/off_the_books.journal.json": "13450c8daa3c64166a19e1402026fac014aa34bcce9f62de7b6172cf3aa1f749",
+          "assets/off_the_books/onscreens.json.json": "63501b9ce3a5d4c3d47e1c03d40ccd2b6a7e38af4a111726bc5343af2583764e"
+        },
+        "actual_game_validation": false
+      },
+      "actual_game_validation": false
+    },
+    "voss_retention": {
+      "voss_same_managed_pair_after_restore": true,
+      "briefing_not_replayed": true,
+      "return_arrival_fact_and_future_debrief_boundary": true,
+      "transient_pose_failure_retains_voss": true,
+      "unloaded_same_entity_enabled": true,
+      "missing_created_role_never_duplicated": true,
+      "partial_creation_recovers_without_duplicates": true,
+      "shard_seed_failure_never_grants_player_item": true,
+      "explicit_clear_and_shutdown_boundaries": true,
+      "orphan_helper_removed_before_missing_pair_rebuild": true,
+      "previous_completed_briefing_recovery_deletion_reproduced": true,
+      "actual_game_validation": false
+    },
+    "continuation": {
+      "reported_v020a1_journal_validation_deletion_reproduced": true,
+      "old_native_default_return_cancellation_reproduced": true,
+      "both_native_return_ports_use_actual_final_receipt": true,
+      "voss_retained_during_pending_or_rejected_journal": true,
+      "parent_and_description_activation_before_objective": true,
+      "missing_dependency_retries_with_specific_reason": true,
+      "same_pending_cycle_recovers_without_duplicates": true,
+      "explicit_cancel_survives_reload_and_new_briefing_rearms": true,
+      "first_quest_completion_retried_without_replaying_speech": true,
+      "early_return_cannot_fabricate_briefing": true,
+      "actual_game_validation": false
+    },
+    "encounter": {
+      "pinned_game_methods_executed": 26,
+      "native_tier2_empty_hands_and_weapon_ready_failure_reproduced": true,
+      "actual_three_psm_decision_wrappers_executed": true,
+      "scope_exclusions_executed": 27,
+      "native_exploration_reset_and_weapon_ready_listener_executed": true,
+      "native_restrictions_resume_outside_scope": true,
+      "native_tier_request_never_modified": true,
+      "hooks_never_write_psm_blackboards": true,
+      "quantity_without_native_loot_quality_failure_reproduced": true,
+      "actual_native_loot_refresh_executed": true,
+      "event_acceptance_distinct_from_readback": true,
+      "only_observed_native_loot_layer_reports_available": true,
+      "missing_components_and_rejected_events_do_not_claim_success": true,
+      "bounded_refresh_and_reload_rebind": true,
+      "actual_item_event_required_no_kill_grant": true,
+      "shard_and_actor_not_duplicated": true,
+      "save_transient_resets_before_and_after_pickup": true,
+      "wanted_escape_and_return_preserved": true,
+      "all_first_dialogue_assets_and_existing_npc_item_fields_retained": true,
+      "native_zone_sender_identified": false,
+      "rendered_native_loot_ui_verified": false,
+      "actual_game_validation": false
+    },
+    "death_loot": {
+      "exact_v020c_live_one_dead_zero_refresh_zero_reproduced": true,
+      "inherited_empty_loot_table_identified": true,
+      "private_native_loot_table_exactly_one_evidence": true,
+      "normal_native_loot_predicates_and_real_item_receipt_executed": true,
+      "existing_empty_saved_corpse_migration_executed": true,
+      "migration_one_use_and_grant_readback_separate": true,
+      "native_generation_wait_and_rejection_bounded": true,
+      "duplicate_corpse_copy_trimmed_without_player_grant": true,
+      "pending_pickup_confirmed_removal_and_acquired_guards": true,
+      "same_saved_actor_before_after_pickup_no_duplicate": true,
+      "all_weapon_override_code_byte_identical": true,
+      "actual_native_generation_internals_emulated": false,
+      "actual_game_validation": false
+    },
+    "receipt": {
+      "exact_v020d_readable_zero_quantity_and_journal_only_stall_reproduced": true,
+      "incoming_item_identity_saved_before_original": true,
+      "zero_quantity_real_item_event_accepted": true,
+      "actual_pinned_native_read_action_and_scoped_wrapper_executed": true,
+      "unique_readable_journal_and_player_possession_readback": true,
+      "first_cycle_existing_save_recovery": true,
+      "old_history_and_repeated_cycle_baselines_do_not_auto_complete": true,
+      "empty_corpse_never_sufficient": true,
+      "native_handlers_once_and_foreign_main_player_guards": true,
+      "conditional_escape_return_and_delayed_journal_retry": true,
+      "receipt_survives_transient_reload": true,
+      "no_new_actor_or_item_or_reward": true,
+      "confirmed_weapon_and_death_loot_implementation_unchanged": true,
+      "actual_native_event_delivery_verified": false,
+      "actual_game_validation": false
+    },
+    "wanted": {
+      "one_native_heat3_quest_request_per_death_cycle": true,
+      "native_queue_and_handler_sources_executed": true,
+      "higher_wanted_levels_not_lowered": true,
+      "no_forced_grey_stars_or_cooldown_override": true,
+      "evidence_still_required_then_escape_and_return": true,
+      "no_reapplication_after_escape_or_transient_reload": true,
+      "existing_dead_legacy_saves_not_retroactively_pursued": true,
+      "alive_legacy_encounters_arm_for_future_death": true,
+      "pause_world_duty_cancel_and_missing_service_guards": true,
+      "confirmed_loot_combat_and_events_unchanged": true,
+      "actual_police_response_and_cooldown_verified": false,
+      "actual_game_validation": false
+    },
+    "audio_mix": {
+      "baseline": "a70f6c697ec39ef502b8e3bec5f610a33b96b4a3",
+      "ten_private_line_contexts_changed": true,
+      "all_other_scene_fields_and_timing_identical": true,
+      "six_voss_and_four_v_lines_covered": true,
+      "all_media_lipsync_captions_and_text_identical": true,
+      "compiled_archive_roundtripped_and_extracted": true,
+      "native_vo_context": "Vo_Context_Minor_Activity",
+      "global_mix_and_volume_settings_modified": false,
+      "native_mixer_cause_confirmed": false,
+      "actual_game_validation": false
+    }
+  },
+  "changed_payload": [
+    "README.txt",
+    "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua",
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/off_the_books.lua",
+    "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds"
+  ],
+  "new_install_files": [],
+  "quest_giver_native_api_version": 5,
+  "off_the_books_native_api_version": 6,
+  "native_three_star_quest_request_once_at_target_death": true,
+  "higher_wanted_not_lowered_and_native_cooldown_untouched": true,
+  "dead_legacy_saves_do_not_receive_a_retroactive_chase": true,
+  "actual_evidence_acquisition_still_required_before_escape_or_return": true,
+  "confirmed_readable_receipt_fix_preserved": true,
+  "confirmed_death_loot_and_weapon_implementations_unchanged": true,
+  "existing_quest_facts_and_real_wanted_escape_return_preserved": true,
+  "only_ten_private_vo_contexts_and_scene_cache_hash_changed": true,
+  "first_scene_voice_lipsync_captions_and_timing_byte_identical": true,
+  "nine_other_archives_byte_identical": true,
+  "all_54_officer_down_sites_unchanged": true,
+  "production_dispatch_duty_and_reward_career_code_unchanged": true,
+  "browser_extension_still_optional": true,
+  "actual_game_validation": false,
+  "actual_native_police_response_and_cooldown_verified": false,
+  "audio_context_change_experimental": true,
+  "audible_ambience_fix_verified": false,
+  "observed_string_operator_compile_error_guard_retained": true,
+  "game_checks_required": [
+    "Install full 131-file package and fully restart the game",
+    "Replay or use a save before Voss briefing: listen to ambience before/after both speakers and confirm all ten voices/lipsync/timing",
+    "Use a save before target death for the new chase; killing the contractor raises native heat to three stars once",
+    "A higher wanted level stays higher; unconscious targets and unrelated NPC deaths do not trigger this report",
+    "Retrieve remains active until Take or Read; native wanted then selects Escape; cool off normally and Return becomes active",
+    "Save/load during pursuit and after escape: no renewed wanted request, duplicate item or dialogue replay",
+    "An existing save whose contractor is already dead does not gain a new chase on upgrade"
+  ],
+  "zip_path": "releases/NCPD_Patrol_v0.20f_Wanted_Dialogue_TEST.zip",
+  "zip_bytes": 3187211,
+  "zip_sha256": "8fdc134cec93d6e22f092c60da3da23a011994524bd1e593a003299f1da305bf",
+  "zip_git_blob": "ba195d977be1cc019382d4f38eb1c164d9a5cd7c",
+  "files": {
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_discovery.lua": {
+      "sha256": "917d4b4f5889b74fc1292d6e3ef176b9261791e73ab66e821b4255247b13c519",
+      "git_blob": "e4e6fbf04f58878e8f5036df89971bcaec3df3ea"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/partner.lua": {
+      "sha256": "0d54721733e30d4eb17a85128d8a2ffe3ae1040d8b9ef7a844d79fbd7f09efbc",
+      "git_blob": "f28fa3594fbaeb61888062bc6eb1368c8726c702"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup.lua": {
+      "sha256": "92fe41ef9358d6f1774623a9cfb64f2bc1728b10d20e791caa46b9dd7999bc1e",
+      "git_blob": "c9d6547da06730c0ba82e43dc2b6416bb743864a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip.lua": {
+      "sha256": "7e4b21a50b39788026877ce1822f8fea92a5cb34dca7bfd6900025c44bb4a16b",
+      "git_blob": "0ba9d53846c586bdf937755e2d513933439f0074"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_staging.lua": {
+      "sha256": "1fd3ae3487f8b04d6c2da568bb9c7d9d50225561ae4ce8c8a1353738ddc5a6f0",
+      "git_blob": "c2567940b5738df607c48faf47a2afeb5f4bc955"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ready.lua": {
+      "sha256": "ea8eff556c9c6fe685a7d315999dfac839dd02d652576510068d7387d144f5db",
+      "git_blob": "ee3290808e300b080b203299c62033d08fe31891"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_settling.lua": {
+      "sha256": "1268cc205c3c29d76f0fd207ba73b8592b7ccca17466220d2fa35d829f9a7738",
+      "git_blob": "335371b3527b92961ee4ad788668fa64701eab9f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_discovery_sites.lua": {
+      "sha256": "3bccf79235f16dc9343c0598a77adf9339291f9085842a76028335adc26b409d",
+      "git_blob": "e26119c7f047c95bf94701f128cbe910b67daeb7"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_location_policy.lua": {
+      "sha256": "0ea5fefc98ba058b156dca5aee30cdc3c5969255281fa64f00135f7af086cf8b",
+      "git_blob": "1099663a833468c2af955681c158a280e4f2cfc8"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cet_ui.lua": {
+      "sha256": "927c38f53b00cacd4aa4f9cd69cc098cf23f87c39811dec9d5edffa6c88d2b30",
+      "git_blob": "30b704b384a35ba83b69ab783741c6c7b94b9c52"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/off_the_books.lua": {
+      "sha256": "b440d7def3eecd791892dceccd38c7e352a8bc2700d0460da4df8e2d12433234",
+      "git_blob": "1eb455bf5cbf80601b619c974eb7e67c27253e1d"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey.lua": {
+      "sha256": "6cc211763b2e568e4dee8bd15e43b3238c2e001aad2431f99f956bbe95506c9d",
+      "git_blob": "dfd076401216c3c5120aa7e22bc588e908888de1"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_giver_test.lua": {
+      "sha256": "39e6d803a820470695a6b46c947d862facb5a45c51610a994ffb3e0bc26488c3",
+      "git_blob": "645a847ffc0c18ff1f516d283c00b414d6c0fff8"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_log.lua": {
+      "sha256": "9c580a3fd2b382813d1bdfbea52a5daa341e829c08d6d5b0bc5aed1888a01e2b",
+      "git_blob": "f23e079cc6086e6b268e7fee71955dd35868f168"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_navigation.lua": {
+      "sha256": "88c2b031a304e9133d2417924308724214ef5069139c304677844b0a0cdfccd4",
+      "git_blob": "259442880e7046f59716363960494d5ce276cc07"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down.lua": {
+      "sha256": "413719ef7a43c185e6bef25e5a95029d79e0e74a45221a5b5c338d1cb7f508e2",
+      "git_blob": "efeb1493f6ffecb6fdd5cbffd1b0713aecb433a9"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/backup_approach.lua": {
+      "sha256": "cce45e5cb1961521df2902781275c1144f066240653ba470b5292b598a0ae0e1",
+      "git_blob": "91708bd11d3b22a5b8164bced19b943f79358d39"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_selection.lua": {
+      "sha256": "e03e5258ac5d7237f1f54e2105cfa32ba9409d5e046e024a44df24a9749a1aec",
+      "git_blob": "7a7a0073d3cd00d4dcaf7b642512de5922fb54dd"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_functional.lua": {
+      "sha256": "b5d51d6137811c22048afc6229135f57c6270f5af686c0a50558735fdf3050cb",
+      "git_blob": "626b4d6c289d65e75213bd2eb0845930e35814ce"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_store.lua": {
+      "sha256": "ac4b8dd8a28e2a467f985a955547ad61778a740a5ff16a5edabce63f749bd95b",
+      "git_blob": "3912d73e30bc006ce201b7cccda1cb60088b105a"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/trunk.lua": {
+      "sha256": "b8b3b4912dc5ad9a3768e835a7489d90e36ee17b515c3662f3028acca261158f",
+      "git_blob": "027b5b14d75b3143f1a9d40372521256eca1a0fa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_ambush.lua": {
+      "sha256": "03c4c10fc1a2a49eb02a7565e3b1787e0db797b53e0d2ceb504f89a694e06d9d",
+      "git_blob": "58be71bd518582cff6f98c27a52bf6ff32115afa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho.lua": {
+      "sha256": "74cb89e32a34b772068722033beb2ce79a2ca2b4a04e5b50f978d8be5c8a1c78",
+      "git_blob": "4840d40b5d83d38b050a0f97b92809baec29de79"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/scene_survey_sites.lua": {
+      "sha256": "576b2c26e566b0f45baedc55d6bfcc6cf55773382f7fb144d34120da910d12ce",
+      "git_blob": "2f5e60021d8d6ecf07afb5ab4fb971d226e7c41d"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/boarding.lua": {
+      "sha256": "e69c46604086123f0ec75b542a97ae9b9c3f28ba3770666a5e38370242b56f35",
+      "git_blob": "1b10ff2d0a4d2ca8d15419ae6e2fc71a6dd6934e"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_hud.lua": {
+      "sha256": "6de86a32c2bc07afd96917a09c52f0b6d41d2ef78fdce04f989220c775009987",
+      "git_blob": "245d936ddad376a721bf685ef3901a04fced67f6"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vehicle_radio.lua": {
+      "sha256": "27d2eecef153e2cc828b004e17232504a0197686287528728c2dc38e1176b247",
+      "git_blob": "59bb8050d5f84babc54bd31ece8828a0fe0c3a85"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_layout.lua": {
+      "sha256": "c7dc9712f0e726f4b31d51343a0ee4e2b71fe5379b4a75457bb065a10a39f0ae",
+      "git_blob": "95c3e4d266f45abb813a66cc7fdc74e36454f330"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/quest_marker_probe.lua": {
+      "sha256": "f634b70368dafeb736f7d900f8f9d2f25303ac8948283eac50fa989c3d5d1cf8",
+      "git_blob": "0b1f927563ed6d6c905b05d6b1065c24a0895719"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/cyberpsycho_variants.lua": {
+      "sha256": "aedf8dd3a1a22deb4d2d3616f83d0e5a290d5faba513606154ea615c735221c8",
+      "git_blob": "6b7bd71c949050ee2a94a443bfde388137a9fa06"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scheduler.lua": {
+      "sha256": "93ca728d6b0b017775b509bdf6a43d4318192e5b9884981b69218ca7b1fbf0cb",
+      "git_blob": "0e9cfeb01b11f8901c745961c1ed44a3f2c10e76"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_sites.lua": {
+      "sha256": "ac1280a62c3cd83555d04a8dcab3afd720ea1e6e63d6733529ad857ea885eac8",
+      "git_blob": "93fd601412429fdb3e1f7c0e893a758af124f546"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_scanner.lua": {
+      "sha256": "360a1c6cb62b391733244a80b9353809b6b91dbbcb90604edb7e1b82e6dcaeac",
+      "git_blob": "0da3d9b34f8276a23d24a3af09c7c8b7266c09e0"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_results.lua": {
+      "sha256": "be175d405befc257169c90d81b3799b9a296f053266e3a7656ede6bfc90cf558",
+      "git_blob": "154d89b29dae436944a2c4e47d6e0b687aeb96d3"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_scene.lua": {
+      "sha256": "555ab4ac37dce7bb0fdf8f7dfa117c844fafd82fb138bc53f32a99664f1df5fa",
+      "git_blob": "2c8a73a8ad527afcbf26cc0da4ad483a4cb4505b"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/marker_catalog.lua": {
+      "sha256": "cf02b675dc4ef8c34f513c0d2287b8f9071d78443db0e3022a556f549fcefcda",
+      "git_blob": "5fdffbae8cca74c84324f1ee46c4d951d308a53f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/init.lua": {
+      "sha256": "4aab8aa9fc760d5acef90cf0a7e235952d89788950fcd3140d15dcb21678c507",
+      "git_blob": "5ea126d4ed8713e78d704a70b13e76c54f33f3b7"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_route_catalog.lua": {
+      "sha256": "566bf23af2572e38ed130791aaf58a7a6292b05725a16b8213169feedc226399",
+      "git_blob": "1881e4029bcda16a599c4740e8fe34ef79f33538"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_locations.lua": {
+      "sha256": "e1e28612db040e9442383411de59b650381ba39c5594f58cabcf67f6ad97f342",
+      "git_blob": "ea3412d0ef884ed86b730180f630f5e6fca68d15"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_down_actors.lua": {
+      "sha256": "7642b53fefed721e5c392c8c6940353bfff310e012a05f578cf574afc3853fc5",
+      "git_blob": "67bc510aea2f4607154924f22fada8438efeb0fb"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_waypoint.lua": {
+      "sha256": "87e64c33354bb648f2b77b2b300eee7f260a6db23d8402426d26fdf6a83e15b5",
+      "git_blob": "7b5a620f5a7a3eb3724494c11e18e9979cc9b1c6"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/revive_probe.lua": {
+      "sha256": "eeedb79d403e27fabe60e51b71bdf6e5ca89fc76a38f7c5de4e18028c10c66c5",
+      "git_blob": "2175d5a833062f71053012fd8fb589887a169e61"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/vip_ambush_unit.lua": {
+      "sha256": "2ab2cf4c056a3a9460e667941201ca779bd2e776dc7890258c7585e9d10e81bd",
+      "git_blob": "a8693f611dc342f28822fa2a98770f2b61653fcb"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/arrest.lua": {
+      "sha256": "bec8799efb176db107bace5a76c1ef303f7701e9b7a913eccfaf3d5526b62434",
+      "git_blob": "d7a7a31b25edce5863067f6767f8e5bdfe9a52fa"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/officer_ai.lua": {
+      "sha256": "3db9487b965f2d30170d557d2e55dbfdf9f8ed7f2d83e9282b33124a1cb8732a",
+      "git_blob": "8e0aaf8c9a3044ae3ddd7c3d2dc303d5aa26b58f"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch_journal.lua": {
+      "sha256": "df636c851fa3c656c0199de0dd0c9ac2215ca68fd399406a549ae0e83d754615",
+      "git_blob": "f4ad3d1290101970b7f99466d66714e19d4d35cc"
+    },
+    "bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPatrol/dispatch.lua": {
+      "sha256": "668dd69462f973666809ef428bc0a4430c045aea87bb7bda592f7ab9c9b88607",
+      "git_blob": "cd9c33db091e8b528ee176e1a4e838e18a821ef0"
+    },
+    "r6/tweaks/NCPDPatrol_CareerVehicles.yaml": {
+      "sha256": "927e57f08ebae95cf7ecdad834045c12b1f0b7bf5972818c4137b42eba95cf67",
+      "git_blob": "7021dbb473218d422f10bf3cc2e3dba6da5476e6"
+    },
+    "r6/tweaks/NCPDPatrol_Interactions.yaml": {
+      "sha256": "64cad0f14d9394828d91ee522676a8bfc8517e5c9869472c8247211adbdea86b",
+      "git_blob": "6babbf3b26b0682fd876e1cd4ed86895ca6474a6"
+    },
+    "r6/tweaks/NCPDPatrol_Cyberpsycho.yaml": {
+      "sha256": "f5c9de109d62a7700c7ac3959c9ae044e16b41e5f2c1b3649da9e38cf19404e1",
+      "git_blob": "6c7b98d58800ebd71adca274a2b933ff8cf87370"
+    },
+    "r6/tweaks/NCPDPatrol_VIP.yaml": {
+      "sha256": "da362244c3b0af5c707b2a4778d65d6ec95e917a3332c57c2272142e790580ff",
+      "git_blob": "dcc7f6f937c36fe73a5ffb783ac90704d40d8773"
+    },
+    "r6/tweaks/NCPDPatrol_OffTheBooks.yaml": {
+      "sha256": "ef8f6e00c5a90f32c1175a453a33217f2437a80f5afa2df32fdbf6bdb1b887aa",
+      "git_blob": "e6cb7cc5f5cc312d94bb8b48b9ca34d5de376b88"
+    },
+    "r6/tweaks/NCPDPatrol_QuestGiverTest.yaml": {
+      "sha256": "59eae1951a6e7000a86bdd20fdcb9ddda7015cdc755a3cd84dc8712fdb17d57f",
+      "git_blob": "be6279e20734da477208d5397aef20072bc921a1"
+    },
+    "r6/tweaks/NCPDPatrol_PartnerDown.yaml": {
+      "sha256": "ca033f754f9bb0251af911b1a87531ff7b153e5ffb5399448f380de3f81003a6",
+      "git_blob": "5b0516c0e39951001e178127866c0fc8fc1c42cb"
+    },
+    "r6/tweaks/NCPDPatrol_OfficerDown.yaml": {
+      "sha256": "c93b1d4c97740e97f9896e7b4981b3cc012727129e60abf26c6828590dd0863b",
+      "git_blob": "0bed0fb7fedb0d1af30733129db50d999397f26b"
+    },
+    "r6/tweaks/NCPDPatrol_PoliceHella.yaml": {
+      "sha256": "42b287f1b376a78c93992b91a0ffdd967f368beb1a2e1d81bdbe010d0c5ab713",
+      "git_blob": "800dd4b66b4aa90f83edbdf6a6de8a46dd30d730"
+    },
+    "r6/tweaks/NCPDPatrol_Arrest.yaml": {
+      "sha256": "531829d1d7b97a3c25f35dd9e4fd8428c8b59c8a08acda19d3ac5da865704944",
+      "git_blob": "aad960c2c07fb5d284d0b3001425de713e70c1c9"
+    },
+    "r6/tweaks/NCPDPatrol_CareerWeapons.yaml": {
+      "sha256": "5ca13c688c15eb7b68d6bea8de2e60a97a89fb58f500d4bf8ce4eb283f690a83",
+      "git_blob": "15579feea82cb90686e292dab14c42e3832b6260"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds": {
+      "sha256": "4d7e96e44affe5333607d2ba178cf1f55f4323f35fc5ef1f38595beea56cdada",
+      "git_blob": "6d487b2b805c8986027801eddb0eb9381bfa594b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkInteractions.reds": {
+      "sha256": "ca29d42470fdba64834955dae242ad851fbb269d48110485d76488a4d4c7aa87",
+      "git_blob": "beb51041205890cc2a2bd96aafcf27f0e5e27b5b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds": {
+      "sha256": "9f154a01713360ce8e9dbcbed9c78cde543e11b1642b212f912d3583cb42c9f5",
+      "git_blob": "93b74182d9df4fe9a95558bc4b82a3a919dab3e2"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerData.reds": {
+      "sha256": "69419eda04ef658e1760c8e81431da539fbecbdb8ceab928e7c7344cfff78400",
+      "git_blob": "4b304f90263acdf3fea47fa5917fdb82683ed1a9"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTerminal.reds": {
+      "sha256": "078b09b6e05988023a30f7bb5a2bd3a24f3aed178cd481446d9d73e6b7d48d11",
+      "git_blob": "42665ed21bbcd8ccf2327aa73d424d83d0ffc6b5"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownInteractions.reds": {
+      "sha256": "29d4a210997ac725090d777f90f22f0ad1dd98afe4c752e3e697228920464a69",
+      "git_blob": "e9c36c1f266f651636d342d6e1864e1d31283f06"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds": {
+      "sha256": "29bd3deadb87b8b6f8a6b9a8500d5b869eeb1ef36de9a8509b0b1350df8820a0",
+      "git_blob": "72428db8741940c6a287c679c4aaf6f3eea7518f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds": {
+      "sha256": "e3a2c61d72ed0b8a6a8a8e9d52e93f11c6adad4401e8db8bed623fa34f0efdf7",
+      "git_blob": "14731dd6ae47e03b0248e22c85b09aeb0e40ae18"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerEquipment.reds": {
+      "sha256": "7d1a49d68a19e931d2cc3124278f64ed53d1711a5fab715f918e0254f7f08ea2",
+      "git_blob": "04d53737134ebe70dcdf825c5c0786bf06b0ab59"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolNotice.reds": {
+      "sha256": "047dd7803a7ff145d21323bc9e1fb18e12511e2871501b8a097e075d7cbeab49",
+      "git_blob": "34fbb8d66f8ca7b967319b704b2865dbf117b9e0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds": {
+      "sha256": "ec1e34bf7cfb18de259a70457c93b79fed2072ad6bac095af68d77db03344fab",
+      "git_blob": "127fe6d0593dfca3ae2faf942fa3e34675bd9ee3"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds": {
+      "sha256": "92d24ab9a9e7e801be4baef2ef76556b8f151fb74d8cdfc9182c49291fec633a",
+      "git_blob": "d84e6cb38038dd28deafc2cc693cae00ba692b75"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolPartnerSafety.reds": {
+      "sha256": "bd5a2e7546a26550a8bd9e8c956e3a477785ab91a6e424474cfd2966af618d08",
+      "git_blob": "3cfe008268734ce92a990a74cb682a150e0df562"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds": {
+      "sha256": "27ad822666c328ee5cd322d570ec105329dbef537e5ce187f18440b2b476f4a2",
+      "git_blob": "f25329e944ae86cf54333a6c27302f680809209f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds": {
+      "sha256": "d395deb6f96fc6890fd6dd86191d58612ddeffb5160f510ed9af7432a4f09ea7",
+      "git_blob": "e7cc4c01e62f818ee022a9e55e7b30a755454f8c"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds": {
+      "sha256": "1ff0c39f9979da2a562a442cbb3fef4aea110a44c3264a34bbb3c816d0cef3d7",
+      "git_blob": "819f63f6128b1f9d21dd0bd8470efce5c09bfdbb"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappinData.reds": {
+      "sha256": "3c035cad71334ce22f14e9ceface5c03ee25f60cecca161a495e10479c7f722a",
+      "git_blob": "d4703475800bce2721566dc3349c9dcb679afc8c"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds": {
+      "sha256": "130299c0336ef0ee434dec1f690edc614f93bb42f33a7e9270b10ab0c1b88169",
+      "git_blob": "ab3dd5e18ef49104e6bece670511382b8878779e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds": {
+      "sha256": "60448c85daa6aca9dffeb84f01aa801f1d1ce56cea0dfdbb87ef69165d860504",
+      "git_blob": "ad577f7c3a3c7366442fa20d6ecf826b62c40d2b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds": {
+      "sha256": "27ff7e1d7e4c6e877e12ce4e4cb99eb3751a058e7ab4f02dac8d0e106c1c18a7",
+      "git_blob": "f33ffa727bfad37cfcab58fd73636d4614beec5b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksCombat.reds": {
+      "sha256": "0abd8928f5ba898230380f18aebc7c23b8de1f6643e283a4846d5d6fc1591185",
+      "git_blob": "b407ffa00e25672781adfeb73c26d572a5e8ac8e"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkPopup.reds": {
+      "sha256": "bf21b27f456fc05e1dfcd442fe609e6345b8a60fcde70157515258f4e1d56a71",
+      "git_blob": "73c416cedd8ebddf2c4b16e661c7e5627aeba35f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestEvents.reds": {
+      "sha256": "1a9ec17af20b608d8fe0e1564f12e65f2f517b4ec3e15f80cc5cedf7ebadde66",
+      "git_blob": "22982b22ace05655dfbb1d3737122522f011a425"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolBeanBaggerSystem.reds": {
+      "sha256": "974883a30fe41e6bf13d44e33933e12ccabc78286c6dd3b6318d6bbdf07e7cc3",
+      "git_blob": "2c207653e0520c65753bd3b5ac2afb03492a6871"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds": {
+      "sha256": "8ec5c0830bc354e75117007888d5b78f23e1dd53b372e1e429a962484d2b1b33",
+      "git_blob": "972b3e7e689612b83eab1e17c32051eff40ccff7"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds": {
+      "sha256": "f2dff7910d464f4fd19d690178cecb220b98e05f838fa2ca9d9bce146b48a60b",
+      "git_blob": "fd578bcd6b3aef19b3cac4d73539cbece4169426"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds": {
+      "sha256": "f6e6e4921aa838f0fd5f3815b1d29e515ff9f30b651c8baec5582c4973fe6d8e",
+      "git_blob": "0ef57634cfa91ffa9b3a002613bd25c7ded70a4f"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksLoot.reds": {
+      "sha256": "e7b761f940bd62b19884e665579097cbc14a413c38489a083e3e7bda25fe0977",
+      "git_blob": "302b9672ff1a34609ad467c95fe174993a8d36e7"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolDispatchMappinData.reds": {
+      "sha256": "704d6b0462af918062b3fc9a2f2ca109c9ed3525f0d44a799a87713f34a067e4",
+      "git_blob": "2cda1031453b2325f60d68441ea082960c8c57ad"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds": {
+      "sha256": "5b05a5183d7ae85075dc37c5e36bb04653f355cc40f4b7ad7e1bca8a3c78503c",
+      "git_blob": "bf5fe9efd7bc40de2aee674df012876234a297bf"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds": {
+      "sha256": "d387650740ff2e16b62da1321adb70703312f7c6085e4b61cb580c38b7dd19a5",
+      "git_blob": "32a6cf01912d7f88dee1704c6b46b0e55aa7f502"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportInteractions.reds": {
+      "sha256": "97cf384182c4911de7fece043abb2a37757e86da51e521d9cc74c3a109541c82",
+      "git_blob": "c81d240b900dece23325208d20beca4a1372e0f6"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolBonusReceipt.reds": {
+      "sha256": "55fc73d9d2717c1b2a8dc32131c63c4e9fdc034ba5ddccf27ecdea712834cf5b",
+      "git_blob": "974e24d88c917f20e7c82ea3877115c00ac2c51a"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkSystem.reds": {
+      "sha256": "ec3e13d9536073df1eabbc19ede809fed886cf3579eb1cece4c382d2688d572b",
+      "git_blob": "18358acbf1f4a10f15a150982d0ab90bc9d32426"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds": {
+      "sha256": "21a413fba8cd92535d538e84149aacc591bfa141ac6b3183a6d572347c7103c9",
+      "git_blob": "27c73b29028f8a92dd90fa51d785a5e810bb610b"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds": {
+      "sha256": "7ed83f06ed114017f7eca7297320a3ae0ca46550d8f9a521e22a028e3eb62f60",
+      "git_blob": "9c1bfc6827691af3baac8ee308f5d39defdad047"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds": {
+      "sha256": "e1a041ae6c583d1558976f02aa76d1179608e820c92bd5733b1881e9da1ea9cb",
+      "git_blob": "de8da8b30887c9624aaa4e9e561d2c24d4205930"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds": {
+      "sha256": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "git_blob": "a08075b6347ab206a8e610c87cf445389eccc3ab"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds": {
+      "sha256": "6e97989c5985fa16c818883f3000a1ed93816c7c55d6f1eb7bcc754ab29e19b4",
+      "git_blob": "a8c5f502fff59e2d042e5bffd0bf9800475a8683"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolTrunkVehicle.reds": {
+      "sha256": "e11c9a72bf63d92414c2d632fc4eddcef82d152ac3c8c1b687b291767ed973c3",
+      "git_blob": "68777544d79983bbf50b30749ee4488523b11b6d"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds": {
+      "sha256": "b394d7b1475a08c8fc81d163aec6aff3da4229897de8c8dbb317c5403d995d28",
+      "git_blob": "65a0cc53ce02e471574e3205038e4901395bd97d"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds": {
+      "sha256": "5090ce3d884e70ad197b47ed3b26e11a4c759a100612c4d42b0bb8082bd24e55",
+      "git_blob": "e705d18aef039b4815e6acecb1792fbfecee51ab"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds": {
+      "sha256": "6d175847d0b37538b00d6c911afd93e2ade8c194a35f4ca453b3a9beb6294291",
+      "git_blob": "42910d9bb2a0141713fa2321f2c9ce44821cdd91"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds": {
+      "sha256": "81a385984fea45b44ae4c2b4f7cef124ff205992625ce1323857f0b29224c35f",
+      "git_blob": "c6f5659cd785a2f719bc4aa054fbc11411a1f502"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVoiceWindow.reds": {
+      "sha256": "8d4939c89098d4e3c20b3826e62e5ee3fe917741eec125b6dc5dde99b7b1f2bb",
+      "git_blob": "67fe01a02121fe384b32e6e7e561a4160a7243b0"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownCatalog.reds": {
+      "sha256": "4d1926d06ccf1bf30a9d6d4124cbb8fb8e1dbb838d2fb6b90336f020f98b023b",
+      "git_blob": "9deff2584523b0e4ee0d8447736f4cc67cebc2a1"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds": {
+      "sha256": "2475e69c56bee516235d45665f5b4702df3ebc5396df7b5a1f54a3cf82cbca14",
+      "git_blob": "0fc273ac1132be69c7b2e349c7b38af36670e5b3"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolRadioStep.reds": {
+      "sha256": "97cd25ca63e68604fb10f420510ca84fa4377bb9884bc84506a30c7dfd0d91e8",
+      "git_blob": "3fb8669ceb94e1139f3a3089636c38c98c8f5ac4"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": {
+      "sha256": "835684597041a0c1993733732e07d0e12ec24ab0a3977a0f5b8bf9425c5218e4",
+      "git_blob": "7cfb149e1bc15326eb21da24936f7b0e2f16e636"
+    },
+    "r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds": {
+      "sha256": "7a575720d318f60a19214a4fda450d2bdd55db8d4f5cea3a37a1627b484c0e79",
+      "git_blob": "bfbcdedc25c9362785c42f2974ba9bb4c5fa3538"
+    },
+    "r6/tweaks/NCPDBeanBagger/NCPDBeanBagger.yaml": {
+      "sha256": "8e80762296ba0847f412447dd8ceea46cf0d124a60b15776de207b06cb1b1cdd",
+      "git_blob": "d93927b2730cce854a1252c21a681c3c407ee070"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDown.archive": {
+      "sha256": "4c49fbe807d0c52b85c8f00eea8111c9f64791c2840c64ae112a10624800d684",
+      "git_blob": "c8ff91ed4781e1eb8997d4d6ae7e39b1353e8824"
+    },
+    "archive/pc/mod/NCPDPatrol_OffTheBooks.archive.xl": {
+      "sha256": "da817b96b15c8a673b02481a56970f819348b69ca588ce6c6f1af55df92d2ecd",
+      "git_blob": "158578d219e68f18a60e1fd1626a3e54abcb5f7a"
+    },
+    "archive/pc/mod/NCPDPatrol_OffTheBooks.archive": {
+      "sha256": "070de6ad671d190deeeced7d579aea1a5a74e852a63c43aa7468f925df8cc69c",
+      "git_blob": "e77734201a72409ec590e64b22a5d0de07b925e5"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive.xl": {
+      "sha256": "c2d20188e8a59c7f8b40e0470439433c3bea15bf4ae82076620d55217382ab20",
+      "git_blob": "24e1252f3bf72622ccb61fb10c61215b2edfd7ce"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive": {
+      "sha256": "930ac746ca49c65ed17f0a994adb224141e6b0d6210f669e905ddc36b0aca470",
+      "git_blob": "5c30bb18fd2c63ce9c5b13cc98b11a0bd20923de"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive": {
+      "sha256": "2be305a3a7f636999cfd859d3330ccf4aadf36d0b16d117aff46100ca8b66ad9",
+      "git_blob": "91e528d706243fc5edacb0c5a4aa51bfdbe0c0fd"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive": {
+      "sha256": "51855a3e56512ef64a3137ad4aa10d5b7742d3db52105a4122691a4c1f263826",
+      "git_blob": "3d39380d9fd9cad05e2e2579e06a38fb2c17c532"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive": {
+      "sha256": "ed5f603259e589fa92ca948f07456b40941f1567ef1fc643aa7b3c9b4150d286",
+      "git_blob": "155ed552da465ae77d2f703e88cf9178bf60c0c6"
+    },
+    "archive/pc/mod/NCPDPatrol_VIP.archive": {
+      "sha256": "54a8fca9629317494f216d5137537a71434f50d2fd065a52eae4647b70bcfbed",
+      "git_blob": "e80bc55b640d39d62cec78aa1d56a845529d2063"
+    },
+    "archive/pc/mod/NCPDPatrol_Cyberpsycho.archive.xl": {
+      "sha256": "61778904e186690f2e61c40b5b406db12fd96aed00639a4e4ea56c05baa89354",
+      "git_blob": "6d01010c2ec9e1df00c1fe36e90406cfee247b19"
+    },
+    "archive/pc/mod/NCPDPatrol_BeanBagger.archive.xl": {
+      "sha256": "0b7c257f3c540ba511d752e9b88d72c8985186bd12c894285071098ad04976c7",
+      "git_blob": "f39b46ca991b051835c48df2f294f857f8908294"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestGiverTest.archive.xl": {
+      "sha256": "daab9d53180814730fd6e1e99780962ee8d1a2f85c148e82b12b0072eac44ccc",
+      "git_blob": "8f22f0cfba74672294699008746c06728feecdfa"
+    },
+    "archive/pc/mod/NCPDPatrol_Dispatch.archive.xl": {
+      "sha256": "e9afcb8d4aceed644944b92ac8c0c58464698fce3903f5bd5da5e39dfe8ebf73",
+      "git_blob": "c9d5b69408f4bf97e05430be28dd5c2eb5b992f2"
+    },
+    "archive/pc/mod/NCPDPatrol_BeanBagger.archive": {
+      "sha256": "30f5e6ac997f96bda63a1d5c5a1ea2a36ec5d796abfe0d4485cc4bba1ed3690e",
+      "git_blob": "7dc9f145a25e7dff58fb78663185b3c9cae066c7"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive.xl": {
+      "sha256": "8e885068933790d1491ff85b2900a03b4275eea570d260f11b22ded469f1c55d",
+      "git_blob": "e96c2a97cc08eb79fe4136adfa627ec794889529"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDown.archive.xl": {
+      "sha256": "24957c413dd28de3844004ec4ace06e843f8f6da491cda9777e1b419b64c15d3",
+      "git_blob": "33265ec4f42112afa744fe6d99e91f11c40eaab9"
+    },
+    "archive/pc/mod/NCPDPatrol_Arrest.archive": {
+      "sha256": "906aba8def92a54553a1c1bff4afc490e71928ca2b7cf4233b8a566f75b432f3",
+      "git_blob": "25563f7e7f2135cd5f361a28df005a6eb7b31560"
+    },
+    "archive/pc/mod/NCPDPatrol_QuestMarkerProbe.archive": {
+      "sha256": "398bb3d05a80ad1a74df5cf9fe3ab93894578d2b058151db9c417b89481f41f5",
+      "git_blob": "67c815d71b2afbb13738e4741790268619ca86d1"
+    },
+    "archive/pc/mod/NCPDPatrol_OfficerDownSites.archive.xl": {
+      "sha256": "7a58a6cb528209dec72d8b07711d68935243a04e04f98520fce9e63a4e8bb781",
+      "git_blob": "45bc4d6718dddc04a92ff0c5f9e34adad07af0cb"
+    },
+    "README.txt": {
+      "sha256": "a5a3cb57661f517077e5babda97cde45bfcf904601240e0e2cdc4e66221205f3",
+      "git_blob": "6335be7ce0c404b4f149c555921048c2f8868a5c"
+    },
+    "LICENSE": {
+      "sha256": "a9ed5ae5bb42b98ca87edea112dda51683a6b46071f27811ae86daae35657f2e",
+      "git_blob": "547869b1c104b5a7680458b19c8e2bca54c9c803"
+    },
+    "THIRD_PARTY_NOTICES.txt": {
+      "sha256": "111f35ab825e05796213b9de12540e69d6a1cb46ee0aaaee26fe74b57c3b86c6",
+      "git_blob": "35a45812099aefd336f5f6d0bb304516d1fd8594"
+    }
+  },
+  "independent_asset_comparison": {
+    "base_commit": "a70f6c697ec39ef502b8e3bec5f610a33b96b4a3",
+    "baseline_archive_sha256": "f5c2dda803379719d2482bc2fc5e3ea5370018537f82223d0b1965abbda54cd2",
+    "archive_sha256": "2be305a3a7f636999cfd859d3330ccf4aadf36d0b16d117aff46100ca8b66ad9",
+    "resource_count": 16,
+    "changed_resources": [
+      "base/ncpd_patrol/quest_giver_test/conversation.scene"
+    ],
+    "fifteen_other_resource_bytes_identical": true,
+    "before": {
+      "base/ncpd_patrol/quest_giver_test/vossbriefing03.wem": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
+      "base/ncpd_patrol/quest_giver_test/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+      "base/ncpd_patrol/quest_giver_test/quest_giver.journal": "9fba0731b56bff001eafd907ce7b9486ac0d4db311994bfdec671e19793f25d1",
+      "base/ncpd_patrol/quest_giver_test/conversation.scene": "8d3bb4abd4aa087492cdd46a9b8a6e4d21f4b62a144c4ddfda2bc0964d133972",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing02.wem": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547",
+      "base/ncpd_patrol/quest_giver_test/vomap.json": "5ffda97d99628fcca28f37731efd9530270d345d2c220b73e303fba9d92e2196",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing05.wem": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627",
+      "base/ncpd_patrol/quest_giver_test/voss_wait_pose.ent": "6e6e4c2141ae5364e53043efa0047fb549aef26d4c5f6bde5e7e6e21094862f5",
+      "base/ncpd_patrol/quest_giver_test/lines.json": "6eb9532333c5e5d989cb6d73858d76ebbdab7e050af0f1180df40b2c141a398a",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing01.wem": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb",
+      "base/ncpd_patrol/quest_giver_test/quest_giver.questphase": "a620cfe7803209595376490c1ee8a377df81d17a6f9230c06e7c39fd8e4cd892",
+      "base/ncpd_patrol/quest_giver_test/onscreens.json": "4bbc2f3ea72b71db69b4658e91ed31b49e159a2e85bbeb60c10d708cc0b84f64",
+      "base/ncpd_patrol/quest_giver_test/subtitles.json": "fac54e42ce4b0bc4e04aec73c8eb58654dd50fc9118176ff8411af0378138424",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing06.wem": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8",
+      "base/ncpd_patrol/quest_giver_test/voss.lipmap": "827b44b709f838cecce68f8cc8a8d38a4513d5d8c4d55594af541fb528395a83",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing04.wem": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5"
+    },
+    "after": {
+      "base/ncpd_patrol/quest_giver_test/vossbriefing03.wem": "a88bc6b077b2828268c44c30846efe20c5d586345eda779dd1e5de04ff49cbc3",
+      "base/ncpd_patrol/quest_giver_test/voss_conversation.anims": "768e34a552163202f13cb63dbf8abddae2a8dd1cf5a4c89cb283a59de8586370",
+      "base/ncpd_patrol/quest_giver_test/quest_giver.journal": "9fba0731b56bff001eafd907ce7b9486ac0d4db311994bfdec671e19793f25d1",
+      "base/ncpd_patrol/quest_giver_test/conversation.scene": "35467d3522deecdb3c66cfe7751011512191010644b1b280781e5e445cf235d2",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing02.wem": "da4a6cd0d631233e1d19104bbbd1eef2148d7e4ad57e8bec260e535fd5c6f547",
+      "base/ncpd_patrol/quest_giver_test/vomap.json": "5ffda97d99628fcca28f37731efd9530270d345d2c220b73e303fba9d92e2196",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing05.wem": "b74566894ee277f2020ec050526a8145c59adc6eabd31143b1a66d090c634627",
+      "base/ncpd_patrol/quest_giver_test/voss_wait_pose.ent": "6e6e4c2141ae5364e53043efa0047fb549aef26d4c5f6bde5e7e6e21094862f5",
+      "base/ncpd_patrol/quest_giver_test/lines.json": "6eb9532333c5e5d989cb6d73858d76ebbdab7e050af0f1180df40b2c141a398a",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing01.wem": "96fb314ae5375e6f634938cf8864b85f5cb7fe4d1c3d174fc3917da655379bdb",
+      "base/ncpd_patrol/quest_giver_test/quest_giver.questphase": "a620cfe7803209595376490c1ee8a377df81d17a6f9230c06e7c39fd8e4cd892",
+      "base/ncpd_patrol/quest_giver_test/onscreens.json": "4bbc2f3ea72b71db69b4658e91ed31b49e159a2e85bbeb60c10d708cc0b84f64",
+      "base/ncpd_patrol/quest_giver_test/subtitles.json": "fac54e42ce4b0bc4e04aec73c8eb58654dd50fc9118176ff8411af0378138424",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing06.wem": "6c60fc0de6258b013bdc3ca145cf6eabbcfeef24a6d7128027fc08a40e7ea3d8",
+      "base/ncpd_patrol/quest_giver_test/voss.lipmap": "827b44b709f838cecce68f8cc8a8d38a4513d5d8c4d55594af541fb528395a83",
+      "base/ncpd_patrol/quest_giver_test/vossbriefing04.wem": "29b963922c4b6f3a12925f49db7e28d3f89bd1d7461784bda27701c0c8698cc5"
+    }
+  },
+  "offline_source_api_validation": {
+    "passed": true,
+    "browser_extension_present_and_absent": true,
+    "actual_game_cache": false,
+    "warnings": 0,
+    "errors": 0,
+    "native_scripts": {
+      "r6/scripts/NCPDPatrol/NCPDPatrolAidAccess.reds": "27ff7e1d7e4c6e877e12ce4e4cb99eb3751a058e7ab4f02dac8d0e106c1c18a7",
+      "r6/scripts/NCPDPatrol/NCPDPatrolArrestEvents.reds": "1a9ec17af20b608d8fe0e1564f12e65f2f517b4ec3e15f80cc5cedf7ebadde66",
+      "r6/scripts/NCPDPatrol/NCPDPatrolArrestInteractions.reds": "21a413fba8cd92535d538e84149aacc591bfa141ac6b3183a6d572347c7103c9",
+      "r6/scripts/NCPDPatrol/NCPDPatrolArrestPlayback.reds": "5145697421c29a34bd4dea698ec893b7b8eaf3d3deb50fee64dd2a629020c224",
+      "r6/scripts/NCPDPatrol/NCPDPatrolArrestSystem.reds": "4d7e96e44affe5333607d2ba178cf1f55f4323f35fc5ef1f38595beea56cdada",
+      "r6/scripts/NCPDPatrol/NCPDPatrolBeanBaggerSystem.reds": "974883a30fe41e6bf13d44e33933e12ccabc78286c6dd3b6318d6bbdf07e7cc3",
+      "r6/scripts/NCPDPatrol/NCPDPatrolBonusReceipt.reds": "55fc73d9d2717c1b2a8dc32131c63c4e9fdc034ba5ddccf27ecdea712834cf5b",
+      "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowser.reds": "d387650740ff2e16b62da1321adb70703312f7c6085e4b61cb580c38b7dd19a5",
+      "r6/scripts/NCPDPatrol/NCPDPatrolCareerBrowserState.reds": "6d175847d0b37538b00d6c911afd93e2ade8c194a35f4ca453b3a9beb6294291",
+      "r6/scripts/NCPDPatrol/NCPDPatrolCareerSystem.reds": "8ec5c0830bc354e75117007888d5b78f23e1dd53b372e1e429a962484d2b1b33",
+      "r6/scripts/NCPDPatrol/NCPDPatrolCyberpsychoSystem.reds": "f6e6e4921aa838f0fd5f3815b1d29e515ff9f30b651c8baec5582c4973fe6d8e",
+      "r6/scripts/NCPDPatrol/NCPDPatrolDispatchJournalSystem.reds": "92d24ab9a9e7e801be4baef2ef76556b8f151fb74d8cdfc9182c49291fec633a",
+      "r6/scripts/NCPDPatrol/NCPDPatrolDispatchMappinData.reds": "704d6b0462af918062b3fc9a2f2ca109c9ed3525f0d44a799a87713f34a067e4",
+      "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerCatalog.reds": "e1a041ae6c583d1558976f02aa76d1179608e820c92bd5733b1881e9da1ea9cb",
+      "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerData.reds": "69419eda04ef658e1760c8e81431da539fbecbdb8ceab928e7c7344cfff78400",
+      "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerDiagnostics.reds": "e3a2c61d72ed0b8a6a8a8e9d52e93f11c6adad4401e8db8bed623fa34f0efdf7",
+      "r6/scripts/NCPDPatrol/NCPDPatrolFixedMarkerSystem.reds": "b394d7b1475a08c8fc81d163aec6aff3da4229897de8c8dbb317c5403d995d28",
+      "r6/scripts/NCPDPatrol/NCPDPatrolIncidentSystem.reds": "29bd3deadb87b8b6f8a6b9a8500d5b869eeb1ef36de9a8509b0b1350df8820a0",
+      "r6/scripts/NCPDPatrol/NCPDPatrolLocalization.reds": "835684597041a0c1993733732e07d0e12ec24ab0a3977a0f5b8bf9425c5218e4",
+      "r6/scripts/NCPDPatrol/NCPDPatrolMarkerSession.reds": "130299c0336ef0ee434dec1f690edc614f93bb42f33a7e9270b10ab0c1b88169",
+      "r6/scripts/NCPDPatrol/NCPDPatrolNotice.reds": "047dd7803a7ff145d21323bc9e1fb18e12511e2871501b8a097e075d7cbeab49",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksCombat.reds": "0abd8928f5ba898230380f18aebc7c23b8de1f6643e283a4846d5d6fc1591185",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksEvents.reds": "9f154a01713360ce8e9dbcbed9c78cde543e11b1642b212f912d3583cb42c9f5",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksLoot.reds": "e7b761f940bd62b19884e665579097cbc14a413c38489a083e3e7bda25fe0977",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOffBooksSystem.reds": "6e97989c5985fa16c818883f3000a1ed93816c7c55d6f1eb7bcc754ab29e19b4",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownCatalog.reds": "4d1926d06ccf1bf30a9d6d4124cbb8fb8e1dbb838d2fb6b90336f020f98b023b",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownInteractions.reds": "29d4a210997ac725090d777f90f22f0ad1dd98afe4c752e3e697228920464a69",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSite.reds": "1ff0c39f9979da2a562a442cbb3fef4aea110a44c3264a34bbb3c816d0cef3d7",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOfficerDownSystem.reds": "7ed83f06ed114017f7eca7297320a3ae0ca46550d8f9a521e22a028e3eb62f60",
+      "r6/scripts/NCPDPatrol/NCPDPatrolOfficerEquipment.reds": "7d1a49d68a19e931d2cc3124278f64ed53d1711a5fab715f918e0254f7f08ea2",
+      "r6/scripts/NCPDPatrol/NCPDPatrolPartnerSafety.reds": "bd5a2e7546a26550a8bd9e8c956e3a477785ab91a6e424474cfd2966af618d08",
+      "r6/scripts/NCPDPatrol/NCPDPatrolPartnerVoice.reds": "5b05a5183d7ae85075dc37c5e36bb04653f355cc40f4b7ad7e1bca8a3c78503c",
+      "r6/scripts/NCPDPatrol/NCPDPatrolQuestGiverTest.reds": "d395deb6f96fc6890fd6dd86191d58612ddeffb5160f510ed9af7432a4f09ea7",
+      "r6/scripts/NCPDPatrol/NCPDPatrolQuestMarkerProbeSystem.reds": "f2dff7910d464f4fd19d690178cecb220b98e05f838fa2ca9d9bce146b48a60b",
+      "r6/scripts/NCPDPatrol/NCPDPatrolRadioStep.reds": "97cd25ca63e68604fb10f420510ca84fa4377bb9884bc84506a30c7dfd0d91e8",
+      "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappinData.reds": "3c035cad71334ce22f14e9ceface5c03ee25f60cecca161a495e10479c7f722a",
+      "r6/scripts/NCPDPatrol/NCPDPatrolReferenceMappins.reds": "60448c85daa6aca9dffeb84f01aa801f1d1ce56cea0dfdbb87ef69165d860504",
+      "r6/scripts/NCPDPatrol/NCPDPatrolSceneMarker.reds": "5090ce3d884e70ad197b47ed3b26e11a4c759a100612c4d42b0bb8082bd24e55",
+      "r6/scripts/NCPDPatrol/NCPDPatrolSceneSurveySystem.reds": "27ad822666c328ee5cd322d570ec105329dbef537e5ce187f18440b2b476f4a2",
+      "r6/scripts/NCPDPatrol/NCPDPatrolSupportInteractions.reds": "97cf384182c4911de7fece043abb2a37757e86da51e521d9cc74c3a109541c82",
+      "r6/scripts/NCPDPatrol/NCPDPatrolSupportSystem.reds": "81a385984fea45b44ae4c2b4f7cef124ff205992625ce1323857f0b29224c35f",
+      "r6/scripts/NCPDPatrol/NCPDPatrolSystem.reds": "ec1e34bf7cfb18de259a70457c93b79fed2072ad6bac095af68d77db03344fab",
+      "r6/scripts/NCPDPatrol/NCPDPatrolTerminal.reds": "078b09b6e05988023a30f7bb5a2bd3a24f3aed178cd481446d9d73e6b7d48d11",
+      "r6/scripts/NCPDPatrol/NCPDPatrolTrunkInteractions.reds": "ca29d42470fdba64834955dae242ad851fbb269d48110485d76488a4d4c7aa87",
+      "r6/scripts/NCPDPatrol/NCPDPatrolTrunkPopup.reds": "bf21b27f456fc05e1dfcd442fe609e6345b8a60fcde70157515258f4e1d56a71",
+      "r6/scripts/NCPDPatrol/NCPDPatrolTrunkSystem.reds": "ec3e13d9536073df1eabbc19ede809fed886cf3579eb1cece4c382d2688d572b",
+      "r6/scripts/NCPDPatrol/NCPDPatrolTrunkVehicle.reds": "e11c9a72bf63d92414c2d632fc4eddcef82d152ac3c8c1b687b291767ed973c3",
+      "r6/scripts/NCPDPatrol/NCPDPatrolVIPSystem.reds": "7a575720d318f60a19214a4fda450d2bdd55db8d4f5cea3a37a1627b484c0e79",
+      "r6/scripts/NCPDPatrol/NCPDPatrolVoiceWindow.reds": "8d4939c89098d4e3c20b3826e62e5ee3fe917741eec125b6dc5dde99b7b1f2bb",
+      "r6/scripts/NCPDPatrol/NCPDPatrolVossSubtitles.reds": "2475e69c56bee516235d45665f5b4702df3ebc5396df7b5a1f54a3cf82cbca14"
+    }
+  }
+}

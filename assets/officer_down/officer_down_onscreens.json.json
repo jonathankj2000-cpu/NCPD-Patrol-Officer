@@ -1,0 +1,59 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_OfficerDown_Title",
+              "femaleVariant": "NCPD DISPATCH: OFFICER DOWN",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_OfficerDown_Objective",
+              "femaleVariant": "Respond, secure the scene and revive the officer",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_OfficerDown_Description",
+              "femaleVariant": "A patrol is pinned down at an intersection. Reach the scene, neutralize the armed suspects and provide aid to the injured officer. Backup may be requested.",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_OfficerDown_Revive",
+              "femaleVariant": "Revive officer",
+              "maleVariant": ""
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "primaryKey": "0",
+              "secondaryKey": "NCPDPatrol_OfficerDown_Reviving",
+              "femaleVariant": "Reviving officer...",
+              "maleVariant": ""
+            }
+          ]
+        }
+      }
+    }
+  }
+}

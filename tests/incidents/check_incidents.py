@@ -19,6 +19,9 @@ lua.globals().MOD_DIR=str(ROOT/'bin/x64/plugins/cyber_engine_tweaks/mods/NCPDPat
 lua.execute('package.path=MOD_DIR.."/?.lua;"..package.path')
 lua.execute((HERE.parent/'vip/native-mocks.lua').read_text())
 lua.execute((HERE/'engine-mocks.lua').read_text())
+sys.path.insert(0,str(HERE.parent/'vip'))
+from legacy_locations import install
+install(lua,ROOT)
 lua.execute((HERE/'native-scenarios.lua').read_text())
 lua.execute((HERE/'mixed-scenarios.lua').read_text())
 lua.execute((HERE/'background-scenarios.lua').read_text())

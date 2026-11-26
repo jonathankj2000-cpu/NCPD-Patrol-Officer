@@ -1,0 +1,145 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "locVoiceoverMap",
+          "entries": [
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936178618028821476",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing01.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing01.wem"
+                },
+                "Flags": "Soft"
+              }
+            },
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936181916563706109",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing02.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing02.wem"
+                },
+                "Flags": "Soft"
+              }
+            },
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936180817052077898",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing03.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing03.wem"
+                },
+                "Flags": "Soft"
+              }
+            },
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936175319493936843",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing04.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing04.wem"
+                },
+                "Flags": "Soft"
+              }
+            },
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936174219982308632",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing05.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing05.wem"
+                },
+                "Flags": "Soft"
+              }
+            },
+            {
+              "$type": "locVoLineEntry",
+              "stringId": "7936177518517193265",
+              "femaleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing06.wem"
+                },
+                "Flags": "Soft"
+              },
+              "maleResPath": {
+                "DepotPath": {
+                  "$type": "ResourcePath",
+                  "$storage": "string",
+                  "$value": "base\\ncpd_patrol\\quest_giver_test\\vossbriefing06.wem"
+                },
+                "Flags": "Soft"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

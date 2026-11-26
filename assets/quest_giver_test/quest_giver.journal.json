@@ -1,0 +1,237 @@
+{
+  "Header": {
+    "WolvenKitVersion": "9.1.1",
+    "WKitJsonVersion": "0.0.9",
+    "GameVersion": 2500,
+    "DataType": "CR2W"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "gameJournalResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "entry": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "gameJournalRootFolderEntry",
+          "id": "",
+          "journalEntryOverrideDataList": [],
+          "entries": [
+            {
+              "HandleId": "1",
+              "Data": {
+                "$type": "gameJournalFolderEntry",
+                "id": "quests/minor_quest",
+                "journalEntryOverrideDataList": [],
+                "entries": [
+                  {
+                    "HandleId": "2",
+                    "Data": {
+                      "$type": "gameJournalQuest",
+                      "id": "ncpd_patrol_quest_giver_test",
+                      "journalEntryOverrideDataList": [],
+                      "entries": [
+                        {
+                          "HandleId": "3",
+                          "Data": {
+                            "$type": "gameJournalQuestPhase",
+                            "id": "main",
+                            "journalEntryOverrideDataList": [],
+                            "entries": [
+                              {
+                                "HandleId": "4",
+                                "Data": {
+                                  "$type": "gameJournalQuestObjective",
+                                  "id": "talk",
+                                  "journalEntryOverrideDataList": [],
+                                  "entries": [
+                                    {
+                                      "HandleId": "5",
+                                      "Data": {
+                                        "$type": "gameJournalQuestDescription",
+                                        "id": "briefing",
+                                        "journalEntryOverrideDataList": [],
+                                        "description": {
+                                          "unk1": "0",
+                                          "value": "NCPDPatrol_QG_Description"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "HandleId": "6",
+                                      "Data": {
+                                        "$type": "gameJournalQuestMapPin",
+                                        "id": "location",
+                                        "journalEntryOverrideDataList": [],
+                                        "entries": [],
+                                        "enableGPS": 1,
+                                        "reference": {
+                                          "$type": "gameEntityReference",
+                                          "type": "EntityRef",
+                                          "reference": {
+                                            "$type": "NodeRef",
+                                            "$storage": "string",
+                                            "$value": "#coyote_performance_test"
+                                          },
+                                          "names": [],
+                                          "slotName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          },
+                                          "sceneActorContextName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          },
+                                          "dynamicEntityUniqueName": {
+                                            "$type": "CName",
+                                            "$storage": "string",
+                                            "$value": "None"
+                                          }
+                                        },
+                                        "slotName": {
+                                          "$type": "CName",
+                                          "$storage": "string",
+                                          "$value": "None"
+                                        },
+                                        "mappinData": {
+                                          "$type": "gamemappinsMappinData",
+                                          "mappinType": {
+                                            "$type": "TweakDBID",
+                                            "$value": "Mappins.QuestStaticMappinDefinition",
+                                            "$storage": "string"
+                                          },
+                                          "variant": "QuestGiverVariant",
+                                          "active": 0,
+                                          "visibleThroughWalls": 1,
+                                          "debugCaption": "NCPD OFFICER DOWN",
+                                          "localizedCaption": {
+                                            "unk1": "0",
+                                            "value": "NCPDPatrol_QG_Objective"
+                                          },
+                                          "scriptData": null
+                                        },
+                                        "offset": {
+                                          "$type": "Vector3",
+                                          "X": 2684.449500001,
+                                          "Y": -1765.887,
+                                          "Z": 192.62780000000498
+                                        },
+                                        "uiAnimation": {
+                                          "$type": "TweakDBID",
+                                          "$storage": "uint64",
+                                          "$value": "0"
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "description": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_QG_Objective"
+                                  },
+                                  "optional": 0,
+                                  "counter": 0
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "title": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_QG_Title"
+                      },
+                      "type": "MinorQuest"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "HandleId": "7",
+              "Data": {
+                "$type": "gameJournalPrimaryFolderEntry",
+                "entries": [
+                  {
+                    "HandleId": "8",
+                    "Data": {
+                      "$type": "gameJournalContact",
+                      "avatarID": {
+                        "$type": "TweakDBID",
+                        "$storage": "string",
+                        "$value": "PhoneAvatars.Avatar_Unknown"
+                      },
+                      "entries": [
+                        {
+                          "HandleId": "9",
+                          "Data": {
+                            "$type": "gameJournalPhoneConversation",
+                            "entries": [
+                              {
+                                "HandleId": "10",
+                                "Data": {
+                                  "$type": "gameJournalPhoneMessage",
+                                  "attachment": {
+                                    "HandleId": "11",
+                                    "Data": {
+                                      "$type": "gameJournalPath",
+                                      "realPath": "quests/minor_quest/ncpd_patrol_quest_giver_test",
+                                      "fileEntryIndex": 1,
+                                      "className": {
+                                        "$type": "CName",
+                                        "$storage": "string",
+                                        "$value": "gameJournalQuest"
+                                      },
+                                      "editorPath": ""
+                                    }
+                                  },
+                                  "delay": 0,
+                                  "id": "meet_voss",
+                                  "imageId": {
+                                    "$type": "TweakDBID",
+                                    "$storage": "uint64",
+                                    "$value": "0"
+                                  },
+                                  "isQuestImportant": 1,
+                                  "journalEntryOverrideDataList": [],
+                                  "sender": "NPC",
+                                  "text": {
+                                    "unk1": "0",
+                                    "value": "NCPDPatrol_QG_Invitation"
+                                  }
+                                }
+                              }
+                            ],
+                            "id": "invitation",
+                            "journalEntryOverrideDataList": [],
+                            "title": {
+                              "unk1": "0",
+                              "value": "NCPDPatrol_QG_SmsTitle"
+                            }
+                          }
+                        }
+                      ],
+                      "id": "ncpd_patrol_mara_voss",
+                      "isCallableDefault": 0,
+                      "journalEntryOverrideDataList": [],
+                      "name": {
+                        "unk1": "0",
+                        "value": "NCPDPatrol_QG_Name"
+                      },
+                      "type": "Texter",
+                      "useFlatMessageLayout": 1
+                    }
+                  }
+                ],
+                "id": "contacts",
+                "journalEntryOverrideDataList": []
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

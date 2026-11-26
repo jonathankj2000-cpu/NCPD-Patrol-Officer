@@ -1,0 +1,62 @@
+{
+  "source": "User-provided game logs and screenshot on 2026-11-20",
+  "build": "v0.17d fixed quest markers r5",
+  "outcome": "failed",
+  "vip": {
+    "scope": 8,
+    "site": 204,
+    "native_pins": 1,
+    "objective_link": false,
+    "runtime_position_ok": true,
+    "quest_position_ok": true,
+    "pin_id": "1653450603555868862",
+    "journal_hash": 764426284,
+    "target": [
+      -1770.870972,
+      -1947.125488,
+      57.199997
+    ],
+    "fallback": true,
+    "manual_id_unchanged": true,
+    "observation": "All potential terminal positions visible simultaneously"
+  },
+  "scanner": {
+    "token": 6,
+    "scope": 4,
+    "site": 42,
+    "native_pins": 0,
+    "objective_link": false,
+    "runtime_position_ok": false,
+    "quest_position_ok": false,
+    "pin_id": "0",
+    "journal_hash": 1219236847,
+    "target": [
+      -1607.330811,
+      -1106.957397,
+      10.454639
+    ],
+    "reported_runtime": [
+      -1087.163086,
+      1312.506226,
+      5.36
+    ],
+    "reported_quest": [
+      0,
+      0,
+      0
+    ],
+    "fallback": true,
+    "manual_id_unchanged": true,
+    "observation": "No native scanner pin; runtime field retained an older observation"
+  },
+  "cyberpsycho": {
+    "observation": "User reports the same multiple-marker behavior as VIP"
+  },
+  "r5a_changes": [
+    "One private single-pin site objective selected by its existing quest owner",
+    "All map-pin definitions start inactive; explicit MappinManager Active/Inactive inputs",
+    "Scanner offsets authored relative to the game-confirmed Coyote anchor",
+    "One-active-bank-pin proof, stale-proof reset and owned new/legacy hash cleanup"
+  ],
+  "r5a_game_validation": false
+}
